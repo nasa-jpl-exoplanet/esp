@@ -1,11 +1,21 @@
 ## --< EXCALIBUR >--
 
-Exoplanet Calibration Bayesian Unified Retrieval Pipeline.
+EXCALIBUR stands for EXoplanet CALIbration Bayesian Unified Retrieval.
 
-EXCALIBUR reduces extrasolar system data into an exoplanet spectrum.
-It includes CERBERUS, a line-by-line, spherical-geometry radiative transfer code modeling exoplanet atmospheres and a Bayesian parameter retrievial / model selection package. 
+The EXCALIBUR pipeline enables comparative exoplanet studies by uniformly processing input catalogs of observations to create science data products. EXCALIBUR preserves the chain of inference with persistent data products for each processing step that are tagged to a unique identifier linking them to a specific compute instance and GitHub change set. EXCALIBUR catalog releases are available on the EXCALIBUR portal hosted at IPAC https://excalibur.ipac.caltech.edu. 
 
-EXCALIBUR is an event driven pipeline where the events are defined as changes in data or algorithms; when events are detected, dependencies affected by the changes are re-processed. Calibration steps are transparent and quantified using a combination of accessible intermediate products and auto-generation of visual diagnostics.
+EXCALIBUR is an event driven pipeline where the events are defined as changes in data or algorithms; when events are detected, dependencies affected by the changes are re-processed. This makes EXCALIBUR a useful tool for sensitivity testing at catalog scales. EXCALIBUR includes CERBERUS, a line-by-line, spherical-geometry radiative transfer code modeling exoplanet atmospheres and a Bayesian parameter retrieval and model selection package. EXCALIBUR also includes a UI that provides visualization of data products. 
+
+EXCALIBUR papers include:
+- https://ui.adsabs.harvard.edu/abs/2024MNRAS.531...35M/abstract
+- https://ui.adsabs.harvard.edu/abs/2022ApJ...941L...5E/abstract
+- https://ui.adsabs.harvard.edu/abs/2022AJ....163...22H/abstract
+- https://ui.adsabs.harvard.edu/abs/2021AJ....162...91E/abstract
+- https://ui.adsabs.harvard.edu/abs/2021MNRAS.504.3316B/abstract
+- https://ui.adsabs.harvard.edu/abs/2021AJ....161..213S/abstract
+
+Current EXCALIBUR processing capabilities include transit spectroscopy and phase curves for selected instruments. EXCALIBUR is under active development with ongoing capability enhancements, and we welcome contributors and collaborations. 
+
 
 ### --< become a member >--
 
