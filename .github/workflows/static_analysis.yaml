@@ -1,6 +1,6 @@
 name: Static Analysis
 run-name: ${{ github.actor }} is checking code quality/style for merge compliance
-on: [pull_request, push]
+on: [pull_request]
 jobs:
   Style:
     name: Coding Style

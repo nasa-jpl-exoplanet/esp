@@ -97,7 +97,7 @@ services:
       - netlines
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
-      - ${EXCALIBUR_CERTS}:/proj/data/certs:ro
+      - ${EXCALIBUR_CERTS}:/proj/mycerts
       - ${EXCALIBUR_DATA_PATH}:/proj/data
       - /etc/ssl:/etc/ssl:ro
       - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro

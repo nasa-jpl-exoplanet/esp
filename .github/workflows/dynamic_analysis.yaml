@@ -1,6 +1,6 @@
 name: Self Diagnositics
 run-name: ${{ github.actor }} is verifying code for merge compliance
-on: [pull_request, push]
+on: [pull_request]
 jobs:
   PyTesting:
     name: Test with Coverage
