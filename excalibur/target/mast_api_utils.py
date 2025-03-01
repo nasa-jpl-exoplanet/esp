@@ -9,13 +9,18 @@ import requests
 
 from urllib.parse import quote as urlencode
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 # ------------- ------------------------------------------------------
-def mast_query(request):
+def mast_query(request, maxwaittime=42):
     """
     Perform a MAST query. Parameters
     ----------
     request (dictionary): The MAST request json object
+    maxwaittime: how long before timeout (in seconds)
     Returns head,content where head is the response HTTP headers, and content is the returned data
     """
     # Base API url
@@ -32,12 +37,18 @@ def mast_query(request):
     req_string = json.dumps(request)
     req_string = urlencode(req_string)
     # Perform the HTTP request
-    resp = requests.post(
-        request_url, data="request=" + req_string, headers=headers, timeout=42
-    )
-    # Pull out the headers and response content
-    head = resp.headers
-    content = resp.content.decode('utf-8')
+    try:
+        resp = requests.post(
+            request_url, data="request=" + req_string, headers=headers, timeout=maxwaittime
+        )
+        # Pull out the headers and response content
+        head = resp.headers
+        content = resp.content.decode('utf-8')
+
+    except requests.exceptions.ReadTimeout:
+        log.warning('--< TIMEDOUT on the mast query (%s seconds)  >--', maxwaittime)
+        head = None
+        content = None
     return head, content
 
 
