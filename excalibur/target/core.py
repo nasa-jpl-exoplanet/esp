@@ -1155,7 +1155,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             'format': 'json',
         }
         # print('MAST download can take a while. use larger wait time')
-        errmastq, datastr = masttool.mast_query(request,maxwaittime=1000)
+        errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         data = json.loads(datastr)
         if data['data']:
             donmast = True
@@ -1315,8 +1315,12 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 with open(fileout, 'wb') as flt:
                     flt.write(resp.content)
             except requests.exceptions.ReadTimeout:
-                log.warning('--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
-                            target, irow, len(allraw))
+                log.warning(
+                    '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
+                    target,
+                    irow,
+                    len(allraw),
+                )
             pass
         pass
     locations = [tempdir]

@@ -39,14 +39,19 @@ def mast_query(request, maxwaittime=42):
     # Perform the HTTP request
     try:
         resp = requests.post(
-            request_url, data="request=" + req_string, headers=headers, timeout=maxwaittime
+            request_url,
+            data="request=" + req_string,
+            headers=headers,
+            timeout=maxwaittime,
         )
         # Pull out the headers and response content
         head = resp.headers
         content = resp.content.decode('utf-8')
 
     except requests.exceptions.ReadTimeout:
-        log.warning('--< TIMEDOUT on the mast query (%s seconds)  >--', maxwaittime)
+        log.warning(
+            '--< TIMEDOUT on the mast query (%s seconds)  >--', maxwaittime
+        )
         head = None
         content = None
     return head, content
