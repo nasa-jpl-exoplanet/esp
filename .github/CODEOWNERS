@@ -1,0 +1,9 @@
+* @nasa-jpl-exoplanet/internal
+/excalibur/cerberus @groudier
+/excalbur/data @groudier
+/excalibur/transit @groudier
+/.docker @nasa-jpl-exoplanet/admin
+/.github @nasa-jpl-exoplanet/admin
+/setup.py @nasa-jpl-exoplanet/admin
+/test/test_01.py @nasa-jpl-exoplanet/admin
+/tools @nasa-jpl-exoplanet/admin
