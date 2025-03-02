@@ -89,7 +89,7 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     targets = targets.split('\n')
     targets = [t.strip() for t in targets if t.replace(' ', '')]
     tn = os.environ.get('TARGET_NAME', None)
-    if tn is not None and tn != '':
+    if tn is not None and tn != '' and tn != '__all__':
         found_target_list = None
         for target in targets:
             if tn == target.split(':')[0].strip():
@@ -97,7 +97,6 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
             pass
         if found_target_list is None:
             # this is an ERROR.  the selected target should be in the target list
-            # exit('ERROR: are you sure about that target?  it is not in the list')
             mssg = f'Obsolete target / Error in target name: {tn}'
             raise dawgie.NoValidOutputDataError(mssg)
         targets = [found_target_list]
@@ -120,7 +119,7 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
         if gen_ids:
             # pylint: disable=protected-access # because dawgie requires it
             dawgie.db.connect(
-                fetch('excalibur.target').algorithms.create(),
+                fetch('excalibur.target').algorithms.Create(),
                 ds._bot(),
                 parsedstr[0],
             ).load()
