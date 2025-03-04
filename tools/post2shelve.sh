@@ -9,6 +9,6 @@ export DAWGIE_DB_HOST=excalibur.jpl.nasa.gov \
        EXCALIBUR_UID=${UID} \
        EXCALIBUR_USER=${USER} \
        EXCALIBUR_SOURCE_PATH=${root}
-docker compose -f ${root}/.docker/compose.yaml run tools \
+docker compose -f ${root}/.docker/compose.yaml run --remove-orphans tools \
        dawgie.db.tools.post2shelve -O /proj/db -p ${1:-${USER:-undefined}}
        
