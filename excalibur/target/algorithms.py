@@ -175,7 +175,7 @@ class Autofill(dawgie.Algorithm):
         '''Top level algorithm call'''
         update = False
 
-        # FIXMEE: this code needs repaired by moving out to config (Geoff added)
+        # FIXMEE: this code needs repaired by moving out to config
         target = repr(self).split('.')[1]
 
         # stop here if it is not a runtime target
@@ -266,7 +266,6 @@ class Scrape(dawgie.Algorithm):
             var_autofill = self.__autofill.sv_as_dict()['parameters']
             valid, errstring = checksv(var_autofill)
             if valid:
-                # FIXMEE: this code needs repaired by moving out to config (Geoff added)
                 log.warning(
                     '--< TARGET SCRAPE: %s >--', repr(self).split('.')[1]
                 )

@@ -16,6 +16,7 @@ from collections import defaultdict
 import numpy as np
 
 import excalibur.transit.core as trncore
+import excalibur.transit.starspots as trnspots
 import excalibur.transit.states as trnstates
 
 from excalibur.util.checksv import checksv
@@ -533,7 +534,7 @@ class StarSpots(dawgie.Algorithm):
     @staticmethod
     def _starspots(fin, wht, spc, out):
         '''Core code call'''
-        spotmodel = trncore.starspots(fin, wht, spc, out)
+        spotmodel = trnspots.starspots(fin, wht, spc, out)
         return spotmodel
 
     def _failure(self, errstr):
