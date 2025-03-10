@@ -59,7 +59,7 @@ def starspots(fin, wht, spc, out):
     Lstar = fin['priors']['L*']
     print('star R,T,L,M:  ', Rstar, Tstar, Lstar, Mstar)
 
-    exospec = False
+    spotssolved = False
 
     # planetletters = fin['priors']['planets']
     # some of the planets available in fin (system parameters) don't have transits
@@ -112,21 +112,9 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['LD'] = limb_coeffs
 
         # 3) for each planet, calculate starspot model based on the input parameters
-
-        #  ************************************************************
-        #               Viktor - insert your code here
-        #  ************************************************************
-
-        # I think that your result will be an array of spectra on a 2-D grid
-        #  one axis is filling factor and
-        #  one axis is the spot temperature
-        # ?????
-        spotmodel = np.zeros((100, 100, 100))
-
         # 4) save the results
-        out['data'][planetletter]['spotmodel'] = spotmodel
 
-        # 5) for each planet, make a plot of the spectrum
+        # 5) for each planet, make some plots (spectrum, spotmodel)
 
         myfig, ax = plt.subplots(figsize=(8, 6))
 
@@ -241,7 +229,7 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['plot_limbCoeffs'] = save_plot_tosv(myfig)
         plt.close(myfig)
 
-        exospec = True
+        spotssolved = True
         out['STATUS'].append(True)
 
         #    VIKTOR CODE BELOW
@@ -287,16 +275,11 @@ def starspots(fin, wht, spc, out):
         plot_graph = False
 
         # Limb-darkening coefficients and wavelengths
-        #  Geoff: we're only considering a single set of LD coeff
-        #         so maybe clean this up later and remove num_elements
-        #          and remove the loop inside of spotmodel/main
-        c1 = [limb_coeffs[0]]
-        c2 = [limb_coeffs[1]]
-        c3 = [limb_coeffs[2]]
-        c4 = [limb_coeffs[3]]
-        num_elements = len(c1)
-        # set the limb-darkening profile
-        profile = '4-parameter'  # Geoff:  *** ??!?!? ***
+        c1 = [limb_coeffs[0],limb_coeffs[0]]
+        c2 = [limb_coeffs[1],limb_coeffs[1]]
+        c3 = [limb_coeffs[2],limb_coeffs[2]]
+        c4 = [limb_coeffs[3],limb_coeffs[3]]
+        num_wavelengths = len(c1)
 
         lambdaEff = [0.5, 1.0, 1.5]  # <-- fix this later after testing!
 
@@ -325,8 +308,7 @@ def starspots(fin, wht, spc, out):
         num_T_fac_simulations = 5
 
         other_params = {
-            'num_elements': num_elements,
-            'profile': profile,
+            'num_wavelengths': num_wavelengths,
             'c1': c1,
             'c2': c2,
             'c3': c3,
@@ -358,9 +340,7 @@ def starspots(fin, wht, spc, out):
         count = 0
         while count == 0:
             include_starspots = False
-            print(
-                "\nRunning the unspotted scenario (ff=0) first, so it appears first in the results file."
-            )
+            print('Running the unspotted scenario (ff=0) first')
 
             unspotted_params = other_params.copy()
             unspotted_params['r'] = 0.0  # => ff=0 => unspotted
@@ -368,9 +348,9 @@ def starspots(fin, wht, spc, out):
                 'nan'
             )  # no valid temperature for a spot
 
-            # Here we call run_simulations with ff_min=0, ff_max=0, T_spot_min=NaN, T_spot_max=NaN
+            # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            run_simulations(
+            ff_grid, T_grid = run_simulations(
                 ff_min=0.0,
                 ff_max=0.0,
                 T_spot_min=float('nan'),
@@ -380,11 +360,12 @@ def starspots(fin, wht, spc, out):
                 other_params=unspotted_params,
                 result_type="unspotted",
             )
+            print('GRID FOR UNSPOTTED:', count, ff_grid, T_grid)
             count = count + 1
         include_starspots = True
 
         # 2) Run simulations for spots
-        spotresults = run_simulations(
+        ff_grid, T_grid = run_simulations(
             ff_spot_min,
             ff_spot_max,
             T_spot_min,
@@ -394,10 +375,12 @@ def starspots(fin, wht, spc, out):
             other_params,
             "spot",
         )
-        print('RESULTS FOR SPOTS:', spotresults)
+        print('GRID FOR SPOTS:', ff_grid, T_grid)
+        out['data'][planetletter]['ff_spot'] = ff_grid
+        out['data'][planetletter]['T_spot'] = T_grid
 
         # 3) Run simulations for faculae
-        facresults = run_simulations(
+        ff_grid, T_grid = run_simulations(
             ff_fac_min,
             ff_fac_max,
             T_fac_min,
@@ -407,9 +390,11 @@ def starspots(fin, wht, spc, out):
             other_params,
             "faculae",
         )
-        print('RESULTS FOR Faculae:', facresults)
+        print('GRID FOR FACULAE:', ff_grid, T_grid)
+        out['data'][planetletter]['ff_fac'] = ff_grid
+        out['data'][planetletter]['T_fac'] = T_grid
 
-    return exospec
+    return spotssolved
 
 
 def run_simulations(
@@ -466,10 +451,9 @@ def run_simulations(
             )
 
             # Executes the SpotModel with the updated parameters
-            SpotModel(
+            oneModel = SpotModel(
                 target=other_params['target'],
-                num_elements=iteration_params['num_elements'],
-                profile=iteration_params['profile'],
+                num_wavelengths=iteration_params['num_wavelengths'],
                 c1=iteration_params['c1'],
                 c2=iteration_params['c2'],
                 c3=iteration_params['c3'],
@@ -497,5 +481,6 @@ def run_simulations(
                 plot_star=iteration_params['plot_star'],
                 tempSpot=iteration_params['tempSpot'],
             )
+            print('oneModel', oneModel)
 
     return grid_ff, grid_T_spot
