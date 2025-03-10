@@ -275,10 +275,10 @@ def starspots(fin, wht, spc, out):
         plot_graph = False
 
         # Limb-darkening coefficients and wavelengths
-        c1 = [limb_coeffs[0],limb_coeffs[0]]
-        c2 = [limb_coeffs[1],limb_coeffs[1]]
-        c3 = [limb_coeffs[2],limb_coeffs[2]]
-        c4 = [limb_coeffs[3],limb_coeffs[3]]
+        c1 = [limb_coeffs[0], limb_coeffs[0]]
+        c2 = [limb_coeffs[1], limb_coeffs[1]]
+        c3 = [limb_coeffs[2], limb_coeffs[2]]
+        c4 = [limb_coeffs[3], limb_coeffs[3]]
         num_wavelengths = len(c1)
 
         lambdaEff = [0.5, 1.0, 1.5]  # <-- fix this later after testing!
@@ -394,10 +394,10 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['ff_fac'] = ff_grid
         out['data'][planetletter]['T_fac'] = T_grid
 
-        print('modelResult ff',modelResult.ffarray)
-        print('modelResult T',modelResult.Tarray)
-        print('modelResult wave',modelResult.wavearray)
-        print('modelResult depth',modelResult.depth)
+        print('modelResult ff', modelResult.ffarray)
+        print('modelResult T', modelResult.Tarray)
+        print('modelResult wave', modelResult.wavearray)
+        print('modelResult depth', modelResult.depth)
 
     return spotssolved
 
@@ -488,4 +488,4 @@ def run_simulations(
             )
             # print('oneModel', oneModel)
 
-    return grid_ff, grid_T_spot, oneModal
+    return grid_ff, grid_T_spot, oneModel

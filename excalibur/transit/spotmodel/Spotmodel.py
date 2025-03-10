@@ -249,7 +249,9 @@ class SpotModel:
                 tamanho_curva = len(curvaLuz)
                 tamanho_tempo = len(tempoHoras)
                 stack_curvaLuz = np.zeros((self.num_wavelengths, tamanho_curva))
-                stack_tempoHoras = np.zeros((self.num_wavelengths, tamanho_tempo))
+                stack_tempoHoras = np.zeros(
+                    (self.num_wavelengths, tamanho_tempo)
+                )
 
             stack_curvaLuz[count3, :] = eclipse_.getCurvaLuz()
             stack_tempoHoras[count3, :] = eclipse_.getTempoHoras()
@@ -350,4 +352,3 @@ class SpotModel:
         self.Tarray = self.tempSpot
         self.wavearray = lambdaEff_nm
         self.depth = D_lambda
-
