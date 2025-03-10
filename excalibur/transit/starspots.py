@@ -66,7 +66,7 @@ def starspots(fin, wht, spc, out):
     # use either transit.whitelight or transit.spectrum for the list of planets
     planetletters = spc['data'].keys()
     for planetletter in planetletters:
-        print('STARSPOTS: big loop over each planet letter',planetletter)
+        print('STARSPOTS: big loop over each planet letter', planetletter)
 
         Rplanet = fin['priors'][planetletter]['rp']
         inc = fin['priors'][planetletter]['inc']

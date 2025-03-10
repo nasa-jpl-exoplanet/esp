@@ -44,7 +44,7 @@ class NormSV(ExcaliburSV):
                 visitor.add_declaration('PLANET: ' + p)
                 if 'vignore' in self['data'][p]:
                     for v, m in zip(
-                            self['data'][p]['vignore'], self['data'][p]['trial']
+                        self['data'][p]['vignore'], self['data'][p]['trial']
                     ):
                         strignore = str(int(v)) + '  ' + m
                         visitor.add_declaration('VISIT: ' + strignore)
