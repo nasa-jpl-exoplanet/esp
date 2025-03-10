@@ -347,8 +347,8 @@ class SpotModel:
             self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
         )
 
-        # save the results
-        self.ffarray = self.r**2 * quantidade
-        self.Tarray = self.tempSpot
+        # save the results (only the depth is used; the rest is redundant)
+        self.ff = self.r**2 * quantidade
+        self.T = self.tempSpot
         self.wavearray = lambdaEff_nm
         self.depth = D_lambda

@@ -6,29 +6,14 @@
 # pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
-# import dawgie
 
-# import excalibur.data.core as datcore
-# import excalibur.system.core as syscore
-# import excalibur.util.cerberus as crbutil
+from excalibur.transit.spotmodel.Spotmodel import SpotModel
+from excalibur.transit.core import vecistar
 from excalibur.cerberus.plotting import rebin_data
 from excalibur.util.plotters import (
     save_plot_tosv,
-    #    save_plot_myfit,
-    #    plot_residual_fft,
     add_scale_height_labels,
 )
-from excalibur.transit.core import vecistar
-from excalibur.transit.spotmodel.Spotmodel import SpotModel
-
-# import pandas as pd
-# from matplotlib import pyplot
-
-# import os
-# import main
-# import importlib
-# importlib.reload(main)
-# from scipy.interpolate import griddata
 
 import numpy as np
 import matplotlib as mpl
@@ -72,6 +57,9 @@ def starspots(fin, wht, spc, out):
         inc = fin['priors'][planetletter]['inc']
         period = fin['priors'][planetletter]['period']
         sma = fin['priors'][planetletter]['sma']
+        # assume zero eccentricity for planet orbit
+        ecc = 0
+        anom = 0
         print('planet' + planetletter, 'R,inc,P,a:', Rplanet, inc, period, sma)
 
         # limb dark
@@ -237,37 +225,11 @@ def starspots(fin, wht, spc, out):
         target = planetletter  # Exoplanet name
 
         # Code Parameters
-
         max_intensity = 1000
         matrix_radius = 700
         matrix_size = 2 * matrix_radius + 100
         # Geoff: NOT USED
         # timeInterval = 3
-        # en to pt
-        intensidadeMaxima = max_intensity
-        raio = matrix_radius
-        tamanhoMatriz = matrix_size
-
-        # Main Parameters
-        # Star
-        # raioStar = 0.2159  # [R_sun]
-        # massStar = 0.1844  # [M_sun]
-        # tempStar = 3100  # [K]
-        raioStar = Rstar  # [R_sun]
-        massStar = Mstar  # [M_sun]
-        tempStar = Tstar  # [K]
-
-        # Planet
-        # raioPlanetaRj = 0.1543  # [Rj] (in in jupiter's radius)
-        # periodo = 24.73723  # [days]
-        # anguloInclinacao = 89.86  # [deg]
-        # semiEixoUA = 0.0946  # [AU]
-        raioPlanetaRj = Rplanet  # [Rj] (in in jupiter's radius)
-        periodo = period  # [days]
-        anguloInclinacao = inc  # [deg]
-        semiEixoUA = sma  # [AU]
-        ecc = 0
-        anom = 0
 
         # Plot Options
         plot_anim = False
@@ -281,7 +243,7 @@ def starspots(fin, wht, spc, out):
         c4 = [limb_coeffs[3], limb_coeffs[3]]
         num_wavelengths = len(c1)
 
-        lambdaEff = [0.5, 1.0, 1.5]  # <-- fix this later after testing!
+        wavelengths = [0.5, 1.0, 1.5]
 
         # Starspots/Faculae
         include_starspots = True  # Caution! Do not change to False
@@ -293,18 +255,18 @@ def starspots(fin, wht, spc, out):
         # define a grid of ff_spot and T_spot values
         ff_spot_min = 0.01
         ff_spot_max = 0.1
-        T_spot_min = (0.418 * tempStar + 1620) - 1200
-        T_spot_max = tempStar - 50
-        num_ff_spot_simulations = 5
+        T_spot_min = (0.418 * Tstar + 1620) - 1200
+        T_spot_max = Tstar - 50
+        num_ff_spot_simulations = 4
         num_T_spot_simulations = 5
 
         # Facula simulation parameters
         # define a grid of ff_fac and T_fac values
         ff_fac_min = 0.01
         ff_fac_max = 0.1
-        T_fac_min = tempStar + 50
-        T_fac_max = tempStar + 1000
-        num_ff_fac_simulations = 5
+        T_fac_min = Tstar + 50
+        T_fac_max = Tstar + 1000
+        num_ff_fac_simulations = 4
         num_T_fac_simulations = 5
 
         other_params = {
@@ -313,25 +275,25 @@ def starspots(fin, wht, spc, out):
             'c2': c2,
             'c3': c3,
             'c4': c4,
-            'lambdaEff': lambdaEff,
+            'lambdaEff': wavelengths,
             'target': target,
-            'raio': raio,
-            'intensidadeMaxima': intensidadeMaxima,
-            'tamanhoMatriz': tamanhoMatriz,
-            'raioStar': raioStar,
+            'raio': matrix_radius,
+            'intensidadeMaxima': max_intensity,
+            'tamanhoMatriz': matrix_size,
+            'raioStar': Rstar,
             'ecc': ecc,
             'anom': anom,
-            'tempStar': tempStar,
+            'tempStar': Tstar,
             'starspots': include_starspots,
             'quantidade': quantidade,
             'lat': lat,
             'longt': longt,
-            'semiEixoUA': semiEixoUA,
-            'massStar': massStar,
+            'semiEixoUA': sma,
+            'massStar': Mstar,
             'plot_anim': plot_anim,
-            'periodo': periodo,
-            'anguloInclinacao': anguloInclinacao,
-            'raioPlanetaRj': raioPlanetaRj,
+            'periodo': period,
+            'anguloInclinacao': inc,
+            'raioPlanetaRj': Rplanet,
             'plot_graph': plot_graph,
             'plot_star': plot_star,
         }
@@ -344,13 +306,12 @@ def starspots(fin, wht, spc, out):
 
             unspotted_params = other_params.copy()
             unspotted_params['r'] = 0.0  # => ff=0 => unspotted
-            unspotted_params['tempSpot'] = float(
-                'nan'
-            )  # no valid temperature for a spot
+            # no valid temperature for a spot
+            unspotted_params['tempSpot'] = float('nan')
 
             # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            ff_grid, T_grid, modelResult = run_simulations(
+            ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
                 ff_min=0.0,
                 ff_max=0.0,
                 T_spot_min=float('nan'),
@@ -360,12 +321,17 @@ def starspots(fin, wht, spc, out):
                 other_params=unspotted_params,
                 result_type="unspotted",
             )
-            print('GRID FOR UNSPOTTED:', count, ff_grid, T_grid)
+            # print('GRID FOR UNSPOTTED:', count, ff_grid, T_grid)
             count = count + 1
+        out['data'][planetletter]['ff_juststar'] = ff_grid
+        out['data'][planetletter]['T_juststar'] = T_grid
+        out['data'][planetletter]['waves_juststar'] = wave_grid
+        out['data'][planetletter]['depths_juststar'] = transit_depths
+
         include_starspots = True
 
         # 2) Run simulations for spots
-        ff_grid, T_grid, modelResult = run_simulations(
+        ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
             ff_spot_min,
             ff_spot_max,
             T_spot_min,
@@ -375,12 +341,14 @@ def starspots(fin, wht, spc, out):
             other_params,
             "spot",
         )
-        print('GRID FOR SPOTS:', ff_grid, T_grid)
-        out['data'][planetletter]['ff_spot'] = ff_grid
-        out['data'][planetletter]['T_spot'] = T_grid
+        # print('GRID FOR SPOTS:', ff_grid, T_grid)
+        out['data'][planetletter]['ff_spots'] = ff_grid
+        out['data'][planetletter]['T_spots'] = T_grid
+        out['data'][planetletter]['waves_spots'] = wave_grid
+        out['data'][planetletter]['depths_spots'] = transit_depths
 
         # 3) Run simulations for faculae
-        ff_grid, T_grid, modelResult = run_simulations(
+        ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
             ff_fac_min,
             ff_fac_max,
             T_fac_min,
@@ -390,15 +358,18 @@ def starspots(fin, wht, spc, out):
             other_params,
             "faculae",
         )
-        print('GRID FOR FACULAE:', ff_grid, T_grid)
+        # print('GRID FOR FACULAE:', ff_grid, T_grid)
         out['data'][planetletter]['ff_fac'] = ff_grid
         out['data'][planetletter]['T_fac'] = T_grid
+        out['data'][planetletter]['waves_fac'] = wave_grid
+        out['data'][planetletter]['depths_fac'] = transit_depths
 
-        print('modelResult ff', modelResult.ffarray)
-        print('modelResult T', modelResult.Tarray)
-        print('modelResult wave', modelResult.wavearray)
-        print('modelResult depth', modelResult.depth)
-
+        # print('ff   ',ff_grid.shape, ff_grid)
+        # print('Tspot',T_grid.shape, T_grid)
+        # print('waves',wave_grid.shape, wave_grid)
+        # print('modelResult depth shape', transit_depths.shape)
+        # print('modelResult depth', transit_depths)
+        
     return spotssolved
 
 
@@ -431,21 +402,23 @@ def run_simulations(
     grid_ff = np.linspace(ff_min, ff_max, num_ff_simulations)
     grid_T_spot = np.linspace(T_spot_min, T_spot_max, num_T_spot_simulations)
 
+    transit_depths = []
     for ff in grid_ff:
-        for T_spot in grid_T_spot:
-            if not 0 <= ff <= 1:
-                raise ValueError(f"ff={ff} is out of range [0, 1].")
+        transit_depths.append([])
 
-            # If there are multiple starspots, each spot receives a proportional filling factor
-            quantidade = max(
-                other_params.get('quantidade', 1), 1
-            )  # Ensure it's at least 1
-            ff_per_spot = (
-                ff / quantidade
-            )  # Distribute the filling factor equally among the spots
-            spot_radius = np.sqrt(
-                ff_per_spot
-            )  # Convert to individual spot radius
+        if not 0 <= ff <= 1:
+            raise ValueError(f"ff={ff} is out of range [0, 1].")
+
+        # If there are multiple starspots, each receives a proportional filling factor
+        # Ensure it's at least 1
+        quantidade = max(other_params.get('quantidade', 1), 1)
+        # Distribute the filling factor equally among the spots
+        ff_per_spot = ff / quantidade
+        # Convert to individual spot radius
+        spot_radius = np.sqrt(ff_per_spot)
+
+        for T_spot in grid_T_spot:
+            transit_depths[-1].append([])
 
             iteration_params = other_params.copy()
             iteration_params['r'] = spot_radius
@@ -486,6 +459,15 @@ def run_simulations(
                 plot_star=iteration_params['plot_star'],
                 tempSpot=iteration_params['tempSpot'],
             )
-            # print('oneModel', oneModel)
+            # print('modelResult ff', oneModel.ff)
+            # print('modelResult T', oneModel.T)
+            # print('modelResult wave', oneModel.wavearray)
+            print('modelResult depth', oneModel.depth)
+            transit_depths[-1][-1] = oneModel.depth  # depths as a func of wavelength
+            # print('transitdepths',transit_depths)
 
-    return grid_ff, grid_T_spot, oneModel
+    # print('transitdepths before arraying',transit_depths)
+    # print('transitdepths before arraying',len(transit_depths))
+    # print('transitdepths before arraying',len(transit_depths[0]))
+    # print('transitdepths before arraying',len(transit_depths[0][0]))
+    return grid_ff, grid_T_spot, oneModel.wavearray, np.array(transit_depths)
