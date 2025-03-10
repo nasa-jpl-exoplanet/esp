@@ -19,7 +19,7 @@ from excalibur.util.plotters import (
     add_scale_height_labels,
 )
 from excalibur.transit.core import vecistar
-from excalibur.transit.spotmodel.spotmodel import SpotModel
+from excalibur.transit.spotmodel.Spotmodel import SpotModel
 
 # import pandas as pd
 # from matplotlib import pyplot
