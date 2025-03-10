@@ -88,7 +88,7 @@ class WhiteLightSV(ExcaliburSV):
                     )
                     plt.tight_layout(rect=[0, 0, (1 - 0.1 * ncol), 1])
                     save_plot_toscreen(myfig, visitor)
-                elif 'Spitzer' in self.__name:
+                elif 'Spitzer' in self.name():
                     # for each event
                     for i in range(len(self['data'][p])):
                         # plots are saved into sv

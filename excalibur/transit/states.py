@@ -84,8 +84,8 @@ class WhiteLightSV(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            if 'HST' in self.__name:
-                mergesv = bool(self.__name == 'HST')
+            if 'HST' in self.name():
+                mergesv = bool(self.name() == 'HST')
                 for p in self['data'].keys():
                     visits = np.array(self['data'][p]['visits'])
                     # phase,allwhite is the data before shifting
@@ -234,7 +234,7 @@ class WhiteLightSV(ExcaliburSV):
 
                     save_plot_toscreen(myfig, visitor)
 
-            elif 'Spitzer' in self.__name:
+            elif 'Spitzer' in self.name():
                 # for each planet
                 for p in self['data'].keys():
                     # for each event
@@ -253,7 +253,7 @@ class WhiteLightSV(ExcaliburSV):
                             '...', ' ', self['data'][p][i]['plot_pixelmap']
                         )
 
-            elif 'JWST' in self.__name:
+            elif 'JWST' in self.name():
                 # for each planet
                 for p in self['data'].keys():
                     # for each event
@@ -273,7 +273,7 @@ class SpectrumSV(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            if self.__name == "Composite":
+            if self.name() == "Composite":
                 plist = []
                 for f in self['data'].keys():
                     if self['data'][f]['data'].keys():
