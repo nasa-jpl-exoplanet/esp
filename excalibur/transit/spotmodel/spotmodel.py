@@ -38,7 +38,7 @@ BASELINE_WAVE = None
 BASELINE_DLAMDA = None
 
 
-class MainProgram:
+class SpotModel:
 
     def __init__(
         self,
@@ -337,21 +337,15 @@ class MainProgram:
             f_spot_array = np.full(len(lambdaEff_nm), f_spot)
             tempSpot_array = np.full(len(lambdaEff_nm), tempSpot)
 
-            out_file = f"simulation_results_{self.target}.txt"
-            file_exists = os.path.exists(out_file)
+            print('f_spot,tempSpot,wavelength,D_lambda')
 
-            with open(out_file, 'a') as file:
-                if not file_exists:
-                    header = "f_spot,tempSpot,wavelength,D_lambda"
-                    file.write(header + '\n')
-
-                np.savetxt(
-                    file,
-                    np.transpose(
-                        [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]
-                    ),
-                    delimiter=',',
-                )
+            print(f_spot_array)
+            print(tempSpot_array)
+            print(lambdaEff_nm)
+            print(D_lambda)
+            print(np.transpose(
+                [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]
+            )
 
         salvar_dados_simulacao(
             self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
