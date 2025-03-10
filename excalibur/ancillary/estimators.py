@@ -1,6 +1,6 @@
 '''estimators ds'''
 
-# Heritage code shame:
+# Don't bother with unnecessary non-shameful style enforcement:
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-positional-arguments
 

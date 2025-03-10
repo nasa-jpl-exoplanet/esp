@@ -26,19 +26,17 @@ class NormSV(ExcaliburSV):
         '''view ds'''
         if self['STATUS'][-1]:
             for p in self['data'].keys():
-                for v, m in zip(
-                    self['data'][p]['vignore'], self['data'][p]['trial']
-                ):
-                    strignore = str(int(v)) + ' ' + m
-                    visitor.add_declaration('VISIT IGNORED: ' + strignore)
+                if 'vignore' in self['data'][p]:
+                    for v, m in zip(
+                            self['data'][p]['vignore'], self['data'][p]['trial']
+                    ):
+                        strignore = str(int(v)) + ' ' + m
+                        visitor.add_declaration('VISIT IGNORED: ' + strignore)
                     pass
                 vrange = self['data'][p]['vrange']
                 plot_normalized_byvisit(self['data'][p], vrange, visitor)
             pass
         pass
-
-    pass
-
 
 class WhiteLightSV(ExcaliburSV):
     '''phasecurve.whitelight view'''
