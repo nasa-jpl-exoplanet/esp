@@ -19,14 +19,7 @@ from excalibur.util.plotters import (
     add_scale_height_labels,
 )
 from excalibur.transit.core import vecistar
-
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import logging
-
-# imports from Viktor's code
-from excalibur.transit.spotmodel.main import MainProgram
+from excalibur.transit.spotmodel.spotmodel import SpotModel
 
 # import pandas as pd
 # from matplotlib import pyplot
@@ -36,6 +29,11 @@ from excalibur.transit.spotmodel.main import MainProgram
 # import importlib
 # importlib.reload(main)
 # from scipy.interpolate import griddata
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +66,8 @@ def starspots(fin, wht, spc, out):
     # use either transit.whitelight or transit.spectrum for the list of planets
     planetletters = spc['data'].keys()
     for planetletter in planetletters:
+        print('STARSPOTS: big loop over each planet letter',planetletter)
+
         Rplanet = fin['priors'][planetletter]['rp']
         inc = fin['priors'][planetletter]['inc']
         period = fin['priors'][planetletter]['period']
@@ -287,10 +287,13 @@ def starspots(fin, wht, spc, out):
         plot_graph = False
 
         # Limb-darkening coefficients and wavelengths
-        c1 = limb_coeffs[0]
-        c2 = limb_coeffs[1]
-        c3 = limb_coeffs[2]
-        c4 = limb_coeffs[3]
+        #  Geoff: we're only considering a single set of LD coeff
+        #         so maybe clean this up later and remove num_elements
+        #          and remove the loop inside of spotmodel/main
+        c1 = [limb_coeffs[0]]
+        c2 = [limb_coeffs[1]]
+        c3 = [limb_coeffs[2]]
+        c4 = [limb_coeffs[3]]
         num_elements = len(c1)
         # set the limb-darkening profile
         profile = '4-parameter'  # Geoff:  *** ??!?!? ***
@@ -462,9 +465,8 @@ def run_simulations(
                 f"Running simulation for {result_type} with ff={ff} and T={T_spot}"
             )
 
-            # Executes the MainProgram with the updated parameters
-            # target=target  <- was undefined!
-            MainProgram(
+            # Executes the SpotModel with the updated parameters
+            SpotModel(
                 target=other_params['target'],
                 num_elements=iteration_params['num_elements'],
                 profile=iteration_params['profile'],
