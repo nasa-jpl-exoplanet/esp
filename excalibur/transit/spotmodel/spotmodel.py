@@ -345,7 +345,7 @@ class SpotModel:
             print(D_lambda)
             print(np.transpose(
                 [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]
-            )
+            ))
 
         salvar_dados_simulacao(
             self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
