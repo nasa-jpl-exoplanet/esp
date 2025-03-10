@@ -350,7 +350,7 @@ def starspots(fin, wht, spc, out):
 
             # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            ff_grid, T_grid = run_simulations(
+            ff_grid, T_grid, modelResult = run_simulations(
                 ff_min=0.0,
                 ff_max=0.0,
                 T_spot_min=float('nan'),
@@ -365,7 +365,7 @@ def starspots(fin, wht, spc, out):
         include_starspots = True
 
         # 2) Run simulations for spots
-        ff_grid, T_grid = run_simulations(
+        ff_grid, T_grid, modelResult = run_simulations(
             ff_spot_min,
             ff_spot_max,
             T_spot_min,
@@ -380,7 +380,7 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['T_spot'] = T_grid
 
         # 3) Run simulations for faculae
-        ff_grid, T_grid = run_simulations(
+        ff_grid, T_grid, modelResult = run_simulations(
             ff_fac_min,
             ff_fac_max,
             T_fac_min,
@@ -393,6 +393,11 @@ def starspots(fin, wht, spc, out):
         print('GRID FOR FACULAE:', ff_grid, T_grid)
         out['data'][planetletter]['ff_fac'] = ff_grid
         out['data'][planetletter]['T_fac'] = T_grid
+
+        print('modelResult ff',modelResult.ffarray)
+        print('modelResult T',modelResult.Tarray)
+        print('modelResult wave',modelResult.wavearray)
+        print('modelResult depth',modelResult.depth)
 
     return spotssolved
 
@@ -481,6 +486,6 @@ def run_simulations(
                 plot_star=iteration_params['plot_star'],
                 tempSpot=iteration_params['tempSpot'],
             )
-            print('oneModel', oneModel)
+            # print('oneModel', oneModel)
 
-    return grid_ff, grid_T_spot
+    return grid_ff, grid_T_spot, oneModal

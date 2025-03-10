@@ -111,8 +111,8 @@ class SpotModel:
 
         raioPlanJup = self.raioPlanetaRj
 
-        print('stellar effective temperature:', self.tempStar)
-        print('active region effective temperature:', self.tempSpot)
+        # print('stellar effective temperature:', self.tempStar)
+        # print('active region effective temperature:', self.tempSpot)
 
         intensidadeMancha = np.zeros(self.num_wavelengths)
         intensidadeManchaNormalizada = np.zeros(self.num_wavelengths)
@@ -140,13 +140,12 @@ class SpotModel:
 
         count3 = 0
         while count3 < self.num_wavelengths:
-            # print(f"Starting iteration {count3+1}")
-            print(
-                'Starting the simulation '
-                + str(count3 + 1)
-                + ' of '
-                + str(self.num_wavelengths)
-            )
+            # print(
+            #    'Starting the simulation '
+            #    + str(count3 + 1)
+            #    + ' of '
+            #    + str(self.num_wavelengths)
+            # )
 
             intensidadeEstrelaLambda = planck(
                 self.lambdaEff[count3] * 1.0e-6, self.tempStar
@@ -346,4 +345,9 @@ class SpotModel:
             self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
         )
 
-        return self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
+        # save the results
+        self.ffarray = self.r**2 * quantidade
+        self.Tarray = self.tempSpot
+        self.wavearray = lambdaEff_nm
+        self.depth = D_lambda
+
