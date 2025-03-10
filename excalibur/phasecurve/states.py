@@ -50,7 +50,7 @@ class WhiteLightSV(ExcaliburSV):
         if self['STATUS'][-1]:
             for p in self['data'].keys():
 
-                if 'HST' in self.__name:
+                if 'HST' in self.name():
 
                     visits = self['data'][p]['visits']
                     phase = self['data'][p]['phase']
