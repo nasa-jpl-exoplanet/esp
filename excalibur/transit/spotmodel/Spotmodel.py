@@ -1,4 +1,4 @@
-'''transit main ds'''
+'''transit Spotmodel ds'''
 
 # Viktor Y. D. Sumida e-mail: viktorsumida@icloud.com
 # PhD student in Astrophysics at Mackenzie University
@@ -44,8 +44,7 @@ class SpotModel:
         self,
         *,
         target,
-        num_elements,
-        profile,
+        num_wavelengths,
         c1,
         c2,
         c3,
@@ -74,8 +73,7 @@ class SpotModel:
         tempSpot,
     ):
         self.target = target
-        self.num_elements = num_elements
-        self.profile = profile
+        self.num_wavelengths = num_wavelengths
         self.c1 = c1
         self.c2 = c2
         self.c3 = c3
@@ -116,11 +114,11 @@ class SpotModel:
         print('stellar effective temperature:', self.tempStar)
         print('active region effective temperature:', self.tempSpot)
 
-        intensidadeMancha = np.zeros(self.num_elements)
-        intensidadeManchaNormalizada = np.zeros(self.num_elements)
-        intensidadeManchaRazao = np.zeros(self.num_elements)
+        intensidadeMancha = np.zeros(self.num_wavelengths)
+        intensidadeManchaNormalizada = np.zeros(self.num_wavelengths)
+        intensidadeManchaRazao = np.zeros(self.num_wavelengths)
 
-        epsilon_Rackham = [0 for j in range(self.num_elements)]
+        epsilon_Rackham = [0 for j in range(self.num_wavelengths)]
 
         # Remova a conversão de lat e longt para float, mantendo-os como arrays:
         # self.r já é um escalar e não precisa ser modificado.
@@ -141,13 +139,13 @@ class SpotModel:
         stack_tempoHoras = None
 
         count3 = 0
-        while count3 < self.num_elements:
+        while count3 < self.num_wavelengths:
             # print(f"Starting iteration {count3+1}")
             print(
                 'Starting the simulation '
                 + str(count3 + 1)
                 + ' of '
-                + str(self.num_elements)
+                + str(self.num_wavelengths)
             )
 
             intensidadeEstrelaLambda = planck(
@@ -251,8 +249,8 @@ class SpotModel:
             if count3 == 0:
                 tamanho_curva = len(curvaLuz)
                 tamanho_tempo = len(tempoHoras)
-                stack_curvaLuz = np.zeros((self.num_elements, tamanho_curva))
-                stack_tempoHoras = np.zeros((self.num_elements, tamanho_tempo))
+                stack_curvaLuz = np.zeros((self.num_wavelengths, tamanho_curva))
+                stack_tempoHoras = np.zeros((self.num_wavelengths, tamanho_tempo))
 
             stack_curvaLuz[count3, :] = eclipse_.getCurvaLuz()
             stack_tempoHoras[count3, :] = eclipse_.getTempoHoras()
@@ -263,14 +261,14 @@ class SpotModel:
         ############################################################################################
         # Plotting the light curves
         ############################################################################################
-        lambdaEff_nm = [0.0] * self.num_elements
-        D_lambda = [0.0] * self.num_elements
+        lambdaEff_nm = [0.0] * self.num_wavelengths
+        D_lambda = [0.0] * self.num_wavelengths
         count4 = 0
 
-        palette = pyplot.cm.cool_r(np.linspace(0, 1, self.num_elements))
-        count_palette = self.num_elements - 1
+        palette = pyplot.cm.cool_r(np.linspace(0, 1, self.num_wavelengths))
+        count_palette = self.num_wavelengths - 1
 
-        while count4 < self.num_elements:
+        while count4 < self.num_wavelengths:
             lambdaEff_nm[count4] = self.lambdaEff[count4] * 1000
             pyplot.plot(
                 stack_tempoHoras[count4],
@@ -338,11 +336,6 @@ class SpotModel:
             tempSpot_array = np.full(len(lambdaEff_nm), tempSpot)
 
             print('f_spot,tempSpot,wavelength,D_lambda')
-
-            print(f_spot_array)
-            print(tempSpot_array)
-            print(lambdaEff_nm)
-            print(D_lambda)
             print(
                 np.transpose(
                     [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]
@@ -352,3 +345,5 @@ class SpotModel:
         salvar_dados_simulacao(
             self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
         )
+
+        return self.r**2 * quantidade, self.tempSpot, lambdaEff_nm, D_lambda
