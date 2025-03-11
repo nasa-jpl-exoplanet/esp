@@ -3,4 +3,5 @@ export DAWGIE_FE_PORT=10101 \
        EXCALIBUR_LOG_LEVEL="logging.INFO" \
        EXCALIBUR_PORT=${DAWGIE_FE_PORT:-9990} \
        EXCALIBUR_SOURCE_PATH=/home/niessner/Projects/Exoplanet/esp \
-       EXCALIBUR_UID=${UID}
+       EXCALIBUR_UID=${UID} \
+       EXCALIBUR_USER=alsmt
