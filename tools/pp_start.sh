@@ -32,4 +32,7 @@ else
     fi
 fi
 
-docker compose -f $root/.docker/compose.yaml up --detach pipeline
+docker compose \
+       --file $root/.docker/compose.yaml \
+       --project-name $(basename ${ep,,}) \
+       up --detach pipeline

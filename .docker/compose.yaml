@@ -5,7 +5,7 @@ services:
       dockerfile: .docker/Dockerfile.base
     image: esp/base:${ESP_VERSION}
     networks:
-      - netlines
+      - pipeline_domain
   pipeline:
     build:
       args:
@@ -33,7 +33,7 @@ services:
       - USERNAME=${USERNAME}
     image: esp/server:${ESP_VERSION}
     networks:
-      - netlines
+      - pipeline_domain
     ports:
       - "${DAWGIE_FE_PORT:-9990}-${DAWGIE_SFE_PORT:-9995}:9090-9095"
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
@@ -66,7 +66,7 @@ services:
       - USERNAME=${USERNAME}
     image: esp/tools:${ESP_VERSION}
     networks:
-      - netlines
+      - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
       - ${EXCALIBUR_PATH}/${EXCALIBUR_USER}:/proj
@@ -94,7 +94,7 @@ services:
     image: esp/worker:latest
     init: true
     networks:
-      - netlines
+      - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
       - ${EXCALIBUR_CERTS}:/proj/mycerts
@@ -104,8 +104,5 @@ services:
       - /usr/share/ca-certificates:/usr/share/ca-certificates:ro
 
 networks:
-  netlines:
-     ipam:
-       driver: default
-       config:
-         - subnet: 172.25.0.0/16
+  pipeline_domain:
+    external: true

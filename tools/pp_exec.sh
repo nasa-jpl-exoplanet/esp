@@ -44,8 +44,11 @@ else
     fi
 fi
 
-docker compose -f $root/.docker/compose.yaml exec \
-       -e DISPLAY=${DISPLAY} \
-       -e RUNID=${RUNID:-17} \
-       -e TARGET_NAME="${2}" \
-       pipeline python3 -m excalibur.${1}
+docker compose \
+       --file $root/.docker/compose.yaml \
+       --project-name $(basename ${ep,,}) \
+       exec \
+          -e DISPLAY=${DISPLAY} \
+          -e RUNID=${RUNID:-17} \
+          -e TARGET_NAME="${2}" \
+          pipeline python3 -m excalibur.${1}
