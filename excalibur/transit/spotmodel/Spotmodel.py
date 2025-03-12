@@ -217,7 +217,6 @@ class SpotModel:
         while count4 < self.num_wavelengths:
             lambdaEff_nm[count4] = self.lambdaEff[count4] * 1000
             index_midTrans = int(np.floor(len(stack_curvaLuz[count4]) / 2))
-            min_D = np.min(stack_curvaLuz)
             D_lambda_mid = stack_curvaLuz[count4]
             # Transit depth in ppm
             D_lambda[count4] = (1.0 - D_lambda_mid[index_midTrans]) * 1.0e6
@@ -227,7 +226,11 @@ class SpotModel:
 
         # asdf
         self.plot_lightcurves = plot_lightcurves(
-            self.num_wavelengths, stack_tempoHoras, stack_curvaLuz, lambdaEff_nm
+            self.num_wavelengths,
+            stack_tempoHoras,
+            stack_curvaLuz,
+            lambdaEff_nm,
+            tempoTransito,
         )
 
         def salvar_dados_simulacao(f_spot, tempSpot, lambdaEff_nm, D_lambda):

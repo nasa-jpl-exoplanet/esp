@@ -8,7 +8,7 @@
 # -- IMPORTS -- ------------------------------------------------------
 
 from excalibur.transit.spotmodel.Spotmodel import SpotModel
-from excalibur.transit.spotmodel.plotters  import plot_transit_depths
+from excalibur.transit.spotmodel.plotters import plot_transit_depths
 from excalibur.transit.core import vecistar
 from excalibur.cerberus.plotting import rebin_data
 from excalibur.util.plotters import (
@@ -312,15 +312,17 @@ def starspots(fin, wht, spc, out):
 
             # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
-                ff_min=0.0,
-                ff_max=0.0,
-                T_spot_min=float('nan'),
-                T_spot_max=float('nan'),
-                num_ff_simulations=1,
-                num_T_spot_simulations=1,
-                other_params=unspotted_params,
-                result_type="unspotted",
+            ff_grid, T_grid, wave_grid, transit_depths, oneplot = (
+                run_simulations(
+                    ff_min=0.0,
+                    ff_max=0.0,
+                    T_spot_min=float('nan'),
+                    T_spot_max=float('nan'),
+                    num_ff_simulations=1,
+                    num_T_spot_simulations=1,
+                    other_params=unspotted_params,
+                    result_type="unspotted",
+                )
             )
             # print('GRID FOR UNSPOTTED:', count, ff_grid, T_grid)
             count = count + 1
@@ -453,4 +455,10 @@ def run_simulations(
     # print('transitdepths before arraying',len(transit_depths))
     # print('transitdepths before arraying',len(transit_depths[0]))
     # print('transitdepths before arraying',len(transit_depths[0][0]))
-    return grid_ff, grid_T_spot, oneModel.wavearray, np.array(transit_depths), oneModel.plot_lightcurves
+    return (
+        grid_ff,
+        grid_T_spot,
+        oneModel.wavearray,
+        np.array(transit_depths),
+        oneModel.plot_lightcurves,
+    )
