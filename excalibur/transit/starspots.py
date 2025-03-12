@@ -43,7 +43,7 @@ def starspots(fin, wht, spc, out):
     Tstar = fin['priors']['T*']
     Mstar = fin['priors']['M*']
     Lstar = fin['priors']['L*']
-    print('star R,T,L,M:  ', Rstar, Tstar, Lstar, Mstar)
+    # print('star R,T,L,M:  ', Rstar, Tstar, Lstar, Mstar)
 
     spotssolved = False
 
@@ -52,7 +52,7 @@ def starspots(fin, wht, spc, out):
     # use either transit.whitelight or transit.spectrum for the list of planets
     planetletters = spc['data'].keys()
     for planetletter in planetletters:
-        print('STARSPOTS: big loop over each planet letter', planetletter)
+        # print('STARSPOTS: big loop over each planet letter', planetletter)
 
         Rplanet = fin['priors'][planetletter]['rp']
         inc = fin['priors'][planetletter]['inc']
@@ -61,15 +61,15 @@ def starspots(fin, wht, spc, out):
         # assume zero eccentricity for planet orbit
         ecc = 0
         anom = 0
-        print('planet' + planetletter, 'R,inc,P,a:', Rplanet, inc, period, sma)
+        # print('planet' + planetletter, 'R,inc,P,a:', Rplanet, inc, period, sma)
 
         # limb dark
         limb_coeffs = wht['data'][planetletter]['whiteld']
-        print('limb darkening parameters from whitelight       ', limb_coeffs)
-        print(
-            'limb darkening parameters from spectrum (median)',
-            np.median(spc['data'][planetletter]['LD'], axis=0),
-        )
+        # print('limb darkening parameters from whitelight       ', limb_coeffs)
+        # print(
+        #    'limb darkening parameters from spectrum (median)',
+        #    np.median(spc['data'][planetletter]['LD'], axis=0),
+        # )
         # print('limb darkening parameters from spectrum (mean)  ',
         #      np.mean(spc['data'][planetletter]['LD'],axis=0))
 
@@ -303,7 +303,7 @@ def starspots(fin, wht, spc, out):
         count = 0
         while count == 0:
             include_starspots = False
-            print('Running the unspotted scenario (ff=0) first')
+            # print('Running the unspotted scenario (ff=0) first')
 
             unspotted_params = other_params.copy()
             unspotted_params['r'] = 0.0  # => ff=0 => unspotted
@@ -436,9 +436,9 @@ def run_simulations(
             iteration_params['r'] = spot_radius
             iteration_params['tempSpot'] = T_spot
 
-            print(
-                f"Running simulation for {result_type} with ff={ff} and T={T_spot}"
-            )
+            # print(
+            #     f"Running simulation for {result_type} with ff={ff} and T={T_spot}"
+            # )
 
             # executes the SpotModel with the chosen parameters (ff and T_spot)
             oneModel = SpotModel(iteration_params)
@@ -446,7 +446,7 @@ def run_simulations(
             # print('modelResult ff', oneModel.ff)
             # print('modelResult T', oneModel.T)
             # print('modelResult wave', oneModel.wavearray)
-            print('modelResult depth', oneModel.depth)
+            # print('modelResult depth', oneModel.depth)
             # depths as a func of wavelength
             transit_depths[-1][-1] = oneModel.depth
             # print('transitdepths',transit_depths)
