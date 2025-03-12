@@ -42,8 +42,8 @@ def starspots(fin, wht, spc, out):
     Rstar = fin['priors']['R*']
     Tstar = fin['priors']['T*']
     Mstar = fin['priors']['M*']
-    Lstar = fin['priors']['L*']
-    # print('star R,T,L,M:  ', Rstar, Tstar, Lstar, Mstar)
+    # Lstar = fin['priors']['L*']
+    # print('star R,T,M:  ', Rstar, Tstar, Mstar)
 
     spotssolved = False
 

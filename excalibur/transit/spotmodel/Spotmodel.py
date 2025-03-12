@@ -233,17 +233,17 @@ class SpotModel:
             tempoTransito,
         )
 
-        def salvar_dados_simulacao(f_spot, tempSpot, lambdaEff_nm, D_lambda):
-            f_spot_array = np.full(len(lambdaEff_nm), f_spot)
-            tempSpot_array = np.full(len(lambdaEff_nm), tempSpot)
+        # def salvar_dados_simulacao(f_spot, tempSpot, lambdaEff_nm, D_lambda):
+        #    f_spot_array = np.full(len(lambdaEff_nm), f_spot)
+        #    tempSpot_array = np.full(len(lambdaEff_nm), tempSpot)
+        #
+        #     print('f_spot,tempSpot,wavelength,D_lambda')
+        #     print(np.transpose(
+        #        [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]))
 
-            # print('f_spot,tempSpot,wavelength,D_lambda')
-            # print(np.transpose(
-            #    [f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda]))
-
-        salvar_dados_simulacao(
-            self.r**2 * self.quantidade, self.tempSpot, lambdaEff_nm, D_lambda
-        )
+        # salvar_dados_simulacao(
+        #     self.r**2 * self.quantidade, self.tempSpot, lambdaEff_nm, D_lambda
+        # )
 
         # save the results (only the depth is used; the rest is redundant)
         self.ff = self.r**2 * self.quantidade
