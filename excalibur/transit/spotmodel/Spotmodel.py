@@ -6,7 +6,6 @@
 
 import numpy as np
 
-from matplotlib import pyplot
 from excalibur.transit.spotmodel.star import Star
 from excalibur.transit.spotmodel.eclipse_nv1 import Eclipse
 from excalibur.transit.spotmodel.Planeta import Planeta
@@ -227,10 +226,9 @@ class SpotModel:
         lambdaEff_nm = np.array(lambdaEff_nm)
 
         # asdf
-        self.plot_lightcurves = plot_lightcurves(self.num_wavelengths,
-                                                 stack_tempoHoras,
-                                                 stack_curvaLuz,
-                                                 lambdaEff_nm)
+        self.plot_lightcurves = plot_lightcurves(
+            self.num_wavelengths, stack_tempoHoras, stack_curvaLuz, lambdaEff_nm
+        )
 
         def salvar_dados_simulacao(f_spot, tempSpot, lambdaEff_nm, D_lambda):
             f_spot_array = np.full(len(lambdaEff_nm), f_spot)

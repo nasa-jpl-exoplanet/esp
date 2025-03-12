@@ -8,6 +8,7 @@
 # -- IMPORTS -- ------------------------------------------------------
 
 from excalibur.transit.spotmodel.Spotmodel import SpotModel
+from excalibur.transit.spotmodel.plotters  import plot_transit_depths
 from excalibur.transit.core import vecistar
 from excalibur.cerberus.plotting import rebin_data
 from excalibur.util.plotters import (
@@ -311,7 +312,7 @@ def starspots(fin, wht, spc, out):
 
             # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
+            ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
                 ff_min=0.0,
                 ff_max=0.0,
                 T_spot_min=float('nan'),
@@ -331,7 +332,7 @@ def starspots(fin, wht, spc, out):
         include_starspots = True
 
         # 2) Run simulations for spots
-        ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
+        ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
             ff_spot_min,
             ff_spot_max,
             T_spot_min,
@@ -347,8 +348,11 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['waves_spots'] = wave_grid
         out['data'][planetletter]['depths_spots'] = transit_depths
 
+        # maybe save one of these lightcurve plots?
+        out['data'][planetletter]['plot_lightcurves'] = oneplot
+
         # 3) Run simulations for faculae
-        ff_grid, T_grid, wave_grid, transit_depths = run_simulations(
+        ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
             ff_fac_min,
             ff_fac_max,
             T_fac_min,
@@ -370,7 +374,9 @@ def starspots(fin, wht, spc, out):
         # print('modelResult depth shape', transit_depths.shape)
         # print('modelResult depth', transit_depths)
 
-        out['data'][planetletter]['plot_transitdepths'] = plot_transit_depths(ff_grid, T_grid, wave_grid, transit_depths)
+        out['data'][planetletter]['plot_transitdepths'] = plot_transit_depths(
+            ff_grid, T_grid, wave_grid, transit_depths
+        )
 
     return spotssolved
 
@@ -435,18 +441,16 @@ def run_simulations(
             # executes the SpotModel with the chosen parameters (ff and T_spot)
             oneModel = SpotModel(iteration_params)
 
-            # maybe save one of these lightcurve plots?
-            out['data'][planetletter]['plot_lightcurves'] = oneModel.plot_lightcurves
-
             # print('modelResult ff', oneModel.ff)
             # print('modelResult T', oneModel.T)
             # print('modelResult wave', oneModel.wavearray)
             print('modelResult depth', oneModel.depth)
-            transit_depths[-1][-1] = oneModel.depth  # depths as a func of wavelength
+            # depths as a func of wavelength
+            transit_depths[-1][-1] = oneModel.depth
             # print('transitdepths',transit_depths)
 
     # print('transitdepths before arraying',transit_depths)
     # print('transitdepths before arraying',len(transit_depths))
     # print('transitdepths before arraying',len(transit_depths[0]))
     # print('transitdepths before arraying',len(transit_depths[0][0]))
-    return grid_ff, grid_T_spot, oneModel.wavearray, np.array(transit_depths)
+    return grid_ff, grid_T_spot, oneModel.wavearray, np.array(transit_depths), oneModel.plot_lightcurves
