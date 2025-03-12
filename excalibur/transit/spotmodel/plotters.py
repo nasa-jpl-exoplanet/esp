@@ -30,14 +30,11 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
     ###############################################################################
     # Agrupa as simulações únicas (combinações de f_spot e tempSpot)
 
-    print('f_spot_array', f_spot_array)
-    print('tempSpot_array', tempSpot_array)
+    # print('f_spot_array', f_spot_array)
+    # print('tempSpot_array', tempSpot_array)
 
     # Escolhe um colormap e cria o normalizador para f_spot
     cmap_f = get_cmap("winter_r")
-    print('fspotarray', f_spot_array)
-    print('fspotarray', np.min(f_spot_array))
-    print('fspotarray', f_spot_array.min())
     norm_f = Normalize(f_spot_array.min(), f_spot_array.max())
 
     # Loop para plotar cada simulação
@@ -45,7 +42,6 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
         for i_spottemp, spottemp in enumerate(tempSpot_array):
             # Define a cor com base no filling factor
             color = cmap_f(norm_f(ff))
-            print('depth check', i_ff, i_spottemp, D_lambda[i_ff, i_spottemp])
             ax1.plot(
                 lambdaEff_nm,
                 D_lambda[i_ff, i_spottemp],
