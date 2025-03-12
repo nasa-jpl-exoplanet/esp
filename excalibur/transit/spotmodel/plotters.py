@@ -16,8 +16,6 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
 
     # Caminho para o arquivo de resultados
     # file_path = f"simulation_results_{target}.txt"
-    # temp_star = 6650
-
     # Carregar os dados (assumindo valores separados por vírgula e com cabeçalho)
     # data = np.loadtxt(file_path, delimiter=',', skiprows=1)
     # f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda = data.T
@@ -32,25 +30,25 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
     ###############################################################################
     # Agrupa as simulações únicas (combinações de f_spot e tempSpot)
 
-    print('f_spot_array',f_spot_array)
-    print('temp_array',temp_array)
+    print('f_spot_array', f_spot_array)
+    print('tempSpot_array', tempSpot_array)
 
     # Escolhe um colormap e cria o normalizador para f_spot
     cmap_f = get_cmap("winter_r")
-    print('fspotarray',f_spot_array)
-    print('fspotarray',np.min(f_spot_array))
-    print('fspotarray',f_spot_array.min())
+    print('fspotarray', f_spot_array)
+    print('fspotarray', np.min(f_spot_array))
+    print('fspotarray', f_spot_array.min())
     norm_f = Normalize(f_spot_array.min(), f_spot_array.max())
 
     # Loop para plotar cada simulação
     for i_ff, ff in enumerate(f_spot_array):
         for i_spottemp, spottemp in enumerate(tempSpot_array):
             # Define a cor com base no filling factor
-            color = cmap_f(norm_f(f_spot))
-            print('depth check',i_ff,i_spottemp,D_lambda[i_ff,i_spottemp])
+            color = cmap_f(norm_f(ff))
+            print('depth check', i_ff, i_spottemp, D_lambda[i_ff, i_spottemp])
             ax1.plot(
                 lambdaEff_nm,
-                D_lambda[i_ff,i_spottemp],
+                D_lambda[i_ff, i_spottemp],
                 marker='o',
                 linestyle='-',
                 color=color,
@@ -104,23 +102,21 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
     norm_t = Normalize(valid_tempSpot.min(), valid_tempSpot.max())
 
     # Loop para plotar cada simulação (desconsiderando as que possuem temperatura NaN)
-    for f_spot, tempSpot in unique_simulations:
-        if np.isnan(tempSpot):
-            continue
-        mask = (f_spot_array == f_spot) & (tempSpot_array == tempSpot)
-        lambdaEff_sim = lambdaEff_nm[mask]
-        D_lambda_sim = D_lambda[mask]
+    for i_ff, ff in enumerate(f_spot_array):
+        for i_spottemp, spottemp in enumerate(tempSpot_array):
+            if np.isnan(spottemp):
+                continue
 
-        # Define a cor com base na spot temperature
-        color = cmap_t(norm_t(tempSpot))
-        ax2.plot(
-            lambdaEff_sim,
-            D_lambda_sim,
-            marker='o',
-            linestyle='-',
-            color=color,
-            alpha=1,
-        )
+            # Define a cor com base na spot temperature
+            color = cmap_t(norm_t(spottemp))
+            ax2.plot(
+                lambdaEff_nm,
+                D_lambda[i_ff, i_spottemp],
+                marker='o',
+                linestyle='-',
+                color=color,
+                alpha=1,
+            )
 
     # Adiciona a colorbar para a spot temperature
     sm_t = ScalarMappable(cmap=cmap_t, norm=norm_t)
