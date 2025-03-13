@@ -32,5 +32,8 @@ else
     fi
 fi
 
-docker compose -f $root/.docker/compose.yaml down pipeline
+docker compose \
+       --file $root/.docker/compose.yaml \
+       --project-name $(basename ${ep,,}) \
+       down pipeline
 
