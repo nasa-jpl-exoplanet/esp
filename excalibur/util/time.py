@@ -10,6 +10,7 @@ import numpy as np
 def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
+    GMR: Tensor comp
     '''
     if tperi is not None:
         ft0 = (tperi - tknot) % orbperiod
@@ -36,7 +37,7 @@ def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray):
         pass
     ft = (time - tperi) % orbperiod
     ft /= orbperiod
-    sft = np.copy(ft)
+    sft = ft.eval()
     sft[(sft > 0.5)] += -1e0
     M = 2e0 * np.pi * ft
     E = solveme(M, ecc, epsilon)
@@ -44,7 +45,7 @@ def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray):
     imagf = np.sqrt(1.0 + ecc) * np.sin(E / 2e0)
     f = []
     for r, i in zip(realf, imagf):
-        cn = np.complex(r, i)
+        cn = complex(r, i)
         f.append(2e0 * np.angle(cn))
         pass
     f = np.array(f)
@@ -52,7 +53,7 @@ def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray):
     z = r * np.sqrt(
         1e0**2 - (np.sin(w + f) ** 2) * (np.sin(ipct * np.pi / 180e0)) ** 2
     )
-    z[sft < 0] *= -1e0
+    z.eval()[sft < 0] *= -1e0
     return z, sft
 
 
@@ -62,11 +63,12 @@ def solveme(M, e, eps):
     '''
     G. ROUDIER: Newton Raphson solver for true anomaly
     M is a numpy array
+    GMR: Tensor comp
     '''
-    E = np.copy(M)
-    for i in np.arange(M.shape[0]):
-        while abs(E[i] - e * np.sin(E[i]) - M[i]) > eps:
-            num = E[i] - e * np.sin(E[i]) - M[i]
+    E = M.eval().copy()
+    for i in np.arange(M.eval().shape[0]):
+        while abs(E[i] - e * np.sin(E[i]) - M.eval()[i]) > eps:
+            num = E[i] - e * np.sin(E[i]) - M.eval()[i]
             den = 1.0 - e * np.cos(E[i])
             E[i] = E[i] - num / den
             pass

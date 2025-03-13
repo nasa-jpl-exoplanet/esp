@@ -1210,20 +1210,22 @@ def hstwhitelight(
                 ext = thisext
             pass
         for nrm, fltr in zip(pnrmlist, pextlist):
+            # GMR: We never realized this thing never worked since some code update
+            # Seems that you cant cast lists into arrays in a dirty way anymore
             visits.extend(np.array(nrm['data'][p]['visits']) + maxvis)
-            orbits.extend(np.array(nrm['data'][p]['orbits']))
-            time.extend(np.array(nrm['data'][p]['time']))
-            wave.extend(np.array(nrm['data'][p]['wave']))
-            nspec.extend(np.array(nrm['data'][p]['nspec']))
-            sep.extend(np.array(nrm['data'][p]['z']))
-            phase.extend(np.array(nrm['data'][p]['phase']))
-            photnoise.extend(np.array(nrm['data'][p]['photnoise']))
+            orbits.extend((nrm['data'][p]['orbits']))
+            time.extend((nrm['data'][p]['time']))
+            wave.extend((nrm['data'][p]['wave']))
+            nspec.extend((nrm['data'][p]['nspec']))
+            sep.extend((nrm['data'][p]['z']))
+            phase.extend((nrm['data'][p]['phase']))
+            photnoise.extend((nrm['data'][p]['photnoise']))
             maxvis = maxvis + np.max(visits)
             allfltrs.extend([fltr] * len(nrm['data'][p]['visits']))
             allvisits.extend(nrm['data'][p]['visits'])
             pass
-        nspec = np.array(nspec)
-        wave = np.array(wave)
+        # nspec = np.array(nspec)
+        # wave = np.array(wave)
         out['data'][p] = {}
         out['data'][p]['nspec'] = nspec
         out['data'][p]['wave'] = wave
@@ -2015,17 +2017,18 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
     '''
     G. ROUDIER: Light curve model
     '''
-    ldlc = np.zeros(z.size)
-    xin = z.copy() - rprs
+    ldlc = np.zeros(z.eval().size)
+    xin = z.eval().copy() - rprs.eval()
     xin[xin < 0e0] = 0e0
-    xout = z.copy() + rprs
+    xout = z.eval().copy() + rprs.eval()
     xout[xout > 1e0] = 1e0
     select = xin > 1e0
     if True in select:
         ldlc[select] = 1e0
+        pass
     inldlc = []
     xint = np.linspace(1e0, 0e0, nint)
-    znot = z.copy()[~select]
+    znot = z.eval().copy()[~select]
     xinnot = np.arccos(xin[~select])
     xoutnot = np.arccos(xout[~select])
     xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
@@ -2035,7 +2038,7 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
     extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
     extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
     extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
-    occulted = vecoccs(znot, extxrs, rprs)
+    occulted = vecoccs(znot, extxrs, rprs.eval())
     diffocc = np.diff(occulted, axis=0)
     si = vecistar(xrs, g1, g2, g3, g4)
     drop = np.sum(diffocc * si, axis=0)
@@ -2396,14 +2399,15 @@ def nlldx(params, x, data=None, weights=None):
 def timlc(vtime, orbits, vslope=0, vitcp=1e0, oslope=0, oitcp=1e0):
     '''
     G. ROUDIER: WFC3 intrument model
+    GMR: Tensor comp
     '''
-    xout = np.array(vtime) - np.mean(vtime)
+    xout = vtime - np.mean(vtime)
     vout = vslope * xout + vitcp
-    oout = np.ones(vout.size)
+    oout = np.ones(vout.eval().size)
     for o in set(np.sort(orbits)):
-        select = orbits == o
+        select = np.array(orbits) == o
         otime = xout[select] - np.mean(xout[select])
-        olin = oslope * otime + oitcp
+        olin = oslope.eval() * otime + oitcp.eval()
         oout[select] = olin
         pass
     return vout * oout
@@ -2822,21 +2826,27 @@ def orbital(*whiteparams):
     r, atk, icln, avs, aos, aoi = whiteparams
     if ctxt.orbp['inc'] == 9e1:
         inclination = 9e1
+        pass
     else:
-        inclination = float(icln)
+        # inclination = float(icln)
+        inclination = icln
+        pass
     out = []
     for i, v in enumerate(ctxt.visits):
         omt = ctxt.time[i]
         if v in ctxt.ttv:
-            omtk = float(atk[ctxt.ttv.index(v)])
+            # omtk = float(atk[ctxt.ttv.index(v)])
+            omtk = atk[ctxt.ttv.index(v)]
+            pass
         else:
             omtk = ctxt.tmjd
+            pass
         omz, _pmph = datcore.time2z(
             omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc
         )
         lcout = tldlc(
             abs(omz),
-            float(r),
+            r,
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
@@ -2845,10 +2855,10 @@ def orbital(*whiteparams):
         imout = timlc(
             omt,
             ctxt.orbits[i],
-            vslope=float(avs[i]),
+            vslope=avs[i],
             vitcp=1e0,
-            oslope=float(aos[i]),
-            oitcp=float(aoi[i]),
+            oslope=aos[i],
+            oitcp=aoi[i],
         )
         out.extend(lcout * imout)
         pass
