@@ -1,0 +1,6 @@
+export DAWGIE_FE_PORT=12321 \
+       DAWGIE_SFE_PORT=12326 \
+       EXCALIBUR_LOG_LEVEL="logging.INFO" \
+       EXCALIBUR_PORT=${DAWGIE_FE_PORT} \
+       EXCALIBUR_SOURCE_PATH=/home/bryden/gitrepos/esp \
+       EXCALIBUR_UID=${UID}

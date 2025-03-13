@@ -26,18 +26,17 @@ class NormSV(ExcaliburSV):
         '''view ds'''
         if self['STATUS'][-1]:
             for p in self['data'].keys():
-                for v, m in zip(
-                    self['data'][p]['vignore'], self['data'][p]['trial']
-                ):
-                    strignore = str(int(v)) + ' ' + m
-                    visitor.add_declaration('VISIT IGNORED: ' + strignore)
+                if 'vignore' in self['data'][p]:
+                    for v, m in zip(
+                        self['data'][p]['vignore'], self['data'][p]['trial']
+                    ):
+                        strignore = str(int(v)) + ' ' + m
+                        visitor.add_declaration('VISIT IGNORED: ' + strignore)
                     pass
                 vrange = self['data'][p]['vrange']
                 plot_normalized_byvisit(self['data'][p], vrange, visitor)
             pass
         pass
-
-    pass
 
 
 class WhiteLightSV(ExcaliburSV):
@@ -52,7 +51,7 @@ class WhiteLightSV(ExcaliburSV):
         if self['STATUS'][-1]:
             for p in self['data'].keys():
 
-                if 'HST' in self.__name:
+                if 'HST' in self.name():
 
                     visits = self['data'][p]['visits']
                     phase = self['data'][p]['phase']
@@ -90,7 +89,7 @@ class WhiteLightSV(ExcaliburSV):
                     )
                     plt.tight_layout(rect=[0, 0, (1 - 0.1 * ncol), 1])
                     save_plot_toscreen(myfig, visitor)
-                elif 'Spitzer' in self.__name:
+                elif 'Spitzer' in self.name():
                     # for each event
                     for i in range(len(self['data'][p])):
                         # plots are saved into sv
