@@ -49,7 +49,6 @@ class NormSV(ExcaliburSV):
                         strignore = str(int(v)) + '  ' + m
                         visitor.add_declaration('VISIT: ' + strignore)
                     pass
-                vrange = self['data'][p]['vrange']
 
                 if 'plot_normalized_byvisit' in self['data'][p].keys():
                     for index, v in enumerate(self['data'][p]['visits']):
@@ -70,7 +69,8 @@ class NormSV(ExcaliburSV):
                         pass
                     pass
                 # keep on-the-fly plotting, so that older RUNIDs still work
-                else:
+                elif 'vrange' in self['data'][p]:
+                    vrange = self['data'][p]['vrange']
                     plot_normalized_byvisit(self['data'][p], vrange, visitor)
 
 
