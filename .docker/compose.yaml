@@ -35,7 +35,7 @@ services:
     networks:
       - pipeline_domain
     ports:
-      - "${DAWGIE_FE_PORT:-9990}-${DAWGIE_SFE_PORT:-9995}:9090-9095"
+      - "${DAWGIE_FE_PORT:-9990}-${DAWGIE_SFE_PORT:-9995}:8080-8085"
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
       - ${EXCALIBUR_CERTS}:/proj/mycerts
