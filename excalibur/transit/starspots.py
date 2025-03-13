@@ -321,7 +321,7 @@ def starspots(fin, wht, spc, out):
                     num_ff_simulations=1,
                     num_T_spot_simulations=1,
                     other_params=unspotted_params,
-                    result_type="unspotted",
+                    # result_type="unspotted",
                 )
             )
             # print('GRID FOR UNSPOTTED:', count, ff_grid, T_grid)
@@ -342,7 +342,7 @@ def starspots(fin, wht, spc, out):
             num_ff_spot_simulations,
             num_T_spot_simulations,
             other_params,
-            "spot",
+            # "spot",
         )
         # print('GRID FOR SPOTS:', ff_grid, T_grid)
         out['data'][planetletter]['ff_spots'] = ff_grid
@@ -362,7 +362,7 @@ def starspots(fin, wht, spc, out):
             num_ff_fac_simulations,
             num_T_fac_simulations,
             other_params,
-            "faculae",
+            # "faculae",
         )
         # print('GRID FOR FACULAE:', ff_grid, T_grid)
         out['data'][planetletter]['ff_fac'] = ff_grid
@@ -391,7 +391,7 @@ def run_simulations(
     num_ff_simulations,
     num_T_spot_simulations,
     other_params,
-    result_type,
+#    result_type,
 ):
     """
     Executes simulations for a grid of ff and T_spot
