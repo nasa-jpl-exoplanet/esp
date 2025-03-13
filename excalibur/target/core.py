@@ -89,7 +89,7 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     targets = targets.split('\n')
     targets = [t.strip() for t in targets if t.replace(' ', '')]
     tn = os.environ.get('TARGET_NAME', None)
-    if tn is not None and tn != '':
+    if tn is not None and tn != '' and tn != '__all__':
         found_target_list = None
         for target in targets:
             if tn == target.split(':')[0].strip():
@@ -97,7 +97,6 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
             pass
         if found_target_list is None:
             # this is an ERROR.  the selected target should be in the target list
-            # exit('ERROR: are you sure about that target?  it is not in the list')
             mssg = f'Obsolete target / Error in target name: {tn}'
             raise dawgie.NoValidOutputDataError(mssg)
         targets = [found_target_list]
@@ -120,7 +119,7 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
         if gen_ids:
             # pylint: disable=protected-access # because dawgie requires it
             dawgie.db.connect(
-                fetch('excalibur.target').algorithms.create(),
+                fetch('excalibur.target').algorithms.Create(),
                 ds._bot(),
                 parsedstr[0],
             ).load()
@@ -242,8 +241,8 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
         return mydecorator
 
     @waitabit(np.random.randint(low=1, high=10))
-    def mastpoke(request):
-        hr, outstr = masttool.mast_query(request)
+    def mastpoke(request, maxwaittime=42):
+        hr, outstr = masttool.mast_query(request, maxwaittime=maxwaittime)
         if not outstr:
             log.warning('--< TARGET AUTOFILL: Empty MAST answer: %s >--', hr)
             pass
@@ -281,7 +280,8 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
         platformlist = []
         # GMR: mastpoke returns outstr only
         # errors (formerly _h) are logged and handled inside mastpoke
-        outstr = mastpoke(request)
+        # 42 seconds isn't enough time (for HAT-P-11 testrun)
+        outstr = mastpoke(request, maxwaittime=420)
         if outstr:
             outjson = json.loads(
                 outstr
@@ -1153,9 +1153,9 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             'params': {'obsid': o},
             'format': 'json',
         }
-        errmastq, datastr = masttool.mast_query(request)
+        errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         data = json.loads(datastr)
-        if data['data']:
+        if data and data['data']:
             donmast = True
         dtlvl = None
         clblvl = None
@@ -1303,13 +1303,22 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         pass
     if allraw:
         for irow, row in enumerate(allraw):
+            # print('  downloading',irow,len(allraw))
             payload = {"uri": row['dataURI']}
-            resp = requests.get(allurl[irow], params=payload, timeout=42)
-            fileout = os.path.join(
-                tempdir, os.path.basename(row['productFilename'])
-            )
-            with open(fileout, 'wb') as flt:
-                flt.write(resp.content)
+            try:
+                resp = requests.get(allurl[irow], params=payload, timeout=42)
+                fileout = os.path.join(
+                    tempdir, os.path.basename(row['productFilename'])
+                )
+                with open(fileout, 'wb') as flt:
+                    flt.write(resp.content)
+            except requests.exceptions.ReadTimeout:
+                log.warning(
+                    '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
+                    target,
+                    irow,
+                    len(allraw),
+                )
             pass
         pass
     locations = [tempdir]

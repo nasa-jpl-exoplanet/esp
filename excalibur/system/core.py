@@ -961,7 +961,6 @@ def write_spreadsheet(svname, aspects, targetlists, st_keys, pl_keys, exts):
                             and key + ext != 'T_corona_ref'
                             and key + ext != 'spTyp_units'
                         ):
-                            outfile.write(key + ext + ',')
                             outfile.write(
                                 str(data[key + ext]).replace(',', ';') + ','
                             )
