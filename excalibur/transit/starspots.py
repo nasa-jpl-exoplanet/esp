@@ -391,7 +391,7 @@ def run_simulations(
     num_ff_simulations,
     num_T_spot_simulations,
     other_params,
-#    result_type,
+    # result_type,
 ):
     """
     Executes simulations for a grid of ff and T_spot
