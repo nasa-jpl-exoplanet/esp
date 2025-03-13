@@ -33,8 +33,9 @@ class NormSV(ExcaliburSV):
                         strignore = str(int(v)) + ' ' + m
                         visitor.add_declaration('VISIT IGNORED: ' + strignore)
                     pass
-                vrange = self['data'][p]['vrange']
-                plot_normalized_byvisit(self['data'][p], vrange, visitor)
+                if 'vrange' in self['data'][p]:
+                    vrange = self['data'][p]['vrange']
+                    plot_normalized_byvisit(self['data'][p], vrange, visitor)
             pass
         pass
 
