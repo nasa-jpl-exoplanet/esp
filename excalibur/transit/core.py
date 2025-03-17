@@ -1479,11 +1479,14 @@ def hstwhitelight(
                 pieces = key.split('[')
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
             tracekeys = key.split('__')
+            tracetable = trace['posterior'][tracekeys[0]].values
+            tracetable = tracetable.reshape(-1, tracetable.shape[-1])
             if len(tracekeys) > 1:
-                mctrace[key] = trace[tracekeys[0]][:, int(tracekeys[1])]
+                mctrace[key] = tracetable[:, int(tracekeys[1])]
                 pass
             else:
-                mctrace[key] = trace[tracekeys[0]]
+                mctrace[key] = tracetable
+                pass
             pass
         postlc = []
         postim = []
@@ -1506,7 +1509,7 @@ def hstwhitelight(
                 else:
                     posttk = tmjd
                 postz, postph = datcore.time2z(
-                    time[i], inclination, posttk, smaors, period, ecc
+                    time[i], inclination, posttk, smaors, period, ecc, tensor=False
                 )
                 if selftype in ['eclipse']:
                     postph[postph < 0] = postph[postph < 0] + 1e0
@@ -1521,6 +1524,7 @@ def hstwhitelight(
                         g2=g2[0],
                         g3=g3[0],
                         g4=g4[0],
+                        tensor=False,
                     )
                 )
                 postim.append(
@@ -1531,6 +1535,7 @@ def hstwhitelight(
                         vitcp=1e0,
                         oslope=np.nanmedian(mctrace[f'oslope__{i}']),
                         oitcp=np.nanmedian(mctrace[f'oitcp__{i}']),
+                        tensor=False,
                     )
                 )
                 pass
@@ -1545,7 +1550,13 @@ def hstwhitelight(
                 )
                 modeltimes.extend(list(modeltimes_thisVisit))
             postz, postph = datcore.time2z(
-                np.array(modeltimes), inclination, tmjd, smaors, period, ecc
+                np.array(modeltimes),
+                inclination,
+                tmjd,
+                smaors,
+                period,
+                ecc,
+                tensor=False,
             )
             modelphase.extend(postph)
             modellc.extend(
@@ -1556,6 +1567,7 @@ def hstwhitelight(
                     g2=g2[0],
                     g3=g3[0],
                     g4=g4[0],
+                    tensor=False,
                 )
             )
         else:
@@ -1578,6 +1590,7 @@ def hstwhitelight(
                         g2=g2[0],
                         g3=g3[0],
                         g4=g4[0],
+                        tensor=False,
                     )
                 )
                 postim.append(
@@ -1588,6 +1601,7 @@ def hstwhitelight(
                         vitcp=1e0,
                         oslope=np.nanmedian(mctrace[f'oslope__{i}']),
                         oitcp=np.nanmedian(mctrace[f'oitcp__{i}']),
+                        tensor=False,
                     )
                 )
                 pass
@@ -2013,14 +2027,22 @@ def whitelight(
 
 # ----------------------- --------------------------------------------
 # -- TRANSIT LIMB DARKENED LIGHT CURVE -- ----------------------------
-def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
+def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2), tensor=True):
     '''
     G. ROUDIER: Light curve model
     '''
-    ldlc = np.zeros(z.eval().size)
-    xin = z.eval().copy() - rprs.eval()
+    if tensor:
+        zeval = z.eval()
+        rprseval = rprs.eval()
+        pass
+    else:
+        zeval = z
+        rprseval = rprs
+        pass
+    ldlc = np.zeros(zeval.size)
+    xin = zeval.copy() - rprseval
     xin[xin < 0e0] = 0e0
-    xout = z.eval().copy() + rprs.eval()
+    xout = zeval.copy() + rprseval
     xout[xout > 1e0] = 1e0
     select = xin > 1e0
     if True in select:
@@ -2028,7 +2050,7 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
         pass
     inldlc = []
     xint = np.linspace(1e0, 0e0, nint)
-    znot = z.eval().copy()[~select]
+    znot = zeval.copy()[~select]
     xinnot = np.arccos(xin[~select])
     xoutnot = np.arccos(xout[~select])
     xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
@@ -2038,7 +2060,7 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
     extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
     extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
     extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
-    occulted = vecoccs(znot, extxrs, rprs.eval())
+    occulted = vecoccs(znot, extxrs, rprseval)
     diffocc = np.diff(occulted, axis=0)
     si = vecistar(xrs, g1, g2, g3, g4)
     drop = np.sum(diffocc * si, axis=0)
@@ -2396,18 +2418,28 @@ def nlldx(params, x, data=None, weights=None):
 
 # ----------- --------------------------------------------------------
 # -- INSTRUMENT MODEL -- ---------------------------------------------
-def timlc(vtime, orbits, vslope=0, vitcp=1e0, oslope=0, oitcp=1e0):
+def timlc(vtime, orbits, vslope=0, vitcp=1e0, oslope=0, oitcp=1e0, tensor=True):
     '''
     G. ROUDIER: WFC3 intrument model
     GMR: Tensor comp
     '''
     xout = vtime - np.mean(vtime)
     vout = vslope * xout + vitcp
-    oout = np.ones(vout.eval().size)
+    if tensor:
+        vouteval = vout.eval()
+        oslopeeval = oslope.eval()
+        oitcpeval = oitcp.eval()
+        pass
+    else:
+        vouteval = vout
+        oslopeeval = oslope
+        oitcpeval = oitcp
+        pass
+    oout = np.ones(vouteval.size)
     for o in set(np.sort(orbits)):
         select = np.array(orbits) == o
         otime = xout[select] - np.mean(xout[select])
-        olin = oslope.eval() * otime + oitcp.eval()
+        olin = oslopeeval * otime + oitcpeval
         oout[select] = olin
         pass
     return vout * oout
@@ -2862,7 +2894,8 @@ def orbital(*whiteparams):
         )
         out.extend(lcout * imout)
         pass
-    return np.array(out)[ctxt.selectfit]
+    out = [o for o, s in zip(out, ctxt.selectfit) if s]
+    return out
 
 
 # @tco.as_op(itypes=[tt.dscalar,
@@ -2887,7 +2920,7 @@ def nottvfiorbital(*whiteparams):
         else:
             omtk = ctxt.tmjd
         omz, _pmph = datcore.time2z(
-            omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc
+            omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc, tensor=False
         )
         lcout = tldlc(
             abs(omz),
@@ -2907,7 +2940,8 @@ def nottvfiorbital(*whiteparams):
         )
         out.extend(lcout * imout)
         pass
-    return np.array(out)[ctxt.selectfit]
+    out = [o for o, s in zip(out, ctxt.selectfit) if s]
+    return out
 
 
 # @tco.as_op(itypes=[tt.dscalar, tt.dvector,
@@ -2946,7 +2980,8 @@ def fiorbital(*whiteparams):
         )
         out.extend(lcout * imout)
         pass
-    return np.array(out)[ctxt.selectfit]
+    out = [o for o, s in zip(out, ctxt.selectfit) if s]
+    return out
 
 
 # @tco.as_op(itypes=[tt.dscalar, tt.dvector, tt.dvector, tt.dvector],

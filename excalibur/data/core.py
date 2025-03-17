@@ -1872,34 +1872,16 @@ def wcme(params, data, refmu=None, reftt=None, forward=True):
 
 # ----------------------------- --------------------------------------
 # -- TIME TO Z -- ----------------------------------------------------
-def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi=None, epsilon=1e-10):
+def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi=None, epsilon=1e-10, tensor=True):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
     '''
     return excalibur.util.time.time2z(
-        time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, True
+        time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, True, tensor=tensor
     )
 
 
 # --------------- ----------------------------------------------------
-# -- TRUE ANOMALY NEWTON RAPHSON SOLVER -- ---------------------------
-def solveme(M, e, eps):
-    '''
-    G. ROUDIER: Newton Raphson solver for true anomaly
-    M is a numpy array
-    '''
-    E = np.copy(M)
-    for i in np.arange(M.shape[0]):
-        while abs(E[i] - e * np.sin(E[i]) - M[i]) > eps:
-            num = E[i] - e * np.sin(E[i]) - M[i]
-            den = 1.0 - e * np.cos(E[i])
-            E[i] = E[i] - num / den
-            pass
-        pass
-    return E
-
-
-# ---------------------------------------- ---------------------------
 # -- CALIBRATE STARE DATA -- -----------------------------------------
 def starecal(
     _fin,
