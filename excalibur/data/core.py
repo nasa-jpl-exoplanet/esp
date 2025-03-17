@@ -1872,12 +1872,31 @@ def wcme(params, data, refmu=None, reftt=None, forward=True):
 
 # ----------------------------- --------------------------------------
 # -- TIME TO Z -- ----------------------------------------------------
-def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi=None, epsilon=1e-10, tensor=True):
+def time2z(
+    time,
+    ipct,
+    tknot,
+    sma,
+    orbperiod,
+    ecc,
+    tperi=None,
+    epsilon=1e-10,
+    tensor=True,
+):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
     '''
     return excalibur.util.time.time2z(
-        time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, True, tensor=tensor
+        time,
+        ipct,
+        tknot,
+        sma,
+        orbperiod,
+        ecc,
+        tperi,
+        epsilon,
+        True,
+        tensor=tensor,
     )
 
 

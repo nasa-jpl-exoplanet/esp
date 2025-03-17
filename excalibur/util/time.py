@@ -7,7 +7,9 @@
 import numpy as np
 
 
-def time2z(time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray, tensor=True):
+def time2z(
+    time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray, tensor=True
+):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
     GMR: Tensor comp
@@ -83,7 +85,7 @@ def solveme(M, e, eps, tensor=True):
         Meval = M
         pass
     E = Meval.copy()
-    for i in np.arange( Meval.shape[0]):
+    for i in np.arange(Meval.shape[0]):
         while abs(E[i] - e * np.sin(E[i]) - Meval[i]) > eps:
             num = E[i] - e * np.sin(E[i]) - Meval[i]
             den = 1.0 - e * np.cos(E[i])
