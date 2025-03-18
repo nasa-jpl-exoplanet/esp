@@ -374,7 +374,7 @@ def gettau(
     print('z (at start of gettau)', z.eval())
     # tau = np.zeros((len(z), wgrid.size))
     tau = np.zeros((Nzones, wgrid.size))
-    print('tau shape at the top',tau.shape)
+    print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     dlarray = []
@@ -603,11 +603,19 @@ def gettau(
             pass
         if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
-            print('tau shape in middle1',tau.shape,
-                  np.array([rho]).shape,sigma.shape)
-            print('tau shape in middle1',(tau.eval()).shape,
-                  np.array([rho]).shape,sigma.shape,
-                  (np.array([rho]).T).shape)
+            print(
+                'tau shape in middle1',
+                tau.shape,
+                np.array([rho]).shape,
+                sigma.shape,
+            )
+            print(
+                'tau shape in middle1',
+                (tau.eval()).shape,
+                np.array([rho]).shape,
+                sigma.shape,
+                (np.array([rho]).T).shape,
+            )
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -648,10 +656,13 @@ def gettau(
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
-    print('tau shape in middle2',tau.shape,
-          np.array([rho]).shape,sigma.shape)
-    print('tau shape in middle2',(tau.eval()).shape,
-          np.array([rho]).shape,sigma.shape)
+    print('tau shape in middle2', tau.shape, np.array([rho]).shape, sigma.shape)
+    print(
+        'tau shape in middle2',
+        (tau.eval()).shape,
+        np.array([rho]).shape,
+        sigma.shape,
+    )
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
@@ -662,8 +673,12 @@ def gettau(
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
         pass
-    print('tau shape in middle3',(tau.eval()).shape,
-          np.array([rho]).shape,sigma.shape)
+    print(
+        'tau shape in middle3',
+        (tau.eval()).shape,
+        np.array([rho]).shape,
+        sigma.shape,
+    )
     if hzlib is not None:
         # WEST ET AL. 2004
         sigma = (
@@ -740,28 +755,32 @@ def gettau(
         tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
         pass
-    print('tau shape in middle4',(tau.eval()).shape,
-          np.array([rho]).shape,sigma.shape)
+    print(
+        'tau shape in middle4',
+        (tau.eval()).shape,
+        np.array([rho]).shape,
+        sigma.shape,
+    )
 
     # any trouble with this matrix multiplication?
-    print('dlarray',dlarray.shape)  # 7 elements
+    print('dlarray', dlarray.shape)  # 7 elements
     # print('tau',tau.shape)
-    print('tau',(tau.eval()).shape) # 7x103 elements
-    print('dlarray',dlarray[0][0].eval())  #
-    print('dlarray',tau[0].eval())         #
+    print('tau', (tau.eval()).shape)  # 7x103 elements
+    print('dlarray', dlarray[0][0].eval())  #
+    print('dlarray', tau[0].eval())  #
 
-# module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
-#    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
+    # module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
+    #    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
     tau = 2e0 * dlarray * tau
-    print('tau after matrixing',tau.shape)          #
-    print('tau after matrixing',tau.eval().shape)          #
+    print('tau after matrixing', tau.shape)  #
+    print('tau after matrixing', tau.eval().shape)  #
 
-#    tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
-#    print('tau after matrixing',tau.shape)          #
+    #    tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
+    #    print('tau after matrixing',tau.shape)          #
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        print('tau for molecule',molecule,tau_by_molecule[molecule].shape)
+        print('tau for molecule', molecule, tau_by_molecule[molecule].shape)
         tau_by_molecule[molecule] = 2e0 * np.array(
             np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
         )
@@ -887,14 +906,16 @@ def getxmolxs(temp, xsecs):
     # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
     # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
     sigma = np.array(list(xsecs['SPL']))
-    print('sigma3', sigma[3])        # scipy.interp object
-    print('sigma3', xsecs['SPL'][3]) # scipy.interp object
-#    print('nu', xsecs['SPLNU'])      # a list of floats
+    print('sigma3', sigma[3])  # scipy.interp object
+    print('sigma3', xsecs['SPL'][3])  # scipy.interp object
+    #    print('nu', xsecs['SPLNU'])      # a list of floats
     print('nu3', xsecs['SPLNU'][3])  # a float
-    print('temperature',temp)  # temp is not a tensor, for ariel-sim call. for cerberus?
-#    for thisspl in xsecs['SPL']:
-        # print('does this single call work?', thisspl)
-#        print('does this single call work?', thisspl(temp))  # <-- was failing before
+    print(
+        'temperature', temp
+    )  # temp is not a tensor, for ariel-sim call. for cerberus?
+    #    for thisspl in xsecs['SPL']:
+    # print('does this single call work?', thisspl)
+    #        print('does this single call work?', thisspl(temp))  # <-- was failing before
     sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
     nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)

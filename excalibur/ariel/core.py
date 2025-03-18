@@ -54,25 +54,22 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0):
     calculate the mean molecular weight and scale height
     '''
     mixratio, fH2, fHe = crbutil.crbce(pressureArray, temperature, X2Hr=X2Hr)
-    print('mixratio (inside)',mixratio,fH2,fHe)
+    print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
     # assume solar C/O and N/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
 
-    mmw, fH2, fHe = crbutil.getmmw(
-        mixratio, protosolar=False, fH2=fH2, fHe=fHe
-    )
-    print('mmw      (inside)',mmw.eval(),fH2.eval(),fHe.eval())
+    mmw, fH2, fHe = crbutil.getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
+    print('mmw      (inside)', mmw.eval(), fH2.eval(), fHe.eval())
 
     mmw_kg = mmw * cst.m_p  # [kg]
     Hs = (
-        cst.Boltzmann
-        * temperature
-        / mmw_kg / 1e-2 / (10.0 ** float(logg))
+        cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
     )  # [m]
 
     # use eval() to convert tensors back to floats
     return mmw.eval(), Hs.eval()
+
 
 def simulate_spectra(target, system_dict, runtime_params, out):
     '''
@@ -175,7 +172,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
             # this is used for plot scaling
             Hssolar = Hs / (model_params['R*'] * sscmks['Rsun'])
-            print('mmw hs (solar)',mmwsolar,Hs,HoverRmax,Hssolar)
+            print('mmw hs (solar)', mmwsolar, Hs, HoverRmax, Hssolar)
 
             # skip non-converging atmospheres!!
             # print()
@@ -257,10 +254,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         # print('C/O model param',model_params['C/O'])
 
                     # check whether this planet+metallicity combo is convergent/bound atmosphere
-                    print ('  METALLICITY',model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(pressure, eqtemp, model_params['logg'],
-                                          X2Hr=model_params['metallicity'])
-                    print('mmw,Hs new method',mmw,Hs)
+                    print('  METALLICITY', model_params['metallicity'])
+                    mmw, Hs = calc_mmw_Hs(
+                        pressure,
+                        eqtemp,
+                        model_params['logg'],
+                        X2Hr=model_params['metallicity'],
+                    )
+                    print('mmw,Hs new method', mmw, Hs)
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
                     # print('HoverRp,mmw',HoverRp,mmw,atmosModel)
                     if HoverRp > 0.04:
@@ -446,10 +447,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     #  it has to be this way to match the formatting for regular spectra itk
 
                     # redo the chemsitry/mmw calculation for this metallicity
-                    print('metallicity [X/H]dex:',model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(pressure, eqtemp, model_params['logg'],
-                                          X2Hr=model_params['metallicity'])
-                    print('lower mmw,Hs new method',mmw,Hs)
+                    print('metallicity [X/H]dex:', model_params['metallicity'])
+                    mmw, Hs = calc_mmw_Hs(
+                        pressure,
+                        eqtemp,
+                        model_params['logg'],
+                        X2Hr=model_params['metallicity'],
+                    )
+                    print('lower mmw,Hs new method', mmw, Hs)
 
                     mixratio, fH2, fHe = crbutil.crbce(
                         pressure, eqtemp, X2Hr=model_params['metallicity']
@@ -463,8 +468,8 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     mmwnow, fH2, fHe = crbutil.getmmw(
                         mixratio, protosolar=False, fH2=fH2, fHe=fHe
                     )
-                    print('lower mmw,Hs old method',mmwnow.eval(),Hs.eval())
-                    print(' mmwnow,mmwsolar',mmwnow,mmwsolar)
+                    print('lower mmw,Hs old method', mmwnow.eval(), Hs.eval())
+                    print(' mmwnow,mmwsolar', mmwnow, mmwsolar)
                     out['data'][planet_letter][atmosModel]['Hs'] = (
                         Hssolar * mmwsolar / mmwnow
                     )

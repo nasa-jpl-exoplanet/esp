@@ -376,7 +376,9 @@ def myxsecs(spc, out, verbose=False):
                     pass
                 if readit:
                     with open(
-                        os.path.join(hitempdir, ks, fdata), 'r', encoding="utf-8"
+                        os.path.join(hitempdir, ks, fdata),
+                        'r',
+                        encoding="utf-8",
                     ) as fp:
                         data = fp.readlines()
                         fp.close()
