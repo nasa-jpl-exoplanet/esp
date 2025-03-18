@@ -32,7 +32,7 @@ if i > -1:
         with open ('$rdir/.docker/.env', 'tw') as f: f.write(config)
     if found == '$expected': sys.exit(0)
     else:
-        print (f'found version {found} but expected version {expected}')
+        print (f'found version {found} but expected version $expected')
         sys.exit(-2)
 else:
     print ("failed to find the ESP_VERSION in .docker/.env")
