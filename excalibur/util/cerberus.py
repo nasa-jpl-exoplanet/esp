@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-locals,too-many-statements
+# pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-positional-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
