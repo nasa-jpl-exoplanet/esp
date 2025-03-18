@@ -13,7 +13,7 @@ from pytensor import tensor
 
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
-def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
+def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     '''
     G. ROUDIER: BURROWS AND SHARP 1998 + ANDERS & GREVESSE 1989
     '''
@@ -120,7 +120,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     # print('nCO',nCO.eval())
     # nCO = ifelse(nCO <= 0, 1e-16, nCO)
     nCO = tensor.maximum(nCO, 1e-16)
-    print('nCO', nCO.eval())
+    if verbose: print('nCO', nCO.eval())
     # BCO tensor; p,pH2 array;  X2Hr,nH scalar
     nCH4 = tensor.mean((2.0 * (10.0**X2Hr) / nH * solar['nC'] - BCO) * pH2 / p)
     nH2O = tensor.mean((2.0 * (10.0**X2Hr) / nH * solar['nO'] - BCO) * pH2 / p)
@@ -139,7 +139,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     nCH4 = tensor.maximum(nCH4, 1e-16)
     # nH2O = ifelse(nH2O <= 0, tensor(1e-16), nH2O)
     nH2O = tensor.maximum(nH2O, 1e-16)
-    print('nH2O', nH2O.eval())
+    if verbose: print('nH2O', nH2O.eval())
     a2 = 8.16413e5
     b2 = -2.9109e4
     c2 = 58.5878
@@ -170,7 +170,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     # if nN2 <= 0: nN2 = 1e-16
     # nN2 = ifelse(nN2 <= 0, 1e-16, nN2)
     nN2 = tensor.maximum(nN2, 1e-16)
-    print('nN2', nN2.eval())
+    if verbose: print('nN2', nN2.eval())
     # nNH3 = np.nanmean(BNH3*pH2/p)
     # nNH3 = BNH3*np.nanmean(pH2/p)
     nNH3 = tensor.mean(BNH3 * pH2 / p)
@@ -178,7 +178,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     # if nNH3 <= 0: nNH3 = 1e-16
     # nNH3 = ifelse(nNH3 <= 0, 1e-16, nNH3)
     nNH3 = tensor.maximum(nNH3, 1e-16)
-    print('nNH3', nNH3.eval())
+    if verbose: print('nNH3', nNH3.eval())
     # mixratio = {'H2O':np.log10(nH2O)+6., 'CH4':np.log10(nCH4)+6., 'NH3':np.log10(nNH3)+6.,
     #            'N2':np.log10(nN2)+6., 'CO':np.log10(nCO)+6.}
     mixratio = {
@@ -188,21 +188,21 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         'N2': tensor.log10(nN2) + 6.0,
         'CO': tensor.log10(nCO) + 6.0,
     }
-    print(
-        'mixratio saved (H2O,CH2,N2,NH3,CO)',
-        mixratio['H2O'].eval(),
-        mixratio['CH4'].eval(),
-        mixratio['N2'].eval(),
-        mixratio['NH3'].eval(),
-        mixratio['CO'].eval(),
-    )
-    print('nH2,nHe saved', nH2, nHe)
+    # print(
+    #    'mixratio saved (H2O,CH2,N2,NH3,CO)',
+    #    mixratio['H2O'].eval(),
+    #    mixratio['CH4'].eval(),
+    #    mixratio['N2'].eval(),
+    #    mixratio['NH3'].eval(),
+    #    mixratio['CO'].eval(),
+    # )
+    # print('nH2,nHe saved', nH2, nHe)
     return mixratio, nH2, nHe
 
 
 # -------------------- -----------------------------------------------
 # -- MEAN MOLECULAR WEIGHT -- ----------------------------------------
-def getmmw(mixratio, protosolar=True, fH2=None, fHe=None):
+def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
     '''
     G. ROUDIER: Mean molecular weight estimate assuming proton mass dominated nucleus
     '''
@@ -241,10 +241,10 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None):
         HEoH2 = 2.0 * 2.343 * 1e9 / (2.431 * 1e10)
     else:
         HEoH2 = fHe / fH2
-    print('fHe,fH2', fHe, fH2)
-    print('HEoH2', HEoH2)
+    if verbose: print('fHe,fH2', fHe, fH2)
+    if verbose: print('HEoH2', HEoH2)
     mrH2 = mrH2He / (1.0 + HEoH2)
     mrHe = HEoH2 * mrH2
     mmw = mrH2 * weights['H2'] + mrHe * weights['He'] + mmw
-    print('*** mmw ***', mmw.eval())
+    if verbose: print('*** mmw ***', mmw.eval())
     return mmw, mrH2, mrHe
