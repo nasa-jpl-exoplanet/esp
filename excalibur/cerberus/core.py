@@ -86,8 +86,8 @@ def myxsecsversion():
 
 
 # GMR: Should be in the param list
-hitemp = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
-tips = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
+hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
+tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
@@ -130,7 +130,7 @@ def myxsecs(spc, out, verbose=False):
         # else:
 
         wgrid = np.array(spc['data'][p]['WB'])
-        qtgrid = gettpf(tips, knownspecies)
+        qtgrid = gettpf(knownspecies)
         library = {}
 
         # EDIT HERE!
@@ -355,7 +355,7 @@ def myxsecs(spc, out, verbose=False):
             }
             myfiles = [
                 f
-                for f in os.listdir(os.path.join(hitemp, ks))
+                for f in os.listdir(os.path.join(hitempdir, ks))
                 if f.endswith('.par')
             ]
             dwmin = abs(wgrid[1] - wgrid[0]) / 2.0
@@ -376,7 +376,7 @@ def myxsecs(spc, out, verbose=False):
                     pass
                 if readit:
                     with open(
-                        os.path.join(hitemp, ks, fdata), 'r', encoding="utf-8"
+                        os.path.join(hitempdir, ks, fdata), 'r', encoding="utf-8"
                     ) as fp:
                         data = fp.readlines()
                         fp.close()
@@ -554,9 +554,10 @@ def gettpf(knownspecies, verbose=False):
     '''
     grid = {}
     tempgrid = list(np.arange(60.0, 3035.0, 25.0))
+
     for ks in knownspecies:
         grid[ks] = {'T': tempgrid, 'Q': [], 'SPL': []}
-        with open(os.path.join(tips, ks), 'r', encoding="utf-8") as fp:
+        with open(os.path.join(tipsdir, ks), 'r', encoding="utf-8") as fp:
             data = fp.readlines()
             fp.close()
             for line in data:
