@@ -260,15 +260,31 @@ def crbmodel(
     if not all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
         for index in np.arange(wtau.size):
-            myspl = itp(reversep, tau[:, index])
-            tau[cloudindex, index] = myspl(10.0**cloudtp)
-            tau[:cloudindex, index] = 0.0
+            # asdf
+            print('reversep',reversep)
+            print('reversep',reversep.shape)
+            print('tau check',index,tau[:, index].eval())
+            print('tau check',index,tau[:, index].eval().shape)
+            myspl = itp(reversep, tau[:, index].eval())
+            # print('myspl',myspl)  # interp1d object
+            print(' cloudtp',cloudtp)
+            powcheck = 10.0**cloudtp
+            print(' powcheck',powcheck)
+            print('  indices',cloudindex, index)
+            print(' DOES INTERP WORK?',myspl(10.0**cloudtp))
+            # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
+            print('  tau[]',tau[cloudindex, index])
+            tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
+            print('  tau[]',tau[cloudindex, index])
+            # tau[:cloudindex, index] = 0.0
+            tau = tau[:cloudindex, index].set(0.0)
             for molecule in molecules:
-                myspl = itp(reversep, tau_by_molecule[molecule][:, index])
-                tau_by_molecule[molecule][cloudindex, index] = myspl(
-                    10.0**cloudtp
+                myspl = itp(reversep, tau_by_molecule[molecule][:, index].eval())
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                    cloudindex, index].set(
+                    myspl(10.0**cloudtp)
                 )
-                tau_by_molecule[molecule][:cloudindex, index] = 0.0
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][:cloudindex, index].set(0.0)
             pass
         ctpdpress = 10.0**cloudtp - p[cloudindex]
         ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
@@ -560,8 +576,15 @@ def gettau(
     # print('dlarray',dlarray.eval())  # fails.  it's a list
     # print()
     dlarray = np.array(dlarray)
-    print('dlarray', [d.eval() for d in dlarray])
+    # print('dlarray', [d.eval() for d in dlarray])
     # print('dlarray',dlarray.eval()) still fails even after change list to array
+
+    # dlarray is a list of tensors which are 1-d arrays (yuch!)
+    # convert it to a 2-d tensor
+    dlarraymod = []
+    for dla in dlarray: dlarraymod.append(dla.eval())
+    dlarray = np.array(dlarraymod)
+    print('dlarray up top',dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
@@ -603,19 +626,6 @@ def gettau(
             pass
         if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
-            print(
-                'tau shape in middle1',
-                tau.shape,
-                np.array([rho]).shape,
-                sigma.shape,
-            )
-            print(
-                'tau shape in middle1',
-                (tau.eval()).shape,
-                np.array([rho]).shape,
-                sigma.shape,
-                (np.array([rho]).T).shape,
-            )
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -656,13 +666,6 @@ def gettau(
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
-    print('tau shape in middle2', tau.shape, np.array([rho]).shape, sigma.shape)
-    print(
-        'tau shape in middle2',
-        (tau.eval()).shape,
-        np.array([rho]).shape,
-        sigma.shape,
-    )
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
@@ -673,13 +676,7 @@ def gettau(
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
         pass
-    print(
-        'tau shape in middle3',
-        (tau.eval()).shape,
-        np.array([rho]).shape,
-        sigma.shape,
-    )
-    if hzlib is not None:
+    else:
         # WEST ET AL. 2004
         sigma = (
             0.0083
@@ -752,43 +749,63 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
+        # print('lower haze',rayleigh)
+        # print('lower haze',sigma)
+        # print('lower haze',rh)
         tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
         pass
-    print(
-        'tau shape in middle4',
-        (tau.eval()).shape,
-        np.array([rho]).shape,
-        sigma.shape,
-    )
 
     # any trouble with this matrix multiplication?
-    print('dlarray', dlarray.shape)  # 7 elements
-    # print('tau',tau.shape)
-    print('tau', (tau.eval()).shape)  # 7x103 elements
-    print('dlarray', dlarray[0][0].eval())  #
-    print('dlarray', tau[0].eval())  #
+    print('dlarray', dlarray)
+    print('dlarray', dlarray.shape)  # 7x7 elements
+    print('dlarray[0][0]', dlarray[0][0])
+    print('tau', tau.eval().shape)  # 7x103 elements
 
     # module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
     #    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
-    tau = 2e0 * dlarray * tau
-    print('tau after matrixing', tau.shape)  #
-    print('tau after matrixing', tau.eval().shape)  #
+    # tau = 2e0 * dlarray * tau  # fails
+    # tau = 2e0 * tensor.nlinalg.matrix_dot(dlarray, tau)  # keyerror: 'object'
 
-    #    tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
-    #    print('tau after matrixing',tau.shape)          #
+    print('dlarray',dlarray)
+    # TypeError: Unsupported dtype for TensorType: object
+    # testtest = tensor.as_tensor(dlarray)
+    # print('dlarray',testtest)
+
+    # dlarraymod = []
+    # for dla in dlarray: dlarraymod.append(dla.eval())
+    # dlarraymod = np.array(dlarraymod)
+    # print('dlarraymod',dlarraymod)
+    # print('dlarraymod shape',dlarraymod.shape)
+    # testtest = tensor.as_tensor(dlarraymod)
+    # print('dlarray as tensor',testtest)
+    # print('OK!')
+    # print()
+
+    # tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
+    # print('tau after matrixing',tau.shape)          #
+    tau = 2e0 * tensor.nlinalg.matrix_dot(tensor.as_tensor(dlarray), tau)
+    print('tau shape after matrixing', tau.eval().shape)
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        print('tau for molecule', molecule, tau_by_molecule[molecule].shape)
-        tau_by_molecule[molecule] = 2e0 * np.array(
-            np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
-        )
-
+        print(' MOLECULE:',molecule)
+        # careful here.  most of the time this is a tensor
+        #  but for haze it comes out as a numpy array
+        #  (haze is based on a float-based density profile)
+        # print('tau[0][0] for molecule',
+        #      molecule, tau_by_molecule[molecule][0][0])
+        # this is only an issue for printing.  this handles either case fine
+        tau_by_molecule[molecule] = 2e0 * tensor.nlinalg.matrix_dot(
+            tensor.as_tensor(dlarray),
+            tau_by_molecule[molecule]
+                        )
+        print('tau[0][0] for molecule',
+              molecule, tau_by_molecule[molecule][0][0].eval())
     if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
-            np.log10(tau),
+            tensor.log10(tau).eval(),
             aspect='auto',
             origin='lower',
             extent=[max(wgrid), min(wgrid), np.log10(max(p)), np.log10(min(p))],
@@ -800,6 +817,11 @@ def gettau(
         plt.tick_params(axis='both', labelsize=20)
         cbar = plt.colorbar()
         cbar.ax.tick_params(labelsize=20)
+        # asdf
+        # plt.savefig('opticalDepth1.png')  # permission denied
+        # plt.savefig('/proj/sdp/bryden/opticalDepth2.png')  # no such file/dir
+        plt.savefig('/tmp/opticalDepth3.png')  # hey this works! but where is it?!
+        # plt.savefig('/home/bryden/opticalDepth4.png') # no such file/dir
         plt.show()
         pass
     return tau, tau_by_molecule, 1e4 / lsig
