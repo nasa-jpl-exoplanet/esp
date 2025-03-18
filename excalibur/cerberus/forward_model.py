@@ -277,8 +277,8 @@ def crbmodel(
     atmdepth = (
         2e0
         * np.array(
-            np.mat((rp0 + np.array(z)) * np.array(dz))
-            * np.mat(1.0 - np.exp(-tau))
+            np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+            * np.asmatrix(1.0 - np.exp(-tau))
         ).flatten()
     )
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
@@ -290,8 +290,8 @@ def crbmodel(
         atmdepth = (
             2e0
             * np.array(
-                np.mat((rp0 + np.array(z)) * np.array(dz))
-                * np.mat(1.0 - np.exp(-tau_by_molecule[molecule]))
+                np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+                * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
             ).flatten()
         )
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
@@ -374,6 +374,7 @@ def gettau(
     print('z (at start of gettau)', z.eval())
     # tau = np.zeros((len(z), wgrid.size))
     tau = np.zeros((Nzones, wgrid.size))
+    print('tau shape at the top',tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     dlarray = []
@@ -602,6 +603,11 @@ def gettau(
             pass
         if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
+            print('tau shape in middle1',tau.shape,
+                  np.array([rho]).shape,sigma.shape)
+            print('tau shape in middle1',(tau.eval()).shape,
+                  np.array([rho]).shape,sigma.shape,
+                  (np.array([rho]).T).shape)
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -642,6 +648,10 @@ def gettau(
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
+    print('tau shape in middle2',tau.shape,
+          np.array([rho]).shape,sigma.shape)
+    print('tau shape in middle2',(tau.eval()).shape,
+          np.array([rho]).shape,sigma.shape)
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
@@ -652,6 +662,8 @@ def gettau(
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
         pass
+    print('tau shape in middle3',(tau.eval()).shape,
+          np.array([rho]).shape,sigma.shape)
     if hzlib is not None:
         # WEST ET AL. 2004
         sigma = (
@@ -728,11 +740,30 @@ def gettau(
         tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
         pass
-    tau = 2e0 * np.array(np.mat(dlarray) * np.mat(tau))
+    print('tau shape in middle4',(tau.eval()).shape,
+          np.array([rho]).shape,sigma.shape)
+
+    # any trouble with this matrix multiplication?
+    print('dlarray',dlarray.shape)  # 7 elements
+    # print('tau',tau.shape)
+    print('tau',(tau.eval()).shape) # 7x103 elements
+    print('dlarray',dlarray[0][0].eval())  #
+    print('dlarray',tau[0].eval())         #
+
+# module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
+#    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
+    tau = 2e0 * dlarray * tau
+    print('tau after matrixing',tau.shape)          #
+    print('tau after matrixing',tau.eval().shape)          #
+
+#    tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
+#    print('tau after matrixing',tau.shape)          #
+
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
+        print('tau for molecule',molecule,tau_by_molecule[molecule].shape)
         tau_by_molecule[molecule] = 2e0 * np.array(
-            np.mat(dlarray) * np.mat(tau_by_molecule[molecule])
+            np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
         )
 
     if debug:
@@ -795,14 +826,14 @@ def absorb(
     sigma = S * tips
     ps = mmr * p
     gamma = np.array(
-        np.mat(p - ps).T * np.mat(gair * (Tref / T) ** eta)
-        + np.mat(ps).T * np.mat(gself)
+        np.asmatrix(p - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+        + np.asmatrix(ps).T * np.asmatrix(gself)
     )
     if lbroadening:
         if lshifting:
             matnu = np.array(
-                np.mat(np.ones(p.size)).T * np.mat(nu)
-                + np.mat(p).T * np.mat(delta)
+                np.asmatrix(np.ones(p.size)).T * np.asmatrix(nu)
+                + np.asmatrix(p).T * np.asmatrix(delta)
             )
         else:
             matnu = np.array(nu) * np.array([np.ones(len(p))]).T
@@ -814,7 +845,7 @@ def absorb(
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
     if lbroadening:
         for mymatnu, mygamma in zip(matnu, gamma):
-            binsigma = np.mat(sigma) * np.mat(
+            binsigma = np.asmatrix(sigma) * np.asmatrix(
                 intflor(
                     nugrid,
                     dwnu / 2.0,
@@ -856,24 +887,16 @@ def getxmolxs(temp, xsecs):
     # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
     # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
     sigma = np.array(list(xsecs['SPL']))
-    # print('sigma',sigma)
-    print('sigma3', sigma[3])
-    print('sigma3', xsecs['SPL'][3])
-    print('nu', xsecs['SPLNU'])
-    print('nu3', xsecs['SPLNU'][3])
-    print('ackack')
-    print('temperature', temp.eval())
-    print('ackack')
-    for thisspl in xsecs['SPL']:
-        print(
-            'does this single call work?', thisspl(temp.eval())
-        )  # ?? didn't try yet
-        print('does this single call work?', thisspl(temp))  # <-- FAILS!!
-    print('ackack')
+    print('sigma3', sigma[3])        # scipy.interp object
+    print('sigma3', xsecs['SPL'][3]) # scipy.interp object
+#    print('nu', xsecs['SPLNU'])      # a list of floats
+    print('nu3', xsecs['SPLNU'][3])  # a float
+    print('temperature',temp)  # temp is not a tensor, for ariel-sim call. for cerberus?
+#    for thisspl in xsecs['SPL']:
+        # print('does this single call work?', thisspl)
+#        print('does this single call work?', thisspl(temp))  # <-- was failing before
     sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
-    print('nu?')
     nu = np.array(xsecs['SPLNU'])
-    print('nu!')
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]
