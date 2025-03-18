@@ -1,0 +1,6 @@
+export DAWGIE_FE_PORT=19990 \
+       DAWGIE_SFE_PORT=19995 \
+       EXCALIBUR_LOG_LEVEL="logging.INFO" \
+       EXCALIBUR_PORT=${DAWGIE_FE_PORT:-9990} \
+       EXCALIBUR_SOURCE_PATH=/home/groudier/GITHUB/esp \
+       EXCALIBUR_UID=${UID}
