@@ -244,6 +244,11 @@ def crbmodel(
         hzwscale=hzwscale,
         debug=debug,
     )
+
+    print('tau', tau.eval())
+    for molecule in tau_by_molecule:
+        print('tau', molecule, tau_by_molecule[molecule].eval())
+
     if not break_down_by_molecule:
         tau_by_molecule = {}
     molecules = tau_by_molecule.keys()
@@ -298,26 +303,30 @@ def crbmodel(
     #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     matrix1 = (rp0 + z) * dz
     matrix2 = 1.0 - tensor.exp(-tau)
-    print('matrix1 shape',matrix1.eval().shape)
-    print('matrix2 shape',matrix2.eval().shape)
-    atmdepth = 2e0 * tensor.matrix_dot(matrix1, matrix2)
-    print('result shape',atmdepth.eval().shape)
-    atmdepth = tensor.flatten(atmdepth)
-    print('result shape',atmdepth.eval().shape)
+    print('matrix1 shape', matrix1.eval().shape)
+    print('matrix2 shape', matrix2.eval().shape)
+    atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
+    print('result shape', atmdepth.eval().shape)
+    #  flatten is not needed I think.  it's already 1-D, no?
+    # atmdepth = tensor.flatten(atmdepth)
+    # print('result shape',atmdepth.eval().shape)
     # atmdepth = (2e0 * np.array(
     #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
     #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
-    print('final model result!',model.eval())
-    print('final model result!',model.eval().shape)
+    print('final model result!', model.eval())
+    print('final model result!', model.eval().shape)
     models_by_molecule = {}
     for molecule in molecules:
-        atmdepth = (
-            2e0
-            * np.array(
-                np.asmatrix((rp0 + np.array(z)) * np.array(dz))
-                * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
-            ).flatten()
+        # atmdepth = (
+        #    2e0
+        #    * np.array(
+        #        np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+        #        * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
+        # ).flatten()
+        # )
+        atmdepth = 2e0 * tensor.nlinalg.matrix_dot(
+            (rp0 + z) * dz, 1.0 - tensor.exp(-tau_by_molecule[molecule])
         )
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
@@ -641,6 +650,10 @@ def gettau(
         if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
+            # print('    mmr', mmr)  # tensor
+            # print('    sigma', sigma) # 100 floats
+            # print('    rho', rho)  # 7 floats
+            # print('tau for this molecule', elem, tau_by_molecule[elem].eval())
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
@@ -671,6 +684,7 @@ def gettau(
             sigma[~np.isfinite(sigma)] = 0e0
         tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
         tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
+        print('tau for this molecule', cia, tau_by_molecule[cia].eval())
         pass
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
@@ -679,6 +693,7 @@ def gettau(
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
+    print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
@@ -689,6 +704,7 @@ def gettau(
         tau_by_molecule['haze'] = (
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
+        print('sssssssaasddfasdfasdfss')
         pass
     else:
         # WEST ET AL. 2004
@@ -702,6 +718,7 @@ def gettau(
             )
         )
         if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
+            print('ssssssss')
             frh = hzlib['PROFILE'][0][hzp][0]
             rh = frh(p)
             rh[rh < 0] = 0.0
@@ -765,10 +782,12 @@ def gettau(
             pass
         # print('lower haze',rayleigh)
         # print('lower haze',sigma)
-        # print('lower haze',rh)
+        print('lower haze',rh)
         tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
         pass
+    print('tau for this molecule', 'haze', tau_by_molecule['haze'].eval())
+    exit('asgdasdgasdgasg')
 
     # any trouble with this matrix multiplication?
     print('dlarray', dlarray)
