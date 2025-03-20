@@ -7,7 +7,7 @@ from matplotlib.colors import Normalize
 from excalibur.util.plotters import save_plot_tosv
 
 
-def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
+def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_lambda_juststar):
 
     # Configura os parâmetros visuais padrão
     plt.rcParams['axes.linewidth'] = (
@@ -50,26 +50,32 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
                 color=color,
                 alpha=1,
             )
+    ax1.plot(
+        lambdaEff_nm,
+        D_lambda_juststar[0,0],
+        marker='x',
+        linestyle='-',
+        color='k',
+        alpha=1,
+    )
 
     # Adiciona a colorbar para o filling factor
     sm_f = ScalarMappable(cmap=cmap_f, norm=norm_f)
     sm_f.set_array(f_spot_array)
     cbar1 = fig.colorbar(sm_f, ax=ax1, orientation='vertical', pad=0.02)
-    cbar1.set_label(
-        "Filling Factor", fontsize=21, fontweight='bold', labelpad=15
-    )
-    cbar1.ax.tick_params(labelsize=17)
+    cbar1.set_label('Filling Factor', fontsize=16, labelpad=15)
+    cbar1.ax.tick_params(labelsize=16)
     cbar1.ax.yaxis.label.set_rotation(270)
     cbar1.ax.yaxis.label.set_verticalalignment('bottom')
 
     # Personaliza o primeiro subplot
-    ax1.set_title("", fontsize=23, fontweight='bold')
-    ax1.set_xlabel("", fontsize=23, fontweight='bold')
-    ax1.set_ylabel("Transit Depth [ppm]", fontsize=23, fontweight='bold')
+    ax1.set_title('', fontsize=16)
+    ax1.set_xlabel('', fontsize=16)
+    ax1.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax1.tick_params(
         axis="x",
         direction="in",
-        labelsize=19,
+        labelsize=16,
         width=2,
         length=7,
         pad=3,
@@ -78,7 +84,7 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
     ax1.tick_params(
         axis="y",
         direction="in",
-        labelsize=19,
+        labelsize=16,
         width=2,
         length=7,
         pad=3,
@@ -113,26 +119,32 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
                 color=color,
                 alpha=1,
             )
+    ax2.plot(
+        lambdaEff_nm,
+        D_lambda_juststar[0,0],
+        marker='x',
+        linestyle='-',
+        color='k',
+        alpha=1,
+    )
 
     # Adiciona a colorbar para a spot temperature
     sm_t = ScalarMappable(cmap=cmap_t, norm=norm_t)
     sm_t.set_array(valid_tempSpot)
     cbar2 = fig.colorbar(sm_t, ax=ax2, orientation='vertical', pad=0.02)
-    cbar2.set_label(
-        "Spot Temperature [K]", fontsize=21, fontweight='bold', labelpad=15
-    )
-    cbar2.ax.tick_params(labelsize=17)
+    cbar2.set_label('Spot Temperature [K]', fontsize=16, labelpad=15)
+    cbar2.ax.tick_params(labelsize=16)
     cbar2.ax.yaxis.label.set_rotation(270)
     cbar2.ax.yaxis.label.set_verticalalignment('bottom')
 
     # Personaliza o segundo subplot
-    ax2.set_title("", fontsize=23, fontweight='bold')
-    ax2.set_xlabel("Wavelength [nm]", fontsize=23, fontweight='bold')
-    ax2.set_ylabel("Transit Depth [ppm]", fontsize=23, fontweight='bold')
+    ax2.set_title('', fontsize=16)
+    ax2.set_xlabel('Wavelength [nm]', fontsize=16)
+    ax2.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax2.tick_params(
         axis="x",
         direction="in",
-        labelsize=19,
+        labelsize=16,
         width=2,
         length=7,
         pad=3,
@@ -141,7 +153,7 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda):
     ax2.tick_params(
         axis="y",
         direction="in",
-        labelsize=19,
+        labelsize=16,
         width=2,
         length=7,
         pad=3,
@@ -184,17 +196,15 @@ def plot_lightcurves(
     min_D = np.min(stack_curvaLuz)
 
     pyplot.axis([-tempoTransito / 5, tempoTransito / 5, min_D, 1.00005])
-    pyplot.xlabel(
-        "$\\mathbf{Time\\;from\\;transit\\;center\\;(hr)}$", fontsize=19
-    )
-    pyplot.ylabel("$\\mathbf{Relative\\;flux}$", fontsize=19)
+    pyplot.xlabel('Time from transit center (hr)', fontsize=16)
+    pyplot.ylabel('Relative flux', fontsize=16)
     pyplot.tick_params(
-        axis="x", direction="in", labelsize=12, length=7, width=2, top=True
+        axis="x", direction="in", labelsize=16, length=7, width=2, top=True
     )
     pyplot.tick_params(
         axis="y",
         direction="in",
-        labelsize=12,
+        labelsize=16,
         length=7,
         width=2,
         right=True,
