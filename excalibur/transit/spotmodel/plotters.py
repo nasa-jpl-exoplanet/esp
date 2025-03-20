@@ -7,7 +7,7 @@ from matplotlib.colors import Normalize
 from excalibur.util.plotters import save_plot_tosv
 
 
-def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_lambda_juststar):
+def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_lambda_juststar, subtractStar=False):
 
     # Configura os parâmetros visuais padrão
     plt.rcParams['axes.linewidth'] = (
@@ -42,22 +42,27 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
         for i_spottemp, spottemp in enumerate(tempSpot_array):
             # Define a cor com base no filling factor
             color = cmap_f(norm_f(ff))
+            if subtractStar:
+                depth = (D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]) /D_lambda_juststar[0, 0]
+            else:
+                depth = D_lambda[i_ff, i_spottemp]
             ax1.plot(
                 lambdaEff_nm,
-                D_lambda[i_ff, i_spottemp],
+                depth,
                 marker='o',
                 linestyle='-',
                 color=color,
                 alpha=1,
             )
-    ax1.plot(
-        lambdaEff_nm,
-        D_lambda_juststar[0,0],
-        marker='x',
-        linestyle='-',
-        color='k',
-        alpha=1,
-    )
+    if not subtractStar:
+        ax1.plot(
+            lambdaEff_nm,
+            D_lambda_juststar[0,0],
+            marker='x',
+            linestyle='-',
+            color='k',
+            alpha=1,
+        )
 
     # Adiciona a colorbar para o filling factor
     sm_f = ScalarMappable(cmap=cmap_f, norm=norm_f)
@@ -71,7 +76,10 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     # Personaliza o primeiro subplot
     ax1.set_title('', fontsize=16)
     ax1.set_xlabel('', fontsize=16)
-    ax1.set_ylabel('Transit Depth [ppm]', fontsize=16)
+    if subtractStar:
+        ax1.set_ylabel('Change in Transit Depth [fractional]', fontsize=16)
+    else:
+        ax1.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax1.tick_params(
         axis="x",
         direction="in",
@@ -111,22 +119,27 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
 
             # Define a cor com base na spot temperature
             color = cmap_t(norm_t(spottemp))
+            if subtractStar:
+                depth = (D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]) /D_lambda_juststar[0, 0]
+            else:
+                depth = D_lambda[i_ff, i_spottemp]
             ax2.plot(
                 lambdaEff_nm,
-                D_lambda[i_ff, i_spottemp],
+                depth,
                 marker='o',
                 linestyle='-',
                 color=color,
                 alpha=1,
             )
-    ax2.plot(
-        lambdaEff_nm,
-        D_lambda_juststar[0,0],
-        marker='x',
-        linestyle='-',
-        color='k',
-        alpha=1,
-    )
+    if not subtractStar:
+        ax2.plot(
+            lambdaEff_nm,
+            D_lambda_juststar[0,0],
+            marker='x',
+            linestyle='-',
+            color='k',
+            alpha=1,
+        )
 
     # Adiciona a colorbar para a spot temperature
     sm_t = ScalarMappable(cmap=cmap_t, norm=norm_t)
@@ -140,7 +153,10 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     # Personaliza o segundo subplot
     ax2.set_title('', fontsize=16)
     ax2.set_xlabel('Wavelength [nm]', fontsize=16)
-    ax2.set_ylabel('Transit Depth [ppm]', fontsize=16)
+    if subtractStar:
+        ax2.set_ylabel('Change in Transit Depth [fractional]', fontsize=16)
+    else:
+        ax2.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax2.tick_params(
         axis="x",
         direction="in",
@@ -195,7 +211,8 @@ def plot_lightcurves(
 
     min_D = np.min(stack_curvaLuz)
 
-    pyplot.axis([-tempoTransito / 5, tempoTransito / 5, min_D, 1.00005])
+    depth = 1 - min_D
+    pyplot.axis([-tempoTransito / 5, tempoTransito / 5, min_D-depth/10, 1+depth/10])
     pyplot.xlabel('Time from transit center (hr)', fontsize=16)
     pyplot.ylabel('Relative flux', fontsize=16)
     pyplot.tick_params(

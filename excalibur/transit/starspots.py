@@ -386,7 +386,8 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['plot_starspot_transitdepths'] = plot_transit_depths(
             ff_grid, T_grid, wave_grid, transit_depths_spots, transit_depths_juststar
         )
-
+        out['data'][planetletter]['plot_starspot_deltadepths'] = plot_transit_depths(
+            ff_grid, T_grid, wave_grid, transit_depths_spots, transit_depths_juststar,subtractStar=True)
         # show one of the lightcurve plots (put it after the transitdepth result)
         #  it covers a range of wavelengths for a single ff+Tspot model
         out['data'][planetletter]['plot_starspot_lightcurves'] = oneplot
