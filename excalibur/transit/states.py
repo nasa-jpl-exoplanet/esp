@@ -500,12 +500,17 @@ class StarspotSV(ExcaliburSV):
                 for savedresult in self['data'][p].keys():
                     # anything with 'plot' in it is a saved .png figure
                     if 'plot' in savedresult:
-                        if savedresult == 'plot_starspot_spectrum':
-                            plotlabel = 'starspot spectrum'
-                        elif savedresult == 'plot_starspot_limbCoeffs':
-                            plotlabel = 'limb darkening coefficients'
-                        elif savedresult == 'plot_starspot_limbdarkening':
-                            plotlabel = 'limb darkening'
+                        if savedresult.endswith('_spectrum'):
+                            plotlabel = 'the data itself'
+                        elif savedresult.endswith('_limbCoeffs'):
+                            plotlabel = 'assumed limb darkening coefficients'
+                        elif savedresult.endswith('_limbdarkening'):
+                            or savedresult == 'plot_limbdarkening':
+                            plotlabel = 'assumed limb darkening'
+                        elif savedresult.endswith('_transitdepths'):
+                            plotlabel = 'starspots effect on transit depth'
+                        elif savedresult.endswith('_lightcurves'):
+                            plotlabel = 'lightcurves for various wavelengths'
                         else:
                             plotlabel = 'more starspot info'
                         visitor.add_image(
