@@ -134,7 +134,7 @@ def starspots(fin, spc, out):
         # plt.savefig('/proj/data/bryden/testsave.png')
 
         # no longer saving the data spectrum; not needed here
-        # out['data'][planetletter]['plot_starspot_spectrum'] = save_plot_tosv(
+        # out['data'][planetletter]['plot_spectrum'] = save_plot_tosv(
         #    myfig)
         plt.close(myfig)
 
@@ -177,8 +177,9 @@ def starspots(fin, spc, out):
 
         # no longer saving the input limbdarkening;
         #  maybe include below alongside the limb-darkened transit profile
-        # out['data'][planetletter]['plot_starspot_limbdarkening'] = (
+        # out['data'][planetletter]['plot_limbdarkening'] = (
         #     save_plot_tosv(myfig))
+        limbdarkeningplot = save_plot_tosv(myfig)
         plt.close(myfig)
 
         # 7) also plot the limb darkening coefficients
@@ -405,6 +406,9 @@ def starspots(fin, spc, out):
         # show one of the lightcurve plots (put it after the transitdepth result)
         #  it covers a range of wavelengths for a single ff+Tspot model
         out['data'][planetletter]['plot_starspot_lightcurves'] = oneplot
+
+        # limbdarkening input parameters tacked onto the end (calculated above)
+        out['data'][planetletter]['plot_limbdarkening'] = limbdarkeningplot
 
     return spotssolved
 
