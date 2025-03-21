@@ -476,7 +476,9 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     )
                     print('lower mmw,Hs old method', mmwnow.eval(), Hs)
                     print(' mmwnow,mmwsolar', mmwnow.eval(), mmwsolar)
-                    print('   Hs from scaling',Hssolar * mmwsolar / mmwnow.eval())
+                    print(
+                        '   Hs from scaling', Hssolar * mmwsolar / mmwnow.eval()
+                    )
                     out['data'][planet_letter][atmosModel]['Hs'] = (
                         Hssolar * mmwsolar / mmwnow.eval()
                     )

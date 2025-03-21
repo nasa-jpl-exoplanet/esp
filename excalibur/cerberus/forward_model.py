@@ -860,9 +860,9 @@ def gettau(
         cbar.ax.tick_params(labelsize=20)
         # plt.savefig('opticalDepth1.png')  # permission denied
         # plt.savefig('/proj/sdp/bryden/opticalDepth2.png')  # no such file/dir
-        plt.savefig(
-            '/tmp/opticalDepth3.png'
-        )  # hey this works! but where is it?!
+        # hey this works! but no way to see it.
+        #  also it seems to raise bandit security error in pylint
+        plt.savefig('/tmp/opticalDepth3.png')
         # plt.savefig('/home/bryden/opticalDepth4.png') # no such file/dir
         plt.show()
         pass
