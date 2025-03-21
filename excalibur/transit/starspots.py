@@ -11,10 +11,7 @@ from excalibur.transit.spotmodel.Spotmodel import SpotModel
 from excalibur.transit.spotmodel.plotters import plot_transit_depths
 from excalibur.transit.core import vecistar
 from excalibur.cerberus.plotting import rebin_data
-from excalibur.util.plotters import (
-    save_plot_tosv,
-    add_scale_height_labels,
-)
+from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
 import numpy as np
 import matplotlib as mpl
@@ -25,7 +22,8 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------
-def starspots(fin, wht, spc, out):
+# def starspots(fin, wht, spc, out):
+def starspots(fin, spc, out):
     '''
     Viktor Sumida's starspot model
     '''
@@ -63,9 +61,10 @@ def starspots(fin, wht, spc, out):
         anom = 0
         # print('planet' + planetletter, 'R,inc,P,a:', Rplanet, inc, period, sma)
 
-        # limb dark
-        limb_coeffs = wht['data'][planetletter]['whiteld']
-        # print('limb darkening parameters from whitelight       ', limb_coeffs)
+        # limb darkening (ignore whitelight, we want the wavelength dependence)
+        # limb_coeffs_whitelight = wht['data'][planetletter]['whiteld']
+        # print('limb darkening parameters (whitelight)', limb_coeffs_whitelight)
+        limb_coeffs = np.array(spc['data'][planetletter]['LD'])
         # print(
         #    'limb darkening parameters from spectrum (median)',
         #    np.median(spc['data'][planetletter]['LD'], axis=0),
@@ -98,6 +97,7 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['ESerr'] = transitdata['error']
         out['data'][planetletter]['RSTAR'] = Rstar
         out['data'][planetletter]['TSTAR'] = Tstar
+        # out['data'][planetletter]['LD'] = limb_coeffs_whitelight
         out['data'][planetletter]['LD'] = limb_coeffs
 
         # 3) for each planet, calculate starspot model based on the input parameters
@@ -132,16 +132,15 @@ def starspots(fin, wht, spc, out):
         # print('saving plot as testsave.png')
         # plt.savefig('/proj/data/bryden/testsave.png')
 
-        out['data'][planetletter]['plot_starspot_spectrum'] = save_plot_tosv(
-            myfig
-        )
+        # no longer saving the data spectrum; not needed here
+        # out['data'][planetletter]['plot_spectrum'] = save_plot_tosv(
+        #    myfig)
         plt.close(myfig)
 
         # 6) make a plot of the limb darkening as a function of wavelength
 
         myfig, ax = plt.subplots(figsize=(6, 4))
 
-        LD = np.array(spc['data'][planetletter]['LD'])
         radii = np.linspace(0, 1, 111)
         for iwave in range(len(transitdata['wavelength'])):
             # vecistar is normalized such that an integral over the star is 1
@@ -149,10 +148,10 @@ def starspots(fin, wht, spc, out):
             limbdarkening = (
                 vecistar(
                     radii,
-                    LD[iwave, 0],
-                    LD[iwave, 1],
-                    LD[iwave, 2],
-                    LD[iwave, 3],
+                    limb_coeffs[iwave, 0],
+                    limb_coeffs[iwave, 1],
+                    limb_coeffs[iwave, 2],
+                    limb_coeffs[iwave, 3],
                 )
                 * np.pi
             )
@@ -175,37 +174,38 @@ def starspots(fin, wht, spc, out):
         #        print('saving plot as testsave.png')
         #        plt.savefig('/proj/data/bryden/testsave.png')
 
-        out['data'][planetletter]['plot_starspot_limbdarkening'] = (
-            save_plot_tosv(myfig)
-        )
+        # no longer saving the input limbdarkening;
+        #  maybe include below alongside the limb-darkened transit profile
+        # out['data'][planetletter]['plot_limbdarkening'] = (
+        #     save_plot_tosv(myfig))
+        limbdarkeningplot = save_plot_tosv(myfig)
         plt.close(myfig)
 
         # 7) also plot the limb darkening coefficients
 
         myfig = plt.figure(figsize=(8, 6))
 
-        LD = np.array(spc['data'][planetletter]['LD'])
         # print('len check',len(spc['data'][planetletter]['LD']))
-        # print('len check',LD.shape)
-        # print('do these match now?!?',len(transitdata['wavelength']), len(LD[:-1,0]))
+        # print('len check',limb_coeffs.shape)
+        # print('do these match now?!?',len(transitdata['wavelength']), len(limb_coeffs[:-1,0]))
         ax = myfig.add_subplot(2, 2, 1)
-        ax.plot(transitdata['wavelength'], LD[:-1, 0], color='k')
+        ax.plot(transitdata['wavelength'], limb_coeffs[:-1, 0], color='k')
         plt.xlabel(str('Wavelength [$\\mu$m]'))
         plt.ylabel(str('Limb darkening coeff #1'))
         # plt.title('planet '+planetletter)
 
         ax = myfig.add_subplot(2, 2, 2)
-        ax.plot(transitdata['wavelength'], LD[:-1, 1], color='k')
+        ax.plot(transitdata['wavelength'], limb_coeffs[:-1, 1], color='k')
         plt.xlabel(str('Wavelength [$\\mu$m]'))
         plt.ylabel(str('Limb darkening coeff #2'))
         ax = myfig.add_subplot(2, 2, 3)
 
-        ax.plot(transitdata['wavelength'], LD[:-1, 2], color='k')
+        ax.plot(transitdata['wavelength'], limb_coeffs[:-1, 2], color='k')
         plt.xlabel(str('Wavelength [$\\mu$m]'))
         plt.ylabel(str('Limb darkening coeff #3'))
 
         ax = myfig.add_subplot(2, 2, 4)
-        ax.plot(transitdata['wavelength'], LD[:-1, 3], color='k')
+        ax.plot(transitdata['wavelength'], limb_coeffs[:-1, 3], color='k')
         plt.xlabel(str('Wavelength [$\\mu$m]'))
         plt.ylabel(str('Limb darkening coeff #4'))
         # plt.title('planet '+planetletter)
@@ -215,7 +215,8 @@ def starspots(fin, wht, spc, out):
         # print('saving plot as testsave.png')
         # plt.savefig('/proj/data/bryden/testsave.png')
 
-        out['data'][planetletter]['plot_limbCoeffs'] = save_plot_tosv(myfig)
+        # no longer saving the input limbdarkening coeffs; not that informative'
+        # out['data'][planetletter]['plot_limbCoeffs'] = save_plot_tosv(myfig)
         plt.close(myfig)
 
         spotssolved = True
@@ -237,14 +238,21 @@ def starspots(fin, wht, spc, out):
         plot_star = False
         plot_graph = False
 
-        # Limb-darkening coefficients and wavelengths
-        c1 = [limb_coeffs[0], limb_coeffs[0], limb_coeffs[0]]
-        c2 = [limb_coeffs[1], limb_coeffs[1], limb_coeffs[1]]
-        c3 = [limb_coeffs[2], limb_coeffs[2], limb_coeffs[2]]
-        c4 = [limb_coeffs[3], limb_coeffs[3], limb_coeffs[3]]
-        num_wavelengths = len(c1)
+        #  just a few wavelengths during debugging
+        # wavelengths = [0.5, 1.0, 1.5]
+        wavelengths = transitdata['wavelength']
+        num_wavelengths = len(wavelengths)
 
-        wavelengths = [0.5, 1.0, 1.5]
+        # Limb-darkening coefficients
+        #  simple case during debugging:
+        # c1 = [limb_coeffs_whitelight[0]] * num_wavelengths
+        # c2 = [limb_coeffs_whitelight[1]] * num_wavelengths
+        # c3 = [limb_coeffs_whitelight[2]] * num_wavelengths
+        # c4 = [limb_coeffs_whitelight[3]] * num_wavelengths
+        c1 = limb_coeffs[:, 0]
+        c2 = limb_coeffs[:, 1]
+        c3 = limb_coeffs[:, 2]
+        c4 = limb_coeffs[:, 3]
 
         # Starspots/Faculae
         include_starspots = True  # Caution! Do not change to False
@@ -312,7 +320,7 @@ def starspots(fin, wht, spc, out):
 
             # run_simulations with ff_min=ff_max=0, T_spot_min=T_spot_max=NaN
             # and only 1 step for each, so it simulates a single unspotted point.
-            ff_grid, T_grid, wave_grid, transit_depths, oneplot = (
+            ff_grid, T_grid, wave_grid, transit_depths_juststar, oneplot = (
                 run_simulations(
                     ff_min=0.0,
                     ff_max=0.0,
@@ -329,32 +337,31 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['ff_juststar'] = ff_grid
         out['data'][planetletter]['T_juststar'] = T_grid
         out['data'][planetletter]['waves_juststar'] = wave_grid
-        out['data'][planetletter]['depths_juststar'] = transit_depths
+        out['data'][planetletter]['depths_juststar'] = transit_depths_juststar
 
         include_starspots = True
 
         # 2) Run simulations for spots
-        ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
-            ff_spot_min,
-            ff_spot_max,
-            T_spot_min,
-            T_spot_max,
-            num_ff_spot_simulations,
-            num_T_spot_simulations,
-            other_params,
-            # "spot",
+        ff_grid, T_grid, wave_grid, transit_depths_spots, oneplot = (
+            run_simulations(
+                ff_spot_min,
+                ff_spot_max,
+                T_spot_min,
+                T_spot_max,
+                num_ff_spot_simulations,
+                num_T_spot_simulations,
+                other_params,
+                # "spot",
+            )
         )
         # print('GRID FOR SPOTS:', ff_grid, T_grid)
         out['data'][planetletter]['ff_spots'] = ff_grid
         out['data'][planetletter]['T_spots'] = T_grid
         out['data'][planetletter]['waves_spots'] = wave_grid
-        out['data'][planetletter]['depths_spots'] = transit_depths
-
-        # maybe save one of these lightcurve plots?
-        out['data'][planetletter]['plot_lightcurves'] = oneplot
+        out['data'][planetletter]['depths_spots'] = transit_depths_spots
 
         # 3) Run simulations for faculae
-        ff_grid, T_grid, wave_grid, transit_depths, oneplot = run_simulations(
+        ff_grid, T_grid, wave_grid, transit_depths_fac, _ = run_simulations(
             ff_fac_min,
             ff_fac_max,
             T_fac_min,
@@ -368,7 +375,7 @@ def starspots(fin, wht, spc, out):
         out['data'][planetletter]['ff_fac'] = ff_grid
         out['data'][planetletter]['T_fac'] = T_grid
         out['data'][planetletter]['waves_fac'] = wave_grid
-        out['data'][planetletter]['depths_fac'] = transit_depths
+        out['data'][planetletter]['depths_fac'] = transit_depths_fac
 
         # print('ff   ',ff_grid.shape, ff_grid)
         # print('Tspot',T_grid.shape, T_grid)
@@ -376,9 +383,31 @@ def starspots(fin, wht, spc, out):
         # print('modelResult depth shape', transit_depths.shape)
         # print('modelResult depth', transit_depths)
 
-        out['data'][planetletter]['plot_transitdepths'] = plot_transit_depths(
-            ff_grid, T_grid, wave_grid, transit_depths
+        out['data'][planetletter]['plot_starspot_transitdepths'] = (
+            plot_transit_depths(
+                ff_grid,
+                T_grid,
+                wave_grid,
+                transit_depths_spots,
+                transit_depths_juststar,
+            )
         )
+        out['data'][planetletter]['plot_starspot_deltadepths'] = (
+            plot_transit_depths(
+                ff_grid,
+                T_grid,
+                wave_grid,
+                transit_depths_spots,
+                transit_depths_juststar,
+                subtractStar=True,
+            )
+        )
+        # show one of the lightcurve plots (put it after the transitdepth result)
+        #  it covers a range of wavelengths for a single ff+Tspot model
+        out['data'][planetletter]['plot_starspot_lightcurves'] = oneplot
+
+        # limbdarkening input parameters tacked onto the end (calculated above)
+        out['data'][planetletter]['plot_limbdarkening'] = limbdarkeningplot
 
     return spotssolved
 

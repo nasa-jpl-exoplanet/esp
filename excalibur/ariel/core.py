@@ -49,6 +49,28 @@ ArielParams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
+def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0):
+    '''
+    calculate the mean molecular weight and scale height
+    '''
+    mixratio, fH2, fHe = crbutil.crbce(pressureArray, temperature, X2Hr=X2Hr)
+    print('mixratio (inside)', mixratio, fH2, fHe)
+    # X2Hr=cheq['XtoH'])
+    # assume solar C/O and N/O for now
+    # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
+
+    mmw, fH2, fHe = crbutil.getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
+    print('mmw      (inside)', mmw.eval(), fH2.eval(), fHe.eval())
+
+    mmw_kg = mmw * cst.m_p  # [kg]
+    Hs = (
+        cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
+    )  # [m]
+
+    # use eval() to convert tensors back to floats
+    return mmw.eval(), Hs.eval()
+
+
 def simulate_spectra(target, system_dict, runtime_params, out):
     '''
     Simulate Ariel spectra, adding noise based on the Ariel instrument model
@@ -146,23 +168,11 @@ def simulate_spectra(target, system_dict, runtime_params, out):
             )
             pressure = pgrid[::-1]
             # Assume solar metallicity here but then below use each model's metallicity
-            mixratio, fH2, fHe = crbutil.crbce(pressure, eqtemp)
-            # X2Hr=cheq['XtoH'])
-            # assume solar C/O and N/O for now
-            # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-            mmwsolar, fH2, fHe = crbutil.getmmw(
-                mixratio, protosolar=False, fH2=fH2, fHe=fHe
-            )
-            mmw = mmwsolar * cst.m_p  # [kg]
-            Hs = (
-                cst.Boltzmann
-                * eqtemp
-                / (mmw * 1e-2 * (10.0 ** float(model_params['logg'])))
-            )  # [m]
+            mmwsolar, Hs = calc_mmw_Hs(pressure, eqtemp, model_params['logg'])
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
-            Hssolar = Hs / (
-                model_params['R*'] * sscmks['Rsun']
-            )  # this is used for plot scaling
+            # this is used for plot scaling
+            Hssolar = Hs / (model_params['R*'] * sscmks['Rsun'])
+            print('mmw hs (solar)', mmwsolar, Hs, HoverRmax, Hssolar)
 
             # skip non-converging atmospheres!!
             # print()
@@ -206,9 +216,8 @@ def simulate_spectra(target, system_dict, runtime_params, out):
 
                 # make sure that the random C/O is fixed for each target planet
                 np.random.seed(intFromTarget + 12345)
-                CtoO_planet_linear = (
-                    randomCtoO_linear()
-                )  # this is linear C/O, not dex
+                # this is linear C/O, not dex
+                CtoO_planet_linear = randomCtoO_linear()
                 # print('CtoO_planet_linear',CtoO_planet_linear)
 
                 # Load the instrument model and rescale based on #-of-transits
@@ -245,23 +254,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         # print('C/O model param',model_params['C/O'])
 
                     # check whether this planet+metallicity combo is convergent/bound atmosphere
-                    mixratio, fH2, fHe = crbutil.crbce(
-                        pressure, eqtemp, X2Hr=model_params['metallicity']
+                    print('  METALLICITY', model_params['metallicity'])
+                    mmw, Hs = calc_mmw_Hs(
+                        pressure,
+                        eqtemp,
+                        model_params['logg'],
+                        X2Hr=model_params['metallicity'],
                     )
-                    # print ('  METALLICITY',model_params['metallicity'])
-                    mmw, fH2, fHe = crbutil.getmmw(
-                        mixratio, protosolar=False, fH2=fH2, fHe=fHe
-                    )
-                    Hs = (
-                        cst.Boltzmann
-                        * eqtemp
-                        / (
-                            mmw
-                            * cst.m_p
-                            * 1e-2
-                            * (10.0 ** float(model_params['logg']))
-                        )
-                    )
+                    print('mmw,Hs new method', mmw, Hs)
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
                     # print('HoverRp,mmw',HoverRp,mmw,atmosModel)
                     if HoverRp > 0.04:
@@ -333,9 +333,9 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                             tempspc = {
                                 'data': {planet_letter: {'WB': wavelength_um}}
                             }
-                            # print('CALCulating cross-sections START')
+                            print('CALCulating cross-sections START')
                             _ = myxsecs(tempspc, xslib)
-                            # print('CALCulating cross-sections DONE')
+                            print('CALCulating cross-sections DONE')
                         else:
                             # make sure that it exists for this planet letter
                             if planet_letter in xslib['data']:
@@ -359,8 +359,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                             Hsmax=20,
                         )
 
-                        fluxDepth = cerbModel
-                        fluxDepth_by_molecule = cerbModel_by_molecule
+                        # convert from tensor to normal float
+                        fluxDepth = cerbModel.eval()
+                        print('spectrum in ariel.core', fluxDepth)
+                        fluxDepth_by_molecule = {}
+                        for molecule in cerbModel_by_molecule:
+                            fluxDepth_by_molecule[molecule] = (
+                                cerbModel_by_molecule[molecule].eval()
+                            )
 
                     elif 'taurex' in atmosModel:
                         sys.exit('ERROR: taurex no longer an option')
@@ -447,7 +453,15 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     #  it has to be this way to match the formatting for regular spectra itk
 
                     # redo the chemsitry/mmw calculation for this metallicity
-                    # print('metallicity [X/H]dex:',model_params['metallicity'])
+                    print('metallicity [X/H]dex:', model_params['metallicity'])
+                    mmw, Hs = calc_mmw_Hs(
+                        pressure,
+                        eqtemp,
+                        model_params['logg'],
+                        X2Hr=model_params['metallicity'],
+                    )
+                    print('lower mmw,Hs new method', mmw, Hs)
+
                     mixratio, fH2, fHe = crbutil.crbce(
                         pressure, eqtemp, X2Hr=model_params['metallicity']
                     )
@@ -460,9 +474,13 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     mmwnow, fH2, fHe = crbutil.getmmw(
                         mixratio, protosolar=False, fH2=fH2, fHe=fHe
                     )
-                    # print(' mmwnow,mmwsolar',mmwnow,mmwsolar)
+                    print('lower mmw,Hs old method', mmwnow.eval(), Hs)
+                    print(' mmwnow,mmwsolar', mmwnow.eval(), mmwsolar)
+                    print(
+                        '   Hs from scaling', Hssolar * mmwsolar / mmwnow.eval()
+                    )
                     out['data'][planet_letter][atmosModel]['Hs'] = (
-                        Hssolar * mmwsolar / mmwnow
+                        Hssolar * mmwsolar / mmwnow.eval()
                     )
                     # print('Hs calculation',Hssolar,mmwsolar,mmwnow)
                     # save the true spectrum (both raw and binned)
@@ -499,7 +517,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     fluxDepth_rebin = 100 * fluxDepth_rebin
                     fluxDepth_observed = 100 * fluxDepth_observed
                     # careful - uncertainties are reused, so don't change them permanently
-                    uncertainties_percent = 100 * uncertainties
+                    # uncertainties_percent = 100 * uncertainties
                     molecules = fluxDepth_by_molecule_rebin.keys()
                     for molecule in molecules:
                         fluxDepth_by_molecule_rebin[molecule] = (
@@ -578,25 +596,25 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         )
                     yrange = plt.ylim()
                     # plot the simulated data points
-                    plt.scatter(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        marker='o',
-                        s=20,
-                        color='None',
-                        edgecolor='k',
-                        zorder=4,
-                        label='simulated data',
-                    )
-                    plt.errorbar(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        yerr=uncertainties_percent,
-                        linestyle='None',
-                        lw=0.2,
-                        color='grey',
-                        zorder=2,
-                    )
+                    # plt.scatter(
+                    #    wavelength_um_rebin,
+                    #    fluxDepth_observed,
+                    #    marker='o',
+                    #    s=20,
+                    #    color='None',
+                    #    edgecolor='k',
+                    #    zorder=4,
+                    #    label='simulated data',
+                    # )
+                    # plt.errorbar(
+                    #    wavelength_um_rebin,
+                    #    fluxDepth_observed,
+                    #    yerr=uncertainties_percent,
+                    #    linestyle='None',
+                    #    lw=0.2,
+                    #    color='grey',
+                    #    zorder=2,
+                    # )
                     plt.ylim(yrange)
                     plt.xlim(0.0, 8.0)
                     plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.48))

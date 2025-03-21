@@ -208,7 +208,7 @@ def crbmodel(
 
     z = np.linspace(0, len(p) - 1, len(p))
     z = 2 * rdz * z
-    print('z', z.eval())
+    # print('z', z.eval())
     # print('z redo',[zlist.eval() for zlist in z[1:]])
 
     # simplify dz.  will help tremendously below, where tensor keeps crashing
@@ -216,7 +216,7 @@ def crbmodel(
     # print('new dz',dz)
     # print(' rdz',rdz.eval()*2)
     dz = 2 * rdz
-    print('new dz', dz.eval())
+    # print('new dz', dz.eval())
 
     rho = p * 1e5 / (cst.Boltzmann * temp)
     tau, tau_by_molecule, wtau = gettau(
@@ -244,6 +244,11 @@ def crbmodel(
         hzwscale=hzwscale,
         debug=debug,
     )
+
+    # print('tau', tau.eval())
+    # for molecule, tau in tau_by_molecule.items:
+    #    print('tau', molecule, tau.eval())
+
     if not break_down_by_molecule:
         tau_by_molecule = {}
     molecules = tau_by_molecule.keys()
@@ -260,45 +265,77 @@ def crbmodel(
     if not all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
         for index in np.arange(wtau.size):
-            myspl = itp(reversep, tau[:, index])
-            tau[cloudindex, index] = myspl(10.0**cloudtp)
-            tau[:cloudindex, index] = 0.0
+            # print('reversep', reversep)
+            # print('reversep', reversep.shape)
+            # print('tau check', index, tau[:, index].eval())
+            # print('tau check', index, tau[:, index].eval().shape)
+            myspl = itp(reversep, tau[:, index].eval())
+            # print('myspl',myspl)  # interp1d object
+            # print(' cloudtp', cloudtp)
+            # print(' powcheck', 10.0**cloudtp)
+            # print('  indices', cloudindex, index)
+            print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
+            # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
+            # print('  tau[]', tau[cloudindex, index].eval())
+            tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
+            # print('  tau[]', tau[cloudindex, index].eval())
+            # tau[:cloudindex, index] = 0.0
+            # --> this line can be done for all indices (outside of loop, I mean)
+            tau = tau[:cloudindex, index].set(0.0)
             for molecule in molecules:
-                myspl = itp(reversep, tau_by_molecule[molecule][:, index])
-                tau_by_molecule[molecule][cloudindex, index] = myspl(
-                    10.0**cloudtp
+                myspl = itp(
+                    reversep, tau_by_molecule[molecule][:, index].eval()
                 )
-                tau_by_molecule[molecule][:cloudindex, index] = 0.0
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                    cloudindex, index
+                ].set(myspl(10.0**cloudtp))
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                    :cloudindex, index
+                ].set(0.0)
             pass
         ctpdpress = 10.0**cloudtp - p[cloudindex]
         ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
         rp0 += z[cloudindex] + ctpdz
         pass
-    atmdepth = (
-        2e0
-        * np.array(
-            np.mat((rp0 + np.array(z)) * np.array(dz))
-            * np.mat(1.0 - np.exp(-tau))
-        ).flatten()
-    )
+    # atmdepth = (2e0 * np.array(
+    #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+    #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
+    matrix1 = (rp0 + z) * dz
+    matrix2 = 1.0 - tensor.exp(-tau)
+    # print('matrix1 shape', matrix1.eval().shape)
+    # print('matrix2 shape', matrix2.eval().shape)
+    atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
+    print('result shape', atmdepth.eval().shape)
+    #  flatten is not needed I think.  it's already 1-D, no?
+    # atmdepth = tensor.flatten(atmdepth)
+    # print('result shape',atmdepth.eval().shape)
+    # atmdepth = (2e0 * np.array(
+    #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+    #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
-    noatm = rp0**2 / (orbp['R*'] * ssc['Rsun']) ** 2
-    noatm = np.nanmin(model)
-    rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
+    # print('final model result!', model.eval())
+    # print('final model result!', model.eval().shape)
     models_by_molecule = {}
     for molecule in molecules:
-        atmdepth = (
-            2e0
-            * np.array(
-                np.mat((rp0 + np.array(z)) * np.array(dz))
-                * np.mat(1.0 - np.exp(-tau_by_molecule[molecule]))
-            ).flatten()
+        # atmdepth = (
+        #    2e0
+        #    * np.array(
+        #        np.asmatrix((rp0 + np.array(z)) * np.array(dz))
+        #        * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
+        # ).flatten()
+        # )
+        atmdepth = 2e0 * tensor.nlinalg.matrix_dot(
+            (rp0 + z) * dz, 1.0 - tensor.exp(-tau_by_molecule[molecule])
         )
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
         ) ** 2
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
     if verbose:
+        # noatm = tensor.nanmin(model)  # hmm, there is no nanmin in pytensor
+        noatm = tensor.min(model)
+        rp0hs = tensor.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
+
         fig, ax = plt.subplots(figsize=(10, 6))
         axes = [ax, ax.twinx(), ax.twinx()]
         fig.subplots_adjust(left=0.125, right=0.775)
@@ -370,14 +407,13 @@ def gettau(
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(p)
-    # print('z (at start of gettau)',[zz.eval() for zz in z])
-    print('z (at start of gettau)', z.eval())
+    # print('z (at start of gettau)', z.eval())
     # tau = np.zeros((len(z), wgrid.size))
     tau = np.zeros((Nzones, wgrid.size))
+    # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     dlarray = []
-    # these are coming in as lists created with append loops.  want arrays
     zprime = z
     # zprime = np.array(z)
     # dzprime = np.array(dz)
@@ -430,13 +466,12 @@ def gettau(
         # for zpr,dzpr in zip(zprime,dzprime):
         # dl = np.zeros(len(zprime))
         # dl = np.zeros(Nzones)
-        print(' zprime', zprime.eval())
-        print(' dz', dz.eval())
+        # print(' zprime', zprime.eval())
+        # print(' dz', dz.eval())
         # print('dl',dl)
         # WHAT ABOUT THIS NOW? Yes!
-        dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
-        dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
-        # exit('GOOD!!!')
+        # dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
+        # dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)  # works
         # for izz in range(Nzones):
         #    print(' subloop',izz,dl)
         #    dl[izz] = rp0
@@ -459,7 +494,7 @@ def gettau(
         #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2 - (rp0 + thisz)**2)
         # print('dl sqrt works subtract both',dl)
         # print('dl sqrt works subtract both',[d.eval() for d in dl])
-        print('dl sqrt works subtract both', dl.eval())
+        # print('dl sqrt works subtract both', dl.eval() / dz.eval())
 
         # for d in dl: print('loop check1',d.eval())
         # for id,d in enumerate(dl): print('loop check2',id,d.eval())
@@ -529,20 +564,30 @@ def gettau(
         #            )
         #            print('dop', dl[did].eval())
 
-        dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
-        # print('dl with negative still',[dd.eval() for dd in dl])
-        print('dl with negative still', dl.eval())
+        # (above) dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
 
-        dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
-        print(' dl0 old', dl0.eval())
+        # dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
+        # print('dl with negative still',[dd.eval() for dd in dl])
+        # print('dl with negative still', dl.eval() / dz.eval())
+
+        # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
+        # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
+        dl = np.sqrt(
+            tensor.max(
+                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                axis=0,
+            )
+        )
         dl0 = np.sqrt(
             tensor.max(
                 [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
             )
         )
-        print(' dl0 new', dl0.eval())
-        # asdfasdf
+        # print(' dl1 ', dl.eval() / dz.eval())
+        # print(' dl0 ', dl0.eval() / dz.eval())
+        dl = dl - dl0
+        print(' dl new', dl.eval() / dz.eval())
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
         # print('dl with nan fixed?',dl.eval())
@@ -559,8 +604,16 @@ def gettau(
     # print('dlarray',dlarray.eval())  # fails.  it's a list
     # print()
     dlarray = np.array(dlarray)
-    print('dlarray', [d.eval() for d in dlarray])
+    # print('dlarray', [d.eval() for d in dlarray])
     # print('dlarray',dlarray.eval()) still fails even after change list to array
+
+    # dlarray is a list of tensors which are 1-d arrays (yuch!)
+    # convert it to a 2-d tensor
+    dlarraymod = []
+    for dla in dlarray:
+        dlarraymod.append(dla.eval())
+    dlarray = np.array(dlarraymod)
+    print('dlarray up top', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
@@ -603,6 +656,10 @@ def gettau(
         if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
+            # print('    mmr', mmr)  # tensor
+            # print('    sigma', sigma) # 100 floats
+            # print('    rho', rho)  # 7 floats
+            # print('tau for this molecule', elem, tau_by_molecule[elem].eval())
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
@@ -633,7 +690,7 @@ def gettau(
             sigma[~np.isfinite(sigma)] = 0e0
         tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
         tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-        pass
+        # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
@@ -641,6 +698,7 @@ def gettau(
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
+    # print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
@@ -651,8 +709,7 @@ def gettau(
         tau_by_molecule['haze'] = (
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
-        pass
-    if hzlib is not None:
+    else:
         # WEST ET AL. 2004
         sigma = (
             0.0083
@@ -682,7 +739,6 @@ def gettau(
                 preval = hztop - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
-                pass
             else:
                 rh = thisfrh(np.log10(p)) * 0
             if debug:
@@ -725,20 +781,72 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
-        tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
+        # print('lower haze',rayleigh)
+        # print('lower haze',sigma)
+        # print('lower haze', rh)
+        hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
+        # convert the haze contribution to a tensor
+        #  otherwise haze will be different type than all other contributions
+        hazecontribution = tensor.as_tensor(hazecontribution)
+        tau = tau + hazecontribution
+        tau_by_molecule['haze'] = hazecontribution
         pass
-    tau = 2e0 * np.array(np.mat(dlarray) * np.mat(tau))
+    # careful, haze is the weird one. it's float, not tensor
+    # print('tau for this molecule', 'haze', tau_by_molecule['haze'])
+    # print('OVERALL TAU!!!', tau.eval())
+
+    # any trouble with this matrix multiplication?
+    print('dlarray', dlarray)
+    print('dlarray', dlarray.shape)  # 7x7 elements
+    print('dlarray[0][0]', dlarray[0][0])
+    print('tau', tau.eval().shape)  # 7x103 elements
+
+    # module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
+    #    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
+    # tau = 2e0 * dlarray * tau  # fails
+    # tau = 2e0 * tensor.nlinalg.matrix_dot(dlarray, tau)  # keyerror: 'object'
+
+    print('dlarray', dlarray)
+    # TypeError: Unsupported dtype for TensorType: object
+    # testtest = tensor.as_tensor(dlarray)
+    # print('dlarray',testtest)
+
+    # dlarraymod = []
+    # for dla in dlarray: dlarraymod.append(dla.eval())
+    # dlarraymod = np.array(dlarraymod)
+    # print('dlarraymod',dlarraymod)
+    # print('dlarraymod shape',dlarraymod.shape)
+    # testtest = tensor.as_tensor(dlarraymod)
+    # print('dlarray as tensor',testtest)
+    # print('OK!')
+    # print()
+
+    # tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
+    # print('tau after matrixing',tau.shape)
+    tau = 2e0 * tensor.nlinalg.matrix_dot(tensor.as_tensor(dlarray), tau)
+    print('tau shape after matrixing', tau.eval().shape)
+
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        tau_by_molecule[molecule] = 2e0 * np.array(
-            np.mat(dlarray) * np.mat(tau_by_molecule[molecule])
+        print(' MOLECULE:', molecule)
+        # careful here.  most of the time this is a tensor
+        #  but for haze it comes out as a numpy array
+        #  (haze is based on a float-based density profile)
+        # print('tau[0][0] for molecule',
+        #      molecule, tau_by_molecule[molecule][0][0])
+        # this is only an issue for printing.  this handles either case fine
+        tau_by_molecule[molecule] = 2e0 * tensor.nlinalg.matrix_dot(
+            tensor.as_tensor(dlarray), tau_by_molecule[molecule]
         )
-
+        print(
+            'tau[0][0] for molecule',
+            molecule,
+            tau_by_molecule[molecule][0][0].eval(),
+        )
     if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
-            np.log10(tau),
+            tensor.log10(tau).eval(),
             aspect='auto',
             origin='lower',
             extent=[max(wgrid), min(wgrid), np.log10(max(p)), np.log10(min(p))],
@@ -750,6 +858,12 @@ def gettau(
         plt.tick_params(axis='both', labelsize=20)
         cbar = plt.colorbar()
         cbar.ax.tick_params(labelsize=20)
+        # plt.savefig('opticalDepth1.png')  # permission denied
+        # plt.savefig('/proj/sdp/bryden/opticalDepth2.png')  # no such file/dir
+        # hey this works! but no way to see it.
+        #  also it seems to raise bandit security error in pylint
+        # plt.savefig('/tmp/opticalDepth3.png')
+        # plt.savefig('/home/bryden/opticalDepth4.png') # no such file/dir
         plt.show()
         pass
     return tau, tau_by_molecule, 1e4 / lsig
@@ -795,14 +909,14 @@ def absorb(
     sigma = S * tips
     ps = mmr * p
     gamma = np.array(
-        np.mat(p - ps).T * np.mat(gair * (Tref / T) ** eta)
-        + np.mat(ps).T * np.mat(gself)
+        np.asmatrix(p - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+        + np.asmatrix(ps).T * np.asmatrix(gself)
     )
     if lbroadening:
         if lshifting:
             matnu = np.array(
-                np.mat(np.ones(p.size)).T * np.mat(nu)
-                + np.mat(p).T * np.mat(delta)
+                np.asmatrix(np.ones(p.size)).T * np.asmatrix(nu)
+                + np.asmatrix(p).T * np.asmatrix(delta)
             )
         else:
             matnu = np.array(nu) * np.array([np.ones(len(p))]).T
@@ -814,7 +928,7 @@ def absorb(
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
     if lbroadening:
         for mymatnu, mygamma in zip(matnu, gamma):
-            binsigma = np.mat(sigma) * np.mat(
+            binsigma = np.asmatrix(sigma) * np.asmatrix(
                 intflor(
                     nugrid,
                     dwnu / 2.0,
@@ -856,24 +970,17 @@ def getxmolxs(temp, xsecs):
     # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
     # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
     sigma = np.array(list(xsecs['SPL']))
-    # print('sigma',sigma)
-    print('sigma3', sigma[3])
-    print('sigma3', xsecs['SPL'][3])
-    print('nu', xsecs['SPLNU'])
-    print('nu3', xsecs['SPLNU'][3])
-    print('ackack')
-    print('temperature', temp.eval())
-    print('ackack')
-    for thisspl in xsecs['SPL']:
-        print(
-            'does this single call work?', thisspl(temp.eval())
-        )  # ?? didn't try yet
-        print('does this single call work?', thisspl(temp))  # <-- FAILS!!
-    print('ackack')
+    # print('sigma3', sigma[3])  # scipy.interp object
+    # print('sigma3', xsecs['SPL'][3])  # scipy.interp object
+    #    print('nu', xsecs['SPLNU'])      # a list of floats
+    # print('nu3', xsecs['SPLNU'][3])  # a float
+    # temp is not a tensor, for ariel-sim call. for cerberus?  asdf
+    # print('temperature', temp)
+    #    for thisspl in xsecs['SPL']:
+    # print('does this single call work?', thisspl)
+    #        print('does this single call work?', thisspl(temp))  # <-- was failing before
     sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
-    print('nu?')
     nu = np.array(xsecs['SPLNU'])
-    print('nu!')
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]

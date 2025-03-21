@@ -49,7 +49,6 @@ class NormSV(ExcaliburSV):
                         strignore = str(int(v)) + '  ' + m
                         visitor.add_declaration('VISIT: ' + strignore)
                     pass
-                vrange = self['data'][p]['vrange']
 
                 if 'plot_normalized_byvisit' in self['data'][p].keys():
                     for index, v in enumerate(self['data'][p]['visits']):
@@ -70,7 +69,8 @@ class NormSV(ExcaliburSV):
                         pass
                     pass
                 # keep on-the-fly plotting, so that older RUNIDs still work
-                else:
+                elif 'vrange' in self['data'][p]:
+                    vrange = self['data'][p]['vrange']
                     plot_normalized_byvisit(self['data'][p], vrange, visitor)
 
 
@@ -500,12 +500,20 @@ class StarspotSV(ExcaliburSV):
                 for savedresult in self['data'][p].keys():
                     # anything with 'plot' in it is a saved .png figure
                     if 'plot' in savedresult:
-                        if savedresult == 'plot_starspot_spectrum':
-                            plotlabel = 'starspot spectrum'
-                        elif savedresult == 'plot_starspot_limbCoeffs':
-                            plotlabel = 'limb darkening coefficients'
-                        elif savedresult == 'plot_starspot_limbdarkening':
-                            plotlabel = 'limb darkening'
+                        if savedresult.endswith('_spectrum'):
+                            plotlabel = 'the data itself'
+                        elif savedresult.endswith('_limbCoeffs'):
+                            plotlabel = 'assumed limb darkening coefficients'
+                        elif savedresult.endswith('_limbdarkening'):
+                            plotlabel = 'assumed limb darkening'
+                        elif savedresult.endswith('_transitdepths'):
+                            plotlabel = (
+                                'transit depth for various starspot models'
+                            )
+                        elif savedresult.endswith('_deltadepths'):
+                            plotlabel = 'starspots effect on transit depth'
+                        elif savedresult.endswith('_lightcurves'):
+                            plotlabel = 'lightcurves for various wavelengths'
                         else:
                             plotlabel = 'more starspot info'
                         visitor.add_image(
