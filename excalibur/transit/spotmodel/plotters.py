@@ -257,38 +257,39 @@ def plot_lightcurves(
     pyplot.rcParams['axes.linewidth'] = 2
 
     # second panel
-    count4 = 0
-    while count4 < num_wavelengths:
-        ax2.plot(
-            stack_tempoHoras[count4],
-            stack_curvaLuz[count4],
-            label=int(lambdaEff_nm[count4]),
-            color=palette[count_palette],
-            linewidth=1.5,
-        )
-        count4 += 1
-        count_palette -= 1
-    ax2.axis(
-        [
-            -tempoTransito / 5,
-            tempoTransito / 5,
-            min_D - depth / 3,
-            1 + depth / 3,
-        ]
-    )
-    ax2.set_xlabel('Time from transit center (hrasdfasdf)', fontsize=16)
-    ax2.set_ylabel('Relaasdfasdfdsftive flux', fontsize=16)
-    ax2.tick_params(
-        axis="x", direction="in", labelsize=16, length=7, width=2, top=True
-    )
-    ax2.tick_params(
-        axis="y",
-        direction="in",
-        labelsize=16,
-        length=7,
-        width=2,
-        right=True,
-    )
+    # count4 = 0
+    # count_palette = num_wavelengths - 1
+    # while count4 < num_wavelengths:
+    #    ax2.plot(
+    #        stack_tempoHoras[count4],
+    #        stack_curvaLuz[count4],
+    #        label=int(lambdaEff_nm[count4]),
+    #        color=palette[count_palette],
+    #        linewidth=1.5,
+    #    )
+    #    count4 += 1
+    #    count_palette -= 1
+    # ax2.axis(
+    #    [
+    #        -tempoTransito / 5,
+    #        tempoTransito / 5,
+    #        min_D - depth / 10,
+    #        1 + depth / 10,
+    #    ]
+    # )
+    # ax2.set_xlabel('Time from transit center', fontsize=16)
+    # ax2.set_ylabel('Relative flux', fontsize=16)
+    # ax2.tick_params(
+    #    axis="x", direction="in", labelsize=16, length=7, width=2, top=True
+    # )
+    # ax2.tick_params(
+    #    axis="y",
+    #    direction="in",
+    #    labelsize=16,
+    #    length=7,
+    #    width=2,
+    #    right=True,
+    # )
 
     pyplot.tight_layout()
     # pyplot.show()
