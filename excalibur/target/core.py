@@ -1205,14 +1205,14 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 allraw.extend(rawdata)
                 # --<
                 # Downloads JWST data only
-                allsci.extend(scidata)
-                allmiss.extend([obscol] * len(scidata))
-                allurl.extend([thisurl] * len(scidata))
+                # allsci.extend(scidata)
+                # allmiss.extend([obscol] * len(scidata))
+                # allurl.extend([thisurl] * len(scidata))
                 pass
             # Downloads all missions
-            # allsci.extend(scidata)
-            # allmiss.extend([obscol]*len(scidata))
-            # allurl.extend([thisurl]*len(scidata))
+            allsci.extend(scidata)
+            allmiss.extend([obscol] * len(scidata))
+            allurl.extend([thisurl] * len(scidata))
             # >--
             if verbose:
                 log.warning('%s: %s: %s', obscol, o, len(scidata))
