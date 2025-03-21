@@ -464,12 +464,11 @@ class StarSpots(dawgie.Algorithm):
     include Viktor's starspot model
     '''
 
-    def __init__(self, wht=WhiteLight(), spc=Spectrum()):
+    def __init__(self, spc=Spectrum()):
         '''__init__ ds'''
         self._version_ = trncore.spectrumversion()
         self._type = 'transit'
         self.__fin = sysalg.Finalize()
-        self._wht = wht
         self._spc = spc
         self.__rt = rtalg.Autofill()
         self.__out = [trnstates.StarspotSV(fltr) for fltr in fltrs]
@@ -484,7 +483,6 @@ class StarSpots(dawgie.Algorithm):
         transit.whitelight'''
         return [
             dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
             dawgie.ALG_REF(fetch('excalibur.transit').task, self._spc),
         ] + self.__rt.refs_for_proceed()
 
@@ -498,26 +496,27 @@ class StarSpots(dawgie.Algorithm):
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
+        # print('STARSPOTS: allowed filters',
+        #    self.__rt.sv_as_dict()['status']['allowed_filter_names'])
+
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:  # for debugging, just run G141
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
 
             update = False
-            vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             vspc, sspc = checksv(self._spc.sv_as_dict()[fltr])
-            if vfin and vwht and vspc:
-                log.warning(
-                    '--< %s STARSPOTS: %s >--', self._type.upper(), fltr
-                )
+            if vfin and vspc:
+                # log.warning(
+                #     '--< %s STARSPOTS: %s >--', self._type.upper(), fltr
+                # )
                 update = self._starspots(
                     self.__fin.sv_as_dict()['parameters'],
-                    self._wht.sv_as_dict()[fltr],
                     self._spc.sv_as_dict()[fltr],
                     self.__out[fltrs.index(fltr)],
                 )
             else:
-                errstr = [m for m in [sfin, swht, sspc] if m is not None]
+                errstr = [m for m in [sfin, sspc] if m is not None]
                 self._failure(errstr[0])
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
@@ -532,9 +531,9 @@ class StarSpots(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _starspots(fin, wht, spc, out):
+    def _starspots(fin, spc, out):
         '''Core code call'''
-        spotmodel = trnspots.starspots(fin, wht, spc, out)
+        spotmodel = trnspots.starspots(fin, spc, out)
         return spotmodel
 
     def _failure(self, errstr):

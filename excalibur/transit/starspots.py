@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------
-def starspots(fin, wht, spc, out):
+# def starspots(fin, wht, spc, out):
+def starspots(fin, spc, out):
     '''
     Viktor Sumida's starspot model
     '''
