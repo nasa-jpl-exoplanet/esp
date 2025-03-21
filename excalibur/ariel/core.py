@@ -596,25 +596,25 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         )
                     yrange = plt.ylim()
                     # plot the simulated data points
-                    plt.scatter(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        marker='o',
-                        s=20,
-                        color='None',
-                        edgecolor='k',
-                        zorder=4,
-                        label='simulated data',
-                    )
-                    plt.errorbar(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        yerr=uncertainties_percent,
-                        linestyle='None',
-                        lw=0.2,
-                        color='grey',
-                        zorder=2,
-                    )
+                    # plt.scatter(
+                    #    wavelength_um_rebin,
+                    #    fluxDepth_observed,
+                    #    marker='o',
+                    #    s=20,
+                    #    color='None',
+                    #    edgecolor='k',
+                    #    zorder=4,
+                    #    label='simulated data',
+                    # )
+                    # plt.errorbar(
+                    #    wavelength_um_rebin,
+                    #    fluxDepth_observed,
+                    #    yerr=uncertainties_percent,
+                    #    linestyle='None',
+                    #    lw=0.2,
+                    #    color='grey',
+                    #    zorder=2,
+                    # )
                     plt.ylim(yrange)
                     plt.xlim(0.0, 8.0)
                     plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.48))
