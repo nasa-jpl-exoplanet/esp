@@ -280,6 +280,7 @@ def crbmodel(
             tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
             # print('  tau[]', tau[cloudindex, index].eval())
             # tau[:cloudindex, index] = 0.0
+            # --> this line can be done for all indices (outside of loop, I mean)
             tau = tau[:cloudindex, index].set(0.0)
             for molecule in molecules:
                 myspl = itp(
@@ -413,7 +414,6 @@ def gettau(
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     dlarray = []
-    # these are coming in as lists created with append loops.  want arrays
     zprime = z
     # zprime = np.array(z)
     # dzprime = np.array(dz)
@@ -466,12 +466,12 @@ def gettau(
         # for zpr,dzpr in zip(zprime,dzprime):
         # dl = np.zeros(len(zprime))
         # dl = np.zeros(Nzones)
-        print(' zprime', zprime.eval())
+        # print(' zprime', zprime.eval())
         # print(' dz', dz.eval())
         # print('dl',dl)
         # WHAT ABOUT THIS NOW? Yes!
         # dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
-        dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
+        # dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)  # works
         # for izz in range(Nzones):
         #    print(' subloop',izz,dl)
         #    dl[izz] = rp0
@@ -494,7 +494,7 @@ def gettau(
         #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2 - (rp0 + thisz)**2)
         # print('dl sqrt works subtract both',dl)
         # print('dl sqrt works subtract both',[d.eval() for d in dl])
-        print('dl sqrt works subtract both', dl.eval() / dz.eval())
+        # print('dl sqrt works subtract both', dl.eval() / dz.eval())
 
         # for d in dl: print('loop check1',d.eval())
         # for id,d in enumerate(dl): print('loop check2',id,d.eval())
@@ -566,9 +566,9 @@ def gettau(
 
         # (above) dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
 
-        dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
+        # dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print('dl with negative still',[dd.eval() for dd in dl])
-        print('dl with negative still', dl.eval() / dz.eval())
+        # print('dl with negative still', dl.eval() / dz.eval())
 
         # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print(' dl0 old', dl0.eval()/dz.eval())
@@ -584,11 +584,10 @@ def gettau(
                 [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
             )
         )
-        print(' dl1 ', dl.eval() / dz.eval())
-        print(' dl0 ', dl0.eval() / dz.eval())
+        # print(' dl1 ', dl.eval() / dz.eval())
+        # print(' dl0 ', dl0.eval() / dz.eval())
         dl = dl - dl0
         print(' dl new', dl.eval() / dz.eval())
-        # asdfasdf
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
         # print('dl with nan fixed?',dl.eval())
@@ -859,7 +858,6 @@ def gettau(
         plt.tick_params(axis='both', labelsize=20)
         cbar = plt.colorbar()
         cbar.ax.tick_params(labelsize=20)
-        # asdf
         # plt.savefig('opticalDepth1.png')  # permission denied
         # plt.savefig('/proj/sdp/bryden/opticalDepth2.png')  # no such file/dir
         plt.savefig(
