@@ -245,9 +245,9 @@ def crbmodel(
         debug=debug,
     )
 
-    print('tau', tau.eval())
-    for molecule in tau_by_molecule:
-        print('tau', molecule, tau_by_molecule[molecule].eval())
+    # print('tau', tau.eval())
+    # for molecule, tau in tau_by_molecule.items:
+    #    print('tau', molecule, tau.eval())
 
     if not break_down_by_molecule:
         tau_by_molecule = {}
@@ -265,22 +265,20 @@ def crbmodel(
     if not all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
         for index in np.arange(wtau.size):
-            # asdf
-            print('reversep', reversep)
-            print('reversep', reversep.shape)
-            print('tau check', index, tau[:, index].eval())
-            print('tau check', index, tau[:, index].eval().shape)
+            # print('reversep', reversep)
+            # print('reversep', reversep.shape)
+            # print('tau check', index, tau[:, index].eval())
+            # print('tau check', index, tau[:, index].eval().shape)
             myspl = itp(reversep, tau[:, index].eval())
             # print('myspl',myspl)  # interp1d object
-            print(' cloudtp', cloudtp)
-            powcheck = 10.0**cloudtp
-            print(' powcheck', powcheck)
-            print('  indices', cloudindex, index)
+            # print(' cloudtp', cloudtp)
+            # print(' powcheck', 10.0**cloudtp)
+            # print('  indices', cloudindex, index)
             print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
             # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
-            print('  tau[]', tau[cloudindex, index].eval())
+            # print('  tau[]', tau[cloudindex, index].eval())
             tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
-            print('  tau[]', tau[cloudindex, index].eval())
+            # print('  tau[]', tau[cloudindex, index].eval())
             # tau[:cloudindex, index] = 0.0
             tau = tau[:cloudindex, index].set(0.0)
             for molecule in molecules:
@@ -289,7 +287,7 @@ def crbmodel(
                 )
                 tau_by_molecule[molecule] = tau_by_molecule[molecule][
                     cloudindex, index
-                ].set(myspl(10.0**cloudtp))
+;                ].set(myspl(10.0**cloudtp))
                 tau_by_molecule[molecule] = tau_by_molecule[molecule][
                     :cloudindex, index
                 ].set(0.0)
@@ -303,8 +301,8 @@ def crbmodel(
     #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     matrix1 = (rp0 + z) * dz
     matrix2 = 1.0 - tensor.exp(-tau)
-    print('matrix1 shape', matrix1.eval().shape)
-    print('matrix2 shape', matrix2.eval().shape)
+    # print('matrix1 shape', matrix1.eval().shape)
+    # print('matrix2 shape', matrix2.eval().shape)
     atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
     print('result shape', atmdepth.eval().shape)
     #  flatten is not needed I think.  it's already 1-D, no?
@@ -314,8 +312,8 @@ def crbmodel(
     #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
     #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
-    print('final model result!', model.eval())
-    print('final model result!', model.eval().shape)
+    # print('final model result!', model.eval())
+    # print('final model result!', model.eval().shape)
     models_by_molecule = {}
     for molecule in molecules:
         # atmdepth = (
@@ -333,8 +331,8 @@ def crbmodel(
         ) ** 2
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
     if verbose:
-        noatm = rp0**2 / (orbp['R*'] * ssc['Rsun']) ** 2
-        noatm = tensor.nanmin(model)
+        # noatm = tensor.nanmin(model)  # hmm, there is no nanmin in pytensor
+        noatm = tensor.min(model)
         rp0hs = tensor.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -408,11 +406,10 @@ def gettau(
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(p)
-    # print('z (at start of gettau)',[zz.eval() for zz in z])
-    print('z (at start of gettau)', z.eval())
+    # print('z (at start of gettau)', z.eval())
     # tau = np.zeros((len(z), wgrid.size))
     tau = np.zeros((Nzones, wgrid.size))
-    print('tau shape at the top', tau.shape)
+    # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     dlarray = []
@@ -787,11 +784,11 @@ def gettau(
             pass
         # print('lower haze',rayleigh)
         # print('lower haze',sigma)
-        print('lower haze', rh)
+        # print('lower haze', rh)
         hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
         # convert the haze contribution to a tensor
         #  otherwise haze will be different type than all other contributions
-        # hazecontribution = tensor.as_tensor(hazecontribution)
+        hazecontribution = tensor.as_tensor(hazecontribution)
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
