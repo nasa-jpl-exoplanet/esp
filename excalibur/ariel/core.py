@@ -517,7 +517,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     fluxDepth_rebin = 100 * fluxDepth_rebin
                     fluxDepth_observed = 100 * fluxDepth_observed
                     # careful - uncertainties are reused, so don't change them permanently
-                    uncertainties_percent = 100 * uncertainties
+                    # uncertainties_percent = 100 * uncertainties
                     molecules = fluxDepth_by_molecule_rebin.keys()
                     for molecule in molecules:
                         fluxDepth_by_molecule_rebin[molecule] = (
