@@ -474,10 +474,11 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     mmwnow, fH2, fHe = crbutil.getmmw(
                         mixratio, protosolar=False, fH2=fH2, fHe=fHe
                     )
-                    print('lower mmw,Hs old method', mmwnow, Hs)
-                    print(' mmwnow,mmwsolar', mmwnow, mmwsolar)
+                    print('lower mmw,Hs old method', mmwnow.eval(), Hs)
+                    print(' mmwnow,mmwsolar', mmwnow.eval(), mmwsolar)
+                    print('   Hs from scaling',Hssolar * mmwsolar / mmwnow.eval())
                     out['data'][planet_letter][atmosModel]['Hs'] = (
-                        Hssolar * mmwsolar / mmwnow
+                        Hssolar * mmwsolar / mmwnow.eval()
                     )
                     # print('Hs calculation',Hssolar,mmwsolar,mmwnow)
                     # save the true spectrum (both raw and binned)
