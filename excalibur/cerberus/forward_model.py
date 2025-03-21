@@ -862,7 +862,7 @@ def gettau(
         # plt.savefig('/proj/sdp/bryden/opticalDepth2.png')  # no such file/dir
         # hey this works! but no way to see it.
         #  also it seems to raise bandit security error in pylint
-        plt.savefig('/tmp/opticalDepth3.png')
+        # plt.savefig('/tmp/opticalDepth3.png')
         # plt.savefig('/home/bryden/opticalDepth4.png') # no such file/dir
         plt.show()
         pass
