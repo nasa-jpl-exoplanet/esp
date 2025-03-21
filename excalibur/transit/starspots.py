@@ -11,10 +11,8 @@ from excalibur.transit.spotmodel.Spotmodel import SpotModel
 from excalibur.transit.spotmodel.plotters import plot_transit_depths
 from excalibur.transit.core import vecistar
 from excalibur.cerberus.plotting import rebin_data
-from excalibur.util.plotters import (
-    save_plot_tosv,
-    add_scale_height_labels,
-)
+from excalibur.util.plotters import add_scale_height_labels,
+# save_plot_tosv
 
 import numpy as np
 import matplotlib as mpl
@@ -64,9 +62,9 @@ def starspots(fin, wht, spc, out):
         # print('planet' + planetletter, 'R,inc,P,a:', Rplanet, inc, period, sma)
 
         # limb darkening (ignore whitelight, we want the wavelength dependence)
-        limb_coeffs_whitelight = wht['data'][planetletter]['whiteld']
-        limb_coeffs = np.array(spc['data'][planetletter]['LD'])
+        # limb_coeffs_whitelight = wht['data'][planetletter]['whiteld']
         # print('limb darkening parameters (whitelight)', limb_coeffs_whitelight)
+        limb_coeffs = np.array(spc['data'][planetletter]['LD'])
         # print(
         #    'limb darkening parameters from spectrum (median)',
         #    np.median(spc['data'][planetletter]['LD'], axis=0),
