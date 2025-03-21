@@ -241,12 +241,12 @@ def plot_lightcurves(
             1 + depth / 10,
         ]
     )
-    pyplot.xlabel('Time from transit center (hr)', fontsize=16)
-    pyplot.ylabel('Relative flux', fontsize=16)
-    pyplot.tick_params(
+    ax1.set_xlabel('Time from transit center (hr)', fontsize=16)
+    ax1.set_ylabel('Relative flux', fontsize=16)
+    ax1.tick_params(
         axis="x", direction="in", labelsize=16, length=7, width=2, top=True
     )
-    pyplot.tick_params(
+    ax2.tick_params(
         axis="y",
         direction="in",
         labelsize=16,
@@ -254,7 +254,7 @@ def plot_lightcurves(
         width=2,
         right=True,
     )
-    pyplot.rcParams['axes.linewidth'] = 2
+    ax1.rcParams['axes.linewidth'] = 2
 
     # second panel
     count4 = 0
@@ -276,12 +276,12 @@ def plot_lightcurves(
             1 + depth / 3,
         ]
     )
-    pyplot.xlabel('Time from transit center (hrasdfasdf)', fontsize=16)
-    pyplot.ylabel('Relaasdfasdfdsftive flux', fontsize=16)
-    pyplot.tick_params(
+    ax2.set_xlabel('Time from transit center (hrasdfasdf)', fontsize=16)
+    ax2.set_ylabel('Relaasdfasdfdsftive flux', fontsize=16)
+    ax2.tick_params(
         axis="x", direction="in", labelsize=16, length=7, width=2, top=True
     )
-    pyplot.tick_params(
+    ax2.tick_params(
         axis="y",
         direction="in",
         labelsize=16,
