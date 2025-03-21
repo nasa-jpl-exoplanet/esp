@@ -254,7 +254,7 @@ def plot_lightcurves(
         width=2,
         right=True,
     )
-    ax1.rcParams['axes.linewidth'] = 2
+    pyplot.rcParams['axes.linewidth'] = 2
 
     # second panel
     count4 = 0
