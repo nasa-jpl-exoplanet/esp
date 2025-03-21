@@ -507,7 +507,9 @@ class StarspotSV(ExcaliburSV):
                         elif savedresult.endswith('_limbdarkening'):
                             plotlabel = 'assumed limb darkening'
                         elif savedresult.endswith('_transitdepths'):
-                            plotlabel = 'transit depth for various starspot models'
+                            plotlabel = (
+                                'transit depth for various starspot models'
+                            )
                         elif savedresult.endswith('_deltadepths'):
                             plotlabel = 'starspots effect on transit depth'
                         elif savedresult.endswith('_lightcurves'):

@@ -7,7 +7,14 @@ from matplotlib.colors import Normalize
 from excalibur.util.plotters import save_plot_tosv
 
 
-def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_lambda_juststar, subtractStar=False):
+def plot_transit_depths(
+    f_spot_array,
+    tempSpot_array,
+    lambdaEff_nm,
+    D_lambda,
+    D_lambda_juststar,
+    subtractStar=False,
+):
 
     # Configura os parâmetros visuais padrão
     plt.rcParams['axes.linewidth'] = (
@@ -34,7 +41,8 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     # print('tempSpot_array', tempSpot_array)
 
     # Escolhe um colormap e cria o normalizador para f_spot
-    cmap_f = get_cmap("winter_r")
+    # cmap_f = get_cmap("winter_r")
+    cmap_f = get_cmap('PuBuGn')
     norm_f = Normalize(f_spot_array.min(), f_spot_array.max())
 
     # Loop para plotar cada simulação
@@ -43,7 +51,9 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
             # Define a cor com base no filling factor
             color = cmap_f(norm_f(ff))
             if subtractStar:
-                depth = (D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]) /D_lambda_juststar[0, 0]
+                depth = (
+                    D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]
+                ) / D_lambda_juststar[0, 0]
             else:
                 depth = D_lambda[i_ff, i_spottemp]
             ax1.plot(
@@ -57,7 +67,7 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     if not subtractStar:
         ax1.plot(
             lambdaEff_nm,
-            D_lambda_juststar[0,0],
+            D_lambda_juststar[0, 0],
             marker='x',
             linestyle='-',
             color='k',
@@ -77,7 +87,8 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     ax1.set_title('', fontsize=16)
     ax1.set_xlabel('', fontsize=16)
     if subtractStar:
-        ax1.set_ylabel('Change in Transit Depth [fractional]', fontsize=16)
+        # ax1.set_ylabel('Change in Transit Depth [fractional]', fontsize=16)
+        pass
     else:
         ax1.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax1.tick_params(
@@ -108,7 +119,9 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
         raise ValueError("All temperature values are NaN. Check the data.")
 
     # Escolhe um colormap e cria o normalizador para T_spot
-    cmap_t = get_cmap("cool_r")
+    # cmap_t = get_cmap("cool_r")
+    # cmap_t = get_cmap('YlGnBu')
+    cmap_t = get_cmap('autumn')
     norm_t = Normalize(valid_tempSpot.min(), valid_tempSpot.max())
 
     # Loop para plotar cada simulação (desconsiderando as que possuem temperatura NaN)
@@ -120,7 +133,9 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
             # Define a cor com base na spot temperature
             color = cmap_t(norm_t(spottemp))
             if subtractStar:
-                depth = (D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]) /D_lambda_juststar[0, 0]
+                depth = (
+                    D_lambda[i_ff, i_spottemp] - D_lambda_juststar[0, 0]
+                ) / D_lambda_juststar[0, 0]
             else:
                 depth = D_lambda[i_ff, i_spottemp]
             ax2.plot(
@@ -134,7 +149,7 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     if not subtractStar:
         ax2.plot(
             lambdaEff_nm,
-            D_lambda_juststar[0,0],
+            D_lambda_juststar[0, 0],
             marker='x',
             linestyle='-',
             color='k',
@@ -154,7 +169,10 @@ def plot_transit_depths(f_spot_array, tempSpot_array, lambdaEff_nm, D_lambda, D_
     ax2.set_title('', fontsize=16)
     ax2.set_xlabel('Wavelength [nm]', fontsize=16)
     if subtractStar:
-        ax2.set_ylabel('Change in Transit Depth [fractional]', fontsize=16)
+        ax2.set_ylabel(
+            '                           Change in Transit Depth [fractional]',
+            fontsize=16,
+        )
     else:
         ax2.set_ylabel('Transit Depth [ppm]', fontsize=16)
     ax2.tick_params(
@@ -192,14 +210,17 @@ def plot_lightcurves(
     tempoTransito,
 ):
 
-    fig = plt.figure(figsize=(6, 5))
+    # fig = plt.figure(figsize=(6, 5))
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 
-    count4 = 0
-    palette = pyplot.cm.cool_r(np.linspace(0, 1, num_wavelengths))
+    # palette = pyplot.cm.cool_r(np.linspace(0, 1, num_wavelengths))
+    # palette = pyplot.cm.YlOrRd(np.linspace(0, 1, num_wavelengths))
+    palette = pyplot.cm.RdYlBu(np.linspace(0, 1, num_wavelengths))
     count_palette = num_wavelengths - 1
 
+    count4 = 0
     while count4 < num_wavelengths:
-        pyplot.plot(
+        ax1.plot(
             stack_tempoHoras[count4],
             stack_curvaLuz[count4],
             label=int(lambdaEff_nm[count4]),
@@ -212,7 +233,14 @@ def plot_lightcurves(
     min_D = np.min(stack_curvaLuz)
 
     depth = 1 - min_D
-    pyplot.axis([-tempoTransito / 5, tempoTransito / 5, min_D-depth/10, 1+depth/10])
+    ax1.axis(
+        [
+            -tempoTransito / 5,
+            tempoTransito / 5,
+            min_D - depth / 10,
+            1 + depth / 10,
+        ]
+    )
     pyplot.xlabel('Time from transit center (hr)', fontsize=16)
     pyplot.ylabel('Relative flux', fontsize=16)
     pyplot.tick_params(
@@ -226,9 +254,42 @@ def plot_lightcurves(
         width=2,
         right=True,
     )
-    pyplot.rcParams['axes.linewidth'] = (
-        2  # Aumenta a espessura das bordas dos eixos
+    pyplot.rcParams['axes.linewidth'] = 2
+
+    # second panel
+    count4 = 0
+    while count4 < num_wavelengths:
+        ax2.plot(
+            stack_tempoHoras[count4],
+            stack_curvaLuz[count4],
+            label=int(lambdaEff_nm[count4]),
+            color=palette[count_palette],
+            linewidth=1.5,
+        )
+        count4 += 1
+        count_palette -= 1
+    ax2.axis(
+        [
+            -tempoTransito / 5,
+            tempoTransito / 5,
+            min_D - depth / 3,
+            1 + depth / 3,
+        ]
     )
+    pyplot.xlabel('Time from transit center (hrasdfasdf)', fontsize=16)
+    pyplot.ylabel('Relaasdfasdfdsftive flux', fontsize=16)
+    pyplot.tick_params(
+        axis="x", direction="in", labelsize=16, length=7, width=2, top=True
+    )
+    pyplot.tick_params(
+        axis="y",
+        direction="in",
+        labelsize=16,
+        length=7,
+        width=2,
+        right=True,
+    )
+
     pyplot.tight_layout()
     # pyplot.show()
     savedplot = save_plot_tosv(fig)

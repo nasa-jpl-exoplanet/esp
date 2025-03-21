@@ -497,7 +497,7 @@ def gettau(
         #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2 - (rp0 + thisz)**2)
         # print('dl sqrt works subtract both',dl)
         # print('dl sqrt works subtract both',[d.eval() for d in dl])
-        print('dl sqrt works subtract both', dl.eval()/dz.eval())
+        print('dl sqrt works subtract both', dl.eval() / dz.eval())
 
         # for d in dl: print('loop check1',d.eval())
         # for id,d in enumerate(dl): print('loop check2',id,d.eval())
@@ -571,14 +571,15 @@ def gettau(
 
         dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print('dl with negative still',[dd.eval() for dd in dl])
-        print('dl with negative still', dl.eval()/dz.eval())
+        print('dl with negative still', dl.eval() / dz.eval())
 
         # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
         dl = np.sqrt(
             tensor.max(
-                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2], axis=0
+                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                axis=0,
             )
         )
         dl0 = np.sqrt(
@@ -586,10 +587,10 @@ def gettau(
                 [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
             )
         )
-        print(' dl1 ', dl.eval()/dz.eval())
-        print(' dl0 ', dl0.eval()/dz.eval())
+        print(' dl1 ', dl.eval() / dz.eval())
+        print(' dl0 ', dl0.eval() / dz.eval())
         dl = dl - dl0
-        print(' dl new', dl.eval()/dz.eval())
+        print(' dl new', dl.eval() / dz.eval())
         # asdfasdf
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
@@ -786,7 +787,7 @@ def gettau(
             pass
         # print('lower haze',rayleigh)
         # print('lower haze',sigma)
-        print('lower haze',rh)
+        print('lower haze', rh)
         hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
         # convert the haze contribution to a tensor
         #  otherwise haze will be different type than all other contributions
