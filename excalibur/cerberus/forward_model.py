@@ -208,7 +208,7 @@ def crbmodel(
 
     z = np.linspace(0, len(p) - 1, len(p))
     z = 2 * rdz * z
-    print('z', z.eval())
+    # print('z', z.eval())
     # print('z redo',[zlist.eval() for zlist in z[1:]])
 
     # simplify dz.  will help tremendously below, where tensor keeps crashing
@@ -216,7 +216,7 @@ def crbmodel(
     # print('new dz',dz)
     # print(' rdz',rdz.eval()*2)
     dz = 2 * rdz
-    print('new dz', dz.eval())
+    # print('new dz', dz.eval())
 
     rho = p * 1e5 / (cst.Boltzmann * temp)
     tau, tau_by_molecule, wtau = gettau(
@@ -470,12 +470,11 @@ def gettau(
         # dl = np.zeros(len(zprime))
         # dl = np.zeros(Nzones)
         print(' zprime', zprime.eval())
-        print(' dz', dz.eval())
+        # print(' dz', dz.eval())
         # print('dl',dl)
         # WHAT ABOUT THIS NOW? Yes!
-        dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
+        # dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
         dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
-        # exit('GOOD!!!')
         # for izz in range(Nzones):
         #    print(' subloop',izz,dl)
         #    dl[izz] = rp0
@@ -498,7 +497,7 @@ def gettau(
         #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2 - (rp0 + thisz)**2)
         # print('dl sqrt works subtract both',dl)
         # print('dl sqrt works subtract both',[d.eval() for d in dl])
-        print('dl sqrt works subtract both', dl.eval())
+        print('dl sqrt works subtract both', dl.eval()/dz.eval())
 
         # for d in dl: print('loop check1',d.eval())
         # for id,d in enumerate(dl): print('loop check2',id,d.eval())
@@ -568,19 +567,29 @@ def gettau(
         #            )
         #            print('dop', dl[did].eval())
 
+        # (above) dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
+
         dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print('dl with negative still',[dd.eval() for dd in dl])
-        print('dl with negative still', dl.eval())
+        print('dl with negative still', dl.eval()/dz.eval())
 
-        dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
-        print(' dl0 old', dl0.eval())
+        # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
+        # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
+        dl = np.sqrt(
+            tensor.max(
+                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2], axis=0
+            )
+        )
         dl0 = np.sqrt(
             tensor.max(
                 [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
             )
         )
-        print(' dl0 new', dl0.eval())
+        print(' dl1 ', dl.eval()/dz.eval())
+        print(' dl0 ', dl0.eval()/dz.eval())
+        dl = dl - dl0
+        print(' dl new', dl.eval()/dz.eval())
         # asdfasdf
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
@@ -684,8 +693,7 @@ def gettau(
             sigma[~np.isfinite(sigma)] = 0e0
         tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
         tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-        print('tau for this molecule', cia, tau_by_molecule[cia].eval())
-        pass
+        # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
@@ -693,7 +701,7 @@ def gettau(
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
     tau = tau + fH2 * sigma * np.array([rho]).T
     tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
-    print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
+    # print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
@@ -704,8 +712,6 @@ def gettau(
         tau_by_molecule['haze'] = (
             (10.0**rayleigh) * sigma * np.array([hazedensity]).T
         )
-        print('sssssssaasddfasdfasdfss')
-        pass
     else:
         # WEST ET AL. 2004
         sigma = (
@@ -718,7 +724,6 @@ def gettau(
             )
         )
         if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
-            print('ssssssss')
             frh = hzlib['PROFILE'][0][hzp][0]
             rh = frh(p)
             rh[rh < 0] = 0.0
@@ -737,7 +742,6 @@ def gettau(
                 preval = hztop - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
-                pass
             else:
                 rh = thisfrh(np.log10(p)) * 0
             if debug:
@@ -783,11 +787,16 @@ def gettau(
         # print('lower haze',rayleigh)
         # print('lower haze',sigma)
         print('lower haze',rh)
-        tau = tau + (10.0**rayleigh) * sigma * np.array([rh]).T
-        tau_by_molecule['haze'] = (10.0**rayleigh) * sigma * np.array([rh]).T
+        hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
+        # convert the haze contribution to a tensor
+        #  otherwise haze will be different type than all other contributions
+        # hazecontribution = tensor.as_tensor(hazecontribution)
+        tau = tau + hazecontribution
+        tau_by_molecule['haze'] = hazecontribution
         pass
-    print('tau for this molecule', 'haze', tau_by_molecule['haze'].eval())
-    exit('asgdasdgasdgasg')
+    # careful, haze is the weird one. it's float, not tensor
+    # print('tau for this molecule', 'haze', tau_by_molecule['haze'])
+    # print('OVERALL TAU!!!', tau.eval())
 
     # any trouble with this matrix multiplication?
     print('dlarray', dlarray)
@@ -965,13 +974,12 @@ def getxmolxs(temp, xsecs):
     # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
     # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
     sigma = np.array(list(xsecs['SPL']))
-    print('sigma3', sigma[3])  # scipy.interp object
-    print('sigma3', xsecs['SPL'][3])  # scipy.interp object
+    # print('sigma3', sigma[3])  # scipy.interp object
+    # print('sigma3', xsecs['SPL'][3])  # scipy.interp object
     #    print('nu', xsecs['SPLNU'])      # a list of floats
-    print('nu3', xsecs['SPLNU'][3])  # a float
-    print(
-        'temperature', temp
-    )  # temp is not a tensor, for ariel-sim call. for cerberus?
+    # print('nu3', xsecs['SPLNU'][3])  # a float
+    # temp is not a tensor, for ariel-sim call. for cerberus?  asdf
+    # print('temperature', temp)
     #    for thisspl in xsecs['SPL']:
     # print('does this single call work?', thisspl)
     #        print('does this single call work?', thisspl(temp))  # <-- was failing before
