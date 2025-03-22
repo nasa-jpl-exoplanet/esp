@@ -68,10 +68,11 @@ class XSLib(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         svupdate = []
+        # just one filter, while debugging:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
-
             update = False
 
             if fltr == 'Ariel-sim':
@@ -186,6 +187,8 @@ class Atmos(dawgie.Algorithm):
             sfin = 'Missing system params!'
 
         svupdate = []
+        # just one filter, while debugging:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -214,7 +217,9 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
 
                 runtime_params = crbcore.CerbParams(
-                    mcmc_chain_length=runtime['cerberus_steps'],
+                    MCMC_chain_length=runtime['cerberus_steps'],
+                    # MCMC_sampler='slice',
+                    MCMC_sampler='metropolis',
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],
@@ -251,9 +256,9 @@ class Atmos(dawgie.Algorithm):
         '''Core code call'''
 
         mcmc_chain_length = runtime_params.MCMC_chain_length.value()
-        # MCMC_chain_length = 30
-        # print('MCMC_chain_length',MCMC_chain_length)
-
+        # print('MCMC_chain_length',mcmc_chain_length)
+        # mcmc_chain_length = 30
+        # print('MCMC_chain_length',mcmc_chain_length)
         log.info(
             ' calling atmos from cerb-alg-atmos  chain len=%d',
             mcmc_chain_length,
