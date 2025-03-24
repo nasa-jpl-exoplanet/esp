@@ -53,7 +53,7 @@ class Autofill(dawgie.Algorithm):
         return self.__status.proceed(ext)
 
     def refs_for_proceed(self) -> [dawgie.V_REF]:
-        '''return minimum list for StatusSV.proceed() to work'''
+        '''return list for StatusSV.proceed() to work'''
         return [
             dawgie.V_REF(
                 fetch('excalibur.runtime').task,
