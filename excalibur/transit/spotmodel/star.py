@@ -2,7 +2,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List
-from numba import njit, prange
+
+# from numba import njit, prange
 
 
 class Star:
@@ -72,7 +73,7 @@ class Star:
             self.latitude = latitude
             self.longitude = longitude
 
-    @njit(parallel=True)
+    # @njit(parallel=True)
     def criaEstrela(
         lin,
         col,
@@ -101,7 +102,8 @@ class Star:
         estrela = np.zeros((lin, col), dtype=np.int32)
         center = tamanhoMatriz / 2.0
 
-        for i in prange(lin):
+        # for i in prange(lin):
+        for i in range(lin):
             for j in range(col):
                 dx = i - center
                 dy = j - center

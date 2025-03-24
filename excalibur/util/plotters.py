@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
 
@@ -280,6 +280,10 @@ def distrplot(paramName, values1, values2, visitor, units=None):
         plt.xlabel(paramName, fontsize=14)
     else:
         plt.xlabel(paramName + f' [{units}]', fontsize=14)
+
+    # debugging: save to disk!
+    # plt.savefig('/proj/data/debug/histogramTest.png')
+
     save_plot_toscreen(myfig, visitor)
     return
 
@@ -338,7 +342,7 @@ def outlier_aware_hist(
         label=label1,
     )
 
-    if data2:
+    if data2 is not None:
         plt.hist(
             data2,
             range=(lower, upper),
