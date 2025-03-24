@@ -19,11 +19,11 @@ from excalibur.transit.spotmodel.keplerAux import (
 # import platform
 # import time
 
-from numba import njit, prange
+# from numba import njit, prange
 
 
 # Função acelerada com Numba para o cálculo da curva de luz
-@njit(parallel=True)
+# @njit(parallel=True)
 def curvaLuz_jit(
     x0, y0, tamanhoMatriz, raioPlanetaPixel, estrelaManchada_flat, maxCurvaLuz
 ):
@@ -43,7 +43,8 @@ def curvaLuz_jit(
     """
     N = tamanhoMatriz
     total = 0.0
-    for i in prange(N * N):
+    # for i in prange(N * N):
+    for i in range(N * N):
         row = i / N
         col = i - N * math.floor(i / N)
         if ((row - y0) ** 2 + (col - x0) ** 2) > (raioPlanetaPixel**2):
