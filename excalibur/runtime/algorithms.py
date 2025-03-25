@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class Autofill(dawgie.Algorithm):
-    '''Breaks the levers and knobs global table to target specific'''
+    '''Breaks the levers and knobs global table to target specific subtables'''
 
     def __init__(self, table: {str: {}} = None, tn: str = None):
         '''init autofill'''
