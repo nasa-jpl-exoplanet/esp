@@ -454,31 +454,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
 
                     # redo the chemsitry/mmw calculation for this metallicity
                     print('metallicity [X/H]dex:', model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(
+                    mmwnow, Hs = calc_mmw_Hs(
                         pressure,
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
                     )
-                    print('lower mmw,Hs new method', mmw, Hs)
+                    print('lower mmw,Hs new method', mmwnow, Hs)
 
-                    mixratio, fH2, fHe = crbutil.crbce(
-                        pressure, eqtemp, X2Hr=model_params['metallicity']
-                    )
-                    # print(' mixratio',mixratio)
-                    # print(' H2O fraction',10.**(mixratio['H2O']-6))
-                    # print(' fh2,fhe',fH2,fHe)
-
-                    # assume solar C/O and N/O for now
-                    # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-                    mmwnow, fH2, fHe = crbutil.getmmw(
-                        mixratio, protosolar=False, fH2=fH2, fHe=fHe
-                    )
-                    print('lower mmw,Hs old method', mmwnow.eval(), Hs)
-                    print(' mmwnow,mmwsolar', mmwnow.eval(), mmwsolar)
-                    print(
-                        '   Hs from scaling', Hssolar * mmwsolar / mmwnow.eval()
-                    )
                     out['data'][planet_letter][atmosModel]['Hs'] = (
                         Hssolar * mmwsolar / mmwnow.eval()
                     )
