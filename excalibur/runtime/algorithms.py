@@ -141,7 +141,7 @@ class Create(dawgie.Analyzer):
             # just a little bit and access some hidden information.
             # pylint: disable=protected-access # because dawgie requires it
             pbot = aspects.ds()._bot()
-            with multiprocessing.Pool(processes=60) as pool:
+            with multiprocessing.Pool(processes=20) as pool:
                 log.info('using the pool to run in parallel')
                 pool.map(
                     Create._do,
