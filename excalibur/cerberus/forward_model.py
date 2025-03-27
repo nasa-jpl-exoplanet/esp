@@ -664,7 +664,7 @@ def gettau(
             print('mmr shape', mmr.eval().shape) # single float (from tensor)
             print('sigma shape', sigma.shape)    # 110 float array
             if isinstance(rho, tensor.variable.TensorVariable):
-                print('rho shape', rho.eval().shape) # 7 float array (from tensor)
+                print('rho shape', rho.eval().shape)  # 7 float array (from tensor)
                 # print('rho shape', np.array(rho.eval()).T.shape)
             else:
                 print('rho shape', rho.shape) # 7 float array
@@ -676,7 +676,9 @@ def gettau(
                 check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
                 print('check2 shape', check2.shape)
                 tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
-                tau_by_molecule[elem] = mmr.eval() * sigma * np.array([rho.eval()]).T
+                tau_by_molecule[elem] = (
+                    mmr.eval() * sigma * np.array([rho.eval()]).T
+                )
                 print('tau shape after adding', tau.shape)
             else:
                 tau = tau + mmr * sigma * np.array([rho]).T
