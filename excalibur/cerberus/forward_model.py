@@ -661,13 +661,13 @@ def gettau(
             # print('mmr shape', mmr.eval())
             # print('sigma shape', sigma)
             # print('rho shape', rho.eval())
-            print('mmr shape', mmr.eval().shape) # single float (from tensor)
-            print('sigma shape', sigma.shape)    # 110 float array
+            print('mmr shape', mmr.eval().shape)  # single float (from tensor)
+            print('sigma shape', sigma.shape)     # 110 float array
             if isinstance(rho, tensor.variable.TensorVariable):
                 print('rho shape', rho.eval().shape)  # 7 float array (from tensor)
                 # print('rho shape', np.array(rho.eval()).T.shape)
             else:
-                print('rho shape', rho.shape) # 7 float array
+                print('rho shape', rho.shape)  # 7 float array
             print('tau check', tau[3][5])  # float (zero)
             print('tau shape', tau.shape)  # 7x110
             if isinstance(rho, tensor.variable.TensorVariable):
