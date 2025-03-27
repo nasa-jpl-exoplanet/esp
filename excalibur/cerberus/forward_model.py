@@ -255,14 +255,16 @@ def crbmodel(
     # SEMI FINITE CLOUD ------------------------------------------------------------------
     reversep = np.array(p[::-1])
     selectcloud = p > 10.0**cloudtp
+    # print('p',p)
+    # print('cloudtp',cloudtp)
     blocked = False
-    if all(selectcloud):
+    if np.all(selectcloud):
         tau = tau * 0
         for molecule in molecules:
             tau_by_molecule[molecule] = tau_by_molecule[molecule] * 0
         blocked = True
         pass
-    if not all(~selectcloud) and not blocked:
+    if not np.all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
         for index in np.arange(wtau.size):
             # print('reversep', reversep)
@@ -656,26 +658,26 @@ def gettau(
         if isothermal:
             # sigma cross-section comes from scipy interp, so it's a float
             # but the other stuff (mmr, rho) are tensors
-            # print('mmr shape',mmr.eval())
-            # print('sigma shape',sigma)
-            # print('rho shape',rho.eval())
-            print('mmr shape',mmr.eval().shape) # single float (from tensor)
-            print('sigma shape',sigma.shape)    # 110 float array
+            # print('mmr shape', mmr.eval())
+            # print('sigma shape', sigma)
+            # print('rho shape', rho.eval())
+            print('mmr shape', mmr.eval().shape) # single float (from tensor)
+            print('sigma shape', sigma.shape)    # 110 float array
             if isinstance(rho, tensor.variable.TensorVariable):
-                print('rho shape',rho.eval().shape) # 7 float array (from tensor)
-                # print('rho shape',np.array(rho.eval()).T.shape)
+                print('rho shape', rho.eval().shape) # 7 float array (from tensor)
+                # print('rho shape', np.array(rho.eval()).T.shape)
             else:
-                print('rho shape',rho.shape) # 7 float array
-            print('tau check',tau[3][5])  # float (zero)
-            print('tau shape',tau.shape)  # 7x110
+                print('rho shape', rho.shape) # 7 float array
+            print('tau check', tau[3][5])  # float (zero)
+            print('tau shape', tau.shape)  # 7x110
             if isinstance(rho, tensor.variable.TensorVariable):
                 check1 = sigma * np.array([rho.eval()]).T
-                print('check1 shape',check1.shape)
+                print('check1 shape', check1.shape)
                 check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
-                print('check2 shape',check2.shape)
+                print('check2 shape', check2.shape)
                 tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
                 tau_by_molecule[elem] = mmr.eval() * sigma * np.array([rho.eval()]).T
-                print('tau shape after adding',tau.shape)
+                print('tau shape after adding', tau.shape)
             else:
                 tau = tau + mmr * sigma * np.array([rho]).T
                 tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
@@ -717,7 +719,7 @@ def gettau(
         else:
             tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
             tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-       # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
+        # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
@@ -736,9 +738,9 @@ def gettau(
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hzslope)
         hazedensity = np.ones(len(z))
-        tau = tau + (10.0**rayleigh) * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0**rayleigh * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            (10.0**rayleigh) * sigma * np.array([hazedensity]).T
+            10.0**rayleigh * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
@@ -1129,7 +1131,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             hza,
-            ctp,
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1227,7 +1229,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1252,7 +1254,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1301,7 +1303,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1326,7 +1328,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1378,7 +1380,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1403,7 +1405,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1450,7 +1452,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1475,7 +1477,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1523,7 +1525,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1548,7 +1550,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1595,7 +1597,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1620,7 +1622,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1665,7 +1667,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1690,7 +1692,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1737,7 +1739,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1762,7 +1764,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1807,7 +1809,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1832,7 +1834,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1877,7 +1879,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1902,7 +1904,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
