@@ -106,6 +106,7 @@ def crbmodel(
     lshifting=False,
     # nlevels=100,
     # TEMPORARY REDUCTION IN ATMOS RESOLUTION WHILE DEBUGGING PYMC
+        #
     nlevels=7,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
@@ -426,7 +427,10 @@ def gettau(
     # dzprime = dz
     for iz, thisz in enumerate(z):
         print()
-        print('LOOP iz,thisz', iz, thisz.eval())
+        if isinstance(thisz, tensor.variable.TensorVariable):
+            print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')
+        else:
+            print('LOOP iz,thisz', iz, thisz)
         # dltemp = (rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2
         # print('rp0',rp0)
         # print('zprime',zprime)  # messed up.  first element (zero) is diff
@@ -578,21 +582,39 @@ def gettau(
         # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
-        dl = np.sqrt(
-            tensor.max(
-                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
-                axis=0,
+        if isinstance(thisz, tensor.variable.TensorVariable):
+            print('  TENSOR YES')
+            dl = np.sqrt(
+                tensor.max(
+                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
             )
-        )
-        dl0 = np.sqrt(
-            tensor.max(
-                [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+            dl0 = np.sqrt(
+                tensor.max(
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+                )
             )
-        )
+        else:
+            print('  TENSOR NO ')
+            dl = np.sqrt(
+                np.max(
+                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
+            )
+            dl0 = np.sqrt(
+                np.max(
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+                )
+            )
         # print(' dl1 ', dl.eval() / dz.eval())
         # print(' dl0 ', dl0.eval() / dz.eval())
         dl = dl - dl0
-        print(' dl new', dl.eval() / dz.eval())
+        if isinstance(dl, tensor.variable.TensorVariable):
+            print(' dl new', dl.eval() / dz.eval())
+        else:
+            print(' dl new', dl / dz)
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
         # print('dl with nan fixed?',dl.eval())
@@ -614,10 +636,12 @@ def gettau(
 
     # dlarray is a list of tensors which are 1-d arrays (yuch!)
     # convert it to a 2-d tensor
-    dlarraymod = []
-    for dla in dlarray:
-        dlarraymod.append(dla.eval())
-    dlarray = np.array(dlarraymod)
+    if isinstance(dl, tensor.variable.TensorVariable):
+        dlarraymod = []
+        for dla in dlarray:
+            dlarraymod.append(dla.eval())
+        dlarray = np.array(dlarraymod)
+
     print('dlarray up top', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -664,10 +688,12 @@ def gettau(
             # print('mmr shape', mmr.eval())
             # print('sigma shape', sigma)
             # print('rho shape', rho.eval())
-            print('mmr shape', mmr.eval().shape)  # single float (from tensor)
-            print('sigma shape', sigma.shape)     # 110 float array
+            # print('mmr shape', mmr.eval().shape)  # single float (from tensor)
+            print('sigma shape', sigma.shape)  # 110 float array
             if isinstance(rho, tensor.variable.TensorVariable):
-                print('rho shape', rho.eval().shape)  # 7 float array (from tensor)
+                print(
+                    'rho shape', rho.eval().shape
+                )  # 7 float array (from tensor)
                 # print('rho shape', np.array(rho.eval()).T.shape)
             else:
                 print('rho shape', rho.shape)  # 7 float array
@@ -719,8 +745,10 @@ def gettau(
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
         if isinstance(rho, tensor.variable.TensorVariable):
-            tau = tau + f1 * f2 * sigma * np.array([rho.eval()**2]).T
-            tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho.eval()**2]).T
+            tau = tau + f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
+            tau_by_molecule[cia] = (
+                f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
+            )
         else:
             tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
             tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
