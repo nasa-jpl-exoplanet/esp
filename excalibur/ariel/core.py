@@ -463,7 +463,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     print('lower mmw,Hs new method', mmwnow, Hs)
 
                     out['data'][planet_letter][atmosModel]['Hs'] = (
-                        Hssolar * mmwsolar / mmwnow.eval()
+                        Hssolar * mmwsolar / mmwnow
                     )
                     # print('Hs calculation',Hssolar,mmwsolar,mmwnow)
                     # save the true spectrum (both raw and binned)
@@ -609,22 +609,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth_rebin, ax, myfig
                     )
 
-                    plot_dir = (
-                        excalibur.context['data_dir'] + '/ariel/savedplots'
-                    )
-                    if not os.path.exists(plot_dir):
-                        os.mkdir(plot_dir)
-
-                    plt.savefig(
-                        plot_dir
-                        + '/ariel_'
-                        + atmosModel
-                        + 'Atmos_'
-                        + target
-                        + '_'
-                        + planet_letter
-                        + '.png'
-                    )
+                    # plot_dir = (
+                    #     excalibur.context['data_dir'] + '/ariel/savedplots'
+                    # )
+                    # if not os.path.exists(plot_dir):
+                    #    os.mkdir(plot_dir)
+                    # plt.savefig(plot_dir +
+                    #             '/ariel_' + atmosModel + 'Atmos_' +
+                    #             target + '_' + planet_letter + '.png')
 
                     # REDUNDANT SAVE - above saves to disk; below saves as state vector
                     # plt.title('Ariel : '+target+' '+planet_letter, fontsize=16)
