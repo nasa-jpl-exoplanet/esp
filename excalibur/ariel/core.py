@@ -364,7 +364,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         print('spectrum in ariel.core', fluxDepth)
                         fluxDepth_by_molecule = {}
                         # for molecule in cerbModel_by_molecule:
-                        for model,molecule in cerbModel_by_molecule.items():
+                        for model, molecule in cerbModel_by_molecule.items():
                             fluxDepth_by_molecule[molecule] = model.eval()
 
                     elif 'taurex' in atmosModel:
