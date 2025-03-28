@@ -9,7 +9,7 @@ import logging
 
 from collections import namedtuple
 
-import excalibur
+# import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
 
@@ -24,7 +24,7 @@ from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
-import os
+# import os
 import sys
 
 # import pickle
