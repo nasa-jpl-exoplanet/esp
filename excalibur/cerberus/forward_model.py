@@ -104,10 +104,9 @@ def crbmodel(
     wgrid,
     lbroadening=False,
     lshifting=False,
-    # nlevels=100,
+    nlevels=100,
     # TEMPORARY REDUCTION IN ATMOS RESOLUTION WHILE DEBUGGING PYMC
-    #
-    nlevels=7,
+    # nlevels=7,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
     solrad=10.0,
