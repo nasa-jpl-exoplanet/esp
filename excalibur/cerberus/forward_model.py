@@ -106,7 +106,7 @@ def crbmodel(
     lshifting=False,
     # nlevels=100,
     # TEMPORARY REDUCTION IN ATMOS RESOLUTION WHILE DEBUGGING PYMC
-        #
+    #
     nlevels=7,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
@@ -592,7 +592,8 @@ def gettau(
             )
             dl0 = np.sqrt(
                 tensor.max(
-                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
                 )
             )
         else:
@@ -605,7 +606,8 @@ def gettau(
             )
             dl0 = np.sqrt(
                 np.max(
-                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
                 )
             )
         # print(' dl1 ', dl.eval() / dz.eval())
