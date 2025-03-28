@@ -104,9 +104,9 @@ def crbmodel(
     wgrid,
     lbroadening=False,
     lshifting=False,
-    # nlevels=100,
+    nlevels=100,
     # TEMPORARY REDUCTION IN ATMOS RESOLUTION WHILE DEBUGGING PYMC
-    nlevels=7,
+    # nlevels=7,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
     solrad=10.0,
@@ -160,7 +160,10 @@ def crbmodel(
         # print('SHOULD NOT BE HERE')
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
-    print('mmw', mmw.eval() * 6.022e26)
+    if isinstance(mmw, tensor.variable.TensorVariable):
+        print('mmw YES TENSOR', mmw.eval() * 6.022e26)
+    else:
+        print('mmw NOT TENSOR', mmw * 6.022e26)
 
     Hs = (
         cst.Boltzmann
@@ -255,14 +258,16 @@ def crbmodel(
     # SEMI FINITE CLOUD ------------------------------------------------------------------
     reversep = np.array(p[::-1])
     selectcloud = p > 10.0**cloudtp
+    # print('p',p)
+    # print('cloudtp',cloudtp)
     blocked = False
-    if all(selectcloud):
+    if np.all(selectcloud):
         tau = tau * 0
         for molecule in molecules:
             tau_by_molecule[molecule] = tau_by_molecule[molecule] * 0
         blocked = True
         pass
-    if not all(~selectcloud) and not blocked:
+    if not np.all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
         for index in np.arange(wtau.size):
             # print('reversep', reversep)
@@ -274,7 +279,7 @@ def crbmodel(
             # print(' cloudtp', cloudtp)
             # print(' powcheck', 10.0**cloudtp)
             # print('  indices', cloudindex, index)
-            print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
+            # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
             # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
             # print('  tau[]', tau[cloudindex, index].eval())
             tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
@@ -421,7 +426,10 @@ def gettau(
     # dzprime = dz
     for iz, thisz in enumerate(z):
         print()
-        print('LOOP iz,thisz', iz, thisz.eval())
+        if isinstance(thisz, tensor.variable.TensorVariable):
+            print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')
+        else:
+            print('LOOP iz,thisz', iz, thisz)
         # dltemp = (rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2
         # print('rp0',rp0)
         # print('zprime',zprime)  # messed up.  first element (zero) is diff
@@ -573,21 +581,41 @@ def gettau(
         # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
         # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
-        dl = np.sqrt(
-            tensor.max(
-                [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
-                axis=0,
+        if isinstance(thisz, tensor.variable.TensorVariable):
+            print('  TENSOR YES')
+            dl = np.sqrt(
+                tensor.max(
+                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
             )
-        )
-        dl0 = np.sqrt(
-            tensor.max(
-                [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2], axis=0
+            dl0 = np.sqrt(
+                tensor.max(
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
             )
-        )
+        else:
+            print('  TENSOR NO ')
+            dl = np.sqrt(
+                np.max(
+                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
+            )
+            dl0 = np.sqrt(
+                np.max(
+                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
+                    axis=0,
+                )
+            )
         # print(' dl1 ', dl.eval() / dz.eval())
         # print(' dl0 ', dl0.eval() / dz.eval())
         dl = dl - dl0
-        print(' dl new', dl.eval() / dz.eval())
+        if isinstance(dl, tensor.variable.TensorVariable):
+            print(' dl new', dl.eval() / dz.eval())
+        else:
+            print(' dl new', dl / dz)
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
         # print('dl with nan fixed?',dl.eval())
@@ -609,10 +637,12 @@ def gettau(
 
     # dlarray is a list of tensors which are 1-d arrays (yuch!)
     # convert it to a 2-d tensor
-    dlarraymod = []
-    for dla in dlarray:
-        dlarraymod.append(dla.eval())
-    dlarray = np.array(dlarraymod)
+    if isinstance(dl, tensor.variable.TensorVariable):
+        dlarraymod = []
+        for dla in dlarray:
+            dlarraymod.append(dla.eval())
+        dlarray = np.array(dlarraymod)
+
     print('dlarray up top', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -654,8 +684,35 @@ def gettau(
             sigma = sigma * 1e-4  # m^2/mol
             pass
         if isothermal:
-            tau = tau + mmr * sigma * np.array([rho]).T
-            tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
+            # sigma cross-section comes from scipy interp, so it's a float
+            # but the other stuff (mmr, rho) are tensors
+            # print('mmr shape', mmr.eval())
+            # print('sigma shape', sigma)
+            # print('rho shape', rho.eval())
+            # print('mmr shape', mmr.eval().shape)  # single float (from tensor)
+            print('sigma shape', sigma.shape)  # 110 float array
+            if isinstance(rho, tensor.variable.TensorVariable):
+                print(
+                    'rho shape', rho.eval().shape
+                )  # 7 float array (from tensor)
+                # print('rho shape', np.array(rho.eval()).T.shape)
+            else:
+                print('rho shape', rho.shape)  # 7 float array
+            print('tau check', tau[3][5])  # float (zero)
+            print('tau shape', tau.shape)  # 7x110
+            if isinstance(rho, tensor.variable.TensorVariable):
+                check1 = sigma * np.array([rho.eval()]).T
+                print('check1 shape', check1.shape)
+                check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
+                print('check2 shape', check2.shape)
+                tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
+                tau_by_molecule[elem] = (
+                    mmr.eval() * sigma * np.array([rho.eval()]).T
+                )
+                print('tau shape after adding', tau.shape)
+            else:
+                tau = tau + mmr * sigma * np.array([rho]).T
+                tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
             # print('    mmr', mmr)  # tensor
             # print('    sigma', sigma) # 100 floats
             # print('    rho', rho)  # 7 floats
@@ -688,16 +745,26 @@ def gettau(
             sigma[sigma < 0] = 0e0
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
-        tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
-        tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
+        if isinstance(rho, tensor.variable.TensorVariable):
+            tau = tau + f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
+            tau_by_molecule[cia] = (
+                f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
+            )
+        else:
+            tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
+            tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
         # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
-    tau = tau + fH2 * sigma * np.array([rho]).T
-    tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
+    if isinstance(rho, tensor.variable.TensorVariable):
+        tau = tau + fH2 * sigma * np.array([rho.eval()]).T
+        tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho.eval()]).T
+    else:
+        tau = tau + fH2 * sigma * np.array([rho]).T
+        tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
     # print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
@@ -705,9 +772,9 @@ def gettau(
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hzslope)
         hazedensity = np.ones(len(z))
-        tau = tau + (10.0**rayleigh) * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0**rayleigh * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            (10.0**rayleigh) * sigma * np.array([hazedensity]).T
+            10.0**rayleigh * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
@@ -735,6 +802,12 @@ def gettau(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
             hzwdist = hztop - np.log10(p)
+
+            # it's probably easier to eval() hzwscale and hztop when passed in
+            # if isinstance(hzwscale, tensor.variable.TensorVariable):
+            #    hzwscale_float = hzwscale.eval()
+            # else:
+            #    hzwscale_float = hzwscale
             if hzwscale > 0:
                 preval = hztop - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
@@ -828,7 +901,7 @@ def gettau(
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        print(' MOLECULE:', molecule)
+        # print(' MOLECULE:', molecule)
         # careful here.  most of the time this is a tensor
         #  but for haze it comes out as a numpy array
         #  (haze is based on a float-based density profile)
@@ -972,14 +1045,30 @@ def getxmolxs(temp, xsecs):
     sigma = np.array(list(xsecs['SPL']))
     # print('sigma3', sigma[3])  # scipy.interp object
     # print('sigma3', xsecs['SPL'][3])  # scipy.interp object
-    #    print('nu', xsecs['SPLNU'])      # a list of floats
+    # print('nu', xsecs['SPLNU'])      # a list of floats
     # print('nu3', xsecs['SPLNU'][3])  # a float
     # temp is not a tensor, for ariel-sim call. for cerberus?  asdf
-    # print('temperature', temp)
-    #    for thisspl in xsecs['SPL']:
-    # print('does this single call work?', thisspl)
-    #        print('does this single call work?', thisspl(temp))  # <-- was failing before
-    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+
+    # print('temperature', temp)  # interesting!  prints as 'T'
+    # print('temperature', temp.eval())  # float
+    # print('  temp type', type(temp))  # <class 'pytensor.tensor.variable.TensorVariable'>
+    # print('  temp type', isinstance(temp, float))
+    #  yes this works:
+    # print('  temp type', isinstance(temp, tensor.variable.TensorVariable))
+
+    # for thisspl in xsecs['SPL']:
+    # print('does this single call work?', thisspl)  # interp object
+    # print('CHECK WITH A FLOAT?', thisspl(666.0))  # fine
+    # asdf
+    # if isinstance(temp, tensor.variable.TensorVariable):
+    #    print('does this single call work?', thisspl(temp.eval()))
+    # else:
+    #   print('does this single call work?', thisspl(temp))
+
+    if isinstance(temp, tensor.variable.TensorVariable):
+        sigma = np.array([thisspl(temp.eval()) for thisspl in xsecs['SPL']])
+    else:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
     nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
@@ -994,7 +1083,10 @@ def getciaxs(temp, xsecs):
     '''
     G. ROUDIER: Wrapper around CIA Cerberus library
     '''
-    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+    if isinstance(temp, tensor.variable.TensorVariable):
+        sigma = np.array([thisspl(temp.eval()) for thisspl in xsecs['SPL']])
+    else:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
     nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
@@ -1037,6 +1129,7 @@ def cloudyfmcerberus(*crbinputs):
         hzloc.eval(),
         hzthick.eval(),
     )
+
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -1073,7 +1166,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             hza,
-            ctp,
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1082,8 +1175,8 @@ def cloudyfmcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1171,7 +1264,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1180,8 +1273,8 @@ def clearfmcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1196,7 +1289,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1205,8 +1298,8 @@ def clearfmcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1245,7 +1338,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1254,8 +1347,8 @@ def offcerberus(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1270,7 +1363,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1279,8 +1372,8 @@ def offcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1322,7 +1415,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1331,8 +1424,8 @@ def offcerberus1(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1347,7 +1440,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1356,8 +1449,8 @@ def offcerberus1(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1394,7 +1487,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1403,8 +1496,8 @@ def offcerberus2(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1419,7 +1512,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1428,8 +1521,8 @@ def offcerberus2(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1467,7 +1560,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1476,8 +1569,8 @@ def offcerberus3(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1492,7 +1585,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1501,8 +1594,8 @@ def offcerberus3(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1539,7 +1632,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1548,8 +1641,8 @@ def offcerberus4(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1564,7 +1657,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1573,8 +1666,8 @@ def offcerberus4(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1609,7 +1702,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1618,8 +1711,8 @@ def offcerberus5(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1634,7 +1727,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1643,8 +1736,8 @@ def offcerberus5(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1681,7 +1774,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1690,8 +1783,8 @@ def offcerberus6(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1706,7 +1799,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1715,8 +1808,8 @@ def offcerberus6(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1751,7 +1844,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1760,8 +1853,8 @@ def offcerberus7(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1776,7 +1869,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1785,8 +1878,8 @@ def offcerberus7(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1821,7 +1914,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1830,8 +1923,8 @@ def offcerberus8(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1846,7 +1939,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            float(ctp),
+            ctp.eval(),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1855,8 +1948,8 @@ def offcerberus8(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            hztop=hzloc.eval(),
+            hzwscale=hzthick.eval(),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
