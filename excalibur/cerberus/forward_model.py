@@ -160,7 +160,10 @@ def crbmodel(
         # print('SHOULD NOT BE HERE')
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
-    print('mmw', mmw.eval() * 6.022e26)
+    if isinstance(mmw, tensor.variable.TensorVariable):
+        print('mmw YES TENSOR', mmw.eval() * 6.022e26)
+    else:
+        print('mmw NOT TENSOR', mmw * 6.022e26)
 
     Hs = (
         cst.Boltzmann
@@ -276,7 +279,7 @@ def crbmodel(
             # print(' cloudtp', cloudtp)
             # print(' powcheck', 10.0**cloudtp)
             # print('  indices', cloudindex, index)
-            print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
+            # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
             # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
             # print('  tau[]', tau[cloudindex, index].eval())
             tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
@@ -869,7 +872,7 @@ def gettau(
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        print(' MOLECULE:', molecule)
+        # print(' MOLECULE:', molecule)
         # careful here.  most of the time this is a tensor
         #  but for haze it comes out as a numpy array
         #  (haze is based on a float-based density profile)
@@ -1024,13 +1027,14 @@ def getxmolxs(temp, xsecs):
     #  yes this works:
     # print('  temp type', isinstance(temp, tensor.variable.TensorVariable))
 
-    for thisspl in xsecs['SPL']:
-        # print('does this single call work?', thisspl)  # interp object
-        # print('CHECK WITH A FLOAT?', thisspl(666.0))  # fine
-        if isinstance(temp, tensor.variable.TensorVariable):
-            print('does this single call work?', thisspl(temp.eval()))
-        else:
-            print('does this single call work?', thisspl(temp))
+    # for thisspl in xsecs['SPL']:
+    # print('does this single call work?', thisspl)  # interp object
+    # print('CHECK WITH A FLOAT?', thisspl(666.0))  # fine
+    # asdf
+    # if isinstance(temp, tensor.variable.TensorVariable):
+    #    print('does this single call work?', thisspl(temp.eval()))
+    # else:
+    #   print('does this single call work?', thisspl(temp))
 
     if isinstance(temp, tensor.variable.TensorVariable):
         sigma = np.array([thisspl(temp.eval()) for thisspl in xsecs['SPL']])
