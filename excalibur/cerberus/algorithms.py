@@ -256,9 +256,9 @@ class Atmos(dawgie.Algorithm):
         '''Core code call'''
 
         mcmc_chain_length = runtime_params.MCMC_chain_length.value()
-        # print('MCMC_chain_length',mcmc_chain_length)
-        # mcmc_chain_length = 30
-        # print('MCMC_chain_length',mcmc_chain_length)
+        # print('MCMC_chain_length', mcmc_chain_length)
+        mcmc_chain_length = 1000
+        # print('MCMC_chain_length', mcmc_chain_length)
         log.info(
             ' calling atmos from cerb-alg-atmos  chain len=%d',
             mcmc_chain_length,
@@ -336,6 +336,8 @@ class Results(dawgie.Algorithm):
             # allowed_filters = self.__rt.sv_as_dict()['status']['allowed_filter_names']
             # print('allowed filters in cerb.results',allowed_filters)
 
+            # just one filter, while debugging:
+            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
