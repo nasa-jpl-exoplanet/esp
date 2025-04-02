@@ -1186,15 +1186,20 @@ def atmos(
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
+                    # print('key', key)
                     tracekeys = key.split('[')
                     keyname = tracekeys[0]
-                    if tracekeys:
+                    # print('tracekeys,keyname', tracekeys, keyname)
+                    if len(tracekeys) > 1:
+                        # print('tracekeys', tracekeys)
                         param_index = int(tracekeys[1][:-1])
                         mctrace[key] = trace.posterior[keyname][
                             :, :, param_index
                         ]
                     else:
-                        mctrace[key] = trace.posterior[keyname]
+                        mctrace[key] = trace.posterior[key]
+                    print('mctrace shape', key, mctrace[key].shape)
+
                     # convert Nchain x Nstep 2-D posteriors to a single chain
                     # mctrace[key] = np.ravel(mctrace[key])
                     # original ravel is the correct one?  it's hard to tell with 30 steps

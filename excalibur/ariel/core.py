@@ -9,7 +9,7 @@ import logging
 
 from collections import namedtuple
 
-import excalibur
+# import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
 
@@ -24,7 +24,7 @@ from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
-import os
+# import os
 import sys
 
 # import pickle
@@ -363,10 +363,9 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         fluxDepth = cerbModel.eval()
                         print('spectrum in ariel.core', fluxDepth)
                         fluxDepth_by_molecule = {}
-                        for molecule in cerbModel_by_molecule:
-                            fluxDepth_by_molecule[molecule] = (
-                                cerbModel_by_molecule[molecule].eval()
-                            )
+                        # for molecule in cerbModel_by_molecule:
+                        for model, molecule in cerbModel_by_molecule.items():
+                            fluxDepth_by_molecule[molecule] = model.eval()
 
                     elif 'taurex' in atmosModel:
                         sys.exit('ERROR: taurex no longer an option')
@@ -454,33 +453,16 @@ def simulate_spectra(target, system_dict, runtime_params, out):
 
                     # redo the chemsitry/mmw calculation for this metallicity
                     print('metallicity [X/H]dex:', model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(
+                    mmwnow, Hs = calc_mmw_Hs(
                         pressure,
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
                     )
-                    print('lower mmw,Hs new method', mmw, Hs)
+                    print('lower mmw,Hs new method', mmwnow, Hs)
 
-                    mixratio, fH2, fHe = crbutil.crbce(
-                        pressure, eqtemp, X2Hr=model_params['metallicity']
-                    )
-                    # print(' mixratio',mixratio)
-                    # print(' H2O fraction',10.**(mixratio['H2O']-6))
-                    # print(' fh2,fhe',fH2,fHe)
-
-                    # assume solar C/O and N/O for now
-                    # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-                    mmwnow, fH2, fHe = crbutil.getmmw(
-                        mixratio, protosolar=False, fH2=fH2, fHe=fHe
-                    )
-                    print('lower mmw,Hs old method', mmwnow.eval(), Hs)
-                    print(' mmwnow,mmwsolar', mmwnow.eval(), mmwsolar)
-                    print(
-                        '   Hs from scaling', Hssolar * mmwsolar / mmwnow.eval()
-                    )
                     out['data'][planet_letter][atmosModel]['Hs'] = (
-                        Hssolar * mmwsolar / mmwnow.eval()
+                        Hssolar * mmwsolar / mmwnow
                     )
                     # print('Hs calculation',Hssolar,mmwsolar,mmwnow)
                     # save the true spectrum (both raw and binned)
@@ -626,22 +608,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth_rebin, ax, myfig
                     )
 
-                    plot_dir = (
-                        excalibur.context['data_dir'] + '/ariel/savedplots'
-                    )
-                    if not os.path.exists(plot_dir):
-                        os.mkdir(plot_dir)
-
-                    plt.savefig(
-                        plot_dir
-                        + '/ariel_'
-                        + atmosModel
-                        + 'Atmos_'
-                        + target
-                        + '_'
-                        + planet_letter
-                        + '.png'
-                    )
+                    # plot_dir = (
+                    #     excalibur.context['data_dir'] + '/ariel/savedplots'
+                    # )
+                    # if not os.path.exists(plot_dir):
+                    #    os.mkdir(plot_dir)
+                    # plt.savefig(plot_dir +
+                    #             '/ariel_' + atmosModel + 'Atmos_' +
+                    #             target + '_' + planet_letter + '.png')
 
                     # REDUNDANT SAVE - above saves to disk; below saves as state vector
                     # plt.title('Ariel : '+target+' '+planet_letter, fontsize=16)

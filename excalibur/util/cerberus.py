@@ -237,7 +237,11 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
     for elem in mixratio:
         molsum = molsum + 10.0 ** (mixratio[elem] - 6.0)
         mmw = mmw + 10.0 ** (mixratio[elem] - 6.0) * weights[elem]
-        # print('molsum,mmw',molsum.eval(),mmw.eval())
+        if verbose:
+            if isinstance(molsum, tensor.variable.TensorVariable):
+                print('molsum,mmw', molsum.eval(), mmw.eval(), 'TENSOR YES')
+            else:
+                print('molsum,mmw', molsum, mmw, 'TENSOR NO')
     # print('molsum,mmw',molsum.eval(),mmw.eval())
     mrH2He = 1.0 - molsum
     # Lodders 2010
@@ -251,7 +255,19 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         print('HEoH2', HEoH2)
     mrH2 = mrH2He / (1.0 + HEoH2)
     mrHe = HEoH2 * mrH2
+    # print('mmw',mmw)  # float
     mmw = mrH2 * weights['H2'] + mrHe * weights['He'] + mmw
+    # print('weights',weights)  # float
+    # print('mrs',mrH2,mrHe)  # tensor
+    # print('mmw',mmw)  # tensor
+
+    # mixratios from TEC are coming in as tensor; but DISEQ are floats
+    # it might be easier to convert tensor to float here, rather than later
+    # actually no that would be strange to leave the other outputs as tensor
+    # if isinstance(mmw, tensor.variable.TensorVariable): mmw = mmw.eval()
     if verbose:
-        print('*** mmw ***', mmw.eval())
+        if isinstance(mmw, tensor.variable.TensorVariable):
+            print('*** mmw *** TENSOR YES', mmw.eval())
+        else:
+            print('*** mmw *** TENSOR NO ', mmw)
     return mmw, mrH2, mrHe
