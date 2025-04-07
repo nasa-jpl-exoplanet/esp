@@ -1,6 +1,5 @@
-# See what happens
-## EXCALIBUR
-
+# EXCALIBUR
+## Welcome
 EXCALIBUR stands for EXoplanet CALIbration Bayesian Unified Retrieval.
 
 The EXCALIBUR pipeline enables comparative exoplanet studies by uniformly processing input catalogs of observations to create science data products. EXCALIBUR preserves the chain of inference with persistent data products for each processing step that are tagged to a unique identifier linking them to a specific compute instance and GitHub change set. EXCALIBUR catalog releases are available on the [EXCALIBUR portal](https://excalibur.ipac.caltech.edu) hosted at IPAC. 
@@ -15,5 +14,7 @@ EXCALIBUR papers include:
 - [Disequilibrium Chemistry in Exoplanet Atmospheres Observed with the Hubble Space Telescope (Roudier et al. 2021 AJ)](https://ui.adsabs.harvard.edu/abs/2021AJ....162...37R/abstract)
 - [Detection of an Atmosphere on a Rocky Exoplanet (Swain et al 2021, AJ)](https://ui.adsabs.harvard.edu/abs/2021AJ....161..213S/abstract)
 
-Current EXCALIBUR processing capabilities include transit spectroscopy and phase curves for selected instruments. EXCALIBUR is under active development with ongoing capability enhancements, and we welcome contributors and collaborations. 
+Current EXCALIBUR processing capabilities include transit spectroscopy and phase curves for selected instruments. EXCALIBUR is under active development with ongoing capability enhancements, and we welcome contributors and collaborations.
 
+## Table of Content
+[Private Pipeline Disk Mapping](disk_mapping)
