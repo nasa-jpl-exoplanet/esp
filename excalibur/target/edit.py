@@ -721,7 +721,7 @@ def targetlist():
     HD 260655 :
     HD 93963 A :
     HD 95338 :
-    HIP 29442 :
+    HIP 29442 : HD 42813
     HIP 94235 :
     HIP 97166 :
     K2-105 :
