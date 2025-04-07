@@ -83,24 +83,31 @@ def tap_query(base_url, query):
 # -- SCRAPE IDS -- ---------------------------------------------------
 def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     '''
-    Parses table from ipac exoplanetarchive
+    - Creates a state vector for each target
+    - Optionally adds on an alias, for cases where archive uses a diff name
+    - Downloads table from ipac exoplanetarchive, for given set of fields
+    note that this is called by Create(), not Scrape()
+    Scrape() calls mastapi()
+    maybe rename this to avoid confusion?
     '''
     targets = trgedit.targetlist.__doc__
     targets = targets.split('\n')
     targets = [t.strip() for t in targets if t.replace(' ', '')]
-    tn = os.environ.get('TARGET_NAME', None)
-    if tn is not None and tn != '' and tn != '__all__':
-        found_target_list = None
-        for target in targets:
-            if tn == target.split(':')[0].strip():
-                found_target_list = target
-            pass
-        if found_target_list is None:
-            # this is an ERROR.  the selected target should be in the target list
-            mssg = f'Obsolete target / Error in target name: {tn}'
-            raise dawgie.NoValidOutputDataError(mssg)
-        targets = [found_target_list]
-        pass
+    # this routine is called by Create()
+    #  it is run once for all targets; the input target is always __all__
+    #  drop this target parsing stuff
+    # tn = os.environ.get('TARGET_NAME', None)
+    # if tn is not None and tn != '' and tn != '__all__':
+    #    found_target_list = None
+    #    for target in targets:
+    #        print('  targ check',target,target.split(':')[0].strip())
+    #        if tn == target.split(':')[0].strip():
+    #            found_target_list = target
+    #    if found_target_list is None:
+    #        # this is an ERROR.  the selected target should be in the target list
+    #        mssg = f'Obsolete target / Error in target name: {tn}'
+    #        raise dawgie.NoValidOutputDataError(mssg)
+    #    targets = [found_target_list]
     for target in targets:
         parsedstr = target.split(':')
         parsedstr = [t.strip() for t in parsedstr]
