@@ -1904,6 +1904,9 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     verbose=False,
                     debug=False,
                 )
+                # convert tensor to numpy array
+                if isinstance(fmc_profiled, tensor.variable.TensorVariable):
+                    fmc_profiled = fmc_profiled.eval()
                 patmos_model_profiled = (
                     fmc_profiled
                     - np.nanmean(fmc_profiled)
@@ -2037,8 +2040,12 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # chi2modelrand = tensor.sum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
-                    if isinstance(chi2modelrand, tensor.variable.TensorVariable):
-                        print('chi2modelrand', chi2modelrand.eval(), 'TENSOR YES')
+                    if isinstance(
+                        chi2modelrand, tensor.variable.TensorVariable
+                    ):
+                        print(
+                            'chi2modelrand', chi2modelrand.eval(), 'TENSOR YES'
+                        )
                     else:
                         print('chi2modelrand', chi2modelrand, 'TENSOR NO')
                     if isinstance(chi2best, tensor.variable.TensorVariable):
