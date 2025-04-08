@@ -339,7 +339,7 @@ class Results(dawgie.Algorithm):
             # just one filter, while debugging:
             # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
-                    'allowed_filter_names'
+                'allowed_filter_names'
             ]:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
