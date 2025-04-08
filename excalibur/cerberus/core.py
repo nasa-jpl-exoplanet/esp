@@ -1919,11 +1919,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     print('chi2model',chi2model.eval(),'TENSOR YES')
                 else:
                     print('chi2model',chi2model,'TENSOR NO')
-#                chi2model = tensor.sum(offsets_model**2)
-#                if isinstance(chi2model, tensor.variable.TensorVariable):
-#                    print('chi2model',chi2model.eval(),'TENSOR')
-#                else:
-#                    print('chi2model',chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
