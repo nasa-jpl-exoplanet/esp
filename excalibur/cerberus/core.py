@@ -47,6 +47,7 @@ import logging
 
 import os
 import pymc
+from pytensor import tensor
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
@@ -1873,6 +1874,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     verbose=False,
                     debug=False,
                 )
+                if isinstance(fmc, tensor.variable.TensorVariable):
+                    fmc = fmc.eval()  # convert tensor to numpy array
                 # print('median fmc',np.nanmedian(fmc))
                 # print('mean model',np.nanmean(fmc))
                 # print('mean data',np.nanmean(transitdata['depth']))
@@ -1912,7 +1915,15 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
                 chi2model = np.nansum(offsets_model**2)
-                # print('chi2',chi2model)
+                if isinstance(chi2model, tensor.variable.TensorVariable):
+                    print('chi2model',chi2model.eval(),'TENSOR YES')
+                else:
+                    print('chi2model',chi2model,'TENSOR NO')
+#                chi2model = tensor.sum(offsets_model**2)
+#                if isinstance(chi2model, tensor.variable.TensorVariable):
+#                    print('chi2model',chi2model.eval(),'TENSOR')
+#                else:
+#                    print('chi2model',chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
@@ -1922,6 +1933,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 # make an array of 10 random walker results
                 nrandomwalkers = 100
                 nrandomwalkers = 1000
+                nrandomwalkers = 20
 
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
@@ -2009,6 +2021,9 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         verbose=False,
                         debug=False,
                     )
+                    if isinstance(fmcrand, tensor.variable.TensorVariable):
+                        fmcrand = fmcrand.eval()  # convert tensor to array
+
                     # print('len',len(fmcrand))
                     # print('median fmc',np.nanmedian(fmcrand))
                     # print('mean model',np.nanmean(fmcrand))
@@ -2025,7 +2040,17 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
+                    # chi2modelrand = tensor.sum(offsets_modelrand**2)
                     # print('chi2 for a random walker',chi2modelrand)
+                    if isinstance(chi2modelrand, tensor.variable.TensorVariable):
+                        print('chi2modelrand',chi2modelrand.eval(),'TENSOR YES')
+                    else:
+                        print('chi2modelrand',chi2modelrand,'TENSOR NO')
+                    if isinstance(chi2best, tensor.variable.TensorVariable):
+                        print('chi2best',chi2best.eval(),'TENSOR YES')
+                    else:
+                        print('chi2best',chi2best,'TENSOR NO')
+                    # if chi2modelrand.eval() < chi2best.eval():
                     if chi2modelrand < chi2best:
                         # print('  using this as best',chi2modelrand)
                         chi2best = chi2modelrand
