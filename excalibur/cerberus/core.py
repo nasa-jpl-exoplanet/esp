@@ -1916,9 +1916,9 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 ) / transitdata['error']
                 chi2model = np.nansum(offsets_model**2)
                 if isinstance(chi2model, tensor.variable.TensorVariable):
-                    print('chi2model',chi2model.eval(),'TENSOR YES')
+                    print('chi2model', chi2model.eval(), 'TENSOR YES')
                 else:
-                    print('chi2model',chi2model,'TENSOR NO')
+                    print('chi2model', chi2model, 'TENSOR NO')
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
@@ -1957,12 +1957,12 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
                     # if fitCloudParameters:
-                    #    print('fit results; CTP:',ctp)
-                    #    print('fit results; HScale:',hza)
-                    #    print('fit results; HLoc:',hloc)
-                    #    print('fit results; HThick:',hthc)
-                    # print('fit results; T:',tpr)
-                    # print('fit results; mdplist:',mdp)
+                    #    print('fit results; CTP:', ctp)
+                    #    print('fit results; HScale:', hza)
+                    #    print('fit results; HLoc:', hloc)
+                    #    print('fit results; HThick:', hthc)
+                    # print('fit results; T:', tpr)
+                    # print('fit results; mdplist:', mdp)
 
                     if model_name == 'TEC':
                         mixratio = None
@@ -2020,9 +2020,9 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         fmcrand = fmcrand.eval()  # convert tensor to array
 
                     # print('len',len(fmcrand))
-                    # print('median fmc',np.nanmedian(fmcrand))
-                    # print('mean model',np.nanmean(fmcrand))
-                    # print('stdev model',np.nanstd(fmcrand))
+                    # print('median fmc', np.nanmedian(fmcrand))
+                    # print('mean model', np.nanmean(fmcrand))
+                    # print('stdev model', np.nanstd(fmcrand))
                     fmcarray.append(fmcrand)
 
                     # check to see if this model is the best one
@@ -2036,18 +2036,18 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # chi2modelrand = tensor.sum(offsets_modelrand**2)
-                    # print('chi2 for a random walker',chi2modelrand)
+                    # print('chi2 for a random walker', chi2modelrand)
                     if isinstance(chi2modelrand, tensor.variable.TensorVariable):
-                        print('chi2modelrand',chi2modelrand.eval(),'TENSOR YES')
+                        print('chi2modelrand', chi2modelrand.eval(), 'TENSOR YES')
                     else:
-                        print('chi2modelrand',chi2modelrand,'TENSOR NO')
+                        print('chi2modelrand', chi2modelrand, 'TENSOR NO')
                     if isinstance(chi2best, tensor.variable.TensorVariable):
-                        print('chi2best',chi2best.eval(),'TENSOR YES')
+                        print('chi2best', chi2best.eval(), 'TENSOR YES')
                     else:
-                        print('chi2best',chi2best,'TENSOR NO')
+                        print('chi2best', chi2best, 'TENSOR NO')
                     # if chi2modelrand.eval() < chi2best.eval():
                     if chi2modelrand < chi2best:
-                        # print('  using this as best',chi2modelrand)
+                        # print('  using this as best', chi2modelrand)
                         chi2best = chi2modelrand
                         patmos_best_fit = patmos_modelrand
                         param_values_best_fit = (
