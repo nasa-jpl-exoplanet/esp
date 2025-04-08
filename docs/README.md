@@ -18,6 +18,7 @@ Current EXCALIBUR processing capabilities include transit spectroscopy and phase
 # Table of Content
 
 1. [ESP as a Pipeline](pipeline)
+    1. What [preperation or setup](preparation) is needed?
     1. How do I [start or run](pipeline/start) a pipeline?
     1. How do I [interact with](pipeline/interact) a pipeline?
     1. How do I [share data](pipeline/sharing) between myself and the pipeline?
