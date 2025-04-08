@@ -70,6 +70,7 @@ def createversion():
 # Kepler-628
 # Kepler-706
 # Kepler-807
+# 4/7/25: also Kepler-470 and K2-399 (based on Sept.2024 paper)
 
 
 # ------------ -------------------------------------------------------
@@ -721,7 +722,7 @@ def targetlist():
     HD 260655 :
     HD 93963 A :
     HD 95338 :
-    HIP 29442 :
+    HIP 29442 : HD 42813
     HIP 94235 :
     HIP 97166 :
     K2-105 :
@@ -729,7 +730,6 @@ def targetlist():
     K2-415 :
     K2-60 :
     Kepler-1656 :
-    Kepler-470 :
     Kepler-63 :
     Kepler-96 :
     NGTS-14 A :
@@ -811,7 +811,6 @@ def targetlist():
     K2-321 :
     K2-344 :
     K2-348 :
-    K2-399 :
     K2-417 :
     K2-99 :
     Kepler-1515 :
@@ -1224,10 +1223,8 @@ def targetlist():
     Kepler-476 :
     Kepler-485 :
     Kepler-487 :
-    Kepler-488 :
     Kepler-490 :
     Kepler-491 :
-    Kepler-494 :
     Kepler-495 :
     Kepler-497 :
     Kepler-498 :
@@ -1277,7 +1274,6 @@ def targetlist():
     Kepler-619 :
     Kepler-620 :
     Kepler-621 :
-    Kepler-628 :
     Kepler-629 :
     Kepler-634 :
     Kepler-636 :
@@ -1310,7 +1306,6 @@ def targetlist():
     Kepler-700 :
     Kepler-702 :
     Kepler-703 :
-    Kepler-706 :
     Kepler-707 :
     Kepler-708 :
     Kepler-714 :
@@ -1345,7 +1340,6 @@ def targetlist():
     Kepler-799 :
     Kepler-80 :
     Kepler-805 :
-    Kepler-807 :
     Kepler-808 :
     Kepler-814 :
     Kepler-815 :
@@ -2122,7 +2116,6 @@ def targetondisk():
     K2-415 : K2415
     K2-60 : K260
     Kepler-1656 : Kepler1656
-    Kepler-470 : Kepler470
     Kepler-63 : Kepler63
     Kepler-96 : Kepler96
     NGTS-14 A : NGTS14A
@@ -2204,7 +2197,6 @@ def targetondisk():
     K2-321 : K2321
     K2-344 : K2344
     K2-348 : K2348
-    K2-399 : K2399
     K2-417 : K2417
     K2-99 : K299
     Kepler-1515 : KEPLER1515
@@ -2617,10 +2609,8 @@ def targetondisk():
     Kepler-476 : Kepler476
     Kepler-485 : Kepler485
     Kepler-487 : Kepler487
-    Kepler-488 : Kepler488
     Kepler-490 : Kepler490
     Kepler-491 : Kepler491
-    Kepler-494 : Kepler494
     Kepler-495 : Kepler495
     Kepler-497 : Kepler497
     Kepler-498 : Kepler498
@@ -2670,7 +2660,6 @@ def targetondisk():
     Kepler-619 : Kepler619
     Kepler-620 : Kepler620
     Kepler-621 : Kepler621
-    Kepler-628 : Kepler628
     Kepler-629 : Kepler629
     Kepler-634 : Kepler634
     Kepler-636 : Kepler636
@@ -2703,7 +2692,6 @@ def targetondisk():
     Kepler-700 : Kepler700
     Kepler-702 : Kepler702
     Kepler-703 : Kepler703
-    Kepler-706 : Kepler706
     Kepler-707 : Kepler707
     Kepler-708 : Kepler708
     Kepler-714 : Kepler714
@@ -2738,7 +2726,6 @@ def targetondisk():
     Kepler-799 : Kepler799
     Kepler-80 : Kepler80
     Kepler-805 : Kepler805
-    Kepler-807 : Kepler807
     Kepler-808 : Kepler808
     Kepler-814 : Kepler814
     Kepler-815 : Kepler815

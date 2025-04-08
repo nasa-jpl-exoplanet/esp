@@ -257,7 +257,7 @@ class Atmos(dawgie.Algorithm):
 
         mcmc_chain_length = runtime_params.MCMC_chain_length.value()
         # print('MCMC_chain_length', mcmc_chain_length)
-        mcmc_chain_length = 1000
+        # mcmc_chain_length = 1000
         # print('MCMC_chain_length', mcmc_chain_length)
         log.info(
             ' calling atmos from cerb-alg-atmos  chain len=%d',
