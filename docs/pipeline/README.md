@@ -11,4 +11,8 @@ We often talk about two types of pipelines: operational and private. They only d
 
 ## Description
 
-Because the actual pipeline changes as we commit and update code, the description here is a highlight of the tasks and algorithms from moment in time. To know its current form, you would have to start a pipeline and [view it live](interact).
+Because the actual pipeline changes as we commit and update code, the description here is a highlight of the tasks and algorithms from moment in time. To know its current form, you would have to start a pipeline and [view it live](interact). However, reading through this should provide the ability to interpret the live diagrams.
+
+The ESP tasks and how they relate to each other are in this figure:
+
+![ESP Tasks](tv.svg)
