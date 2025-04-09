@@ -32,6 +32,7 @@ import sys
 from ultranest import ReactiveNestedSampler
 
 import pymc
+from pytensor import tensor
 
 from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
@@ -344,6 +345,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
             smaors,
             priors[p]['period'],
             priors[p]['ecc'],
+            tensor=False
         )
         select = (phaseredo < 0.25) & (phaseredo > -0.25)
         ordered = np.argsort(phaseredo[select])
@@ -1904,16 +1906,20 @@ def whitelight(
             mcpost = pymc.stats.summary(trace)
             pass
         mctrace = {}
+        print('mcpost keys',mcpost.keys())
+        print('mcpost-mean keys',mcpost['mean'].keys())
+        print('trace keys',trace.keys())
+        print('trace-posterior keys',trace.posterior.keys())
         for key in mcpost['mean'].keys():
             if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
                 pieces = key.split('[')
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
             tracekeys = key.split('__')
             if len(tracekeys) > 1:
-                mctrace[key] = trace[tracekeys[0]][:, int(tracekeys[1])]
+                mctrace[key] = trace.posterior[tracekeys[0]][:, int(tracekeys[1])]
                 pass
             else:
-                mctrace[key] = trace[tracekeys[0]]
+                mctrace[key] = trace.posterior[tracekeys[0]]
             pass
         postlc = []
         postim = []
@@ -2935,8 +2941,8 @@ def nottvfiorbital(*whiteparams):
             tensor=False,
         )
         lcout = tldlc(
-            abs(omz),
-            float(r),
+            tensor.abs(omz),
+            r,
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
@@ -2945,10 +2951,10 @@ def nottvfiorbital(*whiteparams):
         imout = timlc(
             omt,
             ctxt.orbits[i],
-            vslope=float(avs[i]),
+            vslope=avs[i],
             vitcp=1e0,
-            oslope=float(aos[i]),
-            oitcp=float(aoi[i]),
+            oslope=aos[i],
+            oitcp=aoi[i],
         )
         out.extend(lcout * imout)
         pass
