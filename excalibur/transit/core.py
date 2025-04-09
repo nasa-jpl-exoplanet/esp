@@ -345,7 +345,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
             smaors,
             priors[p]['period'],
             priors[p]['ecc'],
-            tensor=False
+            tensor=False,
         )
         select = (phaseredo < 0.25) & (phaseredo > -0.25)
         ordered = np.argsort(phaseredo[select])
@@ -2003,7 +2003,7 @@ def whitelight(
                 g2=g2[0],
                 g3=g3[0],
                 g4=g4[0],
-                tensor=False
+                tensor=False,
             )
         )
         out['data'][p]['postlc'] = postlc
@@ -2667,7 +2667,8 @@ def spectrum(
                 g1, g2, g3, g4 = [[0], [0], [0], [0]]
             out['data'][p]['LD'].append([g1[0], g2[0], g3[0], g4[0]])
             model = tldlc(
-                abs(allz), whiterprs, g1=g1[0], g2=g2[0], g3=g3[0], g4=g4[0]
+                abs(allz), whiterprs, g1=g1[0], g2=g2[0], g3=g3[0], g4=g4[0],
+                tensor=False,
             )
 
             if lcplot:
