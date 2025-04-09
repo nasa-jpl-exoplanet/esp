@@ -28,12 +28,12 @@ Activate your virtual environment now. Once the virtual environment is activated
 
 With you virtual environment activated and in your repository root, do `python -m pip install -r requirements.txt`. When pip completes, your environment will contain all of the software that esp requires. For completeness, also do `python -m pip install -e .`.
 
-With the python environment complete, need to create a docker environment as well. Look at the files in the envs directory at the repository root. All of these are setting up virtual docker envirnoments. Pick and choose as desired. If sharing the platform with other users running pipelines, the port number range (DAWGIE_FE_PORT thru and including DAWGIE_SFE_PORT) must always be 6 in length and not overlap with any other user. From here out, this will be referred to as `<your docker env>`.
+With the python environment complete, need to create a docker environment as well. Look at the files in the envs directory at the repository root. All of these are setting up virtual docker envirnoments. Pick and choose as desired. If sharing the platform with other users running pipelines, the port number range (DAWGIE_FE_PORT thru and including DAWGIE_SFE_PORT) must always be 6 in length and not overlap with any other user. From here out, this will be referred to as `<environment profile>`.
 
 ## Build
 
 If the docker images are not already available, then they have to be built from the repository root:
-1. `source envs/<your docker env>`
+1. `source envs/<environment profile>`
 1. `docker compose -f .docker/compose.yaml build base`
 1. `docker compose -f .docker/compose.yaml build server tools workers`
 

@@ -99,22 +99,19 @@ The tool will start a private pipeline. If you are on the mentor machines, you m
 It has one optional argument:
 1. `<environment profile>` is the set of environment variables that define one pipeline from another. If not provided, it defaults to the username via `${USER}`.
 
-Test:
+Test for the reader:
 
-1. `pp_start.sh` uses what port? [9990]
-1. `DAWGIE_FE_PORT=45656 pp_start.sh 12345` uses what port? [12345]
-1. `DAWGIE_FE_PORTs=12345 pp_start.sh` uses what port? [9990 - trick question because environment variable name is wrong]
-1. `DAWGIE_FE_PORT=54321 pp_start.sh` uses what port? [54321]
-1. In .bash_profile `export DAWGIE_FE_PORT=12321`. `pp_start.sh` uses what port? [12321]
+1. `pp_start.sh` uses what `<environment profile>`? [`<repository root>/envs/${USER}`]
+1. `pp_start.sh apple.banana` uses what `<environment profile>`? [`<repository root>/envs/apple.banana`]
+1. `pp_start.sh /cherry/apple/banana` uses what `<environment profile>`? [`/cherry/apple/banana`]
 
-On the mentor cluster, it would be best to put `DAWGIE_FE_PORT` in your .bash_profile or your shell's equivalent and set to a value that does not collide with any of the other developers.
 
 Hence, the most common way to start a private pipeline becomes:
 
 `pp_start.sh`
 
 Be aware of these two hidden requirements:
-1. DB - the private pipeline database is expected to be in `/proj/sdp/data/$USER/db` and named `${USER}`. If post2shelve.sh was used to create the DB, then this requirement is already met.
+1. DB - the private pipeline database is expected to be in `/proj/sdp/$USER/db` and named `${USER}`. If post2shelve.sh was used to create the DB, then this requirement is already met.
 1. runtime - the private pipeline settings and knobs are expected to be the file `/proj/sdp/data/runtime/${USER}.xml`.
 
 ### pp_stop.sh
@@ -123,6 +120,17 @@ Stop the private pipeline started with `pp_start.sh`
 
 It has one optional argument:
 1. `<environment profile>` is the set of environment variables that define one pipeline from another. If not provided, it defaults to the username via `${USER}`.
+
+Test for the reader:
+
+1. `pp_stop.sh` uses what `<environment profile>`? [`<repository root>/envs/${USER}`]
+1. `pp_stop.sh apple.banana` uses what `<environment profile>`? [`<repository root>/envs/apple.banana`]
+1. `pp_stop.sh /cherry/apple/banana` uses what `<environment profile>`? [`/cherry/apple/banana`]
+
+
+Hence, the most common way to start a private pipeline becomes:
+
+`pp_stop.sh`
 
 ### pp_worker.sh
 
