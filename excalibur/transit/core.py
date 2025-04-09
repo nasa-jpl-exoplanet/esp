@@ -1916,8 +1916,9 @@ def whitelight(
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
             tracekeys = key.split('__')
             if len(tracekeys) > 1:
-                mctrace[key] = trace.posterior[tracekeys[0]][:, int(tracekeys[1])]
-                pass
+                mctrace[key] = trace.posterior[tracekeys[0]][
+                    :, int(tracekeys[1])
+                ]
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
@@ -1991,7 +1992,8 @@ def whitelight(
             )
             modeltimes.extend(list(modeltimes_thisVisit))
         postz, postph = datcore.time2z(
-            np.array(modeltimes), inclination, tmjd, smaors, period, ecc
+            np.array(modeltimes), inclination, tmjd, smaors, period, ecc,
+            tensor=False
         )
         modelphase.extend(postph)
         modellc.extend(
