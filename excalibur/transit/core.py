@@ -32,7 +32,7 @@ import sys
 from ultranest import ReactiveNestedSampler
 
 import pymc
-from pytensor import tensor
+from pytensor import tensor as tensorfunc
 
 from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
@@ -1906,10 +1906,10 @@ def whitelight(
             mcpost = pymc.stats.summary(trace)
             pass
         mctrace = {}
-        print('mcpost keys',mcpost.keys())
-        print('mcpost-mean keys',mcpost['mean'].keys())
-        print('trace keys',trace.keys())
-        print('trace-posterior keys',trace.posterior.keys())
+        print('mcpost keys', mcpost.keys())
+        print('mcpost-mean keys', mcpost['mean'].keys())
+        print('trace keys', trace.keys())
+        print('trace-posterior keys', trace.posterior.keys())
         for key in mcpost['mean'].keys():
             if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
                 pieces = key.split('[')
@@ -1941,7 +1941,8 @@ def whitelight(
             else:
                 omtk = tmjd
             postz, postph = datcore.time2z(
-                time[i], inclination, omtk, smaors, period, ecc
+                time[i], inclination, omtk, smaors, period, ecc,
+                tensor=False
             )
             if selftype in ['eclipse']:
                 postph[postph < 0] = postph[postph < 0] + 1e0
@@ -1956,6 +1957,7 @@ def whitelight(
                     g2=g2[0],
                     g3=g3[0],
                     g4=g4[0],
+                    tensor=False,
                 )
             )
             postim.append(
@@ -1966,6 +1968,7 @@ def whitelight(
                     vitcp=1e0,
                     oslope=np.nanmedian(mctrace[f'oslope__{i}']),
                     oitcp=np.nanmedian(mctrace[f'oitcp__{i}']),
+                    tensor=False,
                 )
             )
             pass
@@ -2941,7 +2944,7 @@ def nottvfiorbital(*whiteparams):
             tensor=False,
         )
         lcout = tldlc(
-            tensor.abs(omz),
+            tensorfunc.abs(omz),
             r,
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
