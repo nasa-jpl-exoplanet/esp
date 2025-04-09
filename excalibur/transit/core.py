@@ -1942,8 +1942,7 @@ def whitelight(
             else:
                 omtk = tmjd
             postz, postph = datcore.time2z(
-                time[i], inclination, omtk, smaors, period, ecc,
-                tensor=False
+                time[i], inclination, omtk, smaors, period, ecc, tensor=False
             )
             if selftype in ['eclipse']:
                 postph[postph < 0] = postph[postph < 0] + 1e0
@@ -2004,6 +2003,7 @@ def whitelight(
                 g2=g2[0],
                 g3=g3[0],
                 g4=g4[0],
+                tensor=False
             )
         )
         out['data'][p]['postlc'] = postlc
