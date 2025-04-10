@@ -63,7 +63,7 @@ services:
       dockerfile: .docker/Dockerfile.tools
     environment:
       - DAWGIE_AE_BASE_PACKAGE=${DAWGIE_AE_BASE_PACKAGE}
-      - DAWGIE_AE_BASE_PATH=${DAWGIE_AE_BASE_PATH}
+      - DAWGIE_AE_BASE_PATH=${EXCALIBUR_SOURCE_PATH}/${DAWGIE_AE_BASE_PACKAGE}
       - DAWGIE_DB_HOST=${DAWGIE_DB_HOST}
       - DAWGIE_DB_IMPL=${DAWGIE_DB_IMPL}
       - DAWGIE_DB_NAME=${DAWGIE_DB_NAME}
@@ -96,11 +96,15 @@ services:
         delay: 3s
         window: 45s
     environment:
+      - DAWGIE_DATA_DBSTOR=${DAWGIE_DATA_DBSTOR}
+      - DAWGIE_DATA_LOGDIR=${DAWGIE_DATA_LOGDIR}
+      - DAWGIE_DATA_STAGED=${DAWGIE_DATA_STAGED}
+      - DAWGIE_GUEST_PUBLIC_KEYS=${DAWGIE_GUEST_PUBLIC_KEYS}
       - DAWGIE_SSL_PEM_FILE=${DAWGIE_SSL_PEM_FILE}
       - DAWGIE_SSL_PEM_MYNAME=${DAWGIE_SSL_PEM_MYNAME}
       - DAWGIE_SSL_PEM_MYSELF=${DAWGIE_SSL_PEM_MYSELF}
+      - EXCALIBUR_LEVER_AND_KNOB_SETTINGS=${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}
       - EXCALIBUR_USER=${EXCALIBUR_USER}
-      - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
       - USERNAME=${USERNAME}
     image: esp/worker:latest
     init: true
@@ -110,6 +114,7 @@ services:
     volumes:
       - ${EXCALIBUR_CERTS}:${EXCALIBUR_CERTS}
       - ${EXCALIBUR_DATA_PATH}:${EXCALIBUR_DATA_PATH}
+      - ${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}:${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}:ro
       - /etc/ssl:/etc/ssl:ro
       - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
       - /usr/share/ca-certificates:/usr/share/ca-certificates:ro
