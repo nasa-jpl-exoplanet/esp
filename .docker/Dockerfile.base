@@ -1,7 +1,5 @@
 FROM ubuntu:24.04
 COPY . /tmp/esp
-ENV DAWGIE_GUEST_PUBLIC_KEYS=/proj/data/certs
-ENV EXCALIBUR_LEVER_AND_KNOB_SETTINGS=/proj/data/runtime/ops.xml
 ENV MPLCONFIGDIR=/tmp
 ENV PATH=/usr/local/esp/bin:$PATH
 RUN set -ex && \
