@@ -15,13 +15,18 @@ services:
     container_name: pipeline-${EXCALIBUR_USER}
     environment:
       - DAWGIE_AE_BASE_PACKAGE=${DAWGIE_AE_BASE_PACKAGE}
-      - DAWGIE_AE_BASE_PATH=${DAWGIE_AE_BASE_PATH}
+      - DAWGIE_AE_BASE_PATH=${EXCALIBUR_SOURCE_PATH}/${DAWGIE_AE_BASE_PACKAGE}
+      - DAWGIE_DATA_DBSTOR=${DAWGIE_DATA_DBSTOR}
+      - DAWGIE_DATA_LOGDIR=${DAWGIE_DATA_LOGDIR}
+      - DAWGIE_DATA_STAGED=${DAWGIE_DATA_STAGED}
       - DAWGIE_DB_HOST=${DAWGIE_DB_HOST}
       - DAWGIE_DB_IMPL=${DAWGIE_DB_IMPL}
       - DAWGIE_DB_NAME=${DAWGIE_DB_NAME}
       - DAWGIE_DB_PATH=${DAWGIE_DB_PATH}
       - DAWGIE_DB_PORT=${DAWGIE_DB_PORT}
+      - DAWGIE_DB_ROTATE_PATH=${DAWGIE_DB_ROTATE_PATH}
       - DAWGIE_FE_PATH=${DAWGIE_FE_PATH}
+      - DAWGIE_GUEST_PUBLIC_KEYS=${DAWGIE_GUEST_PUBLIC_KEYS}
       - DAWGIE_LISTENER_BACKLOG=${DAWGIE_LISTENER_BACKLOG}
       - DAWGIE_LOG_BACKUP=${DAWGIE_LOG_BACKUP}
       - DAWGIE_SSL_PEM_FILE=${DAWGIE_SSL_PEM_FILE}
@@ -30,6 +35,8 @@ services:
       - EXCALIBUR_LEVER_AND_KNOB_SETTINGS=${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}
       - EXCALIBUR_LOG_LEVEL=${EXCALIBUR_LOG_LEVEL}
       - EXCALIBUR_USER=${EXCALIBUR_USER}
+      - PGPASS=${EXCALIBUR_PGPASS}
+      - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
       - USERNAME=${USERNAME}
     image: esp/server:${ESP_VERSION}
     networks:
@@ -38,12 +45,12 @@ services:
       - "${DAWGIE_FE_PORT:-9990}-${DAWGIE_SFE_PORT:-9995}:8080-8085"
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
-      - ${EXCALIBUR_CERTS}:/proj/mycerts
-      - ${EXCALIBUR_DATA_PATH}:/proj/data
-      - ${EXCALIBUR_DB_PATH}:/proj/data/db
-      - ${EXCALIBUR_FRONT_END}:/proj/src/front-end
-      - ${EXCALIBUR_SOURCE_PATH}:/proj/src/ae
-      - ${EXCALIBUR_PGPASS}:/proj/.pgpass:ro
+      - ${EXCALIBUR_CERTS}:${EXCALIBUR_CERTS}
+      - ${EXCALIBUR_DATA_PATH}:${EXCALIBUR_DATA_PATH}
+      - ${EXCALIBUR_DB_PATH}:${EXCALIBUR_PATH}/${EXCALIBUR_USER}/db
+      - ${EXCALIBUR_FRONT_END}:${EXCALIBUR_PATH}/${EXCALIBUR_USER}/front-end
+      - ${EXCALIBUR_SOURCE_PATH}:${EXCALIBUR_SOURCE_PATH}
+      - ${EXCALIBUR_PGPASS}:${EXCALIBUR_PGPASS}:ro
       - /etc/ssl:/etc/ssl:ro
       - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
       - /usr/share/ca-certificates:/usr/share/ca-certificates:ro
@@ -56,21 +63,23 @@ services:
       dockerfile: .docker/Dockerfile.tools
     environment:
       - DAWGIE_AE_BASE_PACKAGE=${DAWGIE_AE_BASE_PACKAGE}
-      - DAWGIE_AE_BASE_PATH=${DAWGIE_AE_BASE_PATH}
+      - DAWGIE_AE_BASE_PATH=${EXCALIBUR_SOURCE_PATH}/${DAWGIE_AE_BASE_PACKAGE}
       - DAWGIE_DB_HOST=${DAWGIE_DB_HOST}
       - DAWGIE_DB_IMPL=${DAWGIE_DB_IMPL}
       - DAWGIE_DB_NAME=${DAWGIE_DB_NAME}
       - DAWGIE_DB_PATH=${DAWGIE_DB_PATH}
       - DAWGIE_DB_PORT=${DAWGIE_DB_PORT}
       - EXCALIBUR_USER=${EXCALIBUR_USER}
+      - PGPASS=${EXCALIBUR_PGPASS}
+      - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
       - USERNAME=${USERNAME}
     image: esp/tools:${ESP_VERSION}
     networks:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
-      - ${EXCALIBUR_PATH}/${EXCALIBUR_USER}:/proj
-      - ${EXCALIBUR_SOURCE_PATH}:/proj/src/ae
+      - ${EXCALIBUR_PATH}/${EXCALIBUR_USER}:${EXCALIBUR_PATH}/${EXCALIBUR_USER}
+      - ${EXCALIBUR_SOURCE_PATH}:${EXCALIBUR_SOURCE_PATH}
 
   workers:
     build:
@@ -87,9 +96,14 @@ services:
         delay: 3s
         window: 45s
     environment:
+      - DAWGIE_DATA_DBSTOR=${DAWGIE_DATA_DBSTOR}
+      - DAWGIE_DATA_LOGDIR=${DAWGIE_DATA_LOGDIR}
+      - DAWGIE_DATA_STAGED=${DAWGIE_DATA_STAGED}
+      - DAWGIE_GUEST_PUBLIC_KEYS=${DAWGIE_GUEST_PUBLIC_KEYS}
       - DAWGIE_SSL_PEM_FILE=${DAWGIE_SSL_PEM_FILE}
       - DAWGIE_SSL_PEM_MYNAME=${DAWGIE_SSL_PEM_MYNAME}
       - DAWGIE_SSL_PEM_MYSELF=${DAWGIE_SSL_PEM_MYSELF}
+      - EXCALIBUR_LEVER_AND_KNOB_SETTINGS=${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}
       - EXCALIBUR_USER=${EXCALIBUR_USER}
       - USERNAME=${USERNAME}
     image: esp/worker:latest
@@ -98,8 +112,9 @@ services:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
-      - ${EXCALIBUR_CERTS}:/proj/mycerts
-      - ${EXCALIBUR_DATA_PATH}:/proj/data
+      - ${EXCALIBUR_CERTS}:${EXCALIBUR_CERTS}
+      - ${EXCALIBUR_DATA_PATH}:${EXCALIBUR_DATA_PATH}
+      - ${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}:${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}:ro
       - /etc/ssl:/etc/ssl:ro
       - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
       - /usr/share/ca-certificates:/usr/share/ca-certificates:ro
