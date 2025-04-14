@@ -2,10 +2,11 @@
 
 There are several ways to share data between the pipeline and users:
 1. [Extract state vectors](#state-vector-extraction)
-    1. python script
-    1. python notebook
-1. [Read](#read) manually managed data [from disk](#disk-access)
-1. [Write](#write) intermediate data [to disk](#disk-access)
+    1. [sensitive information](#sensitive-information)
+    1. [DB Connection](#connect-to-db)
+    1. [extraction](#extract-state-vectors)
+1. [Disk Access](disk-access) [(read)](#read)
+1. [Disk Access](disk-access) [(write)](#write)
 
 ## State vector extraction
 
@@ -92,13 +93,20 @@ There are an infinite number of ways to obtain a state vector's full name. There
 
 For both of these instances, we will want the latest or most recent data. To do this, we need a run id larger than any that exist. Therefore, we will use `runid = 2**30`. We will also need to specify a target, and, for documentation, we will use `target = 'GJ 1214'`. Lastly, we will declare the `task.alg.sv` name to be `system.finalize.parameters`.
 
-#### by full Name
+#### by full name
+
+The advantage to using the full name is that you can select just the state vectory or value of a state vector.
+
+The disadvantage to using the full name is that you have to provide a thin dummy algorithm that depends upon the item of interest.
+
+The job of the thin algorithm wrapper is to tie the name to parts of the software so that we can load pickled data into the appropriate objects. How the name we use as a state vector is tied is pretty straight forward only by choice of the lead developer. Lets break the name into its constituent parts:
 
 State vector full name:
 ```
 ```
 
 If we only wanted one of the values in the state vector, we could have asked for just that as well:
+
 ```
 ```
 
