@@ -17,6 +17,7 @@ We first have to define our sensitive information that grants us access to our p
 ```
 $ source <repostiory root>/.docker/.env
 $ source <environment profile>
+$ source /proj/sdp/ops/db-read-access  # only if desired
 ```
 
 These two scripts should set all of the variables that you need to make your current environment look like the inside of a docker contaier.
@@ -31,8 +32,21 @@ def load_environment_profile(filename:str):
             os.environ[key] = os.path.expandvars(os.path.expanduser(value))
 ```
 
-The function will also work for `<repository root>/.docker/.env` but it will overwrite any variable that is already there making python-dotenv better.
+The function will also work for `<repository root>/.docker/.env` but it will overwrite any variable that is already there making python-dotenv better. Since it works in either a script or notebook, we will cover using the python mechanism:
+```
+# define the repository root that will be used later
+repository_root = '/home/niessner/Projects/Exoplanet/esp'
 
+# load the base environment variables that docker compose would normally set
+load_environment_profile(os.path.join(repository_root, '.docker/.env'))
+
+# override the base enviroment variables that define personal choices
+load_environment_profile(os.path.join(repository_root, 'esp/envs/alsMT'))
+
+# load the environment variables that give read access to the ops pipeline
+# it should be used if the desire is to communicate with a private pipeline
+load_environment_profile('/proj/sdp/ops/db-read-access')
+```
 
 ### Connect to DB
 
