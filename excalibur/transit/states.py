@@ -324,7 +324,7 @@ class SpectrumSV(ExcaliburSV):
                     add_scale_height_labels(
                         self['data'][p], vspectrum, ax, myfig
                     )
-                    save_plot_toscreen(fig, visitor)
+                    save_plot_toscreen(myfig, visitor)
                     # now display unmasked spectrum
                     if 'MCPOST' in self['data'][p]:
                         myfig, ax = plt.subplots(figsize=(8, 6))

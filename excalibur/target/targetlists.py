@@ -726,7 +726,7 @@ def targetlist_active():
         'K2-415',
         'K2-60',
         'Kepler-1656',
-        'Kepler-470',
+        # 'Kepler-470',  # false-positive  Morton et al 2016
         'Kepler-63',
         'Kepler-96',
         'NGTS-14 A',
@@ -808,7 +808,7 @@ def targetlist_active():
         'K2-321',
         'K2-344',
         'K2-348',
-        'K2-399',
+        # 'K2-399',  # false-positive  Morton et al 2016
         'K2-417',
         'K2-99',
         'Kepler-1515',
@@ -1221,10 +1221,10 @@ def targetlist_active():
         'Kepler-476',
         'Kepler-485',
         'Kepler-487',
-        'Kepler-488',
+        # 'Kepler-488',  # false-positive  Morton et al 2016
         'Kepler-490',
         'Kepler-491',
-        'Kepler-494',
+        # 'Kepler-494',  # false-positive  Morton et al 2016
         'Kepler-495',
         'Kepler-497',
         'Kepler-498',
@@ -1274,7 +1274,7 @@ def targetlist_active():
         'Kepler-619',
         'Kepler-620',
         'Kepler-621',
-        'Kepler-628',
+        # 'Kepler-628',  # false-positive  Morton et al 2016
         'Kepler-629',
         'Kepler-634',
         'Kepler-636',
@@ -1307,7 +1307,7 @@ def targetlist_active():
         'Kepler-700',
         'Kepler-702',
         'Kepler-703',
-        'Kepler-706',
+        # 'Kepler-706',  # false-positive  Morton et al 2016
         'Kepler-707',
         'Kepler-708',
         'Kepler-714',
@@ -1342,7 +1342,7 @@ def targetlist_active():
         'Kepler-799',
         'Kepler-80',
         'Kepler-805',
-        'Kepler-807',
+        # 'Kepler-807',  # false-positive  Morton et al 2016
         'Kepler-808',
         'Kepler-814',
         'Kepler-815',
@@ -3825,7 +3825,7 @@ def planetlist_ariel2yearTier1_nov2024():
         'TOI-125 c',
         'HD 110067 c',
         'Kepler-6 b',
-        'K2-399 b',
+        # 'K2-399 b',  # false-positive  Morton et al 2016
         'HD 109833 b',
         'TOI-150 b',
         'Gaia-1 b',
@@ -4038,7 +4038,7 @@ def targetlist_ariel2yearTier1_nov2024():
         'K2-36',
         'K2-370',
         'K2-371',
-        'K2-399',
+        # 'K2-399',  # false-positive  Morton et al 2016
         'K2-405',
         'K2-406',
         'K2-415',
