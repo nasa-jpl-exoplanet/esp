@@ -50,6 +50,7 @@ import pymc
 from pytensor import tensor
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 

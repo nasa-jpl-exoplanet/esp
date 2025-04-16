@@ -245,7 +245,6 @@ class Atmos(dawgie.Algorithm):
         self.__out = svupdate
         if self.__out:
             ds.update()
-            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -499,7 +498,7 @@ class Release(dawgie.Algorithm):
         self._version_ = crbcore.rlsversion()
         self.__fin = sysalg.Finalize()
         self.__atmos = Atmos()
-        self.__out = [crbstates.RlsSV(fltr) for fltr in fltrs]
+        self.__out = [crbstates.RlsSv(fltr) for fltr in fltrs]
         return
 
     def name(self):
@@ -510,7 +509,7 @@ class Release(dawgie.Algorithm):
         '''Input State Vectors: cerberus.atmos'''
         return [
             dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(crb.task, self.__atmos),
+            dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__atm),
         ]
 
     def state_vectors(self):
@@ -520,12 +519,12 @@ class Release(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
         svupdate = []
-        vfin, sfin = crbcore.checksv(self.__fin.sv_as_dict()['parameters'])
+        vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         fltr = 'HST-WFC3-IR-G141-SCAN'
         update = False
         if vfin:
             log.warning(
-                '--< CERBERUS RELEASE: %s >--', fltr, repr(self).split('.')[1]
+                '--< CERBERUS RELEASE: %s %s >--', fltr, repr(self).split('.')[1]
             )
             update = self._release(
                 repr(self).split('.')[1],  # this is the target name
@@ -540,7 +539,7 @@ class Release(dawgie.Algorithm):
         if update:
             svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
-        if self.__out.__len__() > 0:
+        if self.__out:
             ds.update()
         else:
             raise dawgie.NoValidOutputDataError(
