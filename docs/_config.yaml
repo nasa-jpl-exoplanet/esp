@@ -1,0 +1,7 @@
+title: Excalibur
+logo: img/logo.png
+description: the process is the product
+show_downloads: true
+google_analytics:
+theme: jekyll-theme-minimal
+markdown: kramdown
