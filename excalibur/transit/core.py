@@ -1921,14 +1921,14 @@ def whitelight(
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
-        for key in mctrace.keys():
+        for key, values in mctrace.items():
             print(
                 'WHITELIGHT mctrace median,std,min,max',
                 key,
-                np.nanmedian(mctrace[key]),
-                np.nanstd(mctrace[key]),
-                np.nanmin(mctrace[key]),
-                np.nanmax(mctrace[key]),
+                np.nanmedian(values),
+                np.nanstd(values),
+                np.nanmin(values),
+                np.nanmax(values),
             )
         postlc = []
         postim = []
