@@ -1481,7 +1481,7 @@ def hstwhitelight(
                 pieces = key.split('[')
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
             tracekeys = key.split('__')
-            tracetable = trace['posterior'][tracekeys[0]].values
+            tracetable = trace.posterior[tracekeys[0]].values
             tracetable = tracetable.reshape(-1, tracetable.shape[-1])
             if len(tracekeys) > 1:
                 mctrace[key] = tracetable[:, int(tracekeys[1])]
@@ -1851,6 +1851,9 @@ def whitelight(
                 lower=rpors / 2e0,
                 upper=2e0 * rpors,
             )
+            # print('PRIOR rprs',rpors,taurprs,rpors / 2e0,2e0 * rpors)
+            # print('PRIOR rprs range',2e0 * rpors-rpors / 2e0)
+            # print('PRIOR rprs range/3',(2e0 * rpors-rpors / 2e0)/3)
             nodes.append(rprs)
             if parentprior:
                 # use parent distr fitted Lorentzians (also called Cauchy)
@@ -1906,10 +1909,6 @@ def whitelight(
             mcpost = pymc.stats.summary(trace)
             pass
         mctrace = {}
-        print('mcpost keys', mcpost.keys())
-        print('mcpost-mean keys', mcpost['mean'].keys())
-        print('trace keys', trace.keys())
-        print('trace-posterior keys', trace.posterior.keys())
         for key in mcpost['mean'].keys():
             if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
                 pieces = key.split('[')
@@ -1922,6 +1921,12 @@ def whitelight(
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
+        # for key in mctrace.keys():
+        #    print('WHITELIGHT mctrace median,std,min,max',key,
+        #          np.nanmedian(mctrace[key]),
+        #          np.nanstd(mctrace[key]),
+        #          np.nanmin(mctrace[key]),
+        #          np.nanmax(mctrace[key]))
         postlc = []
         postim = []
         postsep = []
@@ -2048,6 +2053,11 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2), tensor=True):
     '''
     G. ROUDIER: Light curve model
     '''
+    # print('    TENSOR=',tensor)
+    # print(' z?   ',isinstance(z, tensorfunc.variable.TensorVariable))
+    # print(' rprs?',isinstance(rprs, tensorfunc.variable.TensorVariable))
+    # the first time here (in transit.spectrum) is false/false then false/true
+    # and the call in transit.whitelight is true/true.  false/true is tricky
     if tensor:
         zeval = z.eval()
         rprseval = rprs.eval()
@@ -2733,7 +2743,7 @@ def spectrum(
             with pymc.Model():
                 if startflag:
                     lowstart = whiterprs - 5e0 * Hs
-                    lowstart = max(lowstart, 0)
+                    lowstart = tensorfunc.max(lowstart, 0)
                     upstart = whiterprs + 5e0 * Hs
                     rprs = pymc.Uniform('rprs', lower=lowstart, upper=upstart)
                     pass
@@ -2741,11 +2751,6 @@ def spectrum(
                     rprs = pymc.Normal(
                         'rprs', mu=prcenter, tau=1e0 / (prwidth**2)
                     )
-                #                     lowstart = whiterprs - 5e0*Hs
-                #                     if lowstart < 0: lowstart = 0
-                #                     upstart = whiterprs + 5e0*Hs
-                #                     rprs = pymc.Uniform('rprs', lower=lowstart, upper=upstart)
-                #                     pass
                 allvslope = pymc.TruncatedNormal(
                     'vslope',
                     mu=0e0,
@@ -2793,15 +2798,15 @@ def spectrum(
                         key = f"{pieces[0]}__{pieces[1].strip(']')}"
                     tracekeys = key.split('__')
                     if len(tracekeys) > 1:
-                        mctrace[key] = trace[tracekeys[0]][:, int(tracekeys[1])]
+                        mctrace[key] = trace.posterior[tracekeys[0]][:, int(tracekeys[1])]
                         mcests[key] = np.nanmedian(mctrace[key])
                         pass
                     else:
-                        mctrace[key] = trace[tracekeys[0]]
+                        mctrace[key] = trace.posterior[tracekeys[0]]
                         mcests[key] = np.nanmedian(mctrace[key])
                     pass
                 # save rprs
-                clspvl = np.nanmedian(trace['rprs'])
+                clspvl = np.nanmedian(trace.posterior['rprs'])
                 # now produce fitted estimates
 
                 specparams = (
@@ -2816,10 +2821,10 @@ def spectrum(
                     imout = timlc(
                         time[iv],
                         orbits[iv],
-                        vslope=float(avs[iv]),
+                        vslope=avs[iv],
                         vitcp=1e0,
-                        oslope=float(aos[iv]),
-                        oitcp=float(aoi[iv]),
+                        oslope=aos[iv],
+                        oitcp=aoi[iv],
                     )
                     allimout.extend(imout)
                     pass
@@ -2840,7 +2845,7 @@ def spectrum(
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
                     clspvl = np.nan
                 out['data'][p]['ES'].append(clspvl)
-                out['data'][p]['ESerr'].append(np.nanstd(trace['rprs']))
+                out['data'][p]['ESerr'].append(np.nanstd(trace.posterior['rprs']))
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
                 out['data'][p]['WBlow'].append(wl)
@@ -2986,21 +2991,24 @@ def fiorbital(*whiteparams):
         omz, _pmph = datcore.time2z(
             omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc
         )
+        # didn't test this! changed float(r) to r.eval()
         lcout = tldlc(
             abs(omz),
-            float(r),
+            r.eval(),
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
             g4=ctxt.g4[0],
+            tensor=False,
         )
+        # didn't test this! removed float() from vslope,oslope..
         imout = timlc(
             omt,
             ctxt.orbits[i],
-            vslope=float(avs[i]),
+            vslope=avs[i],
             vitcp=1e0,
-            oslope=float(aos[i]),
-            oitcp=float(aoi[i]),
+            oslope=aos[i],
+            oitcp=aoi[i],
         )
         out.extend(lcout * imout)
         pass
@@ -3020,23 +3028,34 @@ def lcmodel(*specparams):
         imout = timlc(
             ctxt.time[iv],
             ctxt.orbits[iv],
-            vslope=float(avs[iv]),
+            # vslope=float(avs[iv]),         # doesn't work
+            # vslope=avs[iv].astype(float),  # works, but below also works
+            vslope=avs[iv],
             vitcp=1e0,
-            oslope=float(aos[iv]),
-            oitcp=float(aoi[iv]),
+            oslope=aos[iv],
+            oitcp=aoi[iv],
         )
         allimout.extend(imout)
         pass
+    # the first two below parameters should be same type (either float or tensor)
+    # current going with tensor, but commented out float version should work too
     out = tldlc(
-        abs(ctxt.allz),
-        float(r),
+        # np.abs(ctxt.allz),
+        # r.eval(),
+        tensorfunc.abs(ctxt.allz),  # this converts to tensor
+        r,
         g1=float(ctxt.g1[0]),
         g2=float(ctxt.g2[0]),
         g3=float(ctxt.g3[0]),
         g4=float(ctxt.g4[0]),
+        # tensor=False,
     )
     out = out * np.array(allimout)
-    return out[ctxt.valid]
+    # avoiding nasty unknown 'object' bug,
+    # it seems we have convert array of tensors into floats
+    # outconverted = out[ctxt.valid].eval()  # doesnt work; it's a np.array
+    outconverted = [out.eval() for out in list(out[ctxt.valid])]
+    return outconverted
 
 
 # ----------------------------------- --------------------------------
@@ -3254,8 +3273,8 @@ def fastspec(
                 progressbar=verbose,
             )
             pass
-        ES.append(np.nanmedian(trace['rprs']))
-        ESerr.append(np.nanstd(trace['rprs']))
+        ES.append(np.nanmedian(trace.posterior['rprs']))
+        ESerr.append(np.nanstd(trace.posterior['rprs']))
         WB.append(np.mean([wl, wh]))
         pass
     ES = np.array(ES)
