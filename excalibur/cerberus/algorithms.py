@@ -497,7 +497,7 @@ class Release(dawgie.Algorithm):
         '''__init__ ds'''
         self._version_ = crbcore.rlsversion()
         self.__fin = sysalg.Finalize()
-        self.__atmos = Atmos()
+        self.__atm = Atmos()
         self.__out = [crbstates.RlsSv(fltr) for fltr in fltrs]
         return
 
@@ -524,7 +524,9 @@ class Release(dawgie.Algorithm):
         update = False
         if vfin:
             log.warning(
-                '--< CERBERUS RELEASE: %s %s >--', fltr, repr(self).split('.')[1]
+                '--< CERBERUS RELEASE: %s %s >--',
+                fltr,
+                repr(self).split('.')[1],
             )
             update = self._release(
                 repr(self).split('.')[1],  # this is the target name
