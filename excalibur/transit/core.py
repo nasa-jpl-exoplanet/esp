@@ -1851,9 +1851,9 @@ def whitelight(
                 lower=rpors / 2e0,
                 upper=2e0 * rpors,
             )
-            # print('PRIOR rprs',rpors,taurprs,rpors / 2e0,2e0 * rpors)
-            # print('PRIOR rprs range',2e0 * rpors-rpors / 2e0)
-            # print('PRIOR rprs range/3',(2e0 * rpors-rpors / 2e0)/3)
+            print('PRIOR rprs', rpors, taurprs, rpors / 2e0, 2e0 * rpors)
+            print('PRIOR rprs range', 2e0 * rpors - rpors / 2e0)
+            print('PRIOR rprs range/3', (2e0 * rpors - rpors / 2e0) / 3)
             nodes.append(rprs)
             if parentprior:
                 # use parent distr fitted Lorentzians (also called Cauchy)
@@ -1921,12 +1921,15 @@ def whitelight(
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
-        # for key in mctrace.keys():
-        #    print('WHITELIGHT mctrace median,std,min,max',key,
-        #          np.nanmedian(mctrace[key]),
-        #          np.nanstd(mctrace[key]),
-        #          np.nanmin(mctrace[key]),
-        #          np.nanmax(mctrace[key]))
+        for key in mctrace.keys():
+            print(
+                'WHITELIGHT mctrace median,std,min,max',
+                key,
+                np.nanmedian(mctrace[key]),
+                np.nanstd(mctrace[key]),
+                np.nanmin(mctrace[key]),
+                np.nanmax(mctrace[key]),
+            )
         postlc = []
         postim = []
         postsep = []
@@ -1996,8 +1999,13 @@ def whitelight(
             )
             modeltimes.extend(list(modeltimes_thisVisit))
         postz, postph = datcore.time2z(
-            np.array(modeltimes), inclination, tmjd, smaors, period, ecc,
-            tensor=False
+            np.array(modeltimes),
+            inclination,
+            tmjd,
+            smaors,
+            period,
+            ecc,
+            tensor=False,
         )
         modelphase.extend(postph)
         modellc.extend(
@@ -2677,7 +2685,12 @@ def spectrum(
                 g1, g2, g3, g4 = [[0], [0], [0], [0]]
             out['data'][p]['LD'].append([g1[0], g2[0], g3[0], g4[0]])
             model = tldlc(
-                abs(allz), whiterprs, g1=g1[0], g2=g2[0], g3=g3[0], g4=g4[0],
+                abs(allz),
+                whiterprs,
+                g1=g1[0],
+                g2=g2[0],
+                g3=g3[0],
+                g4=g4[0],
                 tensor=False,
             )
 
@@ -2798,7 +2811,9 @@ def spectrum(
                         key = f"{pieces[0]}__{pieces[1].strip(']')}"
                     tracekeys = key.split('__')
                     if len(tracekeys) > 1:
-                        mctrace[key] = trace.posterior[tracekeys[0]][:, int(tracekeys[1])]
+                        mctrace[key] = trace.posterior[tracekeys[0]][
+                            :, int(tracekeys[1])
+                        ]
                         mcests[key] = np.nanmedian(mctrace[key])
                         pass
                     else:
@@ -2845,7 +2860,9 @@ def spectrum(
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
                     clspvl = np.nan
                 out['data'][p]['ES'].append(clspvl)
-                out['data'][p]['ESerr'].append(np.nanstd(trace.posterior['rprs']))
+                out['data'][p]['ESerr'].append(
+                    np.nanstd(trace.posterior['rprs'])
+                )
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
                 out['data'][p]['WBlow'].append(wl)

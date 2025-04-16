@@ -2556,6 +2556,8 @@ def analysis(aspects, filt, out, verbose=False):
 
     out['STATUS'].append(True)
     return out['STATUS'][-1]
+
+
 # ---------------------------------- ---------------------------------
 # -- ROUDIER ET AL. 2021 RELEASE -- ----------------------------------
 def rlsversion():
@@ -2563,7 +2565,8 @@ def rlsversion():
     GMR:110 Initial release to IPAC
     GMR:111 Removed empty keys
     '''
-    return dawgie.VERSION(1,1,1)
+    return dawgie.VERSION(1, 1, 1)
+
 
 def release(trgt, fin, out, verbose=False):
     '''
@@ -2574,39 +2577,48 @@ def release(trgt, fin, out, verbose=False):
     ext [INPUT]: 'HST-WFC3-IR-G141-SCAN'
     verbose [OPTIONAL]: verbosity
     '''
-    print('target name in cerb.release',trgt)
+    print('target name in cerb.release', trgt)
     rlsed = False
     plist = fin['priors']['planets']
     thispath = os.path.join(excalibur.context['data_dir'], 'CERBERUS')
-    print('thispath',thispath)
+    print('thispath', thispath)
     for p in plist:
-        intxtf = os.path.join(thispath, 'P.CERBERUS.atmos', trgt+p+'.txt')
-        incorrpng = os.path.join(thispath, 'P.CERBERUS.atmos', trgt+p+'_atmos_corr.png')
-        intxtpng = os.path.join(thispath, 'P.CERBERUS.atmos', trgt+p+'_atmos.png')
+        intxtf = os.path.join(thispath, 'P.CERBERUS.atmos', trgt + p + '.txt')
+        incorrpng = os.path.join(
+            thispath, 'P.CERBERUS.atmos', trgt + p + '_atmos_corr.png'
+        )
+        intxtpng = os.path.join(
+            thispath, 'P.CERBERUS.atmos', trgt + p + '_atmos.png'
+        )
         out['data'][p] = {}
         try:
             atm = np.loadtxt(intxtf)
             out['data'][p]['atmos'] = atm
             out['STATUS'].append(True)
             pass
-        except FileNotFoundError: pass
+        except FileNotFoundError:
+            pass
         try:
             corrplot = img.imread(incorrpng)
             out['data'][p]['corrplot'] = corrplot
             out['STATUS'].append(True)
             pass
-        except FileNotFoundError: pass
+        except FileNotFoundError:
+            pass
         try:
             modelplot = img.imread(intxtpng)
             out['data'][p]['modelplot'] = modelplot
             out['STATUS'].append(True)
             pass
-        except FileNotFoundError: pass
+        except FileNotFoundError:
+            pass
         if not out['data'][p]:
-            if verbose: log.warning('--< No data found for %s', p)
+            if verbose:
+                log.warning('--< No data found for %s', p)
             out['data'].pop(p)
             pass
         pass
     rlsed = out['STATUS'][-1]
-    if verbose: log.warning('--< %s', out['STATUS'])
+    if verbose:
+        log.warning('--< %s', out['STATUS'])
     return rlsed

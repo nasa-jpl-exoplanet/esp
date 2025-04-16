@@ -493,6 +493,7 @@ class Analysis(dawgie.Analyzer):
 # -------------------------------------------------------------------
 class Release(dawgie.Algorithm):
     '''Format release products Roudier et al. 2021'''
+
     def __init__(self):
         '''__init__ ds'''
         self._version_ = crbcore.rlsversion()
@@ -507,8 +508,10 @@ class Release(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: cerberus.atmos'''
-        return [dawgie.ALG_REF(sys.task, self.__fin),
-                dawgie.ALG_REF(crb.task, self.__atmos)]
+        return [
+            dawgie.ALG_REF(sys.task, self.__fin),
+            dawgie.ALG_REF(crb.task, self.__atmos),
+        ]
 
     def state_vectors(self):
         '''Output State Vectors: cerberus.release'''
@@ -521,22 +524,28 @@ class Release(dawgie.Algorithm):
         fltr = 'HST-WFC3-IR-G141-SCAN'
         update = False
         if vfin:
-            log.warning('--< CERBERUS RELEASE: %s >--', fltr,
-                        repr(self).split('.')[1])
+            log.warning(
+                '--< CERBERUS RELEASE: %s >--', fltr, repr(self).split('.')[1]
+            )
             update = self._release(
                 repr(self).split('.')[1],  # this is the target name
                 self.__fin.sv_as_dict()['parameters'],
-                fltrs.index(fltr))
+                fltrs.index(fltr),
+            )
             pass
         else:
             errstr = [m for m in [sfin] if m is not None]
             self._failure(errstr[0])
             pass
-        if update: svupdate.append(self.__out[fltrs.index(fltr)])
+        if update:
+            svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
-        if self.__out.__len__() > 0: ds.update()
-        else: raise dawgie.NoValidOutputDataError(
-                f'No output created for CERBERUS.{self.name()}')
+        if self.__out.__len__() > 0:
+            ds.update()
+        else:
+            raise dawgie.NoValidOutputDataError(
+                f'No output created for CERBERUS.{self.name()}'
+            )
         return
 
     def _release(self, trgt, fin, index):
@@ -549,5 +558,8 @@ class Release(dawgie.Algorithm):
         '''Failure log'''
         log.warning('--< CERBERUS RELEASE: %s >--', errstr)
         return
+
     pass
+
+
 # ---------------- ---------------------------------------------------
