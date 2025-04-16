@@ -13,7 +13,12 @@ class Actor(dawgie.Task):
 
     def list(self) -> [dawgie.Task]:
         '''Subtasks top level ordered call'''
-        return [crbalg.XSLib(), crbalg.Atmos(), crbalg.Results(), crbalg.Release()]
+        return [
+            crbalg.XSLib(),
+            crbalg.Atmos(),
+            crbalg.Results(),
+            crbalg.Release(),
+        ]
 
     pass
 
