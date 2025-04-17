@@ -14,8 +14,8 @@ import excalibur.util.cerberus as crbutil
 import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
 from excalibur.util import elca
 
-# from excalibur.cerberus.plotting import rebin_data
 from excalibur.util.plotters import (
+    plot_corner,
     save_plot_tosv,
     save_plot_myfit,
     plot_residual_fft,
@@ -1921,7 +1921,11 @@ def whitelight(
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
+        all_keys = []
+        bestfit_params = []
         for key, values in mctrace.items():
+            all_keys.append(key)
+            bestfit_params.append(np.nanmedian(values))
             print(
                 'WHITELIGHT mctrace median,std,min,max',
                 key,
@@ -2052,6 +2056,26 @@ def whitelight(
             'simulated'
         ] = all_sims  # certain targets the simulated data will be empty bc they're not gaussian
         wl = True
+
+        # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING
+        prior_ranges = {}
+        prior_ranges['someParameter'] = [-10, 10]
+
+        out['data'][p]['plot_corner'] = plot_corner(
+            all_keys,
+            mctrace,
+            None,  # profiled trace (no such thing for transit)
+            bestfit_params,
+            None,  # truth_params (no such thing for HST data)
+            prior_ranges,
+            'filterName',
+            'modelName',
+            'targetName',
+            p,
+            os.path.join(excalibur.context['data_dir'], 'bryden/'),
+            savetodisk=True,
+        )
+
     return wl
 
 
@@ -2721,7 +2745,7 @@ def spectrum(
                 cst.Boltzmann
                 * eqtemp
                 / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))
-            )  # [m]
+            ).eval()  # [m]
             Hs = Hs / (priors['R*'] * sscmks['Rsun'])
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
@@ -3238,11 +3262,13 @@ def fastspec(
             mixratio, protosolar=False, fH2=fH2, fHe=fHe
         )
         mmw = mmw * cst.m_p  # [kg]
+        # not checked yet!
+        #    mmw is probably tensor; better below if Hs is converted to float
         Hs = (
             cst.Boltzmann
             * eqtemp
             / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))
-        )  # [m]
+        ).eval()  # [m]
         Hs = Hs / (priors['R*'] * sscmks['Rsun'])
         tauvs = 1e0 / ((1e-2 / trdura) ** 2)
         ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
