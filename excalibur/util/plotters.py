@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-branches
 
 # -- IMPORTS -- ------------------------------------------------------
 
@@ -14,6 +14,9 @@ from scipy.stats import skew, kurtosis
 from numpy.fft import fft, fftfreq
 
 import dawgie
+import logging
+
+log = logging.getLogger(__name__)
 
 
 # -- PLOTTING FUNCTIONS-- --------------------------------------------
