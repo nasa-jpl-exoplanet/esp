@@ -22,7 +22,6 @@ from excalibur.util.plotters import (
 )
 from excalibur.transit.plotters import plot_corner
 
-import os
 import copy
 import logging
 import random
@@ -2065,15 +2064,12 @@ def whitelight(
         out['data'][p]['plot_corner'] = plot_corner(
             all_keys,
             mctrace,
-            None,  # profiled trace (no such thing for transit)
             bestfit_params,
-            None,  # truth_params (no such thing for HST data)
             prior_ranges,
             'filterName',
             'modelName',
             'targetName',
             p,
-            os.path.join(excalibur.context['data_dir'], 'bryden/'),
             savetodisk=True,
         )
 
