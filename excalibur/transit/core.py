@@ -15,12 +15,12 @@ import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disabl
 from excalibur.util import elca
 
 from excalibur.util.plotters import (
-    plot_corner,
     save_plot_tosv,
     save_plot_myfit,
     plot_residual_fft,
     add_scale_height_labels,
 )
+from excalibur.transit.plotters import plot_corner
 
 import os
 import copy

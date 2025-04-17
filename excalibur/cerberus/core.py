@@ -27,10 +27,9 @@ from excalibur.cerberus.forward_model import (
     offcerberus8,
 )
 
-# corner is also used by transit(), so put it in util()
-from excalibur.util.plotters import plot_corner
-from excalibur.cerberus.plotting import (
+from excalibur.cerberus.plotters import (
     rebin_data,
+    plot_corner,
     plot_spectrumfit,
     plot_vs_prior,
     plot_walker_evolution,
