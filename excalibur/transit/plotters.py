@@ -11,14 +11,13 @@ import corner
 import numpy as np
 import matplotlib.pyplot as plt
 
-# import excalibur
-from excalibur.ariel.metallicity import massMetalRelation
-from excalibur.system.core import ssconstants
+import excalibur
 from excalibur.util.plotters import save_plot_tosv
 
-log = logging.getLogger(__name__)
+# from excalibur.system.core import ssconstants
+# ssc = ssconstants(mks=True)
 
-ssc = ssconstants(mks=True)
+log = logging.getLogger(__name__)
 
 
 # --------------------------------------------------------------------
@@ -36,7 +35,7 @@ def plot_corner(
     saveDir=os.path.join(excalibur.context['data_dir'], 'bryden/'),
     savetodisk=False,
 ):
-    '''corner plot showing posterior distributions'''
+    '''corner plot showing posterior distributions (transit, not cerberus) '''
 
     fitcolor = 'firebrick'
 
@@ -68,6 +67,7 @@ def plot_corner(
 
     # print('best fit values in corner plot',paramValues_bestFit)
 
+    mcmcMedian = np.nanmedian(np.array(alltraces), axis=1)
     # print(' params inside of corner plotting',allkeys)
     # print('medians inside of corner plotting',mcmcMedian)
     # print('bestfit inside of corner plotting',paramValues_bestFit)
