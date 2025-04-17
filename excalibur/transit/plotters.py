@@ -5,6 +5,7 @@
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
+import os
 import logging
 import corner
 import numpy as np
@@ -22,23 +23,21 @@ ssc = ssconstants(mks=True)
 
 # --------------------------------------------------------------------
 
+
 def plot_corner(
     allkeys,
     alltraces,
-    profiletraces,
     modelParams_bestFit,
-    truth_params,
     prior_ranges,
     filt,
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir=os.path.join(excalibur.context['data_dir'], 'bryden/'),
     savetodisk=False,
 ):
     '''corner plot showing posterior distributions'''
 
-    truthcolor = 'darkgreen'
     fitcolor = 'firebrick'
 
     tpr, ctp, hza, hloc, hthc, tceqdict, mixratio = modelParams_bestFit
@@ -69,7 +68,6 @@ def plot_corner(
 
     # print('best fit values in corner plot',paramValues_bestFit)
 
-    mcmcMedian = np.nanmedian(np.array(profiletraces), axis=1)
     # print(' params inside of corner plotting',allkeys)
     # print('medians inside of corner plotting',mcmcMedian)
     # print('bestfit inside of corner plotting',paramValues_bestFit)
@@ -110,42 +108,11 @@ def plot_corner(
     # print('trange',trange)
     # print('lodist',lodist)
     # print('lorange',lorange)
-    truths = None
-    if truth_params is not None:
-        truths = []
-        for thiskey in allkeys:
-            if thiskey == 'T':
-                truths.append(truth_params['Teq'])
-            elif thiskey == '[X/H]':
-                # truths.append(np.log10(truth_params['metallicity']))
-                truths.append(truth_params['metallicity'])
-            elif thiskey == '[C/O]':
-                # truths.append(np.log10(truth_params['C/O'] / 0.54951))
-                truths.append(truth_params['C/O'])
-            elif thiskey == '[N/O]':
-                truths.append(0)
-            elif thiskey in truth_params.keys():
-                truths.append(truth_params[thiskey])
-            else:
-                truths.append(666666)
-                log.warning(
-                    '--< PROBLEM: no truth value for this key: %s >--', thiskey
-                )
-        # print('truths in corner plot',truths)
-    # figure = corner.corner(np.vstack(np.array(alltraces)).T,
-    #                       # bins=int(np.sqrt(np.sqrt(nsamples))),
-    #                       bins=10,
-    #                       labels=allkeys, range=trange,
-    #                       truths=truths, truth_color=truthcolor,
-    #                       show_titles=True,
-    #                       quantiles=[0.16, 0.50, 0.84])
     figure = corner.corner(
-        np.vstack(np.array(profiletraces)).T,
+        np.vstack(np.array(alltraces)).T,
         bins=10,
         labels=allkeys,
         range=trange,
-        truths=truths,
-        truth_color=truthcolor,
         show_titles=True,
         quantiles=[0.16, 0.50, 0.84],
     )
@@ -211,4 +178,6 @@ def plot_corner(
         )
 
     return save_plot_tosv(figure), figure
+
+
 # --------------------------------------------------------------------
