@@ -2978,7 +2978,7 @@ def read_ArielMCS_info(filename='Ariel_MCS_Known_2024-02-14.csv'):
     listofDictionaries = []
 
     if not os.path.isfile(arielDir + filename):
-        log.warning('--< PROBLEM: Ariel MCS table not found >--')
+        log.warning('--< PROBLEM: Ariel MCS table not found : %s >--', filename)
     else:
         with open(arielDir + filename, 'r', encoding='ascii') as file:
             csvFile = csv.DictReader(file)
