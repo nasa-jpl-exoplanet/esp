@@ -1606,4 +1606,3 @@ def plot_mass_vs_metals(
     if savetodisk:
         plt.savefig(saveDir + 'massVSmetals_' + filt + '.png')
     return save_plot_tosv(figure), figure
-
