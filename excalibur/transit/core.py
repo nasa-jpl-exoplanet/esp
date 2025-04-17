@@ -2830,6 +2830,7 @@ def spectrum(
                     [mcests[f'oslope__{i}'] for i in range(len(visits))],
                     [mcests[f'oitcp__{i}'] for i in range(len(visits))],
                 )
+                # these are actually all floats (so tensor=false below)
                 _r, avs, aos, aoi = specparams
                 allimout = []
                 for iv in range(len(visits)):
@@ -2840,12 +2841,19 @@ def spectrum(
                         vitcp=1e0,
                         oslope=aos[iv],
                         oitcp=aoi[iv],
+                        tensor=False,
                     )
                     allimout.extend(imout)
                     pass
                 allimout = np.array(allimout)
                 lout = tldlc(
-                    abs(allz), clspvl, g1=g1[0], g2=g2[0], g3=g3[0], g4=g4[0]
+                    abs(allz),
+                    clspvl,
+                    g1=g1[0],
+                    g2=g2[0],
+                    g3=g3[0],
+                    g4=g4[0],
+                    tensor=False,
                 )
                 lout = lout * np.array(allimout)
                 lcfit = {
