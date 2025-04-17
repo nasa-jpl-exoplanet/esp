@@ -22,6 +22,7 @@ from excalibur.util.plotters import (
     add_scale_height_labels,
 )
 
+import os
 import copy
 import logging
 import random
