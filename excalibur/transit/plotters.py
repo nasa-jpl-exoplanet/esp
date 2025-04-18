@@ -24,79 +24,89 @@ log = logging.getLogger(__name__)
 
 
 def plot_corner(
-    allkeys,
+    # allkeys,
     alltraces,
-    modelParams_bestFit,
+    # modelParams_bestFit,
     prior_ranges,
-    filt,
-    modelName,
-    trgt,
     p,
     saveDir=os.path.join(excalibur.context['data_dir'], 'bryden/'),
     savetodisk=False,
 ):
-    '''corner plot showing posterior distributions (transit, not cerberus) '''
+    '''corner plot showing posterior distributions (transit, not cerberus)'''
 
     fitcolor = 'firebrick'
 
-    tpr, ctp, hza, hloc, hthc, tceqdict, mixratio = modelParams_bestFit
-    # print('model param in corner plot',modelParams_bestFit)
+    allkeys = []
+    modelParams_bestFit = []
+    for key, values in mctrace.items():
+        allkeys.append(key)
+        modelParams_bestFit.append(np.nanmedian(values))
+        print(
+            'WHITELIGHT mctrace median,std,min,max',
+            key,
+            np.nanmedian(values),
+            np.nanstd(values),
+            np.nanmin(values),
+            np.nanmax(values),
+        )
 
-    paramValues_bestFit = []
-    for param in allkeys:
-        if param == 'T':
-            paramValues_bestFit.append(tpr)
-        elif param == 'CTP':
-            paramValues_bestFit.append(ctp)
-        elif param == 'HScale':
-            paramValues_bestFit.append(hza)
-        elif param == 'HLoc':
-            paramValues_bestFit.append(hloc)
-        elif param == 'HThick':
-            paramValues_bestFit.append(hthc)
-        elif param == '[X/H]':
-            paramValues_bestFit.append(tceqdict['XtoH'])
-        elif param == '[C/O]':
-            paramValues_bestFit.append(tceqdict['CtoO'])
-        elif param == '[N/O]':
-            paramValues_bestFit.append(tceqdict['NtoO'])
-        elif param in mixratio:
-            paramValues_bestFit.append(mixratio[param])
-        else:
-            log.warning('--< ERROR: param not in list: %s >--', param)
+    print(' params inside of corner plotting',allkeys)
 
-    # print('best fit values in corner plot',paramValues_bestFit)
+    print('mctrace params', alltraces.keys())
 
-    mcmcMedian = np.nanmedian(np.array(alltraces), axis=1)
-    # print(' params inside of corner plotting',allkeys)
-    # print('medians inside of corner plotting',mcmcMedian)
-    # print('bestfit inside of corner plotting',paramValues_bestFit)
-    lo = np.nanpercentile(np.array(alltraces), 16, axis=1)
-    hi = np.nanpercentile(np.array(alltraces), 84, axis=1)
+    print('bestfit values passed in (currently median)', modelParams_bestFit)
+    print()
+
+    lo = []
+    hi = []
+    priorlo = []
+    priorhi = []
+    mcmcMedian = []
+    # awkward because alltraces is a dictionary
+    #  convert to 2-d array first (needed for corner() anyway)
+    paramnames = []
+    tracearray = []
+    for param, values in alltraces.items():
+        paramnames.append(param)
+        tracearray.append(values)
+        print('shape added', param, values.shape)
+    print('tracearray', tracearray)
+    tracearray = np.array(tracearray)
+
+    for param, values in alltraces.items():
+        mcmcMedian.append(np.nanmedian(values))
+        lo.append(np.nanpercentile(np.array(values), 16))
+        hi.append(np.nanpercentile(np.array(values), 84))
+        # span = hi - lo
+        # Careful! these are not actually the prior ranges;
+        #  they're the range of walker values (unless set below)
+        priorlo.append(np.nanmin(values))
+        priorhi.append(np.nanmax(values))
+    print('medians inside of corner plotting', mcmcMedian)
+
+    mcmcMedian = np.nanmedian(tracearray, axis=1)
+    lo = np.nanpercentile(np.array(tracearray), 16, axis=1)
+    hi = np.nanpercentile(np.array(tracearray), 84, axis=1)
     # span = hi - lo
-    # Careful!  These are not actually the prior ranges; they're the range of walker values
-    priorlo = np.nanmin(np.array(alltraces), axis=1)
-    priorhi = np.nanmax(np.array(alltraces), axis=1)
-    # OK fixed now. prior ranges are saved as output from atmos and then passed in here
+    # Careful! these are not actually the prior ranges;
+    #  they're the range of walker values (unless set below)
+    priorlo = np.nanmin(tracearray, axis=1)
+    priorhi = np.nanmax(tracearray, axis=1)
+    print('medians inside of corner plotting', mcmcMedian)
+    print()
+    print()
+
     for ikey, key in enumerate(allkeys):
-        # print('param:',key)
-        # print(' old prior range:',key,priorlo[ikey],priorhi[ikey])
-
-        # special case for older HST state vectors (probably not needed anymore)
-        if 'Hscale' in prior_ranges:
-            prior_ranges['HScale'] = prior_ranges['Hscale']
-
+        print('param:', ikey, key)
+        print('  old prior range:', key, priorlo[ikey], priorhi[ikey])
         if key in prior_ranges.keys():
-            priorlo[ikey], priorhi[ikey] = prior_ranges[key]
-        # else:
-        #    print('TROUBLE: param not found',prior_ranges.keys())
-        # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
+            priorlo[ikey] = prior_ranges[key][0]
+            priorhi[ikey] = prior_ranges[key][1]
+        else:
+            print('  TROUBLE: ', key, 'not found in', prior_ranges.keys())
+        print('  new prior range:', key, priorlo[ikey], priorhi[ikey])
     # priorspan = priorhi - priorlo
     # priormid = (priorhi + priorlo) / 2.
-
-    # put a line showing the equilibrium temperature
-    # eqtemp = orbp['T*']*np.sqrt(orbp['R*']*ssc['Rsun/AU']/(2.*orbp[p]['sma']))
-    # print(lo[4], mcmcMedian[4], hi[4], 'Teq', eqtemp)
 
     lodist = np.array(mcmcMedian) - np.array(lo)
     hidist = np.array(hi) - np.array(mcmcMedian)
@@ -109,17 +119,15 @@ def plot_corner(
     # print('lodist',lodist)
     # print('lorange',lorange)
     figure = corner.corner(
-        np.vstack(np.array(alltraces)).T,
+        np.vstack(np.array(tracearray)).T,
         bins=10,
         labels=allkeys,
         range=trange,
         show_titles=True,
         quantiles=[0.16, 0.50, 0.84],
     )
-    # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
-    # figure.set_size_inches(16,16)  # this actually makes it smaller
 
-    ndim = len(alltraces)
+    ndim = len(allkeys)
     axes = np.array(figure.axes).reshape((ndim, ndim))
     # use larger font size for the axis labels
     for i in range(ndim):
@@ -136,46 +144,22 @@ def plot_corner(
             # ax.axvline(mcmcMedian[xi], color=fitcolor)
             # ax.axhline(mcmcMedian[yi], color=fitcolor)
             # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
-            ax.axvline(paramValues_bestFit[xi], color=fitcolor)
-            ax.axhline(paramValues_bestFit[yi], color=fitcolor)
+            ax.axvline(modelParams_bestFit[xi], color=fitcolor)
+            ax.axhline(modelParams_bestFit[yi], color=fitcolor)
             ax.plot(
-                paramValues_bestFit[xi],
-                paramValues_bestFit[yi],
+                modelParams_bestFit[xi],
+                modelParams_bestFit[yi],
                 marker='s',
                 c=fitcolor,
             )
+
+    # darken the lines for the fit results
     for i in range(ndim):
         ax = axes[i, i]
-        # draw light-colored vertical lines in each hisogram for the prior
-        #  drop this. adds clutter and is redundant with the vsPrior plot following
-        # ax.axvline(priorlo[i] + 0.5*priorspan[i], color='grey', zorder=1)
-        # ax.axvline(priorlo[i] + 0.16*priorspan[i], color='grey', zorder=1, ls='--')
-        # ax.axvline(priorlo[i] + 0.84*priorspan[i], color='grey', zorder=1, ls='--')
-
-        # darken the lines for the fit results
-        # ax.axvline(mcmcMedian[i], color='k', lw=2, zorder=2)
-        # ax.axvline(lo[i], color='k', lw=2, zorder=2, ls='--')
-        # ax.axvline(hi[i], color='k', lw=2, zorder=2, ls='--')
-        # actually the fit result lines are o.k. as is, except all three are dashed
-        #  make the median fit a solid line
-        #  and maybe change the color to match the central panels
-        #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
-        # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
-        ax.axvline(paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12)
+        ax.axvline(modelParams_bestFit[i], color=fitcolor, lw=2, zorder=12)
 
     if savetodisk:
-        plt.savefig(
-            saveDir
-            + 'corner_'
-            + filt
-            + '_'
-            + modelName
-            + '_'
-            + trgt
-            + ' '
-            + p
-            + '.png'
-        )
+        plt.savefig(saveDir + 'corner-' + p + '.png')
 
     return save_plot_tosv(figure), figure
 
