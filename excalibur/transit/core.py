@@ -1843,6 +1843,9 @@ def whitelight(
             oitcp_alpha = 1e0
             oitcp_beta = (1 / tauvi) ** 0.5
         # PYMC --------------------------------------------------------------------------
+        prior_ranges = {}
+        prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+
         with pymc.Model():
             rprs = pymc.TruncatedNormal(
                 'rprs',
@@ -1921,19 +1924,6 @@ def whitelight(
             else:
                 mctrace[key] = trace.posterior[tracekeys[0]]
             pass
-        all_keys = []
-        bestfit_params = []
-        for key, values in mctrace.items():
-            all_keys.append(key)
-            bestfit_params.append(np.nanmedian(values))
-            print(
-                'WHITELIGHT mctrace median,std,min,max',
-                key,
-                np.nanmedian(values),
-                np.nanstd(values),
-                np.nanmin(values),
-                np.nanmax(values),
-            )
         postlc = []
         postim = []
         postsep = []
@@ -2058,17 +2048,12 @@ def whitelight(
         wl = True
 
         # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING
-        prior_ranges = {}
-        prior_ranges['someParameter'] = [-10, 10]
 
         out['data'][p]['plot_corner'] = plot_corner(
-            all_keys,
+            # all_keys,
             mctrace,
-            bestfit_params,
+            # bestfit_params,
             prior_ranges,
-            'filterName',
-            'modelName',
-            'targetName',
             p,
             savetodisk=True,
         )
