@@ -1,0 +1,6 @@
+export DAWGIE_FE_PORT=10300 \
+       DAWGIE_SFE_PORT=10305 \
+       EXCALIBUR_LOG_LEVEL="logging.INFO" \
+       EXCALIBUR_PORT=${DAWGIE_FE_PORT} \
+       EXCALIBUR_SOURCE_PATH=/home/decocq/github/esp \
+       EXCALIBUR_UID=${UID}

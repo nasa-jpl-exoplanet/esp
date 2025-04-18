@@ -1,0 +1,6 @@
+export DAWGIE_FE_PORT=10100 \
+       DAWGIE_SFE_PORT=10105 \
+       EXCALIBUR_LOG_LEVEL="logging.INFO" \
+       EXCALIBUR_PORT=${DAWGIE_FE_PORT} \
+       EXCALIBUR_SOURCE_PATH=/home/admeziem/github/esp \
+       EXCALIBUR_UID=${UID}
