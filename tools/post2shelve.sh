@@ -13,4 +13,4 @@ docker compose \
        --file ${root}/.docker/compose.yaml \
        --project-name ${USER,,} \
        run tools \
-          dawgie.db.tools.post2shelve -O /proj/db -p ${1:-${USER:-undefined}}       
+          dawgie.db.tools.post2shelve -O /proj/sdp/${USER}/db -p ${1:-${USER:-undefined}}       

@@ -245,7 +245,6 @@ class Atmos(dawgie.Algorithm):
         self.__out = svupdate
         if self.__out:
             ds.update()
-            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -491,3 +490,77 @@ class Analysis(dawgie.Analyzer):
 
 
 # -------------------------------------------------------------------
+class Release(dawgie.Algorithm):
+    '''Format release products Roudier et al. 2021'''
+
+    def __init__(self):
+        '''__init__ ds'''
+        self._version_ = crbcore.rlsversion()
+        self.__fin = sysalg.Finalize()
+        self.__atm = Atmos()
+        self.__out = [crbstates.RlsSv(fltr) for fltr in fltrs]
+        return
+
+    def name(self):
+        '''Database name for subtask extension'''
+        return 'release'
+
+    def previous(self):
+        '''Input State Vectors: cerberus.atmos'''
+        return [
+            dawgie.ALG_REF(sys.task, self.__fin),
+            dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__atm),
+        ]
+
+    def state_vectors(self):
+        '''Output State Vectors: cerberus.release'''
+        return self.__out
+
+    def run(self, ds, ps):
+        '''Top level algorithm call'''
+        svupdate = []
+        vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
+        fltr = 'HST-WFC3-IR-G141-SCAN'
+        update = False
+        if vfin:
+            log.warning(
+                '--< CERBERUS RELEASE: %s %s >--',
+                fltr,
+                repr(self).split('.')[1],
+            )
+            update = self._release(
+                repr(self).split('.')[1],  # this is the target name
+                self.__fin.sv_as_dict()['parameters'],
+                fltrs.index(fltr),
+            )
+            pass
+        else:
+            errstr = [m for m in [sfin] if m is not None]
+            self._failure(errstr[0])
+            pass
+        if update:
+            svupdate.append(self.__out[fltrs.index(fltr)])
+        self.__out = svupdate
+        if self.__out:
+            ds.update()
+        else:
+            raise dawgie.NoValidOutputDataError(
+                f'No output created for CERBERUS.{self.name()}'
+            )
+        return
+
+    def _release(self, trgt, fin, index):
+        '''Core code call'''
+        rlsout = crbcore.release(trgt, fin, self.__out[index], verbose=False)
+        return rlsout
+
+    @staticmethod
+    def _failure(errstr):
+        '''Failure log'''
+        log.warning('--< CERBERUS RELEASE: %s >--', errstr)
+        return
+
+    pass
+
+
+# ---------------- ---------------------------------------------------

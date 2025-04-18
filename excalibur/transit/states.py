@@ -234,6 +234,17 @@ class WhiteLightSV(ExcaliburSV):
 
                     save_plot_toscreen(myfig, visitor)
 
+                    # include whitelight corner plot for this planet, if available
+                    #  (this actually shows all saved SVs that start with 'plot')
+                    for savedresult in self['data'][p].keys():
+                        if 'plot' in savedresult:
+                            textlabel = 'Planet ' + p
+                            visitor.add_image(
+                                '...',
+                                textlabel,
+                                self['data'][p][savedresult],
+                            )
+
             elif 'Spitzer' in self.name():
                 # for each planet
                 for p in self['data'].keys():
