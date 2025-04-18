@@ -1664,20 +1664,25 @@ def targetlist_JWST():
 
     targets = [
         # '55 Cnc',     # no data!
-        # 'GJ 1132',    # NIRSPEC data.timing   # no data!
-        # 'GJ 1214',    # no data!
+        'GJ 1132',  # added Dec.2024
+        'GJ 1214',    # no data!  ok wait it's working apr.2025
         'GJ 3053',  # added oct.2024
+        'GJ 3090',  # added nov.2024
         'GJ 3470',  # added oct.2024
         'GJ 357',  # added oct.2024
         'GJ 4102',
         'GJ 4332',
-        'GJ 486',
+        'GJ 436',  # added apr.2025
         'GJ 486',  # NIRSPEC data.timing
         'GJ 9827',  # added oct.2024
         'HAT-P-1',  # added oct.2024
+        'HAT-P-12',  # added apr.2025
         'HAT-P-14',
         'HAT-P-26',  # added oct.2024
+        'HAT-P-30',  # added apr.2025
         'HATS-6',  # added oct.2024
+        'HATS-72',  # added apr.2025
+        'HATS-75',  # added Dec.2024
         'HD 149026',  # added oct.2024
         'HD 15337',
         'HD 189733',  # added oct.2024
@@ -1686,6 +1691,7 @@ def targetlist_JWST():
         'HIP 67522',
         'K2-141',  # added oct.2024
         'K2-18',  # added oct.2024
+        'KELT-7',  # added apr.2025
         'Kepler-167',  # added oct.2024
         'Kepler-51',
         'Kepler-769',  # added oct.2024
@@ -1695,15 +1701,28 @@ def targetlist_JWST():
         'LTT 5972',
         'LTT 9779',
         'NGTS-10',
+        'TOI-1685',  # added apr.2025
+        'TOI-178',  # added Dec.2024
+        'TOI-2076',  # added apr.2025
+        'TOI-270',  # added apr.2025
+        'TOI-2445',  # added apr.2025
+        'TOI-260',  # added apr.2025
         'TOI-3714',
+        'TOI-3757',  # added Dec.2024
+        'TOI-421',  # added Dec.2024
         'TOI-451',  # added oct.2024
+        'TOI-5205',  # added Dec.2024
         'TOI-776',
+        'TRAPPIST-1',  # added apr.2025
         'V1298 Tau',  # added aug.15,2024
         'WASP-107',
         'WASP-127',
+        'WASP-15',  # added apr.2025
+        'WASP-166',  # added apr.2025
         'WASP-17',  # added oct.2024
         'WASP-178',
         'WASP-18',  # added oct.2024
+        'WASP-189',  # added apr.2025
         'WASP-19',  # NIRISS data.timing
         'WASP-39',  # NIRISS data.timing
         'WASP-43',  # added oct.2024
@@ -1714,13 +1733,6 @@ def targetlist_JWST():
         'WASP-80',  # added oct.2024
         'WASP-94',  # added oct.2024
         'WASP-96',
-        'GJ 3090',  # added nov.2024
-        'GJ 1132',  # added Dec.2024
-        'TOI-178',  # added Dec.2024
-        'TOI-421',  # added Dec.2024
-        'HATS-75',  # added Dec.2024
-        'TOI-3757',  # added Dec.2024
-        'TOI-5205',  # added Dec.2024
         'WD 1856+534',  # added Dec.2024
     ]
 
