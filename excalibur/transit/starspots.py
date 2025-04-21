@@ -10,7 +10,7 @@
 from excalibur.transit.spotmodel.Spotmodel import SpotModel
 from excalibur.transit.spotmodel.plotters import plot_transit_depths
 from excalibur.transit.core import vecistar
-from excalibur.cerberus.plotting import rebin_data
+from excalibur.cerberus.plotters import rebin_data
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
 import numpy as np
