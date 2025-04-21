@@ -1665,7 +1665,7 @@ def targetlist_JWST():
     targets = [
         # '55 Cnc',     # no data!
         'GJ 1132',  # added Dec.2024
-        'GJ 1214',    # no data!  ok wait it's working apr.2025
+        'GJ 1214',  # no data!  ok wait it's working apr.2025
         'GJ 3053',  # added oct.2024
         'GJ 3090',  # added nov.2024
         'GJ 3470',  # added oct.2024

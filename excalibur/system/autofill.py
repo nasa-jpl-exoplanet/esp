@@ -1610,9 +1610,11 @@ def fixPublishedLimits(
                     systemInfo[p]['ecc_lowerr'][ipl]
                 )
                 if ecc_SNR < 2:
-                    log.warning(
-                        'SYSTEM: should be an ecc upper limit!? SNR=%s', ecc_SNR
-                    )
+                    if verbose:
+                        print(
+                            'SYSTEM: should be an ecc upper limit!? SNR=%s',
+                            ecc_SNR,
+                        )
                     systemInfo[p]['ecc'][ipl] = '0'
                     systemInfo[p]['ecc_ref'][
                         ipl
