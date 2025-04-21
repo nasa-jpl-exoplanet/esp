@@ -1,5 +1,5 @@
 # Excalibur Science Pipeline - ESP
-![ESP](https://github.com/nasa-jpl-exoplanet/esp/blob/main/docs/img/logo.png)
+![ESP](img/logo.png)
 1. [Data reduction](espdoc/reduction)
 1. [Interpretation](espdoc/interpretation)
 
