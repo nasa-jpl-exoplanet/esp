@@ -38,11 +38,11 @@ def plot_corner(
 
     allkeys = []
     modelParams_bestFit = []
-    for key, values in mctrace.items():
+    for key, values in alltraces.items():
         allkeys.append(key)
         modelParams_bestFit.append(np.nanmedian(values))
         print(
-            'WHITELIGHT mctrace median,std,min,max',
+            'WHITELIGHT trace median,std,min,max',
             key,
             np.nanmedian(values),
             np.nanstd(values),
@@ -50,7 +50,7 @@ def plot_corner(
             np.nanmax(values),
         )
 
-    print(' params inside of corner plotting',allkeys)
+    print(' params inside of corner plotting', allkeys)
 
     print('mctrace params', alltraces.keys())
 
