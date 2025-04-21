@@ -1,7 +1,7 @@
 # Excalibur Science Pipeline - ESP
-[](img/logo.png)
+![ESP](https://github.com/nasa-jpl-exoplanet/esp/blob/52-cerberus-x-pytensor/docs/img/logo.png)
 1. [Data reduction](reduction)
-1. [Interpretion](interpretation)
+1. [interpretation](interpretation)
 
 # Table of Content
 

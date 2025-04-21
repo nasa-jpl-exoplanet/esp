@@ -1,4 +1,4 @@
-## EXCALIBUR
+# EXCALIBUR
 
 EXCALIBUR stands for EXoplanet CALIbration Bayesian Unified Retrieval.
 
@@ -16,10 +16,10 @@ EXCALIBUR papers include:
 
 Current EXCALIBUR processing capabilities include transit spectroscopy and phase curves for selected instruments. EXCALIBUR is under active development with ongoing capability enhancements, and we welcome contributors and collaborations. 
 
-### --< Contact >--
+## Contact
 
 Reach us at excaliburhelp@ipac.caltech.edu
 
-### --< Documentation >--
+## Documentation
 
-[Github](https://github.com/nasa-jpl-exoplanet/esp/tree/main/docs)
+[docs/README](https://github.com/nasa-jpl-exoplanet/esp/tree/main/docs)
