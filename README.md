@@ -16,10 +16,10 @@ EXCALIBUR papers include:
 
 Current EXCALIBUR processing capabilities include transit spectroscopy and phase curves for selected instruments. EXCALIBUR is under active development with ongoing capability enhancements, and we welcome contributors and collaborations. 
 
-### --< become a member >--
+### --< Contact >--
 
-Contact us at excaliburhelp@ipac.caltech.edu
+Reach us at excaliburhelp@ipac.caltech.edu
 
-### --< Source Code >--
+### --< Documentation >--
 
-[Github](https://github-fn.jpl.nasa.gov/EXCALIBUR/esp)
+[Github](https://github.com/nasa-jpl-exoplanet/esp/tree/main/docs)
