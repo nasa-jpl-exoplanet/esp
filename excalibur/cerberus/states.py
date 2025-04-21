@@ -218,7 +218,7 @@ class AnalysisSv(ExcaliburSV):
                         'plot_fitCO',
                         'plot_fitNO',
                     ]:
-                        if 'sim' in self.__name:
+                        if 'sim' in self.name():
                             plotlabel = (
                                 plotlabel + ' : retrieved vs input values'
                             )
