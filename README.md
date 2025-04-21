@@ -22,4 +22,4 @@ Reach us at excaliburhelp@ipac.caltech.edu
 
 ## Documentation
 
-[docs/README](https://github.com/nasa-jpl-exoplanet/esp/tree/main/docs)
+[docs/README](docs)
