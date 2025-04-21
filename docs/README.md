@@ -4,7 +4,10 @@
 # Table of Content
 
 1. [Data reduction](espdoc/reduction)
-1. [Interpretation](espdoc/interpretation)
+   1. Downloading data from MAST - HST, Spitzer, JWST
+   1. Phasecurve, Primary transit, Secondary transit
+1. [Interpretation](espdoc/interpretation)\
+   1. Cerbeurs: atmospheric modeling and parameter retrieval
 1. [ESP as a Pipeline](pipeline)
     1. What [preperation or setup](pipeline/preparation) is needed?
     1. How do I [start or run](pipeline/start) a pipeline?
