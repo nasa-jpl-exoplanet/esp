@@ -239,6 +239,9 @@ class WhiteLight(dawgie.Algorithm):
                 pass
             if allnormdata:
                 try:
+                    log.warning(
+                        '--< %s WHITELIGHT: HST >--', self._type.upper()
+                    )
                     update = self._hstwhitelight(
                         allnormdata,
                         fin,
@@ -264,7 +267,7 @@ class WhiteLight(dawgie.Algorithm):
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
                 log.warning(
-                    '--< %s WHITE LIGHT: %s >--', self._type.upper(), fltr
+                    '--< %s WHITELIGHT: %s >--', self._type.upper(), fltr
                 )
                 update = self._whitelight(
                     nrm,
