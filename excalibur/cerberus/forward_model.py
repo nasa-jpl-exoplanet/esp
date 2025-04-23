@@ -424,7 +424,7 @@ def gettau(
     # dzprime = np.array(dz)
     # zprime = z
     # dzprime = dz
-    for iz, thisz in enumerate(z):
+    for thisz in z:
         # print()
         # if isinstance(thisz, tensor.variable.TensorVariable):
         #    print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')

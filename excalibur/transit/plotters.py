@@ -62,7 +62,7 @@ def plot_corner(
 
     #  convert to the tracearray to a 2-d array (corner() format)
     tracearray = []
-    for param, values in alltraces.items():
+    for _, values in alltraces.items():
         # fixed parameters only have 2 steps. extend them
         if len(values[0]) < chainlen:
             # print('EXTENDING A FIXED PARAM', param, numwalkers, chainlen)
@@ -73,12 +73,10 @@ def plot_corner(
             tracearray.append(np.array(values))
     tracearray = np.array(tracearray)
 
-    mcmcMedian = np.nanmedian(tracearray, axis=(1, 2))
     # Careful! these are not actually the prior ranges;
     #  they're the range of walker values (unless set below)
     priorlo = np.nanmin(tracearray, axis=(1, 2))
     priorhi = np.nanmax(tracearray, axis=(1, 2))
-    # print('medians inside of corner plotting', mcmcMedian)
     # print('  priorlo', priorlo)
 
     # for cases with fixed params, make sure the plots have some range
@@ -119,9 +117,6 @@ def plot_corner(
     for yi in range(ndim):
         for xi in range(yi):
             ax = axes[yi, xi]
-            # ax.axvline(mcmcMedian[xi], color=fitcolor)
-            # ax.axhline(mcmcMedian[yi], color=fitcolor)
-            # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
             ax.axvline(modelParams_bestFit[xi], color=fitcolor)
             ax.axhline(modelParams_bestFit[yi], color=fitcolor)
             ax.plot(
