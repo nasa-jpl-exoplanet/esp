@@ -143,7 +143,7 @@ def crbmodel(
     pgrid = np.exp(pgrid)
     # dp = np.diff(pgrid[::-1])
     p = pgrid[::-1]
-    print('pressure', len(p), p)
+    # print('pressure', len(p), p)
     # print('delta-pressure',len(dp),dp)
     dPoverP = (p[1] - p[0]) / p[0]
 
@@ -425,11 +425,11 @@ def gettau(
     # zprime = z
     # dzprime = dz
     for iz, thisz in enumerate(z):
-        print()
-        if isinstance(thisz, tensor.variable.TensorVariable):
-            print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')
-        else:
-            print('LOOP iz,thisz', iz, thisz)
+        # print()
+        # if isinstance(thisz, tensor.variable.TensorVariable):
+        #    print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')
+        # else:
+        #    print('LOOP iz,thisz', iz, thisz)
         # dltemp = (rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2
         # print('rp0',rp0)
         # print('zprime',zprime)  # messed up.  first element (zero) is diff
@@ -582,7 +582,7 @@ def gettau(
         # print(' dl0 old', dl0.eval()/dz.eval())
         # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
         if isinstance(thisz, tensor.variable.TensorVariable):
-            print('  TENSOR YES')
+            # print('  TENSOR YES')
             dl = np.sqrt(
                 tensor.max(
                     [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
@@ -596,7 +596,7 @@ def gettau(
                 )
             )
         else:
-            print('  TENSOR NO ')
+            # print('  TENSOR NO ')
             dl = np.sqrt(
                 np.max(
                     [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
@@ -612,10 +612,10 @@ def gettau(
         # print(' dl1 ', dl.eval() / dz.eval())
         # print(' dl0 ', dl0.eval() / dz.eval())
         dl = dl - dl0
-        if isinstance(dl, tensor.variable.TensorVariable):
-            print(' dl new', dl.eval() / dz.eval())
-        else:
-            print(' dl new', dl / dz)
+        # if isinstance(dl, tensor.variable.TensorVariable):
+        #    print(' dl new', dl.eval() / dz.eval())
+        # else:
+        #    print(' dl new', dl / dz)
 
         # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
         # print('dl with nan fixed?',dl.eval())
@@ -643,7 +643,7 @@ def gettau(
             dlarraymod.append(dla.eval())
         dlarray = np.array(dlarraymod)
 
-    print('dlarray up top', dlarray)
+    # print('dlarray up top', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
@@ -869,10 +869,10 @@ def gettau(
     # print('OVERALL TAU!!!', tau.eval())
 
     # any trouble with this matrix multiplication?
-    print('dlarray', dlarray)
-    print('dlarray', dlarray.shape)  # 7x7 elements
-    print('dlarray[0][0]', dlarray[0][0])
-    print('tau', tau.eval().shape)  # 7x103 elements
+    # print('dlarray', dlarray)
+    # print('dlarray', dlarray.shape)  # 7x7 elements
+    # print('dlarray[0][0]', dlarray[0][0])
+    # print('tau', tau.eval().shape)  # 7x103 elements
 
     # module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
     #    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
