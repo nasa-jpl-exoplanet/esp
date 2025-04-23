@@ -68,7 +68,7 @@ def fillUncertainty(param, param_value, param_uncertainty, error_type):
                 fillvalue = 0.1
                 fillvalue = 0.2
                 fillvalue = 0.3  # 90-percentile; 95-percentile is 0.3
-            elif param == 'Hmag' or param == 'Jmag' or param == 'Kmag':
+            elif param in ['Hmag', 'Jmag', 'Kmag']:
                 # 0.1 dex for J,H,K band magnitudes
                 # offenders: Kepler-1651, TOI-2583 A, TOI-3976 A, WASP-193
                 fillvalue = 0.1
