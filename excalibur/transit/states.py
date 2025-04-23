@@ -87,13 +87,13 @@ class WhiteLightSV(ExcaliburSV):
             if 'HST' in self.name():
                 mergesv = bool(self.name() == 'HST')
                 for p in self['data'].keys():
-                    visits = np.array(self['data'][p]['visits'])
+                    visits = self['data'][p]['visits']
                     # phase,allwhite is the data before shifting
-                    phase = np.array(self['data'][p]['phase'])
-                    allwhite = np.array(self['data'][p]['allwhite'])
+                    phase = self['data'][p]['phase']
+                    allwhite = self['data'][p]['allwhite']
                     # postphase,allwhite/postim is the data after shifting
-                    postphase = np.array(self['data'][p]['postphase'])
-                    postim = np.array(self['data'][p]['postim'])
+                    postphase = self['data'][p]['postphase']
+                    postim = self['data'][p]['postim']
                     # phase,postlc is the model
                     postflatphase = np.array(self['data'][p]['postflatphase'])
                     postlc = np.array(self['data'][p]['postlc'])
@@ -120,8 +120,8 @@ class WhiteLightSV(ExcaliburSV):
                         else:
                             vlabel = 'visit ' + str(v)
                         ax1.plot(
-                            postphase[index],
-                            allwhite[index] / postim[index],
+                            np.array(postphase[index]),
+                            np.array(allwhite[index]) / np.array(postim[index]),
                             'o',
                             zorder=3,
                             label=vlabel,
@@ -130,16 +130,16 @@ class WhiteLightSV(ExcaliburSV):
                         # plot the pre-correction data
                         if index == len(visits) - 1:
                             ax1.plot(
-                                phase[index],
-                                allwhite[index],
+                                np.array(phase[index]),
+                                np.array(allwhite[index]),
                                 'k+',
                                 zorder=2,
                                 label='pre-correction',
                             )
                         else:
                             ax1.plot(
-                                phase[index],
-                                allwhite[index],
+                                np.array(phase[index]),
+                                np.array(allwhite[index]),
                                 'k+',
                                 zorder=2,
                             )
@@ -152,15 +152,15 @@ class WhiteLightSV(ExcaliburSV):
                             fill_value='extrapolate',
                         )
                         model_at_observed_time = model_interpolator(
-                            postphase[index]
+                            np.array(postphase[index])
                         )
                         residuals = (
-                            allwhite[index] / postim[index]
+                            np.array(allwhite[index]) / np.array(postim[index])
                             - model_at_observed_time
                         )
 
                         ax2.plot(
-                            postphase[index],
+                            np.array(postphase[index]),
                             residuals,
                             'o',
                             color='black',
