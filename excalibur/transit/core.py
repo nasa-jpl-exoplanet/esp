@@ -1627,6 +1627,16 @@ def hstwhitelight(
         out['data'][p]['allfltrs'] = allfltrs
         out['data'][p]['allttvs'] = allttvs
         out['STATUS'].append(True)
+
+        # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING - HST COMBO
+        prior_ranges = None
+        out['data'][p]['plot_corner'] = plot_corner(
+            mctrace,
+            prior_ranges,
+            p,
+            savetodisk=False,
+        )
+
     return True
 
 
@@ -1854,9 +1864,6 @@ def whitelight(
                 lower=rpors / 2e0,
                 upper=2e0 * rpors,
             )
-            print('PRIOR rprs', rpors, taurprs, rpors / 2e0, 2e0 * rpors)
-            print('PRIOR rprs range', 2e0 * rpors - rpors / 2e0)
-            print('PRIOR rprs range/3', (2e0 * rpors - rpors / 2e0) / 3)
             nodes.append(rprs)
             if parentprior:
                 # use parent distr fitted Lorentzians (also called Cauchy)
@@ -2048,14 +2055,11 @@ def whitelight(
         wl = True
 
         # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING
-
         out['data'][p]['plot_corner'] = plot_corner(
-            # all_keys,
             mctrace,
-            # bestfit_params,
             prior_ranges,
             p,
-            savetodisk=True,
+            savetodisk=False,
         )
 
     return wl

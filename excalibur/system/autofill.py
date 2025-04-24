@@ -68,8 +68,9 @@ def fillUncertainty(param, param_value, param_uncertainty, error_type):
                 fillvalue = 0.1
                 fillvalue = 0.2
                 fillvalue = 0.3  # 90-percentile; 95-percentile is 0.3
-            elif param == 'Hmag':
-                # 0.1 dex for H band magnitude (for Kepler-1651)
+            elif param in ['Hmag', 'Jmag', 'Kmag']:
+                # 0.1 dex for J,H,K band magnitudes
+                # offenders: Kepler-1651, TOI-2583 A, TOI-3976 A, WASP-193
                 fillvalue = 0.1
             elif param == 'period':
                 # orbital period should be known pretty well. how about 1%?
@@ -127,6 +128,10 @@ def fillUncertainty(param, param_value, param_uncertainty, error_type):
                 fillvalue = float(param_value) * 0.2
             elif param == 'trandur':
                 # transit duration to 20%? S/N=5 seems reasonable I guess
+                fillvalue = float(param_value) * 0.2
+            elif param == 'dist':
+                # 20% for distance, I guess
+                # offenders: WASP-103, WASP-105, WASP-20. HATS-58, HATS-12, K2-238
                 fillvalue = float(param_value) * 0.2
             else:
                 # fallback option is to set uncertainty to 10%
