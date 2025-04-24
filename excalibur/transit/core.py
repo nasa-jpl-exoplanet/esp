@@ -2932,8 +2932,13 @@ def orbital(*whiteparams):
             omtk = ctxt.tmjd
             pass
         omz, _pmph = datcore.time2z(
-            omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc,
-            tensor=False
+            omt,
+            inclination,
+            omtk,
+            ctxt.smaors,
+            ctxt.period,
+            ctxt.ecc,
+            tensor=False,
         )
         lcout = tldlc(
             abs(omz),
