@@ -136,7 +136,7 @@ def plot_corner(
         # print('  Saving figure to disk!',saveDir+'corner-'+p+'.png')
         plt.savefig(saveDir + 'corner-' + p + '.png')
 
-    return save_plot_tosv(figure), figure
+    return save_plot_tosv(figure)
 
 
 # --------------------------------------------------------------------
