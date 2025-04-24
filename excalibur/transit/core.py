@@ -2919,36 +2919,39 @@ def orbital(*whiteparams):
         pass
     else:
         # inclination = float(icln)
-        inclination = icln
+        inclination = icln.eval()
         pass
     out = []
     for i, v in enumerate(ctxt.visits):
         omt = ctxt.time[i]
         if v in ctxt.ttv:
             # omtk = float(atk[ctxt.ttv.index(v)])
-            omtk = atk[ctxt.ttv.index(v)]
+            omtk = atk.eval()[ctxt.ttv.index(v)]
             pass
         else:
             omtk = ctxt.tmjd
             pass
         omz, _pmph = datcore.time2z(
-            omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc
+            omt, inclination, omtk, ctxt.smaors, ctxt.period, ctxt.ecc,
+            tensor=False
         )
         lcout = tldlc(
             abs(omz),
-            r,
+            r.eval(),
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
             g4=ctxt.g4[0],
+            tensor=False,
         )
         imout = timlc(
             omt,
             ctxt.orbits[i],
-            vslope=avs[i],
+            vslope=avs.eval()[i],
             vitcp=1e0,
-            oslope=aos[i],
-            oitcp=aoi[i],
+            oslope=aos.eval()[i],
+            oitcp=aoi.eval()[i],
+            tensor=False,
         )
         out.extend(lcout * imout)
         pass
