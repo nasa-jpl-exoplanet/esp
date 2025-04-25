@@ -160,11 +160,13 @@ def crbmodel(
         # print('SHOULD NOT BE HERE')
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
-    if isinstance(mmw, tensor.variable.TensorVariable):
-        print('mmw YES TENSOR', mmw.eval() * 6.022e26)
-    else:
-        print('mmw NOT TENSOR', mmw * 6.022e26)
-
+    if debug:
+        if isinstance(mmw, tensor.variable.TensorVariable):
+            print('mmw YES TENSOR', mmw.eval() * 6.022e26)
+        else:
+            print('mmw NOT TENSOR', mmw * 6.022e26)
+            pass
+        pass
     Hs = (
         cst.Boltzmann
         * temp
@@ -310,7 +312,7 @@ def crbmodel(
     # print('matrix1 shape', matrix1.eval().shape)
     # print('matrix2 shape', matrix2.eval().shape)
     atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
-    print('result shape', atmdepth.eval().shape)
+    # print('result shape', atmdepth.eval().shape)
     #  flatten is not needed I think.  it's already 1-D, no?
     # atmdepth = tensor.flatten(atmdepth)
     # print('result shape',atmdepth.eval().shape)
