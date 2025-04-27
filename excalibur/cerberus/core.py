@@ -73,6 +73,10 @@ CerbParams = namedtuple(
     ],
 )
 
+hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
+tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
+ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
+exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 # ----------------- --------------------------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
@@ -89,10 +93,6 @@ def myxsecsversion():
 
 
 # GMR: Should be in the param list
-hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
-tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
-ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
-exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 
 def myxsecs(spc, out, verbose=False):
@@ -247,13 +247,14 @@ def myxsecs(spc, out, verbose=False):
                     borderaxespad=0.0,
                     frameon=True,
                 )
-                plt.savefig(
-                    excalibur.context['data_dir']
-                    + '/bryden/'
-                    + myexomol
-                    + '_xslib.png',
-                    dpi=200,
-                )
+                # GMR: Put this in keyword saveplot
+                # plt.savefig(
+                #    excalibur.context['data_dir']
+                #    + '/bryden/'
+                #    + myexomol
+                #    + '_xslib.png',
+                #    dpi=200,
+                # )
                 plt.show()
                 pass
             pass

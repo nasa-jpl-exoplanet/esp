@@ -24,9 +24,10 @@ import dawgie
 import os
 
 # ------------- ------------------------------------------------------
+# GMR: CAN WE SET UP THIS MESS ONCE AND FORGET ABOUT IT
 context = {
     'data_cal': os.environ.get('DATA_CALIBR', '/proj/data/cal'),
-    'data_dir': os.environ.get('DATA_BASEDIR', '/proj/data'),
+    'data_dir': os.environ.get('DATA_BASEDIR', '/proj/sdp/data'),
     'data_sci': os.environ.get('DATA_SCIENC', '/proj/data/sci'),
     'ldtk_root': os.environ.get('LDTK_ROOT', '/proj/data/ldtk'),
     'target_list': os.environ.get(
