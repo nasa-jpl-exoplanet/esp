@@ -342,7 +342,8 @@ def crbmodel(
         if isinstance(model, tensor.variable.TensorVariable):
             plotmodel = model.eval()
             pass
-        else: plotmodel = model.copy()
+        else:
+            plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
@@ -698,21 +699,24 @@ def gettau(
             # print('sigma shape', sigma.shape)  # 110 float array
             # if isinstance(rho, tensor.variable.TensorVariable):
             #     print(
-                #    'rho shape', rho.eval().shape
-                # )  # 7 float array (from tensor)
-                # print('rho shape', np.array(rho.eval()).T.shape)
+            #    'rho shape', rho.eval().shape
+            # )  # 7 float array (from tensor)
+            # print('rho shape', np.array(rho.eval()).T.shape)
             # else:
-                # print('rho shape', rho.shape)  # 7 float array
+            # print('rho shape', rho.shape)  # 7 float array
             # print('tau check', tau[3][5])  # float (zero)
             # print('tau shape', tau.shape)  # 7x110
             if isinstance(rho, tensor.variable.TensorVariable):
-            #    check1 = sigma * np.array([rho.eval()]).T
-            #    print('check1 shape', check1.shape)
-            #    check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
-            #    print('check2 shape', check2.shape)
+                #    check1 = sigma * np.array([rho.eval()]).T
+                #    print('check1 shape', check1.shape)
+                #    check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
+                #    print('check2 shape', check2.shape)
                 tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
-                tau_by_molecule[elem] = (mmr.eval() * sigma * np.array([rho.eval()]).T)
-            #    print('tau shape after adding', tau.shape)
+                tau_by_molecule[elem] = (
+                    mmr.eval() * sigma * np.array([rho.eval()]).T
+                )
+                #    print('tau shape after adding', tau.shape)
+                pass
             else:
                 tau = tau + mmr * sigma * np.array([rho]).T
                 tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
@@ -919,7 +923,7 @@ def gettau(
         #    'tau[0][0] for molecule',
         #    molecule,
         #    tau_by_molecule[molecule][0][0].eval(),
-        #)
+        # )
     if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
