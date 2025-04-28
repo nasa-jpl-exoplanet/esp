@@ -37,12 +37,12 @@ def plot_corner(
     fit_param_names = []
     modelParams_bestFit = []
     chainlen = 0
-    numwalkers = 0
+    numwalkers = 0    
     for key, values in alltraces.items():
         fit_param_names.append(key)
         modelParams_bestFit.append(np.nanmedian(values))
-        chainlen = max(chainlen, len(values[0]))
-        numwalkers = max(numwalkers, len(values[:, 0]))
+        chainlen = np.max([chainlen, values.shape[1]])
+        numwalkers = np.max([numwalkers, values.shape[0]])
         # print(
         #    'WHITELIGHT trace median,std,min,max',
         #    key,
@@ -82,16 +82,20 @@ def plot_corner(
     # for cases with fixed params, make sure the plots have some range
     #  actually this is not needed. corner() can handle it
 
-    for ikey, key in enumerate(fit_param_names):
-        if key in prior_ranges.keys():
-            # print(
-            #    '  old prior range (median):', key, priorlo[ikey], priorhi[ikey]
-            # )
-            priorlo[ikey] = prior_ranges[key][0]
-            priorhi[ikey] = prior_ranges[key][1]
-            # print(
-            #    '  new prior range (true)  :', key, priorlo[ikey], priorhi[ikey]
-            # )
+    if prior_ranges is not None:
+        for ikey, key in enumerate(fit_param_names):
+            if key in prior_ranges.keys():
+                # print(
+                #    '  old prior range (median):', key, priorlo[ikey], priorhi[ikey]
+                # )
+                priorlo[ikey] = prior_ranges[key][0]
+                priorhi[ikey] = prior_ranges[key][1]
+                # print(
+                #    '  new prior range (true)  :', key, priorlo[ikey], priorhi[ikey]
+                # )
+                pass
+            pass
+        pass
     trange = [tuple([x, y]) for x, y in zip(priorlo, priorhi)]
 
     figure = corner.corner(
