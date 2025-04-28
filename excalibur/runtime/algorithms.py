@@ -5,7 +5,6 @@ import logging
 import dawgie
 import dawgie.context
 import dawgie.db
-import multiprocessing
 import os
 
 from . import core
