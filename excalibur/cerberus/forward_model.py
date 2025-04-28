@@ -147,7 +147,7 @@ def crbmodel(
     # print('delta-pressure',len(dp),dp)
     dPoverP = (p[1] - p[0]) / p[0]
 
-    print()
+    # print()
     if not mixratio:
         # print('SHOULD BE HERE')
         if cheq is None:
@@ -160,11 +160,13 @@ def crbmodel(
         # print('SHOULD NOT BE HERE')
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
-    if isinstance(mmw, tensor.variable.TensorVariable):
-        print('mmw YES TENSOR', mmw.eval() * 6.022e26)
-    else:
-        print('mmw NOT TENSOR', mmw * 6.022e26)
-
+    if debug:
+        if isinstance(mmw, tensor.variable.TensorVariable):
+            print('mmw YES TENSOR', mmw.eval() * 6.022e26)
+        else:
+            print('mmw NOT TENSOR', mmw * 6.022e26)
+            pass
+        pass
     Hs = (
         cst.Boltzmann
         * temp
@@ -310,7 +312,7 @@ def crbmodel(
     # print('matrix1 shape', matrix1.eval().shape)
     # print('matrix2 shape', matrix2.eval().shape)
     atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
-    print('result shape', atmdepth.eval().shape)
+    # print('result shape', atmdepth.eval().shape)
     #  flatten is not needed I think.  it's already 1-D, no?
     # atmdepth = tensor.flatten(atmdepth)
     # print('result shape',atmdepth.eval().shape)
@@ -337,9 +339,13 @@ def crbmodel(
         ) ** 2
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
     if verbose:
-        # noatm = tensor.nanmin(model)  # hmm, there is no nanmin in pytensor
-        noatm = tensor.min(model)
-        rp0hs = tensor.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
+        if isinstance(model, tensor.variable.TensorVariable):
+            plotmodel = model.eval()
+            pass
+        else:
+            plotmodel = model.copy()
+        noatm = np.nanmin(plotmodel)
+        rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
         fig, ax = plt.subplots(figsize=(10, 6))
         axes = [ax, ax.twinx(), ax.twinx()]
@@ -347,8 +353,8 @@ def crbmodel(
         axes[-1].spines['right'].set_position(('axes', 1.2))
         axes[-1].set_frame_on(True)
         axes[-1].patch.set_visible(False)
-        axes[0].plot(wtau, 1e2 * model)
-        axes[0].plot(wtau, model * 0 + 1e2 * noatm, '--')
+        axes[0].plot(wtau, 1e2 * plotmodel)
+        axes[0].plot(wtau, plotmodel * 0 + 1e2 * noatm, '--')
         axes[0].set_xlabel('Wavelength $\\lambda$[$\\mu m$]')
         axes[0].set_ylabel('Transit Depth [%]')
         axes[0].get_yaxis().get_major_formatter().set_useOffset(False)
@@ -627,7 +633,7 @@ def gettau(
         # print(' dl old part',iz,dl[:iz+1])
         # print(' dl new part',iz,[d.eval() for d in dl[iz+1:]])
         dlarray.append(dl)
-    print('MADE IT!!!')
+    # print('MADE IT!!!')
     # print('dlarray',[d.eval() for d in dlarray])
     # print('dlarray',dlarray.eval())  # fails.  it's a list
     # print()
@@ -690,29 +696,31 @@ def gettau(
             # print('sigma shape', sigma)
             # print('rho shape', rho.eval())
             # print('mmr shape', mmr.eval().shape)  # single float (from tensor)
-            print('sigma shape', sigma.shape)  # 110 float array
+            # print('sigma shape', sigma.shape)  # 110 float array
+            # if isinstance(rho, tensor.variable.TensorVariable):
+            #     print(
+            #    'rho shape', rho.eval().shape
+            # )  # 7 float array (from tensor)
+            # print('rho shape', np.array(rho.eval()).T.shape)
+            # else:
+            # print('rho shape', rho.shape)  # 7 float array
+            # print('tau check', tau[3][5])  # float (zero)
+            # print('tau shape', tau.shape)  # 7x110
             if isinstance(rho, tensor.variable.TensorVariable):
-                print(
-                    'rho shape', rho.eval().shape
-                )  # 7 float array (from tensor)
-                # print('rho shape', np.array(rho.eval()).T.shape)
-            else:
-                print('rho shape', rho.shape)  # 7 float array
-            print('tau check', tau[3][5])  # float (zero)
-            print('tau shape', tau.shape)  # 7x110
-            if isinstance(rho, tensor.variable.TensorVariable):
-                check1 = sigma * np.array([rho.eval()]).T
-                print('check1 shape', check1.shape)
-                check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
-                print('check2 shape', check2.shape)
+                #    check1 = sigma * np.array([rho.eval()]).T
+                #    print('check1 shape', check1.shape)
+                #    check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
+                #    print('check2 shape', check2.shape)
                 tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
                 tau_by_molecule[elem] = (
                     mmr.eval() * sigma * np.array([rho.eval()]).T
                 )
-                print('tau shape after adding', tau.shape)
+                #    print('tau shape after adding', tau.shape)
+                pass
             else:
                 tau = tau + mmr * sigma * np.array([rho]).T
                 tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
+                pass
             # print('    mmr', mmr)  # tensor
             # print('    sigma', sigma) # 100 floats
             # print('    rho', rho)  # 7 floats
@@ -879,7 +887,7 @@ def gettau(
     # tau = 2e0 * dlarray * tau  # fails
     # tau = 2e0 * tensor.nlinalg.matrix_dot(dlarray, tau)  # keyerror: 'object'
 
-    print('dlarray', dlarray)
+    # print('dlarray', dlarray)
     # TypeError: Unsupported dtype for TensorType: object
     # testtest = tensor.as_tensor(dlarray)
     # print('dlarray',testtest)
@@ -897,7 +905,7 @@ def gettau(
     # tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
     # print('tau after matrixing',tau.shape)
     tau = 2e0 * tensor.nlinalg.matrix_dot(tensor.as_tensor(dlarray), tau)
-    print('tau shape after matrixing', tau.eval().shape)
+    # print('tau shape after matrixing', tau.eval().shape)
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
@@ -911,11 +919,11 @@ def gettau(
         tau_by_molecule[molecule] = 2e0 * tensor.nlinalg.matrix_dot(
             tensor.as_tensor(dlarray), tau_by_molecule[molecule]
         )
-        print(
-            'tau[0][0] for molecule',
-            molecule,
-            tau_by_molecule[molecule][0][0].eval(),
-        )
+        # print(
+        #    'tau[0][0] for molecule',
+        #    molecule,
+        #    tau_by_molecule[molecule][0][0].eval(),
+        # )
     if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
@@ -1038,7 +1046,7 @@ def getxmolxs(temp, xsecs):
     '''
     G. ROUDIER: Wrapper around EXOMOL Cerberus library
     '''
-    print('--getxmolxs start--')
+    # print('--getxmolxs start--')
     # print('xsecs',xsecs['SPL'])
     # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
     # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
@@ -1073,7 +1081,7 @@ def getxmolxs(temp, xsecs):
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]
-    print('--getxmolxs end--')
+    # print('--getxmolxs end--')
     return sigma, nu
 
 
