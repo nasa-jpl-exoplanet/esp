@@ -1,4 +1,4 @@
-# EXCALIBUR
+# [EXCALIBUR](https://nasa-jpl-exoplanet.github.io/esp/)
 
 EXCALIBUR stands for EXoplanet CALIbration Bayesian Unified Retrieval.
 
