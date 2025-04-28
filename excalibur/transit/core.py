@@ -2973,7 +2973,7 @@ def orbital(*whiteparams):
         if ctxt.gttv:
             midtransits = ctxt.gttv
         pass
-    elif ('inc' in ctxt.fixedpars) and not 'ttv' in ctxt.fixedpars:
+    elif ('inc' in ctxt.fixedpars) and 'ttv' not in ctxt.fixedpars:
         r, atk, avs, aos, aoi = whiteparams
         inclination = ctxt.fixedpars['inc']
         midtransits = atk.eval()
