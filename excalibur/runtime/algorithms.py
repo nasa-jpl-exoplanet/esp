@@ -85,7 +85,7 @@ class Autofill(dawgie.Algorithm):
 
     def run(self, ds, ps):
         '''isolate target specific information from the global table'''
-        core.isolate(self.__status, self.__parent.sv_as_dict['composite'],
+        core.isolate(self.__status, self.__parent.sv_as_dict()['composite'],
                      ds._tn())  # pylint: disable=protected-access
         ds.update()
 
