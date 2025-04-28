@@ -37,7 +37,7 @@ def plot_corner(
     fit_param_names = []
     modelParams_bestFit = []
     chainlen = 0
-    numwalkers = 0    
+    numwalkers = 0
     for key, values in alltraces.items():
         fit_param_names.append(key)
         modelParams_bestFit.append(np.nanmedian(values))
