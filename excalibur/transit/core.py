@@ -1652,6 +1652,13 @@ def hstwhitelight(
         out['data'][p]['allttvs'] = allttvs
         out['STATUS'].append(True)
 
+        if verbose:
+            plt.figure()
+            plt.plot(postflatphase, flatwhite, '+')
+            plt.plot(postflatphase, postlc, 'o')
+            plt.show()
+            pass
+        
         # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING - HST COMBO
         prior_ranges = None
         out['data'][p]['plot_corner'] = plot_corner(
@@ -1836,9 +1843,8 @@ def whitelight(
         nodes = []
         fixedpars = {}
         fixedpars['inc'] = inc
-        fixedpars['ttv'] = inc
-        
-        
+        fixedpars['ttv'] = alltknot
+
         ctxtupdt(
             orbp=priors[p],
             ecc=ecc,
@@ -2950,43 +2956,35 @@ def orbital(*whiteparams):
     '''
     if ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, avs, aos, aoi = whiteparams
+        inclination = ctxt.fixedpars['inc']
+        midtransits = ctxt.fixedpars['ttv']
+        if ctxt.gttv: midtransits = ctxt.gttv
         pass
     elif ('inc' in ctxt.fixedpars) and not ('ttv' in ctxt.fixedpars):
         r, atk, avs, aos, aoi = whiteparams
+        inclination = ctxt.fixedpars['inc']
+        midtransits = atk.eval()
         pass
     elif not ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, icln, avs, aos, aoi = whiteparams
+        inclination = icln.eval()
+        midtransits = ctxt.fixedpars['ttv']
+        if ctxt.gttv: midtransits = ctxt.gttv
         pass
     elif not (('inc' in ctxt.fixedpars) or ('ttv' in ctxt.fixedpars)):
         r, atk, icln, avs, aos, aoi = whiteparams
+        inclination = icln.eval()
+        midtransits = atk.eval()
         pass
     else:
         # Jump the building
         pass
     
-    if ctxt.orbp['inc'] == 9e1:
-        inclination = 9e1
-        pass
-    else:
-        # inclination = float(icln)
-        inclination = icln.eval()
-        pass
-    # Prototyping new way
-    if 'inc' in ctxt.fixedpars:
-        inclination = ctxt.fixedpars['inc']
-        pass
-    else: inclination = icln.eval()
     out = []
     for i, v in enumerate(ctxt.visits):
         omt = ctxt.time[i]
         if v in ctxt.ttv:
-            # omtk = float(atk[ctxt.ttv.index(v)])
-            omtk = atk.eval()[ctxt.ttv.index(v)]
-            if ctxt.ttv.index(v) < len(ctxt.gttv):
-                omtk = float(ctxt.gttv[ctxt.ttv.index(v)])
-            else:
-                # log.warning('>-- Strange: ttv exists but gttv doesnt')
-                omtk = ctxt.tmjd
+            omtk = midtransits[ctxt.ttv.index(v)]
             pass
         else:
             omtk = ctxt.tmjd
