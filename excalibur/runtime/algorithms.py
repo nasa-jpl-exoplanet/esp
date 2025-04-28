@@ -18,13 +18,11 @@ log = logging.getLogger(__name__)
 class Autofill(dawgie.Algorithm):
     '''Breaks the levers and knobs global table to target specific subtables'''
 
-    def __init__(self, table: {str: {}} = None, tn: str = None):
+    def __init__(self):
         '''init autofill'''
         self._version_ = dawgie.VERSION(1, 0, 0)
         self.__parent = Create()
         self.__status = states.StatusSV()
-        self.__table = table
-        self.__tn = tn
 
     def is_valid(self):
         '''convenience function'''
@@ -88,13 +86,8 @@ class Autofill(dawgie.Algorithm):
 
     def run(self, ds, ps):
         '''isolate target specific information from the global table'''
-        if self.__table is None or self.__tn is None:
-            # table = self.__table  # GMR: Hoho
-            # tn = self.__tn  # GMR: Huhu
-            raise dawgie.NoValidInputDataError(
-                'never should be called except from runtime.create'
-            )
-        core.isolate(self.__status, self.__table, self.__tn)
+        core.isolate(self.__status, self.__parent.sv_as_dict['composite'],
+                     ds._tn())  # pylint: disable=protected-access
         ds.update()
 
     def state_vectors(self):
@@ -140,19 +133,19 @@ class Create(dawgie.Analyzer):
             # condensed and processed. To do this, need to act like dawgie
             # just a little bit and access some hidden information.
             # pylint: disable=protected-access # because dawgie requires it
-            pbot = aspects.ds()._bot()
-            with multiprocessing.Pool(processes=20) as pool:
-                log.info('using the pool to run in parallel')
-                pool.map(
-                    Create._do,
-                    [
-                        (
-                            (pbot._name(), 1, pbot._runid(), tn),
-                            {'table': self.sv_as_dict(), 'this_tn': tn},
-                        )
-                        for tn in dawgie.db.targets()
-                    ],
-                )
+            #pbot = aspects.ds()._bot()
+            #with multiprocessing.Pool(processes=20) as pool:
+            #    log.info('using the pool to run in parallel')
+            #    pool.map(
+            #        Create._do,
+            #        [
+            #            (
+            #                (pbot._name(), 1, pbot._runid(), tn),
+            #                {'table': self.sv_as_dict(), 'this_tn': tn},
+            #            )
+            #            for tn in dawgie.db.targets()
+            #        ],
+            #    )
             # pylint: enable=protected-access # turn it back on for rest of code
         except FileNotFoundError as e:
             log.exception(e)
