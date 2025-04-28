@@ -127,25 +127,6 @@ class Create(dawgie.Analyzer):
             core.load(self.sv_as_dict(), dawgie.db.targets())
             log.info('updating state vector')
             aspects.ds().update()
-            # Now do the evil bit where the table is divided into target
-            # specific state vectors where the information becomes highly
-            # condensed and processed. To do this, need to act like dawgie
-            # just a little bit and access some hidden information.
-            # pylint: disable=protected-access # because dawgie requires it
-            #pbot = aspects.ds()._bot()
-            #with multiprocessing.Pool(processes=20) as pool:
-            #    log.info('using the pool to run in parallel')
-            #    pool.map(
-            #        Create._do,
-            #        [
-            #            (
-            #                (pbot._name(), 1, pbot._runid(), tn),
-            #                {'table': self.sv_as_dict(), 'this_tn': tn},
-            #            )
-            #            for tn in dawgie.db.targets()
-            #        ],
-            #    )
-            # pylint: enable=protected-access # turn it back on for rest of code
         except FileNotFoundError as e:
             log.exception(e)
             raise dawgie.AbortAEError(
