@@ -57,6 +57,7 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
+# GMR: There has to be a cleaner way to set this up
 CONTEXT = namedtuple(
     'CONTEXT',
     [
@@ -85,6 +86,7 @@ CONTEXT = namedtuple(
         'avi',
         'ginc',
         'gttv',
+        'fixedpars',
     ],
 )
 ctxt = CONTEXT(
@@ -113,6 +115,7 @@ ctxt = CONTEXT(
     avi=None,
     ginc=None,
     gttv=None,
+    fixedpars={},
 )
 
 
@@ -142,6 +145,7 @@ def ctxtupdt(
     avi=None,
     ginc=None,
     gttv=None,
+    fixedpars=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -172,6 +176,7 @@ def ctxtupdt(
         avi=avi,
         ginc=ginc,
         gttv=gttv,
+        fixedpars=fixedpars,
     )
     return
 
@@ -337,6 +342,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         tmjd = priors[p]['t0']
         if tmjd > 2400000.5:
             tmjd -= 2400000.5
+            pass
         timeredo = np.linspace(0, priors[p]['period'], 1000)
         zredo, phaseredo = datcore.time2z(
             timeredo,
@@ -1366,13 +1372,20 @@ def hstwhitelight(
             tauwhite = 1e0 / (ootstd**2)
         shapettv = max(2, len(ttv))
         shapevis = max(2, len(visits))
+        fixedpars = {}
         if priors[p]['inc'] != 9e1:
             fixedinc = False
+            pass
         else:
+            fixedpars['inc'] = 9e1
             fixedinc = True
+            pass
+        # GMR: Should handle that better in the future for STIS
         if 'eclipse' in selftype:
+            fixedpars['inc'] = priors[p]['inc']
             fixedinc = True
         if 'WFC3' not in ext:
+            fixedpars['inc'] = priors[p]['inc']
             fixedinc = True
         nodes = []
         ctxtupdt(
@@ -1390,9 +1403,10 @@ def hstwhitelight(
             tmjd=tmjd,
             ttv=ttv,
             visits=visits,
+            fixedpars=fixedpars,
         )
-        # PYMC --------------------------------------------------------------------------
         with pymc.Model():
+            # --< PRIORS >--
             rprs = pymc.TruncatedNormal(
                 'rprs',
                 mu=rpors,
@@ -1411,9 +1425,9 @@ def hstwhitelight(
                     shape=shapettv,
                 )
                 nodes.append(alltknot)
-                if fixedinc:
-                    inc = priors[p]['inc']
-                else:
+                # if fixedinc:
+                #    inc = priors[p]['inc']
+                if 'inc' not in ctxt.fixedpars:
                     inc = pymc.TruncatedNormal(
                         'inc',
                         mu=priors[p]['inc'],
@@ -1436,60 +1450,74 @@ def hstwhitelight(
             nodes.append(allvslope)
             nodes.append(alloslope)
             nodes.append(alloitcp)
-            if 'WFC3' in ext:
-                # TTV + FIXED OR VARIABLE INC
-                if fixedinc:
-                    _ = pymc.Normal(
-                        'whitedata',
-                        mu=fiorbital(*nodes),
-                        tau=tauwhite,
-                        observed=flatwhite[selectfit],
-                    )
-                    pass
-                else:
-                    _ = pymc.Normal(
-                        'whitedata',
-                        mu=orbital(*nodes),
-                        tau=tauwhite,
-                        observed=flatwhite[selectfit],
-                    )
-                    pass
-                pass
-            else:
-                # NO TTV, FIXED INC
+            # --------------
+            # --< MODELS >--
+            if 'WFC3' in ext:  # WFC3
                 _ = pymc.Normal(
                     'whitedata',
-                    mu=nottvfiorbital(*nodes),
+                    mu=orbital(*nodes),
+                    tau=tauwhite,
+                    observed=flatwhite[selectfit],
+                )
+                #                if fixedinc:
+                #                    _ = pymc.Normal(
+                #                        'whitedata',
+                #                        mu=fiorbital(*nodes),  # FIXED INCLINATION
+                #                        tau=tauwhite,
+                #                        observed=flatwhite[selectfit],
+                #                    )
+                #                    pass
+                #                else:
+                #                    _ = pymc.Normal(
+                #                        'whitedata',
+                #                        mu=orbital(*nodes),  # ALL FREE
+                #                        tau=tauwhite,
+                #                        observed=flatwhite[selectfit],
+                #                    )
+                #                    pass
+                pass
+            else:  # NOT WFC3
+                _ = pymc.Normal(
+                    'whitedata',
+                    mu=nottvfiorbital(
+                        *nodes
+                    ),  # FIXED MID TRANSIT TIME AND INCLINATION
                     tau=tauwhite,
                     observed=flatwhite[selectfit],
                 )
                 pass
+            # --------------
+            # --< SAMPLING >--
             log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
                 tune=int(chainlen / 2),
                 compute_convergence_checks=False,
-                step=pymc.Metropolis(),
+                step=pymc.Metropolis(),  # TO BE PASSED AS A RUNTIME ARGUMENT
                 progressbar=verbose,
             )
             mcpost = pymc.stats.summary(trace)
+            # ----------------
             pass
+        # --< TRACES >--
         mctrace = {}
         for key in mcpost['mean'].keys():
             if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
                 pieces = key.split('[')
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
+                pass
             tracekeys = key.split('__')
             tracetable = trace.posterior[tracekeys[0]].values
-            tracetable = tracetable.reshape(-1, tracetable.shape[-1])
             if len(tracekeys) > 1:
-                mctrace[key] = tracetable[:, int(tracekeys[1])]
+                tracetable = np.transpose(tracetable)[int(tracekeys[1])]
+                mctrace[key] = np.transpose(tracetable)
                 pass
             else:
                 mctrace[key] = tracetable
                 pass
             pass
+        # --------------
         postlc = []
         postim = []
         postsep = []
@@ -1636,7 +1664,12 @@ def hstwhitelight(
             p,
             savetodisk=False,
         )
-
+        if verbose:
+            plt.figure()
+            plt.plot(postflatphase, flatwhite, '+')
+            plt.plot(postflatphase, postlc, 'o')
+            plt.show()
+            pass
     return True
 
 
@@ -1654,8 +1687,6 @@ def whitelight(
     '''
     G. ROUDIER: Orbital parameters recovery
     '''
-
-    wl = False
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
     planetloop = [p for p in nrm['data'].keys() if nrm['data'][p]['visits']]
@@ -1752,6 +1783,7 @@ def whitelight(
         tmjd = priors[p]['t0']
         if tmjd > 2400000.5:
             tmjd -= 2400000.5
+            pass
         if p in multiwl['data'].keys():
             allttvfltrs = np.array(multiwl['data'][p]['allttvfltrs'])
             if ext in allttvfltrs:
@@ -1764,8 +1796,11 @@ def whitelight(
                 pass
             else:
                 alltknot = []
+                pass
+            pass
         else:
             alltknot = []
+            pass
         period = priors[p]['period']
         ecc = priors[p]['ecc']
         inc = priors[p]['inc']
@@ -1792,6 +1827,7 @@ def whitelight(
         tauwhite = 1e0 / ((np.nanmedian(flaterrwhite)) ** 2)
         if tauwhite == 0:
             tauwhite = 1e0 / (ootstd**2)
+            pass
         # shapettv = max(2, len(ttv))  # unused variable
         shapevis = max(2, len(visits))
         if p in multiwl['data'].keys():
@@ -1800,9 +1836,16 @@ def whitelight(
                 pass
             else:
                 inc = priors[p]['inc']
+                pass
+            pass
         else:
             inc = priors[p]['inc']
+            pass
         nodes = []
+        fixedpars = {}
+        fixedpars['inc'] = inc
+        fixedpars['ttv'] = alltknot
+
         ctxtupdt(
             orbp=priors[p],
             ecc=ecc,
@@ -1820,6 +1863,7 @@ def whitelight(
             visits=visits,
             ginc=inc,
             gttv=alltknot,
+            fixedpars=fixedpars,
         )
         # Set up priors for if parentprior is true
         if selftype in ['transit'] and 'G141-SCAN' in ext:
@@ -1903,7 +1947,7 @@ def whitelight(
             # FIXED ORBITAL SOLUTION
             _ = pymc.Normal(
                 'whitedata',
-                mu=nottvfiorbital(*nodes),
+                mu=orbital(*nodes),
                 tau=tauwhite,
                 observed=flatwhite[selectfit],
             )
@@ -1923,13 +1967,16 @@ def whitelight(
             if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
                 pieces = key.split('[')
                 key = f"{pieces[0]}__{pieces[1].strip(']')}"
+                pass
             tracekeys = key.split('__')
+            tracetable = trace.posterior[tracekeys[0]].values
             if len(tracekeys) > 1:
-                mctrace[key] = trace.posterior[tracekeys[0]][
-                    :, int(tracekeys[1])
-                ]
+                tracetable = np.transpose(tracetable)[int(tracekeys[1])]
+                mctrace[key] = np.transpose(tracetable)
+                pass
             else:
-                mctrace[key] = trace.posterior[tracekeys[0]]
+                mctrace[key] = tracetable
+                pass
             pass
         postlc = []
         postim = []
@@ -1982,8 +2029,10 @@ def whitelight(
             )
             pass
         # finding the min/max time over all visits doesn't work
-        #  you end up covering the time between visits, with not enough points during transit
-        # instead, make a series of times covering each transit/visit and then concatenate them
+        #  you end up covering the time between visits,
+        # with not enough points during transit
+        # instead, make a series of times covering each transit/visit
+        # and then concatenate them
         # mintime = 1.e10
         # maxtime = -1.e10
         # for times in time:
@@ -2031,10 +2080,11 @@ def whitelight(
         out['data'][p]['mctrace'] = mctrace
         out['data'][p]['tauwhite'] = tauwhite
         out['STATUS'].append(True)
-        data = np.array(out['data'][p]['allwhite'])
+
         newdata = []
-        for d in data:
+        for d in out['data'][p]['allwhite']:
             newdata.extend(d)
+            pass
         newdata = np.array(newdata)
         residuals = newdata - postlc  # raw data - model
 
@@ -2049,10 +2099,9 @@ def whitelight(
             samples, _, _ = sample_dist(residuals, len(newdata), bw_adjust=0.05)
             simulated_raw_data = np.array(postlc) + np.array(samples)
             all_sims.append(simulated_raw_data)
-        out['data'][p][
-            'simulated'
-        ] = all_sims  # certain targets the simulated data will be empty bc they're not gaussian
-        wl = True
+            pass
+        out['data'][p]['simulated'] = all_sims
+        # certain targets the simulated data will be empty bc they're not gaussian
 
         # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING
         out['data'][p]['plot_corner'] = plot_corner(
@@ -2061,8 +2110,14 @@ def whitelight(
             p,
             savetodisk=False,
         )
-
-    return wl
+        if verbose:
+            plt.figure()
+            plt.plot(postflatphase, newdata, '+')
+            plt.plot(postflatphase, postlc, 'o')
+            plt.show()
+            pass
+        pass
+    return True
 
 
 # ----------------------- --------------------------------------------
@@ -2907,30 +2962,54 @@ def spectrum(
 
 # -------------- -----------------------------------------------------
 # -- PYMC DETERMINISTIC FUNCTIONS -- ---------------------------------
-# @tco.as_op(itypes=[tt.dscalar, tt.dvector, tt.dscalar,
-#                   tt.dvector, tt.dvector, tt.dvector], otypes=[tt.dvector])
 def orbital(*whiteparams):
     '''
     G. ROUDIER: Orbital model
     '''
-    r, atk, icln, avs, aos, aoi = whiteparams
-    if ctxt.orbp['inc'] == 9e1:
-        inclination = 9e1
+    if ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
+        r, avs, aos, aoi = whiteparams
+        inclination = ctxt.fixedpars['inc']
+        midtransits = ctxt.fixedpars['ttv']
+        if ctxt.gttv:
+            midtransits = ctxt.gttv
+        pass
+    elif ('inc' in ctxt.fixedpars) and 'ttv' not in ctxt.fixedpars:
+        r, atk, avs, aos, aoi = whiteparams
+        inclination = ctxt.fixedpars['inc']
+        midtransits = atk.eval()
+        pass
+    elif not ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
+        r, icln, avs, aos, aoi = whiteparams
+        inclination = icln.eval()
+        midtransits = ctxt.fixedpars['ttv']
+        if ctxt.gttv:
+            midtransits = ctxt.gttv
+        pass
+    elif not (('inc' in ctxt.fixedpars) or ('ttv' in ctxt.fixedpars)):
+        r, atk, icln, avs, aos, aoi = whiteparams
+        inclination = icln.eval()
+        midtransits = atk.eval()
         pass
     else:
-        # inclination = float(icln)
-        inclination = icln.eval()
+        midtransits = None
+        inclination = None
+        r = None
+        avs = None
+        aos = None
+        aoi = None
+        # Jump the building
         pass
+
     out = []
     for i, v in enumerate(ctxt.visits):
         omt = ctxt.time[i]
         if v in ctxt.ttv:
-            # omtk = float(atk[ctxt.ttv.index(v)])
-            omtk = atk.eval()[ctxt.ttv.index(v)]
+            omtk = midtransits[ctxt.ttv.index(v)]
             pass
         else:
             omtk = ctxt.tmjd
             pass
+
         omz, _pmph = datcore.time2z(
             omt,
             inclination,
