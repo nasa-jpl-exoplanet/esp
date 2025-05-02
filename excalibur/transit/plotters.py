@@ -36,13 +36,9 @@ def plot_corner(
 
     fit_param_names = []
     modelParams_bestFit = []
-    chainlen = 0
-    numwalkers = 0
     for key, values in alltraces.items():
         fit_param_names.append(key)
         modelParams_bestFit.append(np.nanmedian(values))
-        chainlen = max(chainlen, len(values[0]))
-        numwalkers = max(numwalkers, len(values[:, 0]))
         # print(
         #    'WHITELIGHT trace median,std,min,max',
         #    key,
@@ -51,47 +47,30 @@ def plot_corner(
         #    np.nanmin(values),
         #    np.nanmax(values),
         # )
-    # print('chainlen,numwalkers', chainlen, numwalkers)
-
     # print('mctrace params', alltraces.keys())
     # print(' params inside of corner plotting', fit_param_names)
     # place rprs as the first parameters? asdf
 
-    # print('bestfit values passed in (currently median)', modelParams_bestFit)
-    # print()
-
     #  convert to the tracearray to a 2-d array (corner() format)
     tracearray = []
     for _, values in alltraces.items():
-        # fixed parameters only have 2 steps. extend them
-        if len(values[0]) < chainlen:
-            # print('EXTENDING A FIXED PARAM', param, numwalkers, chainlen)
-            tracearray.append(
-                float(values[0][0]) * np.ones((numwalkers, chainlen))
-            )
-        else:
-            tracearray.append(np.array(values))
+        tracearray.append(np.array(values))
     tracearray = np.array(tracearray)
 
     # Careful! these are not actually the prior ranges;
     #  they're the range of walker values (unless set below)
-    priorlo = np.nanmin(tracearray, axis=(1, 2))
-    priorhi = np.nanmax(tracearray, axis=(1, 2))
+    priorlo = np.nanmin(tracearray, axis=1)
+    priorhi = np.nanmax(tracearray, axis=1)
     # print('  priorlo', priorlo)
-
-    # for cases with fixed params, make sure the plots have some range
-    #  actually this is not needed. corner() can handle it
+    # print('  priorhi', priorhi)
+    # print()
 
     for ikey, key in enumerate(fit_param_names):
         if key in prior_ranges.keys():
-            # print(
-            #    '  old prior range (median):', key, priorlo[ikey], priorhi[ikey]
-            # )
-            priorlo[ikey] = prior_ranges[key][0]
-            priorhi[ikey] = prior_ranges[key][1]
-            # print(
-            #    '  new prior range (true)  :', key, priorlo[ikey], priorhi[ikey]
-            # )
+            priorlo[ikey] = np.min((prior_ranges[key][0], priorlo[ikey]))
+            priorhi[ikey] = np.max((prior_ranges[key][1], priorhi[ikey]))
+    # print('  priorlo', priorlo)
+    # print('  priorhi', priorhi)
     trange = [tuple([x, y]) for x, y in zip(priorlo, priorhi)]
 
     figure = corner.corner(
