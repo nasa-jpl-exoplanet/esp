@@ -189,6 +189,7 @@ class Atmos(dawgie.Algorithm):
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
+        # for fltr in ['Ariel-sim']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -257,6 +258,7 @@ class Atmos(dawgie.Algorithm):
         mcmc_chain_length = runtime_params.MCMC_chain_length.value()
         # print('MCMC_chain_length', mcmc_chain_length)
         # mcmc_chain_length = 1000
+        # mcmc_chain_length = 10
         # print('MCMC_chain_length', mcmc_chain_length)
         log.info(
             ' calling atmos from cerb-alg-atmos  chain len=%d',
@@ -337,8 +339,9 @@ class Results(dawgie.Algorithm):
 
             # just one filter, while debugging:
             # for fltr in ['HST-WFC3-IR-G141-SCAN']:
+            # for fltr in ['Ariel-sim']:
             for fltr in self.__rt.sv_as_dict()['status'][
-                'allowed_filter_names'
+                    'allowed_filter_names'
             ]:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
@@ -507,10 +510,10 @@ class Release(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: cerberus.atmos'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__atm),
-        ]
+        return []
+        #    dawgie.ALG_REF(sys.task, self.__fin),
+        #    dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__atm),
+        # ]
 
     def state_vectors(self):
         '''Output State Vectors: cerberus.release'''
