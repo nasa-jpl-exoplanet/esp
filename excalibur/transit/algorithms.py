@@ -79,6 +79,9 @@ class Normalization(dawgie.Algorithm):
 
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
+
+        # just one filter, while debugging:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -240,7 +243,7 @@ class WhiteLight(dawgie.Algorithm):
             if allnormdata:
                 try:
                     log.warning(
-                        '--< %s WHITELIGHT: HST >--', self._type.upper()
+                        '--< %s WHITELIGHT: HSTCOMBO >--', self._type.upper()
                     )
                     update = self._hstwhitelight(
                         allnormdata,
@@ -260,7 +263,10 @@ class WhiteLight(dawgie.Algorithm):
                     )
                     pass
                 pass
+
         # FILTER LOOP
+        # just one filter, while debugging:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             update = False
             nrm = self._nrm.sv_as_dict()[fltr]
@@ -292,8 +298,6 @@ class WhiteLight(dawgie.Algorithm):
 
     def _hstwhitelight(self, nrm, fin, chain_length, out, fltr):
         '''Core code call for merged HST data'''
-        # chain_length = 10
-        # print('chain length in hstwhitelight',chain_length)
 
         wl = trncore.hstwhitelight(
             nrm,
@@ -308,8 +312,6 @@ class WhiteLight(dawgie.Algorithm):
 
     def _whitelight(self, nrm, fin, chain_length, out, fltr):
         '''Core code call'''
-        # chain_length = 10
-        # print('chain length in whitelight',chain_length)
 
         if 'Spitzer' in fltr:
             wl = trncore.lightcurve_spitzer(
@@ -390,6 +392,8 @@ class Spectrum(dawgie.Algorithm):
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
+        # just one filter, while debugging:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -482,12 +486,13 @@ class StarSpots(dawgie.Algorithm):
         return 'starspots'
 
     def previous(self):
-        '''Input State Vectors: system.finalize, transit.normalization,
-        transit.whitelight'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._spc),
-        ] + self.__rt.refs_for_proceed()
+        '''
+        Input State Vectors: system.finalize, transit.spectrum
+        '''
+        return []
+        #    dawgie.ALG_REF(sys.task, self.__fin),
+        #    dawgie.ALG_REF(fetch('excalibur.transit').task, self._spc),
+        # ] + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: transit.starspots'''
@@ -500,7 +505,7 @@ class StarSpots(dawgie.Algorithm):
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
         # print('STARSPOTS: allowed filters',
-        #    self.__rt.sv_as_dict()['status']['allowed_filter_names'])
+        #      self.__rt.sv_as_dict()['status']['allowed_filter_names'])
 
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:  # for debugging, just run G141
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
@@ -509,6 +514,7 @@ class StarSpots(dawgie.Algorithm):
 
             update = False
             vspc, sspc = checksv(self._spc.sv_as_dict()[fltr])
+
             if vfin and vspc:
                 # log.warning(
                 #     '--< %s STARSPOTS: %s >--', self._type.upper(), fltr
