@@ -500,7 +500,7 @@ class Release(dawgie.Algorithm):
         '''__init__ ds'''
         self._version_ = crbcore.rlsversion()
         self.__fin = sysalg.Finalize()
-        self.__atm = Atmos()
+        # self.__atm = Atmos()
         self.__out = [crbstates.RlsSv(fltr) for fltr in fltrs]
         return
 
