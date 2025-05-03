@@ -54,10 +54,10 @@ def plot_corner(
     #  convert to the tracearray to a 2-d array (corner() format)
     tracearray = []
     for _, values in alltraces.items():
-        tracearray.append(np.array(values))
+        tracearray.append(np.array(values).flatten())
     tracearray = np.array(tracearray)
 
-    # Careful! these are not actually the prior ranges;
+    # Careful! priorlo,priorhi are not actually the prior ranges;
     #  they're the range of walker values (unless set below)
     priorlo = np.nanmin(tracearray, axis=1)
     priorhi = np.nanmax(tracearray, axis=1)

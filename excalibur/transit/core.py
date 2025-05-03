@@ -2863,8 +2863,10 @@ def spectrum(
                     rprs = pymc.Normal(
                         'rprs', mu=prcenter, tau=1e0 / (prwidth**2)
                     )
-                    prior_ranges['rprs'] = [prcenter - 2 * prwidth,
-                                            prcenter + 2 * prwidth]
+                    prior_ranges['rprs'] = [
+                        prcenter - 2 * prwidth,
+                        prcenter + 2 * prwidth,
+                    ]
                 allvslope = pymc.TruncatedNormal(
                     'vslope',
                     mu=0e0,
