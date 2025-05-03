@@ -64,11 +64,14 @@ def plot_corner(
     # print('  priorlo', priorlo)
     # print('  priorhi', priorhi)
     # print()
-
-    for ikey, key in enumerate(fit_param_names):
-        if key in prior_ranges.keys():
-            priorlo[ikey] = np.min((prior_ranges[key][0], priorlo[ikey]))
-            priorhi[ikey] = np.max((prior_ranges[key][1], priorhi[ikey]))
+    if prior_ranges is not None:
+        for ikey, key in enumerate(fit_param_names):
+            if key in prior_ranges.keys():
+                priorlo[ikey] = np.min((prior_ranges[key][0], priorlo[ikey]))
+                priorhi[ikey] = np.max((prior_ranges[key][1], priorhi[ikey]))
+                pass
+            pass
+        pass
     # print('  priorlo', priorlo)
     # print('  priorhi', priorhi)
     trange = [tuple([x, y]) for x, y in zip(priorlo, priorhi)]

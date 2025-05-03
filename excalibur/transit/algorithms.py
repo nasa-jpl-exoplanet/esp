@@ -331,7 +331,7 @@ class WhiteLight(dawgie.Algorithm):
                 self.__out[-1],
                 chainlen=chain_length,
                 verbose=False,
-                parentprior=True,
+                # parentprior=True,  # GMR: Not safe with new data
             )
             pass
         return wl
