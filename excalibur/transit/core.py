@@ -1405,6 +1405,7 @@ def hstwhitelight(
             visits=visits,
             fixedpars=fixedpars,
         )
+        prior_ranges = {}
         with pymc.Model():
             # --< PRIORS >--
             rprs = pymc.TruncatedNormal(
@@ -1414,6 +1415,7 @@ def hstwhitelight(
                 lower=rpors / 2e0,
                 upper=2e0 * rpors,
             )
+            prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             nodes.append(rprs)
             if 'WFC3' in ext:
                 alltknot = pymc.TruncatedNormal(
@@ -1424,6 +1426,11 @@ def hstwhitelight(
                     upper=tknotmax,
                     shape=shapettv,
                 )
+                for i in range(shapettv):
+                    prior_ranges['dtk__' + str(i)] = [
+                        tknotmin,
+                        tknotmax,
+                    ]
                 nodes.append(alltknot)
                 # if fixedinc:
                 #    inc = priors[p]['inc']
@@ -1436,6 +1443,7 @@ def hstwhitelight(
                         upper=upinc,
                     )
                     nodes.append(inc)
+                    prior_ranges['inc'] = [lowinc, upinc]
                 pass
             allvslope = pymc.TruncatedNormal(
                 'vslope',
@@ -1447,6 +1455,19 @@ def hstwhitelight(
             )
             alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
             alloitcp = pymc.Normal('oitcp', mu=1e0, tau=tauvi, shape=shapevis)
+            for i in range(shapettv):
+                prior_ranges['vslope__' + str(i)] = [
+                    -0.02 / trdura,
+                    0.02 / trdura,
+                ]
+                prior_ranges['oslope__' + str(i)] = [
+                    -0.02 / trdura,
+                    0.02 / trdura,
+                ]
+                prior_ranges['oitcp__' + str(i)] = [
+                    1 - 2 * ootstd,
+                    1 + 2 * ootstd,
+                ]
             nodes.append(allvslope)
             nodes.append(alloslope)
             nodes.append(alloitcp)
@@ -1657,7 +1678,6 @@ def hstwhitelight(
         out['STATUS'].append(True)
 
         # SAVE A CORNER PLOT BASED ON TRANSIT.WHITELIGHT PYMC FITTING - HST COMBO
-        prior_ranges = None
         out['data'][p]['plot_corner'] = plot_corner(
             mctrace,
             prior_ranges,
@@ -1898,8 +1918,6 @@ def whitelight(
             oitcp_beta = (1 / tauvi) ** 0.5
         # PYMC --------------------------------------------------------------------------
         prior_ranges = {}
-        prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
-
         with pymc.Model():
             rprs = pymc.TruncatedNormal(
                 'rprs',
@@ -1908,6 +1926,7 @@ def whitelight(
                 lower=rpors / 2e0,
                 upper=2e0 * rpors,
             )
+            prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             nodes.append(rprs)
             if parentprior:
                 # use parent distr fitted Lorentzians (also called Cauchy)
@@ -1941,6 +1960,19 @@ def whitelight(
                 alloitcp = pymc.Normal(
                     'oitcp', mu=1e0, tau=tauvi, shape=shapevis
                 )
+                for i in range(shapevis):
+                    prior_ranges['vslope__' + str(i)] = [
+                        -0.03 / trdura,
+                        0.03 / trdura,
+                    ]
+                    prior_ranges['oslope__' + str(i)] = [
+                        -0.02 / trdura,
+                        0.02 / trdura,
+                    ]
+                    prior_ranges['oitcp__' + str(i)] = [
+                        1 - 2 * ootstd,
+                        1 + 2 * ootstd,
+                    ]
             nodes.append(allvslope)
             nodes.append(alloslope)
             nodes.append(alloitcp)
@@ -2818,17 +2850,23 @@ def spectrum(
                 visits=visits,
             )
             # PYMC ----------------------------------------------------------------------
+            prior_ranges = {}
             with pymc.Model():
                 if startflag:
                     lowstart = whiterprs - 5e0 * Hs
                     lowstart = tensorfunc.max(lowstart, 0)
                     upstart = whiterprs + 5e0 * Hs
                     rprs = pymc.Uniform('rprs', lower=lowstart, upper=upstart)
+                    prior_ranges['rprs'] = [lowstart, upstart]
                     pass
                 else:
                     rprs = pymc.Normal(
                         'rprs', mu=prcenter, tau=1e0 / (prwidth**2)
                     )
+                    prior_ranges['rprs'] = [
+                        prcenter - 2 * prwidth,
+                        prcenter + 2 * prwidth,
+                    ]
                 allvslope = pymc.TruncatedNormal(
                     'vslope',
                     mu=0e0,
