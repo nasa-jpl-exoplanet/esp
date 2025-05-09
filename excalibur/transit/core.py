@@ -4,6 +4,8 @@
 # pylint: disable=duplicate-code
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
+# GMR: I m out of juice for that
+# pylint: disable=abstract-method,arguments-differ,arguments-renamed,cell-var-from-loop
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -14,15 +16,13 @@ import excalibur.util.cerberus as crbutil
 import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
 from excalibur.util import elca
 from excalibur.util import time as tm
-from excalibur.util.plotters import (save_plot_tosv,
-                                     save_plot_myfit,
-                                     plot_residual_fft,
-                                     add_scale_height_labels,
-                                     )
-from excalibur.transit.plotters import (plot_corner,
-                                        simplecorner,
-                                        postpriors
-                                        )
+from excalibur.util.plotters import (
+    save_plot_tosv,
+    save_plot_myfit,
+    plot_residual_fft,
+    add_scale_height_labels,
+)
+from excalibur.transit.plotters import plot_corner, simplecorner, postpriors
 import copy
 import logging
 import random
@@ -47,9 +47,11 @@ try:
     import astropy.constants
     import astropy.units
     from astropy.modeling.models import BlackBody
+
     pass
 except ImportError:
     from astropy.modeling.blackbody import blackbody_lambda as BlackBody
+
     pass
 
 from collections import namedtuple
@@ -62,133 +64,139 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-ctxtglobals = ['alt',
-               'ald',
-               'allz',
-               'orbp',
-               'commonoim',
-               'ecc',
-               'g1',
-               'g2',
-               'g3',
-               'g4',
-               'ootoindex',
-               'ootorbits',
-               'orbits',
-               'period',
-               'selectfit',
-               'smaors',
-               'time',
-               'tmjd',
-               'ttv',
-               'valid',
-               'visits',
-               'aos',
-               'avi',
-               'ginc',
-               'gttv',
-               'fixedpars',
-               'mcmcdat',
-               'mcmcsig',
-               'nodeshape'
-               ]
+ctxtglobals = [
+    'alt',
+    'ald',
+    'allz',
+    'orbp',
+    'commonoim',
+    'ecc',
+    'g1',
+    'g2',
+    'g3',
+    'g4',
+    'ootoindex',
+    'ootorbits',
+    'orbits',
+    'period',
+    'selectfit',
+    'smaors',
+    'time',
+    'tmjd',
+    'ttv',
+    'valid',
+    'visits',
+    'aos',
+    'avi',
+    'ginc',
+    'gttv',
+    'fixedpars',
+    'mcmcdat',
+    'mcmcsig',
+    'nodeshape',
+]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
-ctxt = CONTEXT(alt=None,
-               ald=None,
-               allz=None,
-               orbp=None,
-               commonoim=None,
-               ecc=None,
-               g1=None,
-               g2=None,
-               g3=None,
-               g4=None,
-               ootoindex=None,
-               ootorbits=None,
-               orbits=None,
-               period=None,
-               selectfit=None,
-               smaors=None,
-               time=None,
-               tmjd=None,
-               ttv=None,
-               valid=None,
-               visits=None,
-               aos=None,
-               avi=None,
-               ginc=None,
-               gttv=None,
-               fixedpars={},
-               mcmcdat=None,
-               mcmcsig=None,
-               nodeshape=None,
-               )
+ctxt = CONTEXT(
+    alt=None,
+    ald=None,
+    allz=None,
+    orbp=None,
+    commonoim=None,
+    ecc=None,
+    g1=None,
+    g2=None,
+    g3=None,
+    g4=None,
+    ootoindex=None,
+    ootorbits=None,
+    orbits=None,
+    period=None,
+    selectfit=None,
+    smaors=None,
+    time=None,
+    tmjd=None,
+    ttv=None,
+    valid=None,
+    visits=None,
+    aos=None,
+    avi=None,
+    ginc=None,
+    gttv=None,
+    fixedpars={},
+    mcmcdat=None,
+    mcmcsig=None,
+    nodeshape=None,
+)
 
-def ctxtupdt(alt=None,
-             ald=None,
-             allz=None,
-             orbp=None,
-             commonoim=None,
-             ecc=None,
-             g1=None,
-             g2=None,
-             g3=None,
-             g4=None,
-             ootoindex=None,
-             ootorbits=None,
-             orbits=None,
-             period=None,
-             selectfit=None,
-             smaors=None,
-             time=None,
-             tmjd=None,
-             ttv=None,
-             valid=None,
-             visits=None,
-             aos=None,
-             avi=None,
-             ginc=None,
-             gttv=None,
-             fixedpars=None,
-             mcmcdat=None,
-             mcmcsig=None,
-             nodeshape=None,
-             ):
+
+def ctxtupdt(
+    alt=None,
+    ald=None,
+    allz=None,
+    orbp=None,
+    commonoim=None,
+    ecc=None,
+    g1=None,
+    g2=None,
+    g3=None,
+    g4=None,
+    ootoindex=None,
+    ootorbits=None,
+    orbits=None,
+    period=None,
+    selectfit=None,
+    smaors=None,
+    time=None,
+    tmjd=None,
+    ttv=None,
+    valid=None,
+    visits=None,
+    aos=None,
+    avi=None,
+    ginc=None,
+    gttv=None,
+    fixedpars=None,
+    mcmcdat=None,
+    mcmcsig=None,
+    nodeshape=None,
+):
     '''
     G. ROUDIER: Update global context for pymc deterministics
     '''
-    sys.modules[__name__].ctxt = CONTEXT(alt=alt,
-                                         ald=ald,
-                                         allz=allz,
-                                         orbp=orbp,
-                                         commonoim=commonoim,
-                                         ecc=ecc,
-                                         g1=g1,
-                                         g2=g2,
-                                         g3=g3,
-                                         g4=g4,
-                                         ootoindex=ootoindex,
-                                         ootorbits=ootorbits,
-                                         orbits=orbits,
-                                         period=period,
-                                         selectfit=selectfit,
-                                         smaors=smaors,
-                                         time=time,
-                                         tmjd=tmjd,
-                                         ttv=ttv,
-                                         valid=valid,
-                                         visits=visits,
-                                         aos=aos,
-                                         avi=avi,
-                                         ginc=ginc,
-                                         gttv=gttv,
-                                         fixedpars=fixedpars,
-                                         mcmcdat=mcmcdat,
-                                         mcmcsig=mcmcsig,
-                                         nodeshape=nodeshape,
-                                         )
+    sys.modules[__name__].ctxt = CONTEXT(
+        alt=alt,
+        ald=ald,
+        allz=allz,
+        orbp=orbp,
+        commonoim=commonoim,
+        ecc=ecc,
+        g1=g1,
+        g2=g2,
+        g3=g3,
+        g4=g4,
+        ootoindex=ootoindex,
+        ootorbits=ootorbits,
+        orbits=orbits,
+        period=period,
+        selectfit=selectfit,
+        smaors=smaors,
+        time=time,
+        tmjd=tmjd,
+        ttv=ttv,
+        valid=valid,
+        visits=visits,
+        aos=aos,
+        avi=avi,
+        ginc=ginc,
+        gttv=gttv,
+        fixedpars=fixedpars,
+        mcmcdat=mcmcdat,
+        mcmcsig=mcmcsig,
+        nodeshape=nodeshape,
+    )
     return
+
 
 # GMR: Gregoire s legacy
 def LogLikelihood(inputs):
@@ -201,9 +209,11 @@ def LogLikelihood(inputs):
     newindex = [n + ns for n, ns in zip(newindex, ctxt.nodeshape)]
     for index, ns in enumerate(ctxt.nodeshape):
         if ns > 1:
-            newnodes.append(inputs[newindex[index]:
-                                   newindex[index] + ctxt.nodeshape[index]
-                                   ])
+            newnodes.append(
+                inputs[
+                    newindex[index] : newindex[index] + ctxt.nodeshape[index]
+                ]
+            )
             pass
         else:
             newnodes.append(inputs[index])
@@ -214,22 +224,27 @@ def LogLikelihood(inputs):
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0 - Norm
     return out
 
+
 class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
     Do not touch the name of the methods
     '''
+
     def make_node(self, nodes) -> tnsrgraph.Apply:
         inputs = [tnsr.as_tensor(n) for n in nodes]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
 
-    def perform(self,
-                node:tnsrgraph.Apply,
-                inputs:list[np.ndarray],
-                outputs:list[list[None]]) -> None:
-        outputs[0][0] = np.asarray(LogLikelihood(inputs))
+    def perform(
+        self,
+        node: tnsrgraph.Apply,
+        inputs: list[np.ndarray],
+        output_storage: list[list[None]],
+    ) -> None:
+        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
         return
+
     pass
 
 
@@ -1226,14 +1241,9 @@ def wlversion():
     return dawgie.VERSION(1, 3, 1)
 
 
-def hstwhitelight(allnrm,
-                  fin,
-                  out,
-                  allext,
-                  selftype,
-                  chainlen=int(1e4),
-                  verbose=False
-                  ):
+def hstwhitelight(
+    allnrm, fin, out, allext, selftype, chainlen=int(1e4), verbose=False
+):
     '''
     G. ROUDIER: Combined orbital parameters recovery
     '''
@@ -1241,11 +1251,13 @@ def hstwhitelight(allnrm,
     ssc = syscore.ssconstants()
     planetloop = []
     for nrm in allnrm:
-        planetloop.extend([p
-                           for p in nrm['data'].keys()
-                           if (nrm['data'][p]['visits']) and (p not in planetloop)
-                           ]
-                          )
+        planetloop.extend(
+            [
+                p
+                for p in nrm['data'].keys()
+                if (nrm['data'][p]['visits']) and (p not in planetloop)
+            ]
+        )
         pass
     for p in planetloop:
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
@@ -1261,9 +1273,9 @@ def hstwhitelight(allnrm,
         allfltrs = []
         allvisits = []
         pnrmlist = [nrm for nrm in allnrm if p in nrm['data']]
-        pextlist = [thisext for nrm,
-                    thisext in zip(allnrm, allext) if p in nrm['data']
-                    ]
+        pextlist = [
+            thisext for nrm, thisext in zip(allnrm, allext) if p in nrm['data']
+        ]
         ext = ''
         for thisext in pextlist:
             if ext:
@@ -1350,11 +1362,12 @@ def hstwhitelight(allnrm,
         out['data'][p]['flatphase'] = flatphase
         # LIMB DARKENING ---------------------------------------------
         if selftype in ['transit']:  # TRANSIT
-            whiteld = createldgrid([allwwmin],
-                                   [allwwmax],
-                                   priors,
-                                   segmentation=int(10),
-                                   )
+            whiteld = createldgrid(
+                [allwwmin],
+                [allwwmax],
+                priors,
+                segmentation=int(10),
+            )
             g1, g2, g3, g4 = whiteld['LD']
             pass
         else:  # ECLIPSE
@@ -1373,7 +1386,9 @@ def hstwhitelight(allnrm,
         allttvs = []
         allttvfltrs = []
         for index, v in enumerate(allvisits):
-            select = (abs(sep[index]) < (1e0 + rpors)) & (abs(sep[index]) > (1e0 - rpors))
+            select = (abs(sep[index]) < (1e0 + rpors)) & (
+                abs(sep[index]) > (1e0 - rpors)
+            )
             if True in select:
                 allttvs.append(v)
                 allttvfltrs.append(allfltrs[index])
@@ -1451,67 +1466,75 @@ def hstwhitelight(allnrm,
         with pymc.Model():
             # --< PRIORS >--
             # RP/RS
-            rprs = pymc.TruncatedNormal('rprs',
-                                        mu=rpors,
-                                        tau=taurprs,
-                                        lower=rpors / 2e0,
-                                        upper=2e0 * rpors,
-                                        )
+            rprs = pymc.TruncatedNormal(
+                'rprs',
+                mu=rpors,
+                tau=taurprs,
+                lower=rpors / 2e0,
+                upper=2e0 * rpors,
+            )
             prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             prior_center['rprs'] = rpors
             nodes.append(rprs)
             # TKNOTS
             if 'WFC3' in ext:
-                alltknot = pymc.TruncatedNormal('dtk',
-                                                mu=tmjd,
-                                                tau=tautknot,
-                                                lower=tknotmin,
-                                                upper=tknotmax,
-                                                shape=shapettv,
-                                                )
+                alltknot = pymc.TruncatedNormal(
+                    'dtk',
+                    mu=tmjd,
+                    tau=tautknot,
+                    lower=tknotmin,
+                    upper=tknotmax,
+                    shape=shapettv,
+                )
                 for i in range(shapettv):
-                    prior_ranges['dtk__' + str(i)] = [tknotmin,
-                                                      tknotmax,
-                                                      ]
+                    prior_ranges['dtk__' + str(i)] = [
+                        tknotmin,
+                        tknotmax,
+                    ]
                     prior_center['dtk__' + str(i)] = tmjd
                     pass
                 nodes.append(alltknot)
                 if 'inc' not in ctxt.fixedpars:
-                    inc = pymc.TruncatedNormal('inc',
-                                               mu=priors[p]['inc'],
-                                               tau=tauinc,
-                                               lower=lowinc,
-                                               upper=upinc,
-                                               )
+                    inc = pymc.TruncatedNormal(
+                        'inc',
+                        mu=priors[p]['inc'],
+                        tau=tauinc,
+                        lower=lowinc,
+                        upper=upinc,
+                    )
                     nodes.append(inc)
                     prior_ranges['inc'] = [lowinc, upinc]
                     prior_center['inc'] = priors[p]['inc']
                     pass
                 pass
             # SYSTEMATICS
-            allvslope = pymc.TruncatedNormal('vslope',
-                                             mu=0e0,
-                                             tau=tauvs,
-                                             lower=-3e-2 / trdura,
-                                             upper=3e-2 / trdura,
-                                             shape=shapevis,
-                                             )
+            allvslope = pymc.TruncatedNormal(
+                'vslope',
+                mu=0e0,
+                tau=tauvs,
+                lower=-3e-2 / trdura,
+                upper=3e-2 / trdura,
+                shape=shapevis,
+            )
             alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
             alloitcp = pymc.Normal('oitcp', mu=1e0, tau=tauvi, shape=shapevis)
             for i in range(shapettv):
                 # GMR: Not changing this but the prior ranges are a bit off here
                 # GMR: That is axctually 3e-2
-                prior_ranges['vslope__' + str(i)] = [-0.02 / trdura,
-                                                     0.02 / trdura,
-                                                     ]
+                prior_ranges['vslope__' + str(i)] = [
+                    -0.02 / trdura,
+                    0.02 / trdura,
+                ]
                 # GMR: Normal distribution with sigma = sqrt(tauvs**-1)
-                prior_ranges['oslope__' + str(i)] = [-0.02 / trdura,
-                                                     0.02 / trdura,
-                                                     ]
+                prior_ranges['oslope__' + str(i)] = [
+                    -0.02 / trdura,
+                    0.02 / trdura,
+                ]
                 # GMR: Normal distribution with sigma = sqrt(tauvi**-1)
-                prior_ranges['oitcp__' + str(i)] = [1 - 2 * ootstd,
-                                                    1 + 2 * ootstd,
-                                                    ]
+                prior_ranges['oitcp__' + str(i)] = [
+                    1 - 2 * ootstd,
+                    1 + 2 * ootstd,
+                ]
                 prior_center['vslope__' + str(i)] = 0e0
                 prior_center['oslope__' + str(i)] = 0e0
                 prior_center['oitcp__' + str(i)] = 1e0
@@ -1520,32 +1543,35 @@ def hstwhitelight(allnrm,
             nodes.append(alloslope)
             nodes.append(alloitcp)
             # --------------
-            ctxtupdt(orbp=priors[p],
-                     ecc=ecc,
-                     g1=g1,
-                     g2=g2,
-                     g3=g3,
-                     g4=g4,
-                     orbits=orbits,
-                     period=period,
-                     selectfit=selectfit,
-                     smaors=smaors,
-                     time=time,
-                     tmjd=tmjd,
-                     ttv=ttv,
-                     visits=visits,
-                     fixedpars=fixedpars,
-                     mcmcdat=flatwhite[selectfit],
-                     mcmcsig=1e0/np.sqrt(tauwhite),  # GMR: FIXME
-                     nodeshape=[n.ndim + 1 for n in nodes],
-                     )
+            ctxtupdt(
+                orbp=priors[p],
+                ecc=ecc,
+                g1=g1,
+                g2=g2,
+                g3=g3,
+                g4=g4,
+                orbits=orbits,
+                period=period,
+                selectfit=selectfit,
+                smaors=smaors,
+                time=time,
+                tmjd=tmjd,
+                ttv=ttv,
+                visits=visits,
+                fixedpars=fixedpars,
+                mcmcdat=flatwhite[selectfit],
+                mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
+                nodeshape=[n.ndim + 1 for n in nodes],
+            )
             # --< MODEL >--
             TensorModel = TensorShell()
+
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
+
             flatnodes = []
             for n in nodes:
                 if n.ndim > 0:
@@ -1557,20 +1583,23 @@ def hstwhitelight(allnrm,
                 pass
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
-            LikeliHood = pymc.CustomDist("likelihood",
-                                         flatnodes,
-                                         observed=flatwhite[selectfit],
-                                         logp=LogLH)
+            _ = pymc.CustomDist(
+                "likelihood",
+                flatnodes,
+                observed=flatwhite[selectfit],
+                logp=LogLH,
+            )
             # --------------
             # --< SAMPLING >--
             log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
-            trace = pymc.sample(chainlen,
-                                cores=4,
-                                tune=int(chainlen / 2),
-                                compute_convergence_checks=False,
-                                step=pymc.Metropolis(),  # GMR: TBD - Use runtime
-                                progressbar=verbose,
-                                )
+            trace = pymc.sample(
+                chainlen,
+                cores=4,
+                tune=int(chainlen / 2),
+                compute_convergence_checks=False,
+                step=pymc.Metropolis(),  # GMR: TBD - Use runtime
+                progressbar=verbose,
+            )
             mcpost = pymc.stats.summary(trace)
             # ----------------
             pass
@@ -1724,30 +1753,30 @@ def hstwhitelight(allnrm,
         out['STATUS'].append(True)
 
         # GMR: Something is happening with the ranges of this plot.
-        out['data'][p]['plot_corner'] = plot_corner(mctrace,
-                                                    prior_ranges,
-                                                    p,
-                                                    savetodisk=False,
-                                                    )
+        out['data'][p]['plot_corner'] = plot_corner(
+            mctrace,
+            prior_ranges,
+            p,
+            savetodisk=False,
+        )
 
-        if verbose:
-            out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
-            postpriors(mctrace, prior_center, verbose=verbose)
-            pass
+        out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
+        postpriors(mctrace, prior_center, verbose=verbose)
         pass
     return True
 
 
-def whitelight(nrm,
-               fin,
-               out,
-               ext,
-               selftype,
-               multiwl,
-               chainlen=int(1e4),
-               verbose=False,
-               parentprior=False,
-               ):
+def whitelight(
+    nrm,
+    fin,
+    out,
+    ext,
+    selftype,
+    multiwl,
+    chainlen=int(1e4),
+    verbose=False,
+    parentprior=False,
+):
     '''
     G. ROUDIER: Orbital parameters recovery
     '''
@@ -1822,11 +1851,12 @@ def whitelight(nrm,
         out['data'][p]['flatphase'] = flatphase
         # LIMB DARKENING ---------------------------------------------
         if selftype in ['transit']:
-            whiteld = createldgrid([allwwmin],
-                                   [allwwmax],
-                                   priors,
-                                   segmentation=int(10),
-                                   )
+            whiteld = createldgrid(
+                [allwwmin],
+                [allwwmax],
+                priors,
+                segmentation=int(10),
+            )
             g1, g2, g3, g4 = whiteld['LD']
             pass
         else:
@@ -1951,22 +1981,23 @@ def whitelight(nrm,
             prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             nodes.append(rprs)
             if parentprior:
-                # use parent distr fitted Lorentzians (also called Cauchy)
-                allvslope = pymc.Cauchy(
-                    'vslope',
-                    alpha=vslope_alpha,
-                    beta=vslope_beta,
-                    shape=shapevis,
-                )
-                alloslope = pymc.Cauchy(
-                    'oslope',
-                    alpha=oslope_alpha,
-                    beta=oslope_beta,
-                    shape=shapevis,
-                )
-                alloitcp = pymc.Cauchy(
-                    'oitcp', alpha=oitcp_alpha, beta=oitcp_beta, shape=shapevis
-                )
+                pass
+            #    # use parent distr fitted Lorentzians (also called Cauchy)
+            #    allvslope = pymc.Cauchy(
+            #        'vslope',
+            #        alpha=vslope_alpha,
+            #        beta=vslope_beta,
+            #        shape=shapevis,
+            #    )
+            #    alloslope = pymc.Cauchy(
+            #        'oslope',
+            #        alpha=oslope_alpha,
+            #        beta=oslope_beta,
+            #        shape=shapevis,
+            #    )
+            #    alloitcp = pymc.Cauchy(
+            #        'oitcp', alpha=oitcp_alpha, beta=oitcp_beta, shape=shapevis
+            #    )
             else:
                 allvslope = pymc.TruncatedNormal(
                     'vslope',
@@ -1999,34 +2030,37 @@ def whitelight(nrm,
             nodes.append(alloslope)
             nodes.append(alloitcp)
             # CONTEXT UPDATE
-            ctxtupdt(orbp=priors[p],
-                     ecc=ecc,
-                     g1=g1,
-                     g2=g2,
-                     g3=g3,
-                     g4=g4,
-                     orbits=orbits,
-                     period=period,
-                     selectfit=selectfit,
-                     smaors=smaors,
-                     time=time,
-                     tmjd=tmjd,
-                     ttv=ttv,
-                     visits=visits,
-                     ginc=inc,
-                     gttv=alltknot,
-                     fixedpars=fixedpars,
-                     mcmcdat=flatwhite[selectfit],
-                     mcmcsig=1e0/np.sqrt(tauwhite),  # GMR: FIXME
-                     nodeshape=[n.ndim + 1 for n in nodes],
-                     )
+            ctxtupdt(
+                orbp=priors[p],
+                ecc=ecc,
+                g1=g1,
+                g2=g2,
+                g3=g3,
+                g4=g4,
+                orbits=orbits,
+                period=period,
+                selectfit=selectfit,
+                smaors=smaors,
+                time=time,
+                tmjd=tmjd,
+                ttv=ttv,
+                visits=visits,
+                ginc=inc,
+                gttv=alltknot,
+                fixedpars=fixedpars,
+                mcmcdat=flatwhite[selectfit],
+                mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
+                nodeshape=[n.ndim + 1 for n in nodes],
+            )
             # FIXED ORBITAL SOLUTION
             TensorModel = TensorShell()
+
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
+
             flatnodes = []
             for n in nodes:
                 if n.ndim > 0:
@@ -2038,10 +2072,12 @@ def whitelight(nrm,
                 pass
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
-            LikeliHood = pymc.CustomDist("likelihood",
-                                         flatnodes,
-                                         observed=flatwhite[selectfit],
-                                         logp=LogLH)
+            _ = pymc.CustomDist(
+                "likelihood",
+                flatnodes,
+                observed=flatwhite[selectfit],
+                logp=LogLH,
+            )
             log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
             trace = pymc.sample(
                 chainlen,
@@ -2092,13 +2128,14 @@ def whitelight(nrm,
             else:
                 omtk = tmjd
                 pass
-            postz, postph = tm.time2z(time[i],
-                                      inclination,
-                                      omtk,
-                                      smaors,
-                                      period,
-                                      ecc,
-                                      )
+            postz, postph = tm.time2z(
+                time[i],
+                inclination,
+                omtk,
+                smaors,
+                period,
+                ecc,
+            )
             if selftype in ['eclipse']:
                 postph[postph < 0] = postph[postph < 0] + 1e0
                 pass
@@ -2205,9 +2242,7 @@ def whitelight(nrm,
             p,
             savetodisk=False,
         )
-        if verbose:
-            out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
-            pass
+        out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
         pass
     return True
 
@@ -2828,13 +2863,14 @@ def spectrum(
                 g1, g2, g3, g4 = [[0], [0], [0], [0]]
                 pass
             out['data'][p]['LD'].append([g1[0], g2[0], g3[0], g4[0]])
-            model = tldlc(abs(allz),
-                          whiterprs,
-                          g1=g1[0],
-                          g2=g2[0],
-                          g3=g3[0],
-                          g4=g4[0],
-                          )
+            model = tldlc(
+                abs(allz),
+                whiterprs,
+                g1=g1[0],
+                g2=g2[0],
+                g3=g3[0],
+                g4=g4[0],
+            )
             if lcplot:
                 plt.figure()
                 plt.title(str(int(1e3 * np.mean([wl, wh]))) + ' nm')
@@ -2970,11 +3006,12 @@ def spectrum(
                 # save rprs
                 clspvl = np.nanmedian(trace.posterior['rprs'])
                 # now produce fitted estimates
-                specparams = (mcests['rprs'],
-                              [mcests[f'vslope__{i}'] for i in range(len(visits))],
-                              [mcests[f'oslope__{i}'] for i in range(len(visits))],
-                              [mcests[f'oitcp__{i}'] for i in range(len(visits))],
-                              )
+                specparams = (
+                    mcests['rprs'],
+                    [mcests[f'vslope__{i}'] for i in range(len(visits))],
+                    [mcests[f'oslope__{i}'] for i in range(len(visits))],
+                    [mcests[f'oitcp__{i}'] for i in range(len(visits))],
+                )
                 _r, avs, aos, aoi = specparams
                 allimout = []
                 for iv in range(len(visits)):
@@ -2989,13 +3026,14 @@ def spectrum(
                     allimout.extend(imout)
                     pass
                 allimout = np.array(allimout)
-                lout = tldlc(abs(allz),
-                             clspvl,
-                             g1=g1[0],
-                             g2=g2[0],
-                             g3=g3[0],
-                             g4=g4[0],
-                             )
+                lout = tldlc(
+                    abs(allz),
+                    clspvl,
+                    g1=g1[0],
+                    g2=g2[0],
+                    g3=g3[0],
+                    g4=g4[0],
+                )
                 lout = lout * np.array(allimout)
                 lcfit = {
                     'expected': lout[valid],
@@ -3091,27 +3129,30 @@ def orbital(*whiteparams):
             omtk = ctxt.tmjd
             pass
 
-        omz, _pmph = tm.time2z(omt,
-                               inclination,
-                               omtk,
-                               ctxt.smaors,
-                               ctxt.period,
-                               ctxt.ecc,
-                               )
-        lcout = tldlc(abs(omz),
-                      r,
-                      g1=ctxt.g1[0],
-                      g2=ctxt.g2[0],
-                      g3=ctxt.g3[0],
-                      g4=ctxt.g4[0],
-                      )
-        imout = timlc(omt,
-                      ctxt.orbits[i],
-                      vslope=avs[i],
-                      vitcp=1e0,
-                      oslope=aos[i],
-                      oitcp=aoi[i],
-                      )
+        omz, _pmph = tm.time2z(
+            omt,
+            inclination,
+            omtk,
+            ctxt.smaors,
+            ctxt.period,
+            ctxt.ecc,
+        )
+        lcout = tldlc(
+            abs(omz),
+            r,
+            g1=ctxt.g1[0],
+            g2=ctxt.g2[0],
+            g3=ctxt.g3[0],
+            g4=ctxt.g4[0],
+        )
+        imout = timlc(
+            omt,
+            ctxt.orbits[i],
+            vslope=avs[i],
+            vitcp=1e0,
+            oslope=aos[i],
+            oitcp=aoi[i],
+        )
         out.extend(lcout * imout)
         pass
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
@@ -3125,22 +3166,24 @@ def lcmodel(*specparams):
     r, avs, aos, aoi = specparams
     allimout = []
     for iv in range(len(ctxt.visits)):
-        imout = timlc(ctxt.time[iv],
-                      ctxt.orbits[iv],
-                      vslope=avs[iv],
-                      vitcp=1e0,
-                      oslope=aos[iv],
-                      oitcp=aoi[iv],
-                      )
+        imout = timlc(
+            ctxt.time[iv],
+            ctxt.orbits[iv],
+            vslope=avs[iv],
+            vitcp=1e0,
+            oslope=aos[iv],
+            oitcp=aoi[iv],
+        )
         allimout.extend(imout)
         pass
-    out = tldlc(ctxt.allz,
-                r,
-                g1=float(ctxt.g1[0]),
-                g2=float(ctxt.g2[0]),
-                g3=float(ctxt.g3[0]),
-                g4=float(ctxt.g4[0]),
-                )
+    out = tldlc(
+        ctxt.allz,
+        r,
+        g1=float(ctxt.g1[0]),
+        g2=float(ctxt.g2[0]),
+        g3=float(ctxt.g3[0]),
+        g4=float(ctxt.g4[0]),
+    )
     out = out * np.array(allimout)
     return out[ctxt.valid]
 

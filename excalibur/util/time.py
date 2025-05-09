@@ -7,16 +7,17 @@
 import numpy as np
 
 
-def time2z(time,
-           ipct,
-           tknot,
-           sma,
-           orbperiod,
-           ecc,
-           tperi=None,
-           epsilon=1e-10,
-           marray=True,
-           ):
+def time2z(
+    time,
+    ipct,
+    tknot,
+    sma,
+    orbperiod,
+    ecc,
+    tperi=None,
+    epsilon=1e-10,
+    marray=True,
+):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
     '''
@@ -27,9 +28,11 @@ def time2z(time,
             ft0 += -1e0
             pass
         M0 = 2e0 * np.pi * ft0
-        E0 = (solveme(np.array([M0]), ecc, epsilon) if marray
-              else solveme(M0, ecc, epsilon)
-              )
+        E0 = (
+            solveme(np.array([M0]), ecc, epsilon)
+            if marray
+            else solveme(M0, ecc, epsilon)
+        )
         realf = np.sqrt(1e0 - ecc) * np.cos(float(E0) / 2e0)
         imagf = np.sqrt(1e0 + ecc) * np.sin(float(E0) / 2e0)
         w = np.angle(np.complex(realf, imagf))
