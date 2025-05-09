@@ -1981,7 +1981,11 @@ def whitelight(
             prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             nodes.append(rprs)
             if parentprior:
+                allvslope = None
+                alloslope = None
+                alloitcp = None
                 pass
+            # GMR: Too Dangerous and certainly not rigorous
             #    # use parent distr fitted Lorentzians (also called Cauchy)
             #    allvslope = pymc.Cauchy(
             #        'vslope',
@@ -2026,6 +2030,8 @@ def whitelight(
                         1 - 2 * ootstd,
                         1 + 2 * ootstd,
                     ]
+                    pass
+                pass
             nodes.append(allvslope)
             nodes.append(alloslope)
             nodes.append(alloitcp)
