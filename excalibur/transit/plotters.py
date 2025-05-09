@@ -118,7 +118,57 @@ def plot_corner(
         # print('  Saving figure to disk!',saveDir+'corner-'+p+'.png')
         plt.savefig(saveDir + 'corner-' + p + '.png')
 
+    # Corner.corner creates a figure instance.
+    # Better close it before memory leaks out
+    plt.close()
+
     return save_plot_tosv(figure)
+
+def simplecorner(mctrace, verbose=False):
+    '''
+    GMR: Simple corner plot
+    '''
+    Medians = [float(np.median(mctrace[k])) for k in mctrace]
+    Lowerr = [float(np.percentile(mctrace[k], 50 - 95.4/2)) for k in mctrace]
+    Uperr = [float(np.percentile(mctrace[k], 50 + 95.4/2)) for k in mctrace]
+    LowBound = [float(np.percentile(mctrace[k], 50 - 99.7/2)) for k in mctrace]
+    UpBound = [float(np.percentile(mctrace[k], 50 + 99.7/2)) for k in mctrace]
+    Ranges = [(l, u) for l, u in zip(LowBound, UpBound)]
+    Figure = corner.corner(mctrace,
+                           quantiles=(0.5 - 0.68/2, 0.5 + 0.68/2),
+                           levels=(0.393, 0.675,),
+                           range=Ranges)
+    corner.overplot_lines(Figure, Medians, c='b')
+    corner.overplot_points(Figure, np.array(Medians)[None], marker='o', c='b')
+    out = save_plot_tosv(Figure)
+    if verbose:
+        plt.show()
+        for index, k in enumerate(mctrace):
+            print(k,
+                  Medians[index],
+                  Medians[index] - Lowerr[index],
+                  Uperr[index] - Medians[index]
+                  )
+            pass
+        pass
+    else:
+        plt.close()
+        pass
+    return out
+
+def postpriors(mctrace, prior_center, verbose=False):
+    '''
+    GMR: Plots post versus prior per parameter
+    '''
+    Medians = [float(np.median(mctrace[k])) for k in mctrace]
+    if verbose:
+        Figure, Axes = plt.subplots(nrows = len(mctrace), figsize=(4, 3*len(mctrace)))
+    for index, k in enumerate(mctrace):
+        Axes[index].plot(mctrace[k].flatten())
+        Axes[index].plot(Medians[index])
+        Axes[index].plot(prior_center[k])
+        pass
+    return
 
 
 # --------------------------------------------------------------------

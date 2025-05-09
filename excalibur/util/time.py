@@ -7,12 +7,18 @@
 import numpy as np
 
 
-def time2z(
-    time, ipct, tknot, sma, orbperiod, ecc, tperi, epsilon, marray, tensor=True
-):
+def time2z(time,
+           ipct,
+           tknot,
+           sma,
+           orbperiod,
+           ecc,
+           tperi=None,
+           epsilon=1e-10,
+           marray=True,
+           ):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
-    GMR: Tensor comp
     '''
     if tperi is not None:
         ft0 = (tperi - tknot) % orbperiod
@@ -21,11 +27,9 @@ def time2z(
             ft0 += -1e0
             pass
         M0 = 2e0 * np.pi * ft0
-        E0 = (
-            solveme(np.array([M0]), ecc, epsilon)
-            if marray
-            else solveme(M0, ecc, epsilon)
-        )
+        E0 = (solveme(np.array([M0]), ecc, epsilon) if marray
+              else solveme(M0, ecc, epsilon)
+              )
         realf = np.sqrt(1e0 - ecc) * np.cos(float(E0) / 2e0)
         imagf = np.sqrt(1e0 + ecc) * np.sin(float(E0) / 2e0)
         w = np.angle(np.complex(realf, imagf))
@@ -40,15 +44,10 @@ def time2z(
         pass
     ft = (time - tperi) % orbperiod
     ft /= orbperiod
-    if tensor:
-        sft = ft.eval()
-        pass
-    else:
-        sft = ft
-        pass
+    sft = ft
     sft[(sft > 0.5)] += -1e0
     M = 2e0 * np.pi * ft
-    E = solveme(M, ecc, epsilon, tensor=tensor)
+    E = solveme(M, ecc, epsilon)
     realf = np.sqrt(1.0 - ecc) * np.cos(E / 2e0)
     imagf = np.sqrt(1.0 + ecc) * np.sin(E / 2e0)
     f = []
@@ -61,33 +60,21 @@ def time2z(
     z = r * np.sqrt(
         1e0**2 - (np.sin(w + f) ** 2) * (np.sin(ipct * np.pi / 180e0)) ** 2
     )
-    if tensor:
-        z.eval()[sft < 0] *= -1e0
-        pass
-    else:
-        z[sft < 0] *= -1e0
-        pass
+    z[sft < 0] *= -1e0
     return z, sft
 
 
 # --------------- ----------------------------------------------------
 # -- TRUE ANOMALY NEWTON RAPHSON SOLVER -- ---------------------------
-def solveme(M, e, eps, tensor=True):
+def solveme(M, e, eps):
     '''
     G. ROUDIER: Newton Raphson solver for true anomaly
     M is a numpy array
-    GMR: Tensor comp
     '''
-    if tensor:
-        Meval = M.eval()
-        pass
-    else:
-        Meval = M
-        pass
-    E = Meval.copy()
-    for i in np.arange(Meval.shape[0]):
-        while abs(E[i] - e * np.sin(E[i]) - Meval[i]) > eps:
-            num = E[i] - e * np.sin(E[i]) - Meval[i]
+    E = M.copy()
+    for i in np.arange(E.shape[0]):
+        while abs(E[i] - e * np.sin(E[i]) - M[i]) > eps:
+            num = E[i] - e * np.sin(E[i]) - M[i]
             den = 1.0 - e * np.cos(E[i])
             E[i] = E[i] - num / den
             pass
