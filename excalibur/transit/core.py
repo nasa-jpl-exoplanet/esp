@@ -22,7 +22,7 @@ from excalibur.util.plotters import (
     plot_residual_fft,
     add_scale_height_labels,
 )
-from excalibur.transit.plotters import plot_corner, simplecorner, postpriors
+from excalibur.transit.plotters import plot_corner, simplecorner, postpriors, lightcurves
 import copy
 import logging
 import random
@@ -47,11 +47,9 @@ try:
     import astropy.constants
     import astropy.units
     from astropy.modeling.models import BlackBody
-
     pass
 except ImportError:
     from astropy.modeling.blackbody import blackbody_lambda as BlackBody
-
     pass
 
 from collections import namedtuple
@@ -205,19 +203,15 @@ def LogLikelihood(inputs):
     We stick to the proper definition of it
     '''
     newnodes = []
-    newindex = np.arange(len(ctxt.nodeshape))
-    newindex = [n + ns for n, ns in zip(newindex, ctxt.nodeshape)]
+    newindex = 0
     for index, ns in enumerate(ctxt.nodeshape):
         if ns > 1:
-            newnodes.append(
-                inputs[
-                    newindex[index] : newindex[index] + ctxt.nodeshape[index]
-                ]
-            )
+            newnodes.append(inputs[newindex : newindex + ns])
             pass
         else:
-            newnodes.append(inputs[index])
+            newnodes.append(inputs[newindex])
             pass
+        newindex += ns
         pass
     ForwardModel = orbital(*newnodes)
     Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
@@ -1285,10 +1279,11 @@ def hstwhitelight(
                 ext = thisext
                 pass
             pass
+        # Combines into a single dataset
         for nrm, fltr in zip(pnrmlist, pextlist):
-            # GMR: We never realized this thing never worked since some code update
-            # Seems that you cant cast lists into arrays in a dirty way anymore
-            visits.extend(np.array(nrm['data'][p]['visits']) + maxvis)
+            # Combined visit numbering
+            visits.extend([nv + maxvis for nv in nrm['data'][p]['visits']])
+            maxvis = maxvis + np.max(visits)
             orbits.extend((nrm['data'][p]['orbits']))
             time.extend((nrm['data'][p]['time']))
             wave.extend((nrm['data'][p]['wave']))
@@ -1296,8 +1291,8 @@ def hstwhitelight(
             sep.extend((nrm['data'][p]['z']))
             phase.extend((nrm['data'][p]['phase']))
             photnoise.extend((nrm['data'][p]['photnoise']))
-            maxvis = maxvis + np.max(visits)
             allfltrs.extend([fltr] * len(nrm['data'][p]['visits']))
+            # Original visit numbering
             allvisits.extend(nrm['data'][p]['visits'])
             pass
         out['data'][p] = {}
@@ -1309,6 +1304,7 @@ def hstwhitelight(
         allerrwhite = []
         flatminww = []
         flatmaxww = []
+        
         for index, _v in enumerate(visits):
             white = []
             errwhite = []
@@ -1374,23 +1370,19 @@ def hstwhitelight(
             g1, g2, g3, g4 = [[0], [0], [0], [0]]
             pass
         out['data'][p]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
-        # TTV --------------------------------------------------------
+        # If visit does not probe ingress or egress
+        # we do not let tknot be a free parameter
         ttv = []
+        allttvs = []
+        allttvfltrs = []
         for index, v in enumerate(visits):
             select = (abs(sep[index]) < (1e0 + rpors)) & (
                 abs(sep[index]) > (1e0 - rpors)
             )
             if True in select:
                 ttv.append(v)
-            pass
-        allttvs = []
-        allttvfltrs = []
-        for index, v in enumerate(allvisits):
-            select = (abs(sep[index]) < (1e0 + rpors)) & (
-                abs(sep[index]) > (1e0 - rpors)
-            )
-            if True in select:
-                allttvs.append(v)
+                # I dont remember the use of the original numbering here
+                allttvs.append(allvisits[index])
                 allttvfltrs.append(allfltrs[index])
                 pass
             pass
@@ -1398,6 +1390,7 @@ def hstwhitelight(
         tmjd = priors[p]['t0']
         if tmjd > 2400000.5:
             tmjd -= 2400000.5
+            pass
         period = priors[p]['period']
         ecc = priors[p]['ecc']
         inc = priors[p]['inc']
@@ -1461,6 +1454,7 @@ def hstwhitelight(
             fixedinc = True
             pass
         nodes = []
+        nodeshape = []
         prior_ranges = {}
         prior_center = {}
         with pymc.Model():
@@ -1476,6 +1470,7 @@ def hstwhitelight(
             prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
             prior_center['rprs'] = rpors
             nodes.append(rprs)
+            nodeshape.append(1)
             # TKNOTS
             if 'WFC3' in ext:
                 alltknot = pymc.TruncatedNormal(
@@ -1493,7 +1488,9 @@ def hstwhitelight(
                     ]
                     prior_center['dtk__' + str(i)] = tmjd
                     pass
-                nodes.append(alltknot)
+                nodes.extend(alltknot)
+                nodeshape.append(shapettv)
+
                 if 'inc' not in ctxt.fixedpars:
                     inc = pymc.TruncatedNormal(
                         'inc',
@@ -1503,6 +1500,7 @@ def hstwhitelight(
                         upper=upinc,
                     )
                     nodes.append(inc)
+                    nodeshape.append(1)
                     prior_ranges['inc'] = [lowinc, upinc]
                     prior_center['inc'] = priors[p]['inc']
                     pass
@@ -1516,32 +1514,41 @@ def hstwhitelight(
                 upper=3e-2 / trdura,
                 shape=shapevis,
             )
-            alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
-            alloitcp = pymc.Normal('oitcp', mu=1e0, tau=tauvi, shape=shapevis)
-            for i in range(shapettv):
+            for i in range(shapevis):
                 # GMR: Not changing this but the prior ranges are a bit off here
                 # GMR: That is axctually 3e-2
                 prior_ranges['vslope__' + str(i)] = [
                     -0.02 / trdura,
                     0.02 / trdura,
                 ]
+                prior_center['vslope__' + str(i)] = 0e0
+                pass
+            nodes.extend(allvslope)
+            nodeshape.append(shapevis)
+
+            alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
+            for i in range(shapevis):
                 # GMR: Normal distribution with sigma = sqrt(tauvs**-1)
                 prior_ranges['oslope__' + str(i)] = [
                     -0.02 / trdura,
                     0.02 / trdura,
                 ]
+                prior_center['oslope__' + str(i)] = 0e0
+                pass
+            nodes.extend(alloslope)
+            nodeshape.append(shapevis)
+
+            alloitcp = pymc.Normal('oitcp', mu=1e0, tau=tauvi, shape=shapevis)
+            for i in range(shapevis):
                 # GMR: Normal distribution with sigma = sqrt(tauvi**-1)
                 prior_ranges['oitcp__' + str(i)] = [
                     1 - 2 * ootstd,
                     1 + 2 * ootstd,
                 ]
-                prior_center['vslope__' + str(i)] = 0e0
-                prior_center['oslope__' + str(i)] = 0e0
                 prior_center['oitcp__' + str(i)] = 1e0
                 pass
-            nodes.append(allvslope)
-            nodes.append(alloslope)
-            nodes.append(alloitcp)
+            nodes.extend(alloitcp)
+            nodeshape.append(shapevis)
             # --------------
             ctxtupdt(
                 orbp=priors[p],
@@ -1561,37 +1568,26 @@ def hstwhitelight(
                 fixedpars=fixedpars,
                 mcmcdat=flatwhite[selectfit],
                 mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
-                nodeshape=[n.ndim + 1 for n in nodes],
+                nodeshape=nodeshape,
             )
             # --< MODEL >--
             TensorModel = TensorShell()
-
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
-
-            flatnodes = []
-            for n in nodes:
-                if n.ndim > 0:
-                    flatnodes.extend(n)
-                    pass
-                else:
-                    flatnodes.append(n)
-                    pass
-                pass
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
             _ = pymc.CustomDist(
                 "likelihood",
-                flatnodes,
+                nodes,
                 observed=flatwhite[selectfit],
                 logp=LogLH,
             )
             # --------------
             # --< SAMPLING >--
-            log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
+            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
@@ -1605,11 +1601,9 @@ def hstwhitelight(
             pass
         # --< TRACES >--
         mctrace = {}
-        for key in mcpost['mean'].keys():
-            if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
-                pieces = key.split('[')
-                key = f"{pieces[0]}__{pieces[1].strip(']')}"
-                pass
+        # GMR: Works only because the current pymc interpreter for the trace
+        # uses __i as an extension for subtensors
+        for key in prior_center:
             tracekeys = key.split('__')
             tracetable = trace.posterior[tracekeys[0]].values
             if len(tracekeys) > 1:
@@ -1632,8 +1626,10 @@ def hstwhitelight(
         if 'WFC3' in ext:
             if fixedinc:
                 inclination = priors[p]['inc']
+                pass
             else:
                 inclination = np.nanmedian(mctrace['inc'])
+                pass
             for i, v in enumerate(visits):
                 if v in ttv:
                     posttk = np.nanmedian(mctrace[f'dtk__{ttvindex}'])
@@ -1651,6 +1647,7 @@ def hstwhitelight(
                 )
                 if selftype in ['eclipse']:
                     postph[postph < 0] = postph[postph < 0] + 1e0
+                    pass
                 postsep.extend(postz)
                 postphase.append(postph)
                 postflatphase.extend(postph)
@@ -1675,7 +1672,6 @@ def hstwhitelight(
                     )
                 )
                 pass
-            pass
             modeltimes = []
             for times in time:
                 mintime = np.min(times)
@@ -1685,6 +1681,7 @@ def hstwhitelight(
                     mintime - 0.05, maxtime + 0.05, num=1000
                 )
                 modeltimes.extend(list(modeltimes_thisVisit))
+                pass
             postz, postph = tm.time2z(
                 np.array(modeltimes),
                 inclination,
@@ -1704,6 +1701,7 @@ def hstwhitelight(
                     g4=g4[0],
                 )
             )
+            pass
         else:
             omtk = ctxt.tmjd
             inclination = ctxt.orbp['inc']
@@ -1713,6 +1711,7 @@ def hstwhitelight(
                 )
                 if selftype in ['eclipse']:
                     postph[postph < 0] = postph[postph < 0] + 1e0
+                    pass
                 postsep.extend(postz)
                 postphase.append(postph)
                 postflatphase.extend(postph)
@@ -1750,18 +1749,25 @@ def hstwhitelight(
         out['data'][p]['allttvfltrs'] = allttvfltrs
         out['data'][p]['allfltrs'] = allfltrs
         out['data'][p]['allttvs'] = allttvs
-        out['STATUS'].append(True)
-
         # GMR: Something is happening with the ranges of this plot.
-        out['data'][p]['plot_corner'] = plot_corner(
-            mctrace,
-            prior_ranges,
-            p,
-            savetodisk=False,
-        )
-
+        # To be returned to service once everything calms down
+        # out['data'][p]['plot_corner'] = plot_corner(
+        #    mctrace,
+        #    prior_ranges,
+        #    p,
+        #    savetodisk=False,
+        # )
+        out['data'][p]['nodes'] = nodes
+        out['data'][p]['plot_lc'] = lightcurves(out['data'][p],
+                                                p,
+                                                mergesv=True,
+                                                verbose=verbose)
         out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
-        postpriors(mctrace, prior_center, verbose=verbose)
+        out['data'][p]['plot_pp'] = postpriors(mctrace,
+                                               prior_center,
+                                               nodes,
+                                               verbose=verbose)
+        out['STATUS'].append(True)
         pass
     return True
 
@@ -1934,6 +1940,7 @@ def whitelight(
             inc = priors[p]['inc']
             pass
         nodes = []
+        nodeshape = []
         fixedpars = {}
         fixedpars['inc'] = inc
         fixedpars['ttv'] = alltknot
@@ -1970,6 +1977,7 @@ def whitelight(
         #    oitcp_beta = (1 / tauvi) ** 0.5
         # PYMC --------------------------------------------------------------------------
         prior_ranges = {}
+        prior_center = {}
         with pymc.Model():
             rprs = pymc.TruncatedNormal(
                 'rprs',
@@ -1979,7 +1987,9 @@ def whitelight(
                 upper=2e0 * rpors,
             )
             prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+            prior_center['rprs'] = rpors
             nodes.append(rprs)
+            nodeshape.append(1)
             if parentprior:
                 allvslope = None
                 alloslope = None
@@ -2011,30 +2021,43 @@ def whitelight(
                     upper=3e-2 / trdura,
                     shape=shapevis,
                 )
-                alloslope = pymc.Normal(
-                    'oslope', mu=0e0, tau=tauvs, shape=shapevis
-                )
-                alloitcp = pymc.Normal(
-                    'oitcp', mu=1e0, tau=tauvi, shape=shapevis
-                )
                 for i in range(shapevis):
                     prior_ranges['vslope__' + str(i)] = [
-                        -0.03 / trdura,
-                        0.03 / trdura,
+                        -0.02 / trdura,
+                        0.02 / trdura,
                     ]
+                    prior_center['vslope__' + str(i)] = 0e0
+                    pass
+                nodes.extend(allvslope)
+                nodeshape.append(shapevis)
+
+                alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
+                for i in range(shapevis):
+                # GMR: Normal distribution with sigma = sqrt(tauvs**-1)
                     prior_ranges['oslope__' + str(i)] = [
                         -0.02 / trdura,
                         0.02 / trdura,
                     ]
+                    prior_center['oslope__' + str(i)] = 0e0
+                    pass
+                nodes.extend(alloslope)
+                nodeshape.append(shapevis)
+
+                alloitcp = pymc.Normal(
+                    'oitcp', mu=1e0, tau=tauvi, shape=shapevis
+                )
+                
+                for i in range(shapevis):
+                    # GMR: Normal distribution with sigma = sqrt(tauvi**-1)
                     prior_ranges['oitcp__' + str(i)] = [
                         1 - 2 * ootstd,
                         1 + 2 * ootstd,
                     ]
+                    prior_center['oitcp__' + str(i)] = 1e0
                     pass
+                nodes.extend(alloitcp)
+                nodeshape.append(shapevis)
                 pass
-            nodes.append(allvslope)
-            nodes.append(alloslope)
-            nodes.append(alloitcp)
             # CONTEXT UPDATE
             ctxtupdt(
                 orbp=priors[p],
@@ -2056,35 +2079,24 @@ def whitelight(
                 fixedpars=fixedpars,
                 mcmcdat=flatwhite[selectfit],
                 mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
-                nodeshape=[n.ndim + 1 for n in nodes],
+                nodeshape=nodeshape,
             )
             # FIXED ORBITAL SOLUTION
             TensorModel = TensorShell()
-
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
-
-            flatnodes = []
-            for n in nodes:
-                if n.ndim > 0:
-                    flatnodes.extend(n)
-                    pass
-                else:
-                    flatnodes.append(n)
-                    pass
-                pass
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
             _ = pymc.CustomDist(
                 "likelihood",
-                flatnodes,
+                nodes,
                 observed=flatwhite[selectfit],
                 logp=LogLH,
             )
-            log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
+            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
@@ -2096,11 +2108,7 @@ def whitelight(
             mcpost = pymc.stats.summary(trace)
             pass
         mctrace = {}
-        for key in mcpost['mean'].keys():
-            if len(key.split('[')) > 1:  # change PyMC3.8 key format to previous
-                pieces = key.split('[')
-                key = f"{pieces[0]}__{pieces[1].strip(']')}"
-                pass
+        for key in prior_center:
             tracekeys = key.split('__')
             tracetable = trace.posterior[tracekeys[0]].values
             if len(tracekeys) > 1:
@@ -2217,7 +2225,6 @@ def whitelight(
         out['data'][p]['mcpost'] = mcpost
         out['data'][p]['mctrace'] = mctrace
         out['data'][p]['tauwhite'] = tauwhite
-        out['STATUS'].append(True)
 
         newdata = []
         for d in out['data'][p]['allwhite']:
@@ -2242,13 +2249,23 @@ def whitelight(
         # certain targets the simulated data will be empty bc they're not gaussian
 
         # Something strange is going on with those plots
-        out['data'][p]['plot_corner'] = plot_corner(
-            mctrace,
-            prior_ranges,
-            p,
-            savetodisk=False,
-        )
+        # out['data'][p]['plot_corner'] = plot_corner(
+        #    mctrace,
+        #    prior_ranges,
+        #    p,
+        #    savetodisk=False,
+        # )
+        out['data'][p]['nodes'] = nodes
+        out['data'][p]['plot_lc'] = lightcurves(out['data'][p],
+                                                p,
+                                                mergesv=False,
+                                                verbose=verbose)
         out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
+        out['data'][p]['plot_pp'] = postpriors(mctrace,
+                                               prior_center,
+                                               nodes,
+                                               verbose=verbose)
+        out['STATUS'].append(True)
         pass
     return True
 
@@ -2645,7 +2662,7 @@ def nlldx(params, x, data=None, weights=None):
 
 # ----------- --------------------------------------------------------
 # -- INSTRUMENT MODEL -- ---------------------------------------------
-def timlc(vtime, orbits, vslope=0, vitcp=1e0, oslope=0, oitcp=1e0):
+def timlc(vtime, orbits, vslope=0e0, vitcp=1e0, oslope=0e0, oitcp=1e0):
     '''
     G. ROUDIER: WFC3 intrument model
     '''
@@ -3093,38 +3110,35 @@ def orbital(*whiteparams):
         midtransits = ctxt.fixedpars['ttv']
         if ctxt.gttv:
             midtransits = ctxt.gttv
+            pass
         pass
     elif ('inc' in ctxt.fixedpars) and 'ttv' not in ctxt.fixedpars:
         r, atk, avs, aos, aoi = whiteparams
         inclination = ctxt.fixedpars['inc']
-        # midtransits = atk.eval()
         midtransits = atk
         pass
     elif not ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, icln, avs, aos, aoi = whiteparams
-        # inclination = icln.eval()
         inclination = icln
         midtransits = ctxt.fixedpars['ttv']
         if ctxt.gttv:
             midtransits = ctxt.gttv
+            pass
         pass
     elif not (('inc' in ctxt.fixedpars) or ('ttv' in ctxt.fixedpars)):
         r, atk, icln, avs, aos, aoi = whiteparams
-        # inclination = icln.eval()
-        # midtransits = atk.eval()
         inclination = icln
         midtransits = atk
         pass
-    else:
+    else:  # Jump the building
         midtransits = None
         inclination = None
         r = None
         avs = None
         aos = None
         aoi = None
-        # Jump the building
+        log.error('!!! No parameter passed in orbital() !!!')
         pass
-
     out = []
     for i, v in enumerate(ctxt.visits):
         omt = ctxt.time[i]
@@ -3134,7 +3148,6 @@ def orbital(*whiteparams):
         else:
             omtk = ctxt.tmjd
             pass
-
         omz, _pmph = tm.time2z(
             omt,
             inclination,
