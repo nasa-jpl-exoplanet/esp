@@ -1881,7 +1881,6 @@ def time2z(
     ecc,
     tperi=None,
     epsilon=1e-10,
-    tensor=True,
 ):
     '''
     G. ROUDIER: Time samples in [Days] to separation in [R*]
@@ -1896,7 +1895,6 @@ def time2z(
         tperi,
         epsilon,
         True,
-        tensor=tensor,
     )
 
 
