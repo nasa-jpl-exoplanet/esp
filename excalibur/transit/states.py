@@ -25,7 +25,6 @@ from excalibur.util.svs import ExcaliburSV
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import cauchy, norm, t
-from scipy.interpolate import interp1d
 
 
 # ------------- ------------------------------------------------------
@@ -85,7 +84,6 @@ class WhiteLightSV(ExcaliburSV):
         '''view ds'''
         if self['STATUS'][-1]:
             if 'HST' in self.name():
-                mergesv = bool(self.name() == 'HST')
                 for p in self['data'].keys():
                     # include whitelight corner plot for this planet, if available
                     #  (this actually shows all saved SVs that start with 'plot')

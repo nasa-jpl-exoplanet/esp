@@ -22,7 +22,11 @@ from excalibur.util.plotters import (
     plot_residual_fft,
     add_scale_height_labels,
 )
-from excalibur.transit.plotters import plot_corner, simplecorner, postpriors, lightcurves
+from excalibur.transit.plotters import (
+    simplecorner,
+    postpriors,
+    lightcurves,
+)
 import copy
 import logging
 import random
@@ -47,9 +51,11 @@ try:
     import astropy.constants
     import astropy.units
     from astropy.modeling.models import BlackBody
+
     pass
 except ImportError:
     from astropy.modeling.blackbody import blackbody_lambda as BlackBody
+
     pass
 
 from collections import namedtuple
@@ -204,7 +210,7 @@ def LogLikelihood(inputs):
     '''
     newnodes = []
     newindex = 0
-    for index, ns in enumerate(ctxt.nodeshape):
+    for ns in ctxt.nodeshape:
         if ns > 1:
             newnodes.append(inputs[newindex : newindex + ns])
             pass
@@ -1304,7 +1310,7 @@ def hstwhitelight(
         allerrwhite = []
         flatminww = []
         flatmaxww = []
-        
+
         for index, _v in enumerate(visits):
             white = []
             errwhite = []
@@ -1572,11 +1578,13 @@ def hstwhitelight(
             )
             # --< MODEL >--
             TensorModel = TensorShell()
+
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
+
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
             _ = pymc.CustomDist(
@@ -1758,15 +1766,13 @@ def hstwhitelight(
         #    savetodisk=False,
         # )
         out['data'][p]['nodes'] = nodes
-        out['data'][p]['plot_lc'] = lightcurves(out['data'][p],
-                                                p,
-                                                mergesv=True,
-                                                verbose=verbose)
+        out['data'][p]['plot_lc'] = lightcurves(
+            out['data'][p], p, mergesv=True, verbose=verbose
+        )
         out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
-        out['data'][p]['plot_pp'] = postpriors(mctrace,
-                                               prior_center,
-                                               nodes,
-                                               verbose=verbose)
+        out['data'][p]['plot_pp'] = postpriors(
+            mctrace, prior_center, nodes, verbose=verbose
+        )
         out['STATUS'].append(True)
         pass
     return True
@@ -2031,9 +2037,11 @@ def whitelight(
                 nodes.extend(allvslope)
                 nodeshape.append(shapevis)
 
-                alloslope = pymc.Normal('oslope', mu=0e0, tau=tauvs, shape=shapevis)
+                alloslope = pymc.Normal(
+                    'oslope', mu=0e0, tau=tauvs, shape=shapevis
+                )
                 for i in range(shapevis):
-                # GMR: Normal distribution with sigma = sqrt(tauvs**-1)
+                    # GMR: Normal distribution with sigma = sqrt(tauvs**-1)
                     prior_ranges['oslope__' + str(i)] = [
                         -0.02 / trdura,
                         0.02 / trdura,
@@ -2046,7 +2054,7 @@ def whitelight(
                 alloitcp = pymc.Normal(
                     'oitcp', mu=1e0, tau=tauvi, shape=shapevis
                 )
-                
+
                 for i in range(shapevis):
                     # GMR: Normal distribution with sigma = sqrt(tauvi**-1)
                     prior_ranges['oitcp__' + str(i)] = [
@@ -2083,11 +2091,13 @@ def whitelight(
             )
             # FIXED ORBITAL SOLUTION
             TensorModel = TensorShell()
+
             def LogLH(_, nodes):
                 '''
                 GMR: Fill in model tensor shell
                 '''
                 return TensorModel(nodes)
+
             # GMR: CustomDist will only take a list that has consistent dims,
             # hence the use of flatnodes
             _ = pymc.CustomDist(
@@ -2256,15 +2266,13 @@ def whitelight(
         #    savetodisk=False,
         # )
         out['data'][p]['nodes'] = nodes
-        out['data'][p]['plot_lc'] = lightcurves(out['data'][p],
-                                                p,
-                                                mergesv=False,
-                                                verbose=verbose)
+        out['data'][p]['plot_lc'] = lightcurves(
+            out['data'][p], p, mergesv=False, verbose=verbose
+        )
         out['data'][p]['plot_corner'] = simplecorner(mctrace, verbose=verbose)
-        out['data'][p]['plot_pp'] = postpriors(mctrace,
-                                               prior_center,
-                                               nodes,
-                                               verbose=verbose)
+        out['data'][p]['plot_pp'] = postpriors(
+            mctrace, prior_center, nodes, verbose=verbose
+        )
         out['STATUS'].append(True)
         pass
     return True

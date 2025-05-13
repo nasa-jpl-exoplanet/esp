@@ -127,8 +127,8 @@ def simplecorner(mctrace, verbose=False):
     GMR: Simple corner plot
     '''
     Medians = [float(np.median(mctrace[k])) for k in mctrace]
-    Lowerr = [float(np.percentile(mctrace[k], 50 - 95.4 / 2)) for k in mctrace]
-    Uperr = [float(np.percentile(mctrace[k], 50 + 95.4 / 2)) for k in mctrace]
+    # Lowerr = [float(np.percentile(mctrace[k], 50 - 95.4 / 2)) for k in mctrace]
+    # Uperr = [float(np.percentile(mctrace[k], 50 + 95.4 / 2)) for k in mctrace]
     LowBound = [
         float(np.percentile(mctrace[k], 50 - 99.7 / 2)) for k in mctrace
     ]
@@ -161,9 +161,7 @@ def postpriors(mctrace, prior_center, nodes, verbose=False):
     '''
     Medians = [float(np.median(mctrace[k])) for k in mctrace]
     Figure, Axes = plt.subplots(
-        nrows=len(mctrace),
-        ncols=2,
-        figsize=(4 * 2, 3 * len(mctrace))
+        nrows=len(mctrace), ncols=2, figsize=(4 * 2, 3 * len(mctrace))
     )
     for index, k in enumerate(mctrace):
         Axes[index, 0].set_title(k)
@@ -171,10 +169,11 @@ def postpriors(mctrace, prior_center, nodes, verbose=False):
         Axes[index, 0].axhline(Medians[index], color='k')
         Axes[index, 0].axhline(prior_center[k], ls='--', color='lightgray')
         Axes[index, 1].hist(mctrace[k].flatten())
-        Axes[index, 1].hist(pymc.draw(nodes[index], draws=len(mctrace[k].flatten())),
-                            color='lightgray',
-                            alpha=0.7,
-                            )
+        Axes[index, 1].hist(
+            pymc.draw(nodes[index], draws=len(mctrace[k].flatten())),
+            color='lightgray',
+            alpha=0.7,
+        )
         pass
     out = save_plot_tosv(Figure)
     if verbose:
@@ -187,159 +186,153 @@ def postpriors(mctrace, prior_center, nodes, verbose=False):
 
 
 def lightcurves(SvDataP, p, mergesv=False, verbose=False):
-     visits = SvDataP['visits']
-     # phase,allwhite is the data before shifting
-     phase = SvDataP['phase']
-     allwhite = SvDataP['allwhite']
-     # postphase,allwhite/postim is the data after shifting
-     postphase = SvDataP['postphase']
-     postim = SvDataP['postim']
-     # phase,postlc is the model
-     postflatphase = np.array(SvDataP['postflatphase'])
-     postlc = np.array(SvDataP['postlc'])
-     # myfig = plt.figure(figsize=(10, 6))
-     # plt.title('Planet '+p, fontsize=14)
-     myfig, (ax1, ax2) = plt.subplots(
-         2,
-         1,
-         figsize=(9, 7),
-         sharex=True,
-         gridspec_kw={'height_ratios': [3, 1]},
-     )
-     myfig.subplots_adjust(hspace=0.03, right=0.8)
-     ax1.set_title('Planet ' + p, fontsize=16)
-     # ax1.set_xlabel('Orbital Phase', fontsize=14)
-     ax1.set_ylabel(
-         'Normalized Post-Whitelight Curve', fontsize=14
-     )
-     for index, v in enumerate(visits):
-         # plot the normalized/shifted data
-         if mergesv:
-             vlabel = SvDataP['allfltrs'][index]
-         else:
-             vlabel = 'visit ' + str(v)
-             pass
-         ax1.plot(
-             np.array(postphase[index]),
-             np.array(allwhite[index]) / np.array(postim[index]),
-             'o',
-             zorder=3,
-             label=vlabel,
-         )
-         # plot the pre-correction data
-         if index == len(visits) - 1:
-             ax1.plot(
-                 np.array(phase[index]),
-                 np.array(allwhite[index]),
-                 'k+',
-                 zorder=2,
-                 label='pre-correction',
-             )
-         else:
-             ax1.plot(
-                 np.array(phase[index]),
-                 np.array(allwhite[index]),
-                 'k+',
-                 zorder=2,
-             )
-             pass
-         # add a lower panel showing the data-model residuals
-         model_interpolator = interp1d(
-             postflatphase[np.argsort(postflatphase)],
-             postlc[np.argsort(postflatphase)],
-             kind='linear',
-             fill_value='extrapolate',
-         )
-         model_at_observed_time = model_interpolator(
-             np.array(postphase[index])
-         )
-         residuals = (
-             np.array(allwhite[index]) / np.array(postim[index])
-             - model_at_observed_time
-         )
+    visits = SvDataP['visits']
+    # phase,allwhite is the data before shifting
+    phase = SvDataP['phase']
+    allwhite = SvDataP['allwhite']
+    # postphase,allwhite/postim is the data after shifting
+    postphase = SvDataP['postphase']
+    postim = SvDataP['postim']
+    # phase,postlc is the model
+    postflatphase = np.array(SvDataP['postflatphase'])
+    postlc = np.array(SvDataP['postlc'])
+    # myfig = plt.figure(figsize=(10, 6))
+    # plt.title('Planet '+p, fontsize=14)
+    myfig, (ax1, ax2) = plt.subplots(
+        2,
+        1,
+        figsize=(9, 7),
+        sharex=True,
+        gridspec_kw={'height_ratios': [3, 1]},
+    )
+    myfig.subplots_adjust(hspace=0.03, right=0.8)
+    ax1.set_title('Planet ' + p, fontsize=16)
+    # ax1.set_xlabel('Orbital Phase', fontsize=14)
+    ax1.set_ylabel('Normalized Post-Whitelight Curve', fontsize=14)
+    for index, v in enumerate(visits):
+        # plot the normalized/shifted data
+        if mergesv:
+            vlabel = SvDataP['allfltrs'][index]
+        else:
+            vlabel = 'visit ' + str(v)
+            pass
+        ax1.plot(
+            np.array(postphase[index]),
+            np.array(allwhite[index]) / np.array(postim[index]),
+            'o',
+            zorder=3,
+            label=vlabel,
+        )
+        # plot the pre-correction data
+        if index == len(visits) - 1:
+            ax1.plot(
+                np.array(phase[index]),
+                np.array(allwhite[index]),
+                'k+',
+                zorder=2,
+                label='pre-correction',
+            )
+        else:
+            ax1.plot(
+                np.array(phase[index]),
+                np.array(allwhite[index]),
+                'k+',
+                zorder=2,
+            )
+            pass
+        # add a lower panel showing the data-model residuals
+        model_interpolator = interp1d(
+            postflatphase[np.argsort(postflatphase)],
+            postlc[np.argsort(postflatphase)],
+            kind='linear',
+            fill_value='extrapolate',
+        )
+        model_at_observed_time = model_interpolator(np.array(postphase[index]))
+        residuals = (
+            np.array(allwhite[index]) / np.array(postim[index])
+            - model_at_observed_time
+        )
 
-         ax2.plot(
-             np.array(postphase[index]),
-             residuals,
-             'o',
-             color='black',
-             markerfacecolor='None',
-         )
-         ax2.axhline(
-             y=0, color='black', linestyle='dashed', linewidth=1
-         )
-         ax2.set_xlabel('Orbital Phase', fontsize=14)
-         ax2.set_ylabel('Residuals', fontsize=14)
-         pass
+        ax2.plot(
+            np.array(postphase[index]),
+            residuals,
+            'o',
+            color='black',
+            markerfacecolor='None',
+        )
+        ax2.axhline(y=0, color='black', linestyle='dashed', linewidth=1)
+        ax2.set_xlabel('Orbital Phase', fontsize=14)
+        ax2.set_ylabel('Residuals', fontsize=14)
+        pass
 
-     xdatarange = ax1.get_xlim()
-     # use full model (not just at some points) if available
-     if 'modellc' in SvDataP.keys():
-         modelphase = np.array(SvDataP['modelphase'])
-         modellc = np.array(SvDataP['modellc'])
-         # the points are ordered by time, not by phase
-         #  so sorting is needed for multi-visit observations
-         # otherwise you get weird wrap-around in the line plots
-         ax1.plot(
-             modelphase[np.argsort(modelphase)],
-             modellc[np.argsort(modelphase)],
-             '-',
-             c='k',
-             marker='None',
-             zorder=1,
-             label='model',
-         )
-         # model phases only go from -0.5 to 0.5 (not good for eclipse)
-         # plot the model line a second time, but shifting the phases over by 1
-         ax1.plot(
-             modelphase[np.argsort(modelphase)] + 1,
-             modellc[np.argsort(modelphase)],
-             '-',
-             c='k',
-             marker='None',
-             zorder=1,
-         )
-     else:
-         ax1.plot(
-             postflatphase, postlc, '^', zorder=1, label='model'
-         )
-         # '^', c='green', zorder=1, label='model')
-         pass
-     ax1.set_xlim(xdatarange)
-     if len(visits) > 14:
-         ncol = 2
-         pass
-     else:
-         ncol = 1
-         if mergesv:
-             ax1.legend(
-                 loc='best',
-                 ncol=ncol,
-                 mode='expand',
-                 numpoints=1,
-                 borderaxespad=0.0,
-                 frameon=False,
-             )
-             # myfig.tight_layout()
-         else:
-             ax1.legend(
-                 bbox_to_anchor=(1 + 0.1 * (ncol - 0.5), 0.5),
-                 loc=5,
-                 ncol=ncol,
-                 mode='expand',
-                 numpoints=1,
-                 borderaxespad=0.0,
-                 frameon=False,
-             )
-             # myfig.tight_layout(rect=[0,0,(1 - 0.1*ncol),1])
-             pass
-         pass
-     out = save_plot_tosv(myfig)
-     if verbose:
-         plt.show()
-         pass
-     else:
-         plt.close()
-         pass
-     return out
+    xdatarange = ax1.get_xlim()
+    # use full model (not just at some points) if available
+    if 'modellc' in SvDataP.keys():
+        modelphase = np.array(SvDataP['modelphase'])
+        modellc = np.array(SvDataP['modellc'])
+        # the points are ordered by time, not by phase
+        #  so sorting is needed for multi-visit observations
+        # otherwise you get weird wrap-around in the line plots
+        ax1.plot(
+            modelphase[np.argsort(modelphase)],
+            modellc[np.argsort(modelphase)],
+            '-',
+            c='k',
+            marker='None',
+            zorder=1,
+            label='model',
+        )
+        # model phases only go from -0.5 to 0.5 (not good for eclipse)
+        # plot the model line a second time, but shifting the phases over by 1
+        ax1.plot(
+            modelphase[np.argsort(modelphase)] + 1,
+            modellc[np.argsort(modelphase)],
+            '-',
+            c='k',
+            marker='None',
+            zorder=1,
+        )
+    else:
+        ax1.plot(postflatphase, postlc, '^', zorder=1, label='model')
+        # '^', c='green', zorder=1, label='model')
+        pass
+    ax1.set_xlim(xdatarange)
+    if len(visits) > 14:
+        ncol = 2
+        pass
+    else:
+        ncol = 1
+        if mergesv:
+            ax1.legend(
+                loc='best',
+                ncol=ncol,
+                mode='expand',
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=False,
+            )
+            # myfig.tight_layout()
+        else:
+            ax1.legend(
+                bbox_to_anchor=(1 + 0.1 * (ncol - 0.5), 0.5),
+                loc=5,
+                ncol=ncol,
+                mode='expand',
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=False,
+            )
+            # myfig.tight_layout(rect=[0,0,(1 - 0.1*ncol),1])
+            pass
+        pass
+    out = save_plot_tosv(myfig)
+    if verbose:
+        plt.show()
+        pass
+    else:
+        plt.close()
+        pass
+    return out
+
+
 # --------------------------------------------------------------------
