@@ -17,7 +17,7 @@ def read_requirements():
     return requirements
 
 
-data_files_names = ["README.md", "LICENSE.txt"]
+data_files_names = ["docs/README.md", "LICENSE.txt"]
 data_files_locations = [
     ('.', [f]) if os.path.exists(f) else ('.', ["../" + f])
     for f in data_files_names
