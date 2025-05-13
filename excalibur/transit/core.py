@@ -1765,7 +1765,6 @@ def hstwhitelight(
         #    p,
         #    savetodisk=False,
         # )
-        out['data'][p]['nodes'] = nodes
         out['data'][p]['plot_lc'] = lightcurves(
             out['data'][p], p, mergesv=True, verbose=verbose
         )
@@ -2265,7 +2264,6 @@ def whitelight(
         #    p,
         #    savetodisk=False,
         # )
-        out['data'][p]['nodes'] = nodes
         out['data'][p]['plot_lc'] = lightcurves(
             out['data'][p], p, mergesv=False, verbose=verbose
         )
