@@ -13,7 +13,7 @@ from pytensor import tensor
 
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
-def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
+def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     '''
     G. ROUDIER: BURROWS AND SHARP 1998 + ANDERS & GREVESSE 1989
     '''
