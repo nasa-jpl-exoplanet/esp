@@ -91,7 +91,10 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     N2Or = min(N2Or, 10.0)
     pH2 = nH2 * p  # array
     # strange. this np.exp call actually works fine it seems. no need to switch to tensor.exp?
-    K1 = np.exp((a1/temp + b1 + c1*temp + d1*temp**2 + e1*temp**3)/(RcalpmolpK*temp))
+    K1 = np.exp(
+        (a1 / temp + b1 + c1 * temp + d1 * temp**2 + e1 * temp**3)
+        / (RcalpmolpK * temp)
+    )
     # print('K1',K1)
     # K1 = tensor.exp(
     #    (a1 / temp + b1 + c1 * temp + d1 * temp**2 + e1 * temp**3)
@@ -114,12 +117,13 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     # print('p',p)  # array
     # <--
     # GMR: We should be prepared for T-P profile change that later
-    nCO = np.mean(BCO*pH2/p)
+    nCO = np.mean(BCO * pH2 / p)
     # -->
     # nCO = BCO * np.mean(pH2/p)    # pH2 and p are array  BCO is tensor
-    #nCO = tensor.mean(BCO * pH2 / p)
+    # nCO = tensor.mean(BCO * pH2 / p)
     # print('nCO',nCO.eval())
-    if nCO <= 0: nCO = 1e-16      # tensor.  needs tensor ifthen
+    if nCO <= 0:
+        nCO = 1e-16  # tensor.  needs tensor ifthen
     # print('nCO',nCO.eval())
     # nCO = ifelse(nCO <= 0, 1e-16, nCO)
     # nCO = tensor.maximum(nCO, 1e-16)
@@ -128,10 +132,12 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     # BCO tensor; p,pH2 array;  X2Hr,nH scalar
     # nCH4 = tensor.mean((2.0 * (10.0**X2Hr) / nH * solar['nC'] - BCO) * pH2 / p)
     # nH2O = tensor.mean((2.0 * (10.0**X2Hr) / nH * solar['nO'] - BCO) * pH2 / p)
-    nCH4 = np.mean((2.*(10.**X2Hr)/nH*solar['nC'] - BCO)*(pH2/p))
-    nH2O = np.mean((2.*(10.**X2Hr)/nH*solar['nO'] - BCO)*(pH2/p))
-    if nCH4 <= 0: nH2O = 1e-16      # tensor.  needs tensor ifthen
-    if nH2O <= 0: nH2O = 1e-16      # tensor.  needs tensor ifthen
+    nCH4 = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nC'] - BCO) * (pH2 / p))
+    nH2O = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nO'] - BCO) * (pH2 / p))
+    if nCH4 <= 0:
+        nH2O = 1e-16  # tensor.  needs tensor ifthen
+    if nH2O <= 0:
+        nH2O = 1e-16  # tensor.  needs tensor ifthen
     # nCH4 = ifelse(nCH4 <= 0, 1e-16, nCH4)
     # nCH4 = ifelse(tensor.lte(nCH4, 0), 1e-16, nCH4)  # lte doesnt exist
     # I'm getting these errors with the if-thens
@@ -150,7 +156,10 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     c2 = 58.5878
     d2 = -7.8284e-4
     e2 = 4.729048e-8
-    K2 = np.exp((a2/temp + b2 + c2*temp + d2*temp**2 + e2*temp**3)/(RcalpmolpK*temp))
+    K2 = np.exp(
+        (a2 / temp + b2 + c2 * temp + d2 * temp**2 + e2 * temp**3)
+        / (RcalpmolpK * temp)
+    )
     # K2 = tensor.exp(
     #    (a2 / temp + b2 + c2 * temp + d2 * temp**2 + e2 * temp**3)
     #    / (RcalpmolpK * temp)
@@ -168,8 +177,9 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     BN2 = AN + AH2 - np.sqrt(np.abs((AN + AH2) ** 2.0 - (AN) ** 2.0))
     BNH3 = 2.0 * (AN - BN2)
     # also I changed mean to nanmean here, though this is no longer necessary
-    nN2 = np.nanmean(BN2*pH2/p)
-    if nN2 <= 0: nN2 = 1e-16
+    nN2 = np.nanmean(BN2 * pH2 / p)
+    if nN2 <= 0:
+        nN2 = 1e-16
     # nN2 = BN2*np.nanmean(pH2/p)
     # nN2 = tensor.mean(BN2 * pH2 / p)
     # print('nN2',nN2.eval())
@@ -178,21 +188,23 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, verbose=False):
     # nN2 = tensor.maximum(nN2, 1e-16)
     # if verbose:
     #    print('nN2', nN2.eval())
-    nNH3 = np.nanmean(BNH3*pH2/p)
+    nNH3 = np.nanmean(BNH3 * pH2 / p)
     # nNH3 = BNH3*np.nanmean(pH2/p)
     # nNH3 = tensor.mean(BNH3 * pH2 / p)
     # print('nNH3',nNH3.eval())
-    if nNH3 <= 0: nNH3 = 1e-16
+    if nNH3 <= 0:
+        nNH3 = 1e-16
     # nNH3 = ifelse(nNH3 <= 0, 1e-16, nNH3)
     # nNH3 = tensor.maximum(nNH3, 1e-16)
     # if verbose:
     #    print('nNH3', nNH3.eval())
-    mixratio = {'H2O':np.log10(nH2O)+6.,
-                'CH4':np.log10(nCH4)+6.,
-                'NH3':np.log10(nNH3)+6.,
-                'N2':np.log10(nN2)+6.,
-                'CO':np.log10(nCO)+6.,
-                }
+    mixratio = {
+        'H2O': np.log10(nH2O) + 6.0,
+        'CH4': np.log10(nCH4) + 6.0,
+        'NH3': np.log10(nNH3) + 6.0,
+        'N2': np.log10(nN2) + 6.0,
+        'CO': np.log10(nCO) + 6.0,
+    }
     # mixratio = {
     #    'H2O': tensor.log10(nH2O) + 6.0,
     #    'CH4': tensor.log10(nCH4) + 6.0,

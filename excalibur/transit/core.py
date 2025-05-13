@@ -137,36 +137,36 @@ ctxt = CONTEXT(
 
 
 def ctxtupdt(
-        alt=None,
-        ald=None,
-        allz=None,
-        orbp=None,
-        commonoim=None,
-        ecc=None,
-        g1=None,
-        g2=None,
-        g3=None,
-        g4=None,
-        ootoindex=None,
-        ootorbits=None,
-        orbits=None,
-        period=None,
-        selectfit=None,
-        smaors=None,
-        time=None,
-        tmjd=None,
-        ttv=None,
-        valid=None,
-        visits=None,
-        aos=None,
-        avi=None,
-        ginc=None,
-        gttv=None,
-        fixedpars=None,
-        mcmcdat=None,
-        mcmcsig=None,
-        nodeshape=None,
-        spec=None,
+    alt=None,
+    ald=None,
+    allz=None,
+    orbp=None,
+    commonoim=None,
+    ecc=None,
+    g1=None,
+    g2=None,
+    g3=None,
+    g4=None,
+    ootoindex=None,
+    ootorbits=None,
+    orbits=None,
+    period=None,
+    selectfit=None,
+    smaors=None,
+    time=None,
+    tmjd=None,
+    ttv=None,
+    valid=None,
+    visits=None,
+    aos=None,
+    avi=None,
+    ginc=None,
+    gttv=None,
+    fixedpars=None,
+    mcmcdat=None,
+    mcmcsig=None,
+    nodeshape=None,
+    spec=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -2930,7 +2930,11 @@ def spectrum(
                 mixratio, protosolar=False, fH2=fH2, fHe=fHe
             )
             mmw = mmw * cst.m_p  # [kg]
-            Hs = cst.Boltzmann * eqtemp / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))  # [m]
+            Hs = (
+                cst.Boltzmann
+                * eqtemp
+                / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))
+            )  # [m]
             Hs = Hs / (priors['R*'] * sscmks['Rsun'])
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
@@ -2939,7 +2943,7 @@ def spectrum(
             prwidth = 2e0 * Hs
             prcenter = whiterprs
             # PYMC
-            shapevis = max(2, len(visits))            
+            shapevis = max(2, len(visits))
             nodes = []
             nodeshape = []
             prior_ranges = {}
@@ -3009,17 +3013,20 @@ def spectrum(
                     valid=valid,
                     visits=visits,
                     mcmcdat=data[valid],
-                    mcmcsig=1e0 / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
+                    mcmcsig=1e0
+                    / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
                 # MODEL
                 TensorModel = TensorShell()
+
                 def LogLH(_, nodes):
                     '''
                     GMR: Fill in model tensor shell
                     '''
                     return TensorModel(nodes)
+
                 _ = pymc.CustomDist(
                     "likelihood",
                     nodes,
@@ -3042,7 +3049,11 @@ def spectrum(
                 # save MCMC samples in SV
                 mctrace = {}
                 mcests = {}
-                for key in prior_center:  # mctrace and nodes are not ordered the same way
+                for (
+                    key
+                ) in (
+                    prior_center
+                ):  # mctrace and nodes are not ordered the same way
                     tracekeys = key.split('__')
                     tracetable = trace.posterior[tracekeys[0]].values
                     if len(tracekeys) > 1:
