@@ -98,6 +98,7 @@ ctxtglobals = [
     'mcmcdat',
     'mcmcsig',
     'nodeshape',
+    'spec',
 ]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
@@ -131,39 +132,41 @@ ctxt = CONTEXT(
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
+    spec=None,
 )
 
 
 def ctxtupdt(
-    alt=None,
-    ald=None,
-    allz=None,
-    orbp=None,
-    commonoim=None,
-    ecc=None,
-    g1=None,
-    g2=None,
-    g3=None,
-    g4=None,
-    ootoindex=None,
-    ootorbits=None,
-    orbits=None,
-    period=None,
-    selectfit=None,
-    smaors=None,
-    time=None,
-    tmjd=None,
-    ttv=None,
-    valid=None,
-    visits=None,
-    aos=None,
-    avi=None,
-    ginc=None,
-    gttv=None,
-    fixedpars=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
+        alt=None,
+        ald=None,
+        allz=None,
+        orbp=None,
+        commonoim=None,
+        ecc=None,
+        g1=None,
+        g2=None,
+        g3=None,
+        g4=None,
+        ootoindex=None,
+        ootorbits=None,
+        orbits=None,
+        period=None,
+        selectfit=None,
+        smaors=None,
+        time=None,
+        tmjd=None,
+        ttv=None,
+        valid=None,
+        visits=None,
+        aos=None,
+        avi=None,
+        ginc=None,
+        gttv=None,
+        fixedpars=None,
+        mcmcdat=None,
+        mcmcsig=None,
+        nodeshape=None,
+        spec=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -198,6 +201,7 @@ def ctxtupdt(
         mcmcdat=mcmcdat,
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
+        spec=spec,
     )
     return
 
@@ -219,7 +223,12 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
-    ForwardModel = orbital(*newnodes)
+    if ctxt.spec:
+        ForwardModel = lcmodel(*newnodes)
+        pass
+    else:
+        ForwardModel = orbital(*newnodes)
+        pass
     Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0 - Norm
     return out
@@ -2739,7 +2748,6 @@ def spectrum(
     '''
     G. ROUDIER: Exoplanet spectrum recovery
     '''
-    exospec = False
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
     planetloop = [p for p in nrm['data'].keys() if nrm['data'][p]['visits']]
@@ -2908,7 +2916,6 @@ def spectrum(
                 plt.xlabel('Orbital phase')
                 plt.show()
                 pass
-            # PRIORS ---------------------------------------------------------------------
             sscmks = syscore.ssconstants(mks=True)
             eqtemp = priors['T*'] * np.sqrt(
                 priors['R*'] * sscmks['Rsun/AU'] / (2.0 * priors[p]['sma'])
@@ -2923,50 +2930,29 @@ def spectrum(
                 mixratio, protosolar=False, fH2=fH2, fHe=fHe
             )
             mmw = mmw * cst.m_p  # [kg]
-            Hs = (
-                cst.Boltzmann
-                * eqtemp
-                / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))
-            ).eval()  # [m]
+            Hs = cst.Boltzmann * eqtemp / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))  # [m]
             Hs = Hs / (priors['R*'] * sscmks['Rsun'])
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
             tauvi = 1e0 / (ootstd**2)
-            nodes = []
             tauwbdata = 1e0 / dnoise**2
-            # PRIOR WIDTH ----------------------------------------------------------------
-            # noot = np.sum(abs(allz) > (1e0 + whiterprs))
-            # nit = allz.size - noot
-            # Noise propagation forecast on transit depth
-            # propphn = np.nanmedian(dnoise)*(1e0 - whiterprs**2)
-            # *np.sqrt(1e0/nit + 1e0/noot)
-            # dirtypn = np.sqrt(propphn + whiterprs**2) - whiterprs
             prwidth = 2e0 * Hs
-            # PRIOR CENTER ---------------------------------------------------------------
             prcenter = whiterprs
-            # UPDATE GLOBALS -------------------------------------------------------------
-            shapevis = max(2, len(visits))
-            ctxtupdt(
-                allz=allz,
-                g1=g1,
-                g2=g2,
-                g3=g3,
-                g4=g4,
-                orbits=orbits,
-                smaors=smaors,
-                time=time,
-                valid=valid,
-                visits=visits,
-            )
-            # PYMC ----------------------------------------------------------------------
+            # PYMC
+            shapevis = max(2, len(visits))            
+            nodes = []
+            nodeshape = []
             prior_ranges = {}
+            prior_center = {}
             with pymc.Model():
+                # RP/RS
                 if startflag:
                     lowstart = whiterprs - 5e0 * Hs
-                    lowstart = tnsr.max(lowstart, 0)
+                    lowstart = np.max(lowstart, 0)
                     upstart = whiterprs + 5e0 * Hs
                     rprs = pymc.Uniform('rprs', lower=lowstart, upper=upstart)
                     prior_ranges['rprs'] = [lowstart, upstart]
+                    prior_center['rprs'] = (lowstart + upstart) / 2e0
                     pass
                 else:
                     rprs = pymc.Normal(
@@ -2976,6 +2962,11 @@ def spectrum(
                         prcenter - 2 * prwidth,
                         prcenter + 2 * prwidth,
                     ]
+                    prior_center['rprs'] = prcenter
+                    pass
+                nodes.append(rprs)
+                nodeshape.append(1)
+                # SYSTEMATICS
                 allvslope = pymc.TruncatedNormal(
                     'vslope',
                     mu=0e0,
@@ -2984,22 +2975,58 @@ def spectrum(
                     upper=3e-2 / trdura,
                     shape=shapevis,
                 )
+                for i in range(shapevis):
+                    prior_center['vslope__' + str(i)] = 0
+                    pass
+                nodes.extend(allvslope)
+                nodeshape.append(shapevis)
                 alloslope = pymc.Normal(
                     'oslope', mu=0, tau=tauvs, shape=shapevis
                 )
+                for i in range(shapevis):
+                    prior_center['oslope__' + str(i)] = 0
+                    pass
+                nodes.extend(alloslope)
+                nodeshape.append(shapevis)
                 alloitcp = pymc.Normal(
                     'oitcp', mu=1e0, tau=tauvi, shape=shapevis
                 )
-                nodes.append(rprs)
-                nodes.append(allvslope)
-                nodes.append(alloslope)
-                nodes.append(alloitcp)
-                _ = pymc.Normal(
-                    'wbdata',
-                    mu=lcmodel(*nodes),
-                    tau=np.nanmedian(tauwbdata[valid]),
-                    observed=data[valid],
+                for i in range(shapevis):
+                    prior_center['oitcp__' + str(i)] = 0
+                    pass
+                nodes.extend(alloitcp)
+                nodeshape.append(shapevis)
+                # UPDATE GLOBALS
+                ctxtupdt(
+                    allz=allz,
+                    g1=g1,
+                    g2=g2,
+                    g3=g3,
+                    g4=g4,
+                    orbits=orbits,
+                    smaors=smaors,
+                    time=time,
+                    valid=valid,
+                    visits=visits,
+                    mcmcdat=data[valid],
+                    mcmcsig=1e0 / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
+                    nodeshape=nodeshape,
+                    spec=True,
                 )
+                # MODEL
+                TensorModel = TensorShell()
+                def LogLH(_, nodes):
+                    '''
+                    GMR: Fill in model tensor shell
+                    '''
+                    return TensorModel(nodes)
+                _ = pymc.CustomDist(
+                    "likelihood",
+                    nodes,
+                    observed=data[valid],
+                    logp=LogLH,
+                )
+                # SAMPLING
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
@@ -3015,21 +3042,16 @@ def spectrum(
                 # save MCMC samples in SV
                 mctrace = {}
                 mcests = {}
-                for key in mcpost['mean'].keys():
-                    if (
-                        len(key.split('[')) > 1
-                    ):  # change PyMC3.8 key format to previous
-                        pieces = key.split('[')
-                        key = f"{pieces[0]}__{pieces[1].strip(']')}"
+                for key in prior_center:  # mctrace and nodes are not ordered the same way
                     tracekeys = key.split('__')
+                    tracetable = trace.posterior[tracekeys[0]].values
                     if len(tracekeys) > 1:
-                        mctrace[key] = trace.posterior[tracekeys[0]][
-                            :, int(tracekeys[1])
-                        ]
+                        tracetable = np.transpose(tracetable)[int(tracekeys[1])]
+                        mctrace[key] = np.transpose(tracetable)
                         mcests[key] = np.nanmedian(mctrace[key])
                         pass
                     else:
-                        mctrace[key] = trace.posterior[tracekeys[0]]
+                        mctrace[key] = tracetable
                         mcests[key] = np.nanmedian(mctrace[key])
                     pass
                 # save rprs
@@ -3075,6 +3097,7 @@ def spectrum(
                 # Spectrum outlier rejection + inpaint with np.nan
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
                     clspvl = np.nan
+                    pass
                 out['data'][p]['ES'].append(clspvl)
                 out['data'][p]['ESerr'].append(
                     np.nanstd(trace.posterior['rprs'])
@@ -3099,9 +3122,8 @@ def spectrum(
             temparr = np.array(out['data'][p][keytoord])
             out['data'][p][keytoord] = temparr[orderme]
             pass
-        exospec = True
         out['STATUS'].append(True)
-    return exospec
+    return True
 
 
 # -------------- -----------------------------------------------------
@@ -3229,220 +3251,11 @@ def binnagem(t, nbins):
 
 
 # ---------------------- ---------------------------------------------
+# !!! GMR HUH? NOT ALLOWED !!!
 # -- FAST SPECTRUM -- ------------------------------------------------
-def fastspec(
-    fin, nrm, wht, ext, selftype, chainlen=int(1e4), p=None, verbose=False
-):
-    '''
-    G. ROUDIER: Exoplanet spectrum fast recovery for prior setup
-    '''
-    priors = fin['priors'].copy()
-    ssc = syscore.ssconstants()
-    rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
-    smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
-    ttrdur = np.arcsin((1e0 + rpors) / smaors)
-    trdura = priors[p]['period'] * ttrdur / np.pi
-    vrange = nrm['data'][p]['vrange']
-    wave = nrm['data'][p]['wavet']
-    waves = nrm['data'][p]['wave']
-    nspec = nrm['data'][p]['nspec']
-    photnoise = nrm['data'][p]['photnoise']
-    if 'G750' in ext:
-        wave, _trash = binnagem(wave, 100)
-        wave = np.resize(wave, (1, 250))
-        pass
-    if 'G430' in ext:
-        wave, _trash = binnagem(wave, 25)
-        wave = np.resize(wave, (1, 121))
-        pass
-    time = nrm['data'][p]['time']
-    visits = nrm['data'][p]['visits']
-    orbits = nrm['data'][p]['orbits']
-    disp = nrm['data'][p]['dispersion']
-    im = wht['data'][p]['postim']
-    allz = wht['data'][p]['postsep']
-    whiterprs = np.nanmedian(wht['data'][p]['mctrace']['rprs'])
-    allwave = []
-    allspec = []
-    allim = []
-    allpnoise = []
-    alldisp = []
-    for w, s, i, n, d in zip(waves, nspec, im, photnoise, disp):
-        allwave.extend(w)
-        allspec.extend(s)
-        allim.extend(i)
-        allpnoise.extend(n)
-        alldisp.extend(d)
-        pass
-    alldisp = np.array(alldisp)
-    allim = np.array(allim)
-    allz = np.array(allz)
-    if 'STIS' in ext:
-        disp = np.median([np.median(np.diff(w)) for w in wave])
-        nbin = np.min([len(w) for w in wave])
-        wavel = [np.min(w) for w in wave]
-        wavec = np.arange(nbin) * disp + np.mean([np.max(wavel), np.min(wavel)])
-        lwavec = wavec - disp / 2e0
-        hwavec = wavec + disp / 2e0
-        pass
-    # MULTI VISITS COMMON WAVELENGTH GRID ------------------------------------------------
-    # if 'WFC3' in ext:  # it has to be either WFC3 or STIS, or wavec etc undefined
-    else:
-        wavec, _t = tplbuild(
-            allspec, allwave, vrange, alldisp * 1e-4, medest=True
-        )
-        wavec = np.array(wavec)
-        temp = [np.diff(wavec)[0]]
-        temp.extend(np.diff(wavec))
-        lwavec = wavec - np.array(temp) / 2e0
-        temp = list(np.diff(wavec))
-        temp.append(np.diff(wavec)[-1])
-        hwavec = wavec + np.array(temp) / 2e0
-        pass
-    # EXCLUDE PARTIAL LIGHT CURVES AT THE EDGES ------------------------------------------
-    wavec = wavec[1:-2]
-    lwavec = lwavec[1:-2]
-    hwavec = hwavec[1:-2]
-    # EXCLUDE ALL NAN CHANNELS -----------------------------------------------------------
-    allnanc = []
-    for wl, wh in zip(lwavec, hwavec):
-        select = [(w > wl) & (w < wh) for w in allwave]
-        if 'STIS' in ext:
-            data = np.array([np.nanmean(d[s]) for d, s in zip(allspec, select)])
-            pass
-        else:
-            data = np.array([np.median(d[s]) for d, s in zip(allspec, select)])
-        if np.all(~np.isfinite(data)):
-            allnanc.append(True)
-        else:
-            allnanc.append(False)
-        pass
-    lwavec = [lwv for lwv, lln in zip(lwavec, allnanc) if not lln]
-    hwavec = [hwv for hwv, lln in zip(hwavec, allnanc) if not lln]
-    # LOOP OVER WAVELENGTH BINS ----------------------------------------------------------
-    ES = []
-    ESerr = []
-    WB = []
-    for wl, wh in zip(lwavec, hwavec):
-        select = [(w > wl) & (w < wh) for w in allwave]
-        if 'STIS' in ext:
-            data = np.array([np.nanmean(d[s]) for d, s in zip(allspec, select)])
-            dnoise = np.array(
-                [
-                    (1e0 / np.sum(s)) * np.sqrt(np.nansum((n[s]) ** 2))
-                    for n, s in zip(allpnoise, select)
-                ]
-            )
-            pass
-        else:
-            data = np.array([np.nanmean(d[s]) for d, s in zip(allspec, select)])
-            dnoise = np.array(
-                [
-                    np.nanmedian(n[s]) / np.sqrt(np.nansum(s))
-                    for n, s in zip(allpnoise, select)
-                ]
-            )
-            pass
-        valid = np.isfinite(data)
-        if selftype in ['transit']:
-            bld = createldgrid([wl], [wh], priors, segmentation=int(10))
-            g1, g2, g3, g4 = bld['LD']
-            pass
-        else:
-            g1, g2, g3, g4 = [[0], [0], [0], [0]]
-        # renorm = np.nanmean(data[abs(allz) > (1e0 + whiterprs)])
-        # data /= renorm
-        # dnoise /= renorm
-        # PRIORS -------------------------------------------------------------------------
-        sscmks = syscore.ssconstants(mks=True)
-        eqtemp = priors['T*'] * np.sqrt(
-            priors['R*'] * sscmks['Rsun/AU'] / (2.0 * priors[p]['sma'])
-        )
-        pgrid = np.arange(
-            np.log(10.0) - 15.0, np.log(10.0) + 15.0 / 100, 15.0 / 99
-        )
-        pgrid = np.exp(pgrid)
-        pressure = pgrid[::-1]
-        mixratio, fH2, fHe = crbutil.crbce(pressure, eqtemp)
-        mmw, fH2, fHe = crbutil.getmmw(
-            mixratio, protosolar=False, fH2=fH2, fHe=fHe
-        )
-        mmw = mmw * cst.m_p  # [kg]
-        # not checked yet!
-        #    mmw is probably tensor; better below if Hs is converted to float
-        Hs = (
-            cst.Boltzmann
-            * eqtemp
-            / (mmw * 1e-2 * (10.0 ** float(priors[p]['logg'])))
-        ).eval()  # [m]
-        Hs = Hs / (priors['R*'] * sscmks['Rsun'])
-        tauvs = 1e0 / ((1e-2 / trdura) ** 2)
-        ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
-        tauvi = 1e0 / (ootstd**2)
-        nodes = []
-        tauwbdata = 1e0 / dnoise**2
-        # UPDATE GLOBALS -----------------------------------------------------------------
-        shapevis = max(2, len(visits))
-        ctxtupdt(
-            allz=allz,
-            g1=g1,
-            g2=g2,
-            g3=g3,
-            g4=g4,
-            orbits=orbits,
-            smaors=smaors,
-            time=time,
-            valid=valid,
-            visits=visits,
-        )
-        # PYMC --------------------------------------------------------------------------
-        with pymc.Model():
-            lowstart = whiterprs - 5e0 * Hs
-            lowstart = max(lowstart, 0)
-            upstart = whiterprs + 5e0 * Hs
-            rprs = pymc.Uniform('rprs', lower=lowstart, upper=upstart)
-            allvslope = pymc.TruncatedNormal(
-                'vslope',
-                mu=0e0,
-                tau=tauvs,
-                lower=-3e-2 / trdura,
-                upper=3e-2 / trdura,
-                shape=shapevis,
-            )
-            alloslope = pymc.Normal('oslope', mu=0, tau=tauvs, shape=shapevis)
-            alloitcp = pymc.Normal('oitcp', mu=1e0, tau=tauvi, shape=shapevis)
-            nodes.append(rprs)
-            nodes.append(allvslope)
-            nodes.append(alloslope)
-            nodes.append(alloitcp)
-            _ = pymc.Normal(
-                'wbdata',
-                mu=lcmodel(*nodes),
-                tau=np.nanmedian(tauwbdata[valid]),
-                observed=data[valid],
-            )
-            trace = pymc.sample(
-                chainlen,
-                cores=4,
-                tune=int(chainlen / 3),
-                compute_convergence_checks=False,
-                step=pymc.Metropolis(),
-                progressbar=verbose,
-            )
-            pass
-        ES.append(np.nanmedian(trace.posterior['rprs']))
-        ESerr.append(np.nanstd(trace.posterior['rprs']))
-        WB.append(np.mean([wl, wh]))
-        pass
-    ES = np.array(ES)
-    ESerr = np.array(ESerr)
-    WB = np.array(WB)
-    priorspec = ES
-    # alpha > 1: Increase width, alpha < 1: Decrease width
-    # decrease width by half if no modulation detected
-    alphanum = max(np.nanmedian(np.diff(ES)), np.nanmedian(ESerr) / 2e0)
-    alpha = alphanum / np.nanmedian(ESerr)
-    return priorspec, alpha
+# def fastspec(
+#    fin, nrm, wht, ext, selftype, chainlen=int(1e4), p=None, verbose=False
+# ):
 
 
 ##########################################################
