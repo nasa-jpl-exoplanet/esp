@@ -154,20 +154,21 @@ def apply_profiling(target, limits, alltraces, allkeys):
     return proftrace, applied_limits
 
 
-def add_priors(prior_range_table, runtime_params, model, modparlbls):
+def add_priors(nodes, nodeshape,
+               prior_range_table, runtime_params, model, modparlbls):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
     (that comment is for older pymc3 version; still working on this pymc version)
     '''
 
     prior_ranges = {}
-    nodes = []
 
     if runtime_params.fitCloudParameters:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
         )
+        nodeshape.append(1)
 
         prior_ranges['HScale'] = prior_range_table['HScale']
         nodes.append(
@@ -175,6 +176,7 @@ def add_priors(prior_range_table, runtime_params, model, modparlbls):
                 'HScale', prior_ranges['HScale'][0], prior_ranges['HScale'][1]
             )
         )
+        nodeshape.append(1)
 
         prior_ranges['HLoc'] = prior_range_table['HLoc']
         nodes.append(
@@ -182,6 +184,7 @@ def add_priors(prior_range_table, runtime_params, model, modparlbls):
                 'HLoc', prior_ranges['HLoc'][0], prior_ranges['HLoc'][1]
             )
         )
+        nodeshape.append(1)
 
         prior_ranges['HThick'] = prior_range_table['HThick']
         nodes.append(
@@ -189,12 +192,14 @@ def add_priors(prior_range_table, runtime_params, model, modparlbls):
                 'HThick', prior_ranges['HThick'][0], prior_ranges['HThick'][1]
             )
         )
+        nodeshape.append(1)
 
     if runtime_params.fitT:
         prior_ranges['T'] = prior_range_table['T']
         nodes.append(
             pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
         )
+        nodeshape.append(1)
 
     for param in modparlbls:
         if param == 'XtoH':
@@ -209,7 +214,7 @@ def add_priors(prior_range_table, runtime_params, model, modparlbls):
     # make sure that there's at least two parameters here, or the decorator crashes  (old pymc3 comment)
     num_abundance_params = max(num_abundance_params, 2)
     # print('numAbundanceParams',num_abundance_params)
-    nodes.append(
+    nodes.extend(
         pymc.Uniform(
             model,
             lower=prior_range_table['dexRange'][0],
@@ -217,5 +222,6 @@ def add_priors(prior_range_table, runtime_params, model, modparlbls):
             shape=num_abundance_params,
         )
     )
+    nodeshape.append(num_abundance_params)
 
-    return nodes, prior_ranges
+    return nodes, nodeshape, prior_ranges
