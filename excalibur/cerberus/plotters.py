@@ -450,6 +450,7 @@ def plot_corner(
     p,
     saveDir,
     savetodisk=False,
+    verbose=False,
 ):
     '''corner plot showing posterior distributions'''
 
@@ -624,6 +625,8 @@ def plot_corner(
             + p
             + '.png'
         )
+
+    if verbose: plt.show()
 
     return save_plot_tosv(figure), figure
 
@@ -801,6 +804,7 @@ def plot_walker_evolution(
     saveDir,
     savetodisk=False,
     Nchains=4,
+    verbose=False,
 ):
     '''trace whether or not the MCMC walkers converge'''
 
@@ -925,6 +929,8 @@ def plot_walker_evolution(
             + p
             + '.png'
         )
+
+    if verbose: plt.show()
 
     return save_plot_tosv(figure), figure
 
