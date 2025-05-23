@@ -86,15 +86,11 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         / (RcalpmolpK * temp)
     )
     AH2 = (pH2**2.0) / (2.0 * K1)
-    ACpAO = (
-        (10.0**X2Hr) / nH * solar['nO'] * (1.0 + (10.0**C2Or) * solCtO)
-    )
+    ACpAO = (10.0**X2Hr) / nH * solar['nO'] * (1.0 + (10.0**C2Or) * solCtO)
     ACtAO = (
         (10.0**C2Or) * solCtO * (solar['nO'] ** 2) * (((10.0**X2Hr) / nH) ** 2)
     )
-    BCO = (
-        ACpAO + AH2 - np.sqrt((ACpAO + AH2) ** 2 - 4.0 * ACtAO)
-    )
+    BCO = ACpAO + AH2 - np.sqrt((ACpAO + AH2) ** 2 - 4.0 * ACtAO)
     # <--
     # GMR: We should be prepared for T-P profile change that later
     nCO = np.mean(BCO * pH2 / p)

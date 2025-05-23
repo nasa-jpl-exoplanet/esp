@@ -626,7 +626,8 @@ def plot_corner(
             + '.png'
         )
 
-    if verbose: plt.show()
+    if verbose:
+        plt.show()
 
     return save_plot_tosv(figure), figure
 
@@ -930,7 +931,8 @@ def plot_walker_evolution(
             + '.png'
         )
 
-    if verbose: plt.show()
+    if verbose:
+        plt.show()
 
     return save_plot_tosv(figure), figure
 

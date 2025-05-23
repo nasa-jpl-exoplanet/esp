@@ -154,8 +154,9 @@ def apply_profiling(target, limits, alltraces, allkeys):
     return proftrace, applied_limits
 
 
-def add_priors(nodes, nodeshape,
-               prior_range_table, runtime_params, model, modparlbls):
+def add_priors(
+    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
+):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
     (that comment is for older pymc3 version; still working on this pymc version)

@@ -81,6 +81,7 @@ tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
+
 class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
@@ -624,6 +625,7 @@ def atmosversion():
     '''
     return dawgie.VERSION(1, 3, 2)
 
+
 def atmos(
     fin,
     xsl,
@@ -1120,9 +1122,9 @@ def atmos(
                         time0 = time.process_time()
 
                         # --< MODEL >--
-                        #asdf
-                        print('nodes going into the tensor model',nodes)
-                        print('nodes going into the tensor model',len(nodes))
+                        # asdf
+                        print('nodes going into the tensor model', nodes)
+                        print('nodes going into the tensor model', len(nodes))
 
                         TensorModel = TensorShell()
 
@@ -1270,7 +1272,7 @@ def atmos(
                         chainlen,
                         # cores=4,  # asdfasdfasdf
                         cores=1,
-                        tune=int(int(chainlen) / 2),   # note: was /4 before
+                        tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         # compute_convergence_checks=False,
                         compute_convergence_checks=True,
@@ -1336,7 +1338,7 @@ def atmos(
                 all_traces = []
                 all_keys = []
                 for key in mctrace:
-                    print('going through keys in MCTRACE',key)
+                    print('going through keys in MCTRACE', key)
                     all_traces.append(mctrace[key])
                     if model == 'TEC':
                         if key == 'TEC[0]':
@@ -1362,7 +1364,7 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                print('allKeys',all_keys)
+                print('allKeys', all_keys)
 
                 # param_values_median = (
                 #    tpr,
@@ -1373,11 +1375,15 @@ def atmos(
                 #    tceqdict,
                 #    mixratio,
                 # )
-                param_values_median = [666,666,666,666,666,
-                                       {'XtoH':666,
-                                        'CtoO':666,
-                                        'NtoO':666},
-                                       {}]
+                param_values_median = [
+                    666,
+                    666,
+                    666,
+                    666,
+                    666,
+                    {'XtoH': 666, 'CtoO': 666, 'NtoO': 666},
+                    {},
+                ]
                 plot_corner(
                     all_keys,
                     all_traces,
@@ -1780,7 +1786,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
 
         # check whether this planet was analyzed
         # (some planets are skipped, because they have an unbound atmosphere)
-        print('atmkeys',atm.keys())
+        print('atmkeys', atm.keys())
         if p not in atm.keys():
             log.warning(
                 '>-- CERBERUS.RESULTS: this planet is missing cerb fit: %s %s',
@@ -1883,7 +1889,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
-
                 if fit_t:
                     tprtrace = atm[p][model_name]['MCTRACE']['T']
                     # tprtrace_profiled = atm[p][model_name]['MCTRACE']['T'][keepers]
@@ -1893,7 +1898,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     tpr_profiled = np.median(tprtrace_profiled)
                 else:
                     if ('TRUTH_MODELPARAMS' in atm[p]) and (
-                            'Teq' in atm[p]['TRUTH_MODELPARAMS']
+                        'Teq' in atm[p]['TRUTH_MODELPARAMS']
                     ):
                         # print('truth params',atm[p]['TRUTH_MODELPARAMS'])
                         tpr = atm[p]['TRUTH_MODELPARAMS']['Teq']
@@ -2119,7 +2124,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 nrandomwalkers = 100
                 nrandomwalkers = 1000
                 nrandomwalkers = 20
-                #asdf
+                # asdf
                 nrandomwalkers = 3
                 nrandomwalkers = 0
 

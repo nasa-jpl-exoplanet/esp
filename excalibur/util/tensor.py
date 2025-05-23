@@ -33,6 +33,7 @@ def LogLikelihood(inputs):
 
     return out
 
+
 class TensorShell(LogLikelihood, tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models

@@ -105,6 +105,7 @@ def ctxtupdt(
     # excalibur.cerberus.core.ctxt = excalibur.cerberus.forward_model.ctxt
     return
 
+
 # GMR: Gregoire s legacy
 def LogLikelihood(inputs):
     '''
@@ -128,15 +129,17 @@ def LogLikelihood(inputs):
 
     print('INSIDE OF LOGLIKELIHOOD!!')
 
-    out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig)**2) / 2e0
+    out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
     # asdf
     # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
     # out -= Norm
 
     print('  forwardmodel', ForwardModel.eval())
-    print('  out',out.eval())
-    print('  chi2_reduced for this model:',
-          -2 * np.sum(out.eval())/len(out.eval()))
+    print('  out', out.eval())
+    print(
+        '  chi2_reduced for this model:',
+        -2 * np.sum(out.eval()) / len(out.eval()),
+    )
 
     return out
 
@@ -155,8 +158,8 @@ def crbmodel(
     wgrid,
     lbroadening=False,
     lshifting=False,
-        # nlevels=100,  # asdf
-        # nlevels=7,
+    # nlevels=100,  # asdf
+    # nlevels=7,
     nlevels=5,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
@@ -216,7 +219,8 @@ def crbmodel(
     t2 = time.process_time()
     print('CPU: mmw', t2 - t1)
 
-    if debug: print('mmw', mmw * 6.022e26)
+    if debug:
+        print('mmw', mmw * 6.022e26)
 
     Hs = (
         cst.Boltzmann
@@ -321,95 +325,93 @@ def crbmodel(
         tloop0 = time.process_time()
         # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM  asdf
         if 0:
-          for index in np.arange(wtau.size):
-            # print('reversep', reversep)
-            # print('reversep', reversep.shape)
-            myspl = itp(reversep, tau[:, index])
-            # print('myspl',myspl)  # interp1d object
-            # print(' cloudtp', cloudtp)
-            # print(' powcheck', 10.0**cloudtp)
-            # print('  indices', cloudindex, index)
-            # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
-            # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
-            # print('  tau[]', tau[cloudindex, index])
-            tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
-            # print('  tau[]', tau[cloudindex, index])
-            # tau[:cloudindex, index] = 0.0
-            # --> this line can be done for all indices (outside of loop, I mean)
-            tau = tau[:cloudindex, index].set(0.0)
-            for molecule in molecules:
-                myspl = itp(
-                    reversep, tau_by_molecule[molecule][:, index]
-                )
-                tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    cloudindex, index
-                ].set(myspl(10.0**cloudtp))
-                tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    :cloudindex, index
-                ].set(0.0)
-            pass
+            for index in np.arange(wtau.size):
+                # print('reversep', reversep)
+                # print('reversep', reversep.shape)
+                myspl = itp(reversep, tau[:, index])
+                # print('myspl',myspl)  # interp1d object
+                # print(' cloudtp', cloudtp)
+                # print(' powcheck', 10.0**cloudtp)
+                # print('  indices', cloudindex, index)
+                # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
+                # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
+                # print('  tau[]', tau[cloudindex, index])
+                tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
+                # print('  tau[]', tau[cloudindex, index])
+                # tau[:cloudindex, index] = 0.0
+                # --> this line can be done for all indices (outside of loop, I mean)
+                tau = tau[:cloudindex, index].set(0.0)
+                for molecule in molecules:
+                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
+                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                        cloudindex, index
+                    ].set(myspl(10.0**cloudtp))
+                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                        :cloudindex, index
+                    ].set(0.0)
+                pass
         tloop1 = time.process_time()
         print('CPU:    loop substep1', tloop1 - tloop0)
         tloop0 = time.process_time()
 
         # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM  asdf
         if 0:
-         print('reversep', reversep)
+            print('reversep', reversep)
 
-         taus = []
-         taus_by_molecule = []
-         for index in np.arange(wtau.size):
-            print('wavelength index',index)
-            print(' pressure grid len',len(reversep))
-            print(' tau shape5',len(list(tau[:, index]))) # 5. good!!
-            print(' tau shapeasdf',tau[:, index].flatten())
-            print(' tau shapeasdf',tau[:, index].flatten().shape)
-            print(' tau shapeasdf',tau[:, index].flatten().eval())
-            print(' tau shapeasdf',tau[:, index].flatten().eval().shape)
-            #print(' tau shapeasdf',tau[:, index].reshape(-1).eval())
-            #print(' tau shapeasdf',tau[:, index].reshape(-1).eval().shape)
-            print(' tau shapeasdfrav',tau[:, index].ravel().eval())
-            print(' tau shapeasdfrav',tau[:, index].ravel().eval().shape)
-            # print(' tau shape6',np.array(list(tau[:, index])).eval().shape)
-            #print(' tau shape8',np.array(tau[:, index]).shape)  # huh? () shape?!
-            #print(' tau shape7',np.array(list(tau[:, index])).shape) # (5,) !?
-            print(' HEYEEHEYEYEY1')
-        # maybe try list on both even?  nope. no help.  this line CRASHES!!
-        # seems like it wants array, not a sequence.  sure
-        # well gees, what about array on both?  ah well
-        # myspl = itp(np.array(reversep), np.array(list(tau[:, index])))
-            myspl = itp(reversep, tau[:, index].ravel())
-            print(' HEYEEHEYEYEY2')
-            print('myspl check1',myspl(1))
-            print('myspl check2',myspl(0.1))
-            print('myspl check3',10.0**cloudtp)
-            print('myspl check3',myspl(10.0**cloudtp))
-            taus.append(myspl(10.0**cloudtp))
+            taus = []
+            taus_by_molecule = []
+            for index in np.arange(wtau.size):
+                print('wavelength index', index)
+                print(' pressure grid len', len(reversep))
+                print(' tau shape5', len(list(tau[:, index])))  # 5. good!!
+                print(' tau shapeasdf', tau[:, index].flatten())
+                print(' tau shapeasdf', tau[:, index].flatten().shape)
+                print(' tau shapeasdf', tau[:, index].flatten().eval())
+                print(' tau shapeasdf', tau[:, index].flatten().eval().shape)
+                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval())
+                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval().shape)
+                print(' tau shapeasdfrav', tau[:, index].ravel().eval())
+                print(' tau shapeasdfrav', tau[:, index].ravel().eval().shape)
+                # print(' tau shape6',np.array(list(tau[:, index])).eval().shape)
+                # print(' tau shape8',np.array(tau[:, index]).shape)  # huh? () shape?!
+                # print(' tau shape7',np.array(list(tau[:, index])).shape) # (5,) !?
+                print(' HEYEEHEYEYEY1')
+                # maybe try list on both even?  nope. no help.  this line CRASHES!!
+                # seems like it wants array, not a sequence.  sure
+                # well gees, what about array on both?  ah well
+                # myspl = itp(np.array(reversep), np.array(list(tau[:, index])))
+                myspl = itp(reversep, tau[:, index].ravel())
+                print(' HEYEEHEYEYEY2')
+                print('myspl check1', myspl(1))
+                print('myspl check2', myspl(0.1))
+                print('myspl check3', 10.0**cloudtp)
+                print('myspl check3', myspl(10.0**cloudtp))
+                taus.append(myspl(10.0**cloudtp))
+                for molecule in molecules:
+                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
+                    taus_by_molecule.append(myspl(10.0**cloudtp))
+
+            tloopmid1 = time.process_time()
+
+            tau = tau[cloudindex, :].set(np.array(taus))
             for molecule in molecules:
-                myspl = itp(reversep, tau_by_molecule[molecule][:, index])
-                taus_by_molecule.append(myspl(10.0**cloudtp))
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                    cloudindex, :
+                ].set(np.array(taus_by_molecule))
+            tau = tau[:cloudindex, :].set(0.0)
+            for molecule in molecules:
+                tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                    :cloudindex, :
+                ].set(0.0)
 
-         tloopmid1 = time.process_time()
+            tloop1 = time.process_time()
+            print('CPU:    loop substep3redo', tloop1 - tloop0)
+            print('CPU:                 mid1', tloopmid1 - tloop0)
+            print('CPU:                 mid2', tloop1 - tloopmid1)
 
-         tau = tau[cloudindex, :].set(np.array(taus))
-         for molecule in molecules:
-            tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                cloudindex, :
-            ].set(np.array(taus_by_molecule))
-         tau = tau[:cloudindex, :].set(0.0)
-         for molecule in molecules:
-            tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                :cloudindex, :
-            ].set(0.0)
-
-         tloop1 = time.process_time()
-         print('CPU:    loop substep3redo', tloop1 - tloop0)
-         print('CPU:                 mid1', tloopmid1 - tloop0)
-         print('CPU:                 mid2', tloop1 - tloopmid1)
-
-         ctpdpress = 10.0**cloudtp - p[cloudindex]
-         ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
-         rp0 += z[cloudindex] + ctpdz
+            ctpdpress = 10.0**cloudtp - p[cloudindex]
+            ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
+            rp0 += z[cloudindex] + ctpdz
         pass
     matrix1 = (rp0 + z) * dz
     matrix2 = 1.0 - tensor.exp(-tau)
@@ -584,7 +586,7 @@ def gettau(
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
     t1 = time.process_time()
-    print('CPU time in gettau: molecule loop',t1-t0)
+    print('CPU time in gettau: molecule loop', t1 - t0)
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     t0 = time.process_time()
     for cia in cialist:
@@ -616,7 +618,7 @@ def gettau(
         tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
         tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
     t1 = time.process_time()
-    print('CPU time in gettau: first tau add',t1-t0)
+    print('CPU time in gettau: first tau add', t1 - t0)
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
