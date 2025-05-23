@@ -2,6 +2,8 @@
 
 # Heritage code shame:
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
+#  more for customDist pymc method:
+# pylint: abstract-method,arguments-differ,cell-var-from-loop, invalid-name
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -55,7 +57,6 @@ from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 
 import pymc
-from pytensor import tensor
 import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
@@ -1337,9 +1338,9 @@ def atmos(
                 print('tracekeys', tracekeys)
                 all_traces = []
                 all_keys = []
-                for key in mctrace:
+                for key, thistrace in mctrace.items():
                     print('going through keys in MCTRACE', key)
-                    all_traces.append(mctrace[key])
+                    all_traces.append(thistrace)
                     if model == 'TEC':
                         if key == 'TEC[0]':
                             all_keys.append('[X/H]')
@@ -2233,7 +2234,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # chi2modelrand = tensor.sum(offsets_modelrand**2)
+                    # chi2modelrand = tnsr.sum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
                     print('chi2modelrand', chi2modelrand)
                     print('chi2best', chi2best)
