@@ -210,10 +210,12 @@ def add_priors(nodes, nodeshape,
             prior_ranges['[N/O]'] = prior_range_table['dexRange']
         else:
             prior_ranges[param] = prior_range_table['dexRange']
+
     num_abundance_params = len(modparlbls)
-    # make sure that there's at least two parameters here, or the decorator crashes  (old pymc3 comment)
+    # make sure that there's at least two parameters here, or the decorator crashes  (old pymc3 comment; maybe doesn't matter anymore)
     num_abundance_params = max(num_abundance_params, 2)
     # print('numAbundanceParams',num_abundance_params)
+
     nodes.extend(
         pymc.Uniform(
             model,
