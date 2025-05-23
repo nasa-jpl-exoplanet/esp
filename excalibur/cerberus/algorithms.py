@@ -229,7 +229,6 @@ class Atmos(dawgie.Algorithm):
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
                 )
                 # print('runtime params',runtime_params)
-
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
@@ -271,9 +270,9 @@ class Atmos(dawgie.Algorithm):
             runtime_params,
             self.__out[index],
             fltr,
-            mclen=mcmc_chain_length,
+            chainlen=mcmc_chain_length,
             verbose=False,
-        )  # singlemod='TEC' after mclen
+        )  # singlemod='TEC' after chainlen
         return am
 
     @staticmethod
@@ -341,7 +340,7 @@ class Results(dawgie.Algorithm):
             # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             # for fltr in ['Ariel-sim']:
             for fltr in self.__rt.sv_as_dict()['status'][
-                'allowed_filter_names'
+                    'allowed_filter_names'
             ]:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
