@@ -1102,22 +1102,7 @@ def atmos(
                     )
 
                     # CERBERUS MCMC
-                    # if not runtime_params.fitCloudParameters:
-                    if 0:
-                        print('TURNING OFF CLOUDS!')
-                        log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
-                        time0 = time.process_time()
-                        _ = pymc.Normal(
-                            'mcdata',
-                            mu=clearfmcerberus(*nodes),
-                            # tau=1e0 / (np.nanmedian(tspecerr[cleanup]) ** 2),
-                            sigma=tspecerr[cleanup],
-                            observed=tspectrum[cleanup],
-                        )
-                        time1 = time.process_time()
-                        print('TOTAL CPU FOR SETUPMODEL:', time1 - time0)
-                        pass
-                    elif 1:
+                    if not runtime_params.fitCloudParameters:
                         print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
                         time0 = time.process_time()
