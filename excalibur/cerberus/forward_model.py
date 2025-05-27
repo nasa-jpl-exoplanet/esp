@@ -206,12 +206,14 @@ def crbmodel(
     t1 = time.process_time()
     print('CPU: startup', t1 - t0)
 
+    # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
         mixratio, fH2, fHe = crbce(
             p, temp, C2Or=cheq['CtoO'], X2Hr=cheq['XtoH'], N2Or=cheq['NtoO']
         )
+        # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:
         mmw, fH2, fHe = getmmw(mixratio)
@@ -231,44 +233,9 @@ def crbmodel(
     # when the Pressure grid is log-spaced, rdz is a constant
     #  drop dz[] and dzprime[] arrays and just use this constant instead
     rdz = abs(Hs / 2.0 * np.log(1.0 + dPoverP))
-
-    z = [0]
-    # dz = []
-    # addz = []
-    # for press, dpress in zip(p[:-1], dp):
-    # print('dp/p',dpress/press,np.log(1. + dpress/press),dPoverP)
-    # for press in p[:-1]:
-    # rdz = abs(Hs/2.*np.log(1. + dpress/press))
-    # rdz = abs(Hs/2.*np.log(1. + dPoverP))
-    # print('press,rdz',press,rdz)
-    # if addz:
-    # dz.append(addz[-1]/2. + rdz)
-    # else:
-    # tem = tensor.dscalar()
-    # print('tem',tem)
-    # tem = 2.*rdz
-    # print('tem',tem)
-    # dz.append(tem)
-    # dz.append(2.*rdz)
-    # print('temp',dz[-1])
-    # addz.append(2.*rdz)
-    # z.append(z[-1]+addz[-1])
-    for _ in p[:-1]:
-        z.append(z[-1] + 2.0 * rdz)
-    # dz.append(addz[-1])
-    # print()
-    # print('len check on z',len(z))
-    # print('len check on dz',len(dz))
-    # print()
-    # print('z going into gettau',z)
-    # print('dz going into gettau',dz)
-    # print()
-
-    z = np.linspace(0, len(p) - 1, len(p))
-    z = 2 * rdz * z
-
-    # simplify dz.  will help tremendously below, where tensor keeps crashing
     dz = 2 * rdz
+    z = dz * np.linspace(0, len(p) - 1, len(p))
+
     t3 = time.process_time()
     print('CPU: z grid', t3 - t2)
 
@@ -477,6 +444,8 @@ def crbmodel(
     t6 = time.process_time()
     print('CPU: last section', t6 - t5)
     print('CPU: total cpu time', t6 - t0)
+
+    # print('crbmodel: model at end',model.eval())
 
     #  asdf
     #    if break_down_by_molecule:
@@ -1085,11 +1054,12 @@ def clearfmcerberus(*crbinputs):
         )
         pass
 
+    # print('FMC in clearfmcerberus pre-mean',fmc.eval())
     # fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     # fmc = fmc[ctxt.cleanup] - np.mean(fmc[ctxt.cleanup])
     fmc = fmc[ctxt.cleanup] - tensor.mean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    # print('FMC in clearfmcerberusC!',fmc.eval())
+    # print('FMC in clearfmcerberus final',fmc.eval())
 
     return fmc
 
