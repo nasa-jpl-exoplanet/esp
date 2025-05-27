@@ -100,7 +100,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     nCH4 = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nC'] - BCO) * (pH2 / p))
     nH2O = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nO'] - BCO) * (pH2 / p))
     if nCH4 <= 0:
-        nH2O = 1e-16
+        nCH4 = 1e-16
     if nH2O <= 0:
         nH2O = 1e-16
     a2 = 8.16413e5
