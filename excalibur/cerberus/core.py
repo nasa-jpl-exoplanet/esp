@@ -2,6 +2,8 @@
 
 # Heritage code shame:
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
+#  more for customDist pymc method:
+# pylint: disable=abstract-method,arguments-differ,cell-var-from-loop,invalid-name
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -12,10 +14,11 @@ from excalibur.target.targetlists import get_target_lists
 # from excalibur.cerberus.core import savesv
 from excalibur.cerberus.forward_model import (
     ctxtupdt,
+    LogLikelihood,
     absorb,
     crbmodel,
     cloudyfmcerberus,
-    clearfmcerberus,
+    # clearfmcerberus,
     offcerberus,
     offcerberus1,
     offcerberus2,
@@ -26,7 +29,6 @@ from excalibur.cerberus.forward_model import (
     offcerberus7,
     offcerberus8,
 )
-
 from excalibur.cerberus.plotters import (
     rebin_data,
     plot_corner,
@@ -45,17 +47,18 @@ from excalibur.cerberus.bounds import (
 )
 
 import logging
-
 import os
-import pymc
-from pytensor import tensor
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
-
 from scipy.interpolate import interp1d as itp
+
+import pymc
+import pytensor.graph as tnsrgraph
+import pytensor.tensor as tnsr
+
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -77,6 +80,29 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
+
+
+class TensorShell(tnsrgraph.Op):
+    '''
+    GMR: Tensor Shell for custom models
+    Do not touch the name of the methods
+    '''
+
+    def make_node(self, nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in nodes]
+        outputs = [tnsr.vector()]
+        return tnsrgraph.Apply(self, inputs, outputs)
+
+    def perform(
+        self,
+        node: tnsrgraph.Apply,
+        inputs: list[np.ndarray],
+        output_storage: list[list[None]],
+    ) -> None:
+        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
+        return
+
+    pass
 
 
 # ----------------- --------------------------------------------------
@@ -609,7 +635,7 @@ def atmos(
     ext,
     hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
     singlemod=None,
-    mclen=int(1e4),
+    chainlen=int(1e4),
     verbose=False,
 ):
     '''
@@ -798,11 +824,16 @@ def atmos(
                 # keep track of the bounds put on each parameter
                 # this will be helpful for later plotting and analysis
                 nodes = []
+                nodeshape = []
                 with pymc.Model():
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
+
                     if not runtime_params.fitCloudParameters:
+                        # note: crashes for HST, since there's no model_params!!
+                        #  (so don't fit HST with no clouds!?)
+
                         fixed_params['CTP'] = input_data['model_params']['CTP']
                         fixed_params['HScale'] = input_data['model_params'][
                             'HScale'
@@ -813,8 +844,11 @@ def atmos(
                         fixed_params['HThick'] = input_data['model_params'][
                             'HThick'
                         ]
+
+                    # print('model params',input_data['model_params'])
+
                     if not runtime_params.fitT:
-                        fixed_params['T'] = input_data['model_params']['T']
+                        fixed_params['T'] = input_data['model_params']['Teq']
                     if not runtime_params.fitNtoO:
                         fixed_params['NtoO'] = 0.0
                     if not runtime_params.fitCtoO:
@@ -859,16 +893,19 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF1', -off1_value, off1_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF2', -off2_value, off2_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 elif valid1 and valid2 and not valid3:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off2])
@@ -887,11 +924,13 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF1', -off1_value, off1_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 elif valid1 and valid3 and not valid2:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off3])
@@ -910,11 +949,13 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF1', -off1_value, off1_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 elif valid2 and valid3 and not valid1:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off3])
@@ -933,11 +974,13 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF1', -off1_value, off1_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 elif valid3 and not valid1 and not valid2:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off3])
@@ -950,6 +993,7 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                             else:
                                 if valid1 and valid2 and valid3:
                                     off0_value = abs(
@@ -969,11 +1013,13 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                     nodes.append(
                                         pymc.Uniform(
                                             'OFF1', -off1_value, off1_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 if valid1 and valid3 and not valid2:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off3])
@@ -986,6 +1032,7 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 if valid1 and valid2 and not valid3:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off2])
@@ -998,6 +1045,7 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                                 if valid1 and valid2 and not valid3:
                                     off0_value = abs(
                                         np.nanmedian(1e2 * tspectrum[cond_off2])
@@ -1010,6 +1058,7 @@ def atmos(
                                             'OFF0', -off0_value, off0_value
                                         )
                                     )
+                                    nodeshape.append(1)
                         if 'WFC3' in filters[0]:
                             if valid2 and valid3:
                                 off0_value = abs(
@@ -1021,9 +1070,12 @@ def atmos(
                                         'OFF0', -off0_value, off0_value
                                     )
                                 )
+                                nodeshape.append(1)
 
-                    # new cleaned-up version of adding on the prior bounds as pymc nodes
-                    nodes, prior_ranges = add_priors(
+                    # use prior bounds to create pymc nodes (Uniform ranges)
+                    nodes, nodeshape, prior_ranges = add_priors(
+                        nodes,
+                        nodeshape,
                         prior_range_table,
                         runtime_params,
                         model,
@@ -1043,17 +1095,37 @@ def atmos(
                         modparlbl=modparlbl,
                         hzlib=crbhzlib,
                         fixed_params=fixed_params,
+                        mcmcdat=tspectrum[cleanup],
+                        mcmcsig=tspecerr[cleanup],
+                        nodeshape=nodeshape,
                     )
 
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters:
+                        # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
-                        _ = pymc.Normal(
-                            'mcdata',
-                            mu=clearfmcerberus(*nodes),
-                            tau=1e0 / (np.nanmedian(tspecerr[cleanup]) ** 2),
+
+                        # --< MODEL >--
+                        # print('nodes going into the tensor model', nodes)
+                        # print('nodes going into the tensor model', len(nodes))
+
+                        TensorModel = TensorShell()
+
+                        def LogLH(_, nodes):
+                            '''
+                            GMR: Fill in model tensor shell
+                            '''
+                            return TensorModel(nodes)
+
+                        # GMR: CustomDist needs a list that has consistent dims,
+                        # hence the use of flatnodes
+                        _ = pymc.CustomDist(
+                            "likelihood for fit spectrum",
+                            nodes,
                             observed=tspectrum[cleanup],
+                            logp=LogLH,
                         )
+                        # --------------
                         pass
                     else:
                         if 'STIS-WFC3' in ext:
@@ -1162,7 +1234,6 @@ def atmos(
                             #   maybe it's the final forward model?  (there's only one)
                             #   oh right, this is just the definition; there's no sampling yet
                             #   so why does it bother making one call.  what param values?
-                            # print('_mcdata (what is this?!)',_mcdata.eval())
                         pass
 
                     if runtime_params.MCMC_sampler == 'slice':
@@ -1172,19 +1243,24 @@ def atmos(
                         log.warning('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    log.warning(
-                        '>-- MCMC nodes: %s', str([n.name for n in nodes])
-                    )
+                    # log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
+                    log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
+
+                    # --< SAMPLING >--
                     trace = pymc.sample(
-                        mclen,
+                        chainlen,
                         cores=4,
-                        tune=int(mclen / 4),
+                        tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
-                        compute_convergence_checks=False,
+                        compute_convergence_checks=True,
                         progressbar=verbose,
                     )
-
+                    # ----------------
                     stats_summary = pymc.stats.summary(trace)
+                    # print('stats summary',stats_summary)
+                    # print('stats summary',stats_summary.keys())
+                    #  ['mean', 'sd', 'hdi_3%', 'hdi_97%', 'mcse_mean', 'mcse_sd',
+                    #   'ess_bulk', 'ess_tail', 'r_hat']
 
                 # N_TEC = len(trace.posterior.TEC_dim_0)
                 # print('# of TEC parameters',N_TEC)
@@ -1203,7 +1279,7 @@ def atmos(
                         ]
                     else:
                         mctrace[key] = trace.posterior[key]
-                    print('mctrace shape', key, mctrace[key].shape)
+                    # print('mctrace shape', key, mctrace[key].shape)
 
                     # convert Nchain x Nstep 2-D posteriors to a single chain
                     # mctrace[key] = np.ravel(mctrace[key])
@@ -1230,11 +1306,95 @@ def atmos(
                         'model_params'
                     ]
                     # print('true modelparams in atmos:',inputData['model_params'])
+
+            # during debugging (script run) show the results as a corner plot
+            if verbose:
+                # print('tracekeys', tracekeys)
+                all_traces = []
+                all_keys = []
+                for key, thistrace in mctrace.items():
+                    # print('going through keys in MCTRACE', key)
+                    all_traces.append(thistrace)
+                    if model == 'TEC':
+                        if key == 'TEC[0]':
+                            all_keys.append('[X/H]')
+                        elif key == 'TEC[1]':
+                            all_keys.append('[C/O]')
+                        elif key == 'TEC[2]':
+                            all_keys.append('[N/O]')
+                        else:
+                            all_keys.append(key)
+                    elif model == 'PHOTOCHEM':
+                        if key == 'PHOTOCHEM[0]':
+                            all_keys.append('HCN')
+                        elif key == 'PHOTOCHEM[1]':
+                            all_keys.append('CH4')
+                        elif key == 'PHOTOCHEM[2]':
+                            all_keys.append('C2H2')
+                        elif key == 'PHOTOCHEM[3]':
+                            all_keys.append('CO2')
+                        elif key == 'PHOTOCHEM[4]':
+                            all_keys.append('H2CO')
+                        else:
+                            all_keys.append(key)
+                    else:
+                        all_keys.append(key)
+                # print('allKeys', all_keys)
+
+                # param_values_median = (
+                #    tpr,
+                #    ctp,
+                #    hza,
+                #    hloc,
+                #    hthc,
+                #    tceqdict,
+                #    mixratio,
+                # )
+                param_values_median = [
+                    666,
+                    666,
+                    666,
+                    666,
+                    666,
+                    {'XtoH': 666, 'CtoO': 666, 'NtoO': 666},
+                    {},
+                ]
+                plot_corner(
+                    all_keys,
+                    all_traces,
+                    all_traces,
+                    param_values_median,
+                    input_data['model_params'],
+                    prior_ranges,
+                    ext,
+                    model,
+                    spc['data']['target'],
+                    p,
+                    './',
+                    verbose=True,
+                    # verbose=False,
+                )
+                plot_walker_evolution(
+                    all_keys,
+                    all_traces,
+                    all_traces,
+                    input_data['model_params'],
+                    prior_ranges,
+                    {},
+                    ext,
+                    model,
+                    spc['data']['target'],
+                    p,
+                    './',
+                    verbose=True,
+                )
+
             out['data'][p]['VALID'] = cleanup
             out['STATUS'].append(True)
 
             okfit = True
             pass
+
     return okfit
 
 
@@ -1601,6 +1761,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
 
         # check whether this planet was analyzed
         # (some planets are skipped, because they have an unbound atmosphere)
+        print('atmkeys', atm.keys())
         if p not in atm.keys():
             log.warning(
                 '>-- CERBERUS.RESULTS: this planet is missing cerb fit: %s %s',
@@ -1703,8 +1864,23 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
-                tprtrace = atm[p][model_name]['MCTRACE']['T']
-                tprtrace_profiled = atm[p][model_name]['MCTRACE']['T'][keepers]
+                if fit_t:
+                    tprtrace = atm[p][model_name]['MCTRACE']['T']
+                    # tprtrace_profiled = atm[p][model_name]['MCTRACE']['T'][keepers]
+                    tprtrace_profiled = tprtrace[keepers]
+
+                    tpr = np.median(tprtrace)
+                    tpr_profiled = np.median(tprtrace_profiled)
+                else:
+                    if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                        'Teq' in atm[p]['TRUTH_MODELPARAMS']
+                    ):
+                        # print('truth params',atm[p]['TRUTH_MODELPARAMS'])
+                        tpr = atm[p]['TRUTH_MODELPARAMS']['Teq']
+                    else:
+                        tpr = 666
+                    tpr_profiled = tpr
+
                 mdplist = [
                     key
                     for key in atm[p][model_name]['MCTRACE']
@@ -1758,12 +1934,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     hloc_profiled = hloc
                     hthc_profiled = hthc
                     # print(' ctp hza hloc hthc',ctp,hza,hloc,hthc)
-                if fit_t:
-                    tpr = np.median(tprtrace)
-                    tpr_profiled = np.median(tprtrace_profiled)
-                else:
-                    tpr = atm[p]['TRUTH_MODELPARAMS']['T']
-                    tpr_profiled = tpr
                 mdp = np.median(np.array(mdptrace), axis=1)
                 mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
@@ -1878,8 +2048,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     verbose=False,
                     debug=False,
                 )
-                if isinstance(fmc, tensor.variable.TensorVariable):
-                    fmc = fmc.eval()  # convert tensor to numpy array
                 # print('median fmc',np.nanmedian(fmc))
                 # print('mean model',np.nanmean(fmc))
                 # print('mean data',np.nanmean(transitdata['depth']))
@@ -1909,8 +2077,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     debug=False,
                 )
                 # convert tensor to numpy array
-                if isinstance(fmc_profiled, tensor.variable.TensorVariable):
-                    fmc_profiled = fmc_profiled.eval()
                 patmos_model_profiled = (
                     fmc_profiled
                     - np.nanmean(fmc_profiled)
@@ -1922,20 +2088,15 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
                 chi2model = np.nansum(offsets_model**2)
-                if isinstance(chi2model, tensor.variable.TensorVariable):
-                    print('chi2model', chi2model.eval(), 'TENSOR YES')
-                else:
-                    print('chi2model', chi2model, 'TENSOR NO')
+                print('chi2model', chi2model, 'TENSOR NO')
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
                 # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
                 # print('chi2 after profiling',chi2modelProfiled)
 
-                # make an array of 10 random walker results
+                # make an array of some randomly selected walker results
                 nrandomwalkers = 100
-                nrandomwalkers = 1000
-                nrandomwalkers = 20
 
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
@@ -1951,9 +2112,11 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 patmos_best_fit = patmos_model
                 param_values_best_fit = param_values_profiled
                 fmcarray = []
+                nwalkersteps = len(np.array(mdptrace)[0, :])
+                print('# of walker steps', nwalkersteps)
                 for _ in range(nrandomwalkers):
-                    iwalker = int(len(tprtrace) * np.random.rand())
-                    # iwalker = max(0, len(tprtrace) - 1 - int(1000* np.random.rand()))
+                    iwalker = int(nwalkersteps * np.random.rand())
+
                     if fit_cloud_parameters:
                         ctp = ctptrace[iwalker]
                         hza = hzatrace[iwalker]
@@ -1963,7 +2126,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
-                    # if fitCloudParameters:
+                    # if runtime_params.fitCloudParameters:
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hza)
                     #    print('fit results; HLoc:', hloc)
@@ -2023,8 +2186,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         verbose=False,
                         debug=False,
                     )
-                    if isinstance(fmcrand, tensor.variable.TensorVariable):
-                        fmcrand = fmcrand.eval()  # convert tensor to array
 
                     # print('len',len(fmcrand))
                     # print('median fmc', np.nanmedian(fmcrand))
@@ -2042,21 +2203,10 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # chi2modelrand = tensor.sum(offsets_modelrand**2)
+                    # chi2modelrand = tnsr.sum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
-                    if isinstance(
-                        chi2modelrand, tensor.variable.TensorVariable
-                    ):
-                        print(
-                            'chi2modelrand', chi2modelrand.eval(), 'TENSOR YES'
-                        )
-                    else:
-                        print('chi2modelrand', chi2modelrand, 'TENSOR NO')
-                    if isinstance(chi2best, tensor.variable.TensorVariable):
-                        print('chi2best', chi2best.eval(), 'TENSOR YES')
-                    else:
-                        print('chi2best', chi2best, 'TENSOR NO')
-                    # if chi2modelrand.eval() < chi2best.eval():
+                    print('chi2modelrand', chi2modelrand)
+                    print('chi2best', chi2best)
                     if chi2modelrand < chi2best:
                         # print('  using this as best', chi2modelrand)
                         chi2best = chi2modelrand

@@ -223,14 +223,17 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
+
     if ctxt.spec:
         ForwardModel = lcmodel(*newnodes)
         pass
     else:
         ForwardModel = orbital(*newnodes)
         pass
-    Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
+    # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
+    Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0 - Norm
+
     return out
 
 
