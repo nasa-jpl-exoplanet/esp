@@ -4,7 +4,7 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 #  more for customDist pymc method:
-# pylint: disable=abstract-method,arguments-differ
+# pylint: notdisable=abstract-method,arguments-differ
 
 import numpy as np
 import matplotlib.pyplot as plt
