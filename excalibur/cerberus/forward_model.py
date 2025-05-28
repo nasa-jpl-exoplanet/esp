@@ -360,10 +360,10 @@ def crbmodel(
     models_by_molecule = {}
     for molecule in molecules:
         atmdepth = (
-            2e0 *
-            np.asmatrix((rp0 + z) * dz)
+            2e0
+            * np.asmatrix((rp0 + z) * dz)
             * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
-            ).flatten()
+        ).flatten()
 
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
@@ -641,13 +641,14 @@ def gettau(
         tau_by_molecule['haze'] = hazecontribution
         pass
 
-    tau = (2e0 * np.asmatrix(dlarray) * np.asmatrix(tau))
+    tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         # print(' MOLECULE:', molecule)
-        tau_by_molecule[molecule] = (2e0 * np.asmatrix(dlarray) * \
-            np.asmatrix(tau_by_molecule[molecule]))
+        tau_by_molecule[molecule] = (
+            2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
+        )
 
     if debug:
         plt.figure(figsize=(12, 6))
@@ -1000,7 +1001,7 @@ def clearfmcerberus(*crbinputs):
 
     # print('FMC in clearfmcerberus pre-mean',fmc)
 
-    fmc = fmc[:,ctxt.cleanup]
+    fmc = fmc[:, ctxt.cleanup]
 
     # fmc = fmc - np.nanmean(fmc)
     # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
@@ -1221,8 +1222,8 @@ def offcerberus2(*crbinputs):
             debug=False,
         )
         pass
-#    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-#    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
+    #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
     ww = ww[ctxt.cleanup]
     flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])

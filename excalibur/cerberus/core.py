@@ -18,7 +18,7 @@ from excalibur.cerberus.forward_model import (
     absorb,
     crbmodel,
     cloudyfmcerberus,
-    clearfmcerberus,
+    # clearfmcerberus,
     offcerberus,
     offcerberus1,
     offcerberus2,
