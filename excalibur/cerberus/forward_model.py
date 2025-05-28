@@ -3,8 +3,6 @@
 # Heritage code shame:
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
-#  more for customDist pymc method:
-# pylint: notdisable=abstract-method,arguments-differ
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -113,6 +111,12 @@ class TensorShell(tnsrgraph.Op):
         inputs = [tnsr.as_tensor(n) for n in nodes]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
+
+    def R_op(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
+
+    def grad(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
 
     def perform(
         self,
