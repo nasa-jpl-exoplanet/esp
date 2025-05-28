@@ -3,7 +3,7 @@
 # Heritage code shame:
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 #  more for customDist pymc method:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,cell-var-from-loop
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
