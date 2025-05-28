@@ -3,8 +3,6 @@
 # Heritage code shame:
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
-#  more for customDist pymc method:
-# pylint: notdisable=abstract-method,arguments-differ
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -109,8 +107,8 @@ class TensorShell(tnsrgraph.Op):
     Do not touch the name of the methods
     '''
 
-    def make_node(self, nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes]
+    def make_node(self, *nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
 
