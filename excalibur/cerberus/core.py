@@ -81,6 +81,29 @@ ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 
+class TensorShell(tnsrgraph.Op):
+    '''
+    GMR: Tensor Shell for custom models
+    Do not touch the name of the methods
+    '''
+
+    def make_node(self, nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in nodes]
+        outputs = [tnsr.vector()]
+        return tnsrgraph.Apply(self, inputs, outputs)
+
+    def perform(
+        self,
+        node: tnsrgraph.Apply,
+        inputs: list[np.ndarray],
+        output_storage: list[list[None]],
+    ) -> None:
+        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
+        return
+
+    pass
+
+
 # ----------------- --------------------------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
 def myxsecsversion():
@@ -2178,7 +2201,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     offsets_modelrand = (
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
-                    chi2modelrand = np.nansum(offsets_modelrand**2)
+                    # chi2modelrand = tnsr.sum(offsets_modelrand**2)
+
                     # print('chi2 for a random walker', chi2modelrand)
                     print('chi2modelrand', chi2modelrand)
                     print('chi2best', chi2best)
