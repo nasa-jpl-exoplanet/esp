@@ -178,9 +178,8 @@ def crbmodel(
     wgrid,
     lbroadening=False,
     lshifting=False,
-    # nlevels=100,  # asdf
-    # nlevels=7,
-    nlevels=5,
+    nlevels=100,
+    # nlevels=5,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
     solrad=10.0,
