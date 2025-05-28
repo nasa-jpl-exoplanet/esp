@@ -246,7 +246,7 @@ class TensorShell(tnsrgraph.Op):
     '''
 
     def make_node(self, *nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in *nodes]
+        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
 
