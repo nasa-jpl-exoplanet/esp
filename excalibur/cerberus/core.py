@@ -46,7 +46,6 @@ from excalibur.cerberus.bounds import (
     apply_profiling,
 )
 
-import time
 import logging
 import os
 import numpy as np
@@ -1103,14 +1102,12 @@ def atmos(
 
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters:
-                        print('TURNING OFF CLOUDS!')
+                        # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
-                        time0 = time.process_time()
 
                         # --< MODEL >--
-                        # asdf
-                        print('nodes going into the tensor model', nodes)
-                        print('nodes going into the tensor model', len(nodes))
+                        # print('nodes going into the tensor model', nodes)
+                        # print('nodes going into the tensor model', len(nodes))
 
                         TensorModel = TensorShell()
 
@@ -1129,9 +1126,6 @@ def atmos(
                             logp=LogLH,
                         )
                         # --------------
-
-                        time1 = time.process_time()
-                        print('TOTAL CPU FOR SETUPMODEL:', time1 - time0)
                         pass
                     else:
                         if 'STIS-WFC3' in ext:
@@ -1252,21 +1246,16 @@ def atmos(
                     # log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
-                    time0 = time.process_time()
                     # --< SAMPLING >--
                     trace = pymc.sample(
                         chainlen,
-                        # cores=4,  # asdfasdfasdf
-                        cores=1,
+                        cores=4,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
-                        # compute_convergence_checks=False,
                         compute_convergence_checks=True,
                         progressbar=verbose,
                     )
                     # ----------------
-                    time1 = time.process_time()
-                    print('TOTAL CPU FOR SAMPLING:', time1 - time0)
                     stats_summary = pymc.stats.summary(trace)
                     # print('stats summary',stats_summary)
                     # print('stats summary',stats_summary.keys())
@@ -1290,7 +1279,7 @@ def atmos(
                         ]
                     else:
                         mctrace[key] = trace.posterior[key]
-                    print('mctrace shape', key, mctrace[key].shape)
+                    # print('mctrace shape', key, mctrace[key].shape)
 
                     # convert Nchain x Nstep 2-D posteriors to a single chain
                     # mctrace[key] = np.ravel(mctrace[key])
@@ -1320,11 +1309,11 @@ def atmos(
 
             # during debugging (script run) show the results as a corner plot
             if verbose:
-                print('tracekeys', tracekeys)
+                # print('tracekeys', tracekeys)
                 all_traces = []
                 all_keys = []
                 for key, thistrace in mctrace.items():
-                    print('going through keys in MCTRACE', key)
+                    # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if model == 'TEC':
                         if key == 'TEC[0]':
@@ -1350,7 +1339,7 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                print('allKeys', all_keys)
+                # print('allKeys', all_keys)
 
                 # param_values_median = (
                 #    tpr,
@@ -2106,13 +2095,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
                 # print('chi2 after profiling',chi2modelProfiled)
 
-                # make an array of 10 random walker results
+                # make an array of some randomly selected walker results
                 nrandomwalkers = 100
-                nrandomwalkers = 1000
-                nrandomwalkers = 20
-                # asdf
-                nrandomwalkers = 3
-                nrandomwalkers = 0
 
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
