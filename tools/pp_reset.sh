@@ -1,7 +1,39 @@
 #! /usr/bin/env bash
 
-myname="${DAWGIE_SSL_PEM_MYNAME:-excalibur.jpl.nasa.gov}"
-myself="${DAWGIE_SSL_PEM_MYSELF:-${HOME}/.ssh/excalibur_identity.pem}"
-let priv_port=${1:-${DAWGIE_FE_PORT:-8080}}+5
+usage()
+{
+    echo "usage: $0 <environment profile>"
+    echo "   <environment profile> : the name of the environment variable set to"
+    echo "                           used when starting the private pipeline."
+    echo ""
+    echo "example: $0 alsMT"
+    echo "example: $0 # defaults to username for <environment profile>" 
+    echo ""
+}
 
-curl -XPOST --cert ${myself} "https://${myname}:${priv_port}/app/reset&archive=${DAWGIE_ARCHIVE:-true}"
+[[ ${1:-""} == "-?" ]] && usage && exit 0
+[[ ${1:-""} == "-h" ]] && usage && exit 0
+[[ ${1:-""} == "--help" ]] && usage && exit 0
+[[ $# -gt 1 ]] && usage && exit -1
+
+ep=${1:-${USER}}
+root=$(realpath $(dirname $0)/..)
+
+if [ -f $ep ]
+then
+    . $ep
+else
+    if [ -f $root/envs/$ep ]
+    then
+        . $root/envs/$ep
+    else
+        echo "Could not resolve $ep"
+        exit -1
+    fi
+fi
+
+myname=${DAWGIE_SSL_PEM_MYNAME:-excalibur.jpl.nasa.gov}
+myself=${DAWGIE_SSL_PEM_MYSELF:-/proj/sdp/${EXCALIBUR_USER}/certs/excalibur_identity.pem}
+let priv_port=${DAWGIE_FE_PORT:-8080}+5
+
+curl -XPOST --cert ${myself} "https://${myname}:${priv_port}/app/reset?archive=${DAWGIE_ARCHIVE:-true}"
