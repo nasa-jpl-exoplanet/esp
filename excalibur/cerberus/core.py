@@ -1087,11 +1087,11 @@ def atmos(
 
                         TensorModel = TensorShell()
 
-                        def LogLH(_, xxxnodes):
+                        def LogLH(_, nodes):
                             '''
                             GMR: Fill in model tensor shell
                             '''
-                            return TensorModel(xxxnodes)
+                            return TensorModel(nodes)
 
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
