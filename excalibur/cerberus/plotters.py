@@ -840,13 +840,12 @@ def plot_walker_evolution(
     for iparam in range(Nparam):
         ax = figure.add_subplot(2, int((Nparam + 1.0) / 2.0), iparam + 1)
         for ic in range(Nchains):
-            jump = ic * chainLength
-            # jumpProfiled = ic * chainLengthProfiled
-            # ax.plot(np.arange(chainLengthProfiled)+1,
-            #        profiledtraces[iparam][jumpProfiled:jumpProfiled+chainLengthProfiled],
+            # jump = ic * chainLength
+            # pymc trace has different format than before. no more jumping
             ax.plot(
                 np.arange(chainLength) + 1,
-                alltraces[iparam][jump : jump + chainLength],
+                # alltraces[iparam][jump : jump + chainLength],
+                alltraces[iparam][ic::Nchains],
                 c=linecolors[ic % len(linecolors)],
                 alpha=1.0 - (ic / float(Nchains) / 2.0),
                 ls='-',
