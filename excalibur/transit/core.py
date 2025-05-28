@@ -5,7 +5,9 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 # GMR: I m out of juice for that
-# pylint: disable=abstract-method,arguments-differ,arguments-renamed,cell-var-from-loop
+# pylint: disable=cell-var-from-loop
+#  these should all be fixed now (as in cerberus)
+# abstract-method,arguments-differ,arguments-renamed
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -243,8 +245,8 @@ class TensorShell(tnsrgraph.Op):
     Do not touch the name of the methods
     '''
 
-    def make_node(self, nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes]
+    def make_node(self, *nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in *nodes]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
 
