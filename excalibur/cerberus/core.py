@@ -2178,7 +2178,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     offsets_modelrand = (
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
-                    chi2modelrand = np.sum(offsets_modelrand**2)
+                    chi2modelrand = np.nansum(offsets_modelrand**2)
 
                     # print('chi2 for a random walker', chi2modelrand)
                     print('chi2modelrand', chi2modelrand)
