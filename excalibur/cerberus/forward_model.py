@@ -4,28 +4,20 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
-import time
-
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-# import sys
-# import pytensor
-# from pytensor.ifelse import ifelse
-from pytensor import tensor
-
 import excalibur
-
-# 2/13/25 Geoff: this line has been here for a while. maybe not required anymore? We'll see...
-# import excalibur.cerberus.forward_model  # is this needed for the context updater?
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
 
 # -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
 from collections import namedtuple
+
+temporarilydropcloudinterpolation = True
 
 log = logging.getLogger(__name__)
 
@@ -127,19 +119,21 @@ def LogLikelihood(inputs):
     # ForwardModel = crbmodel(*newnodes)
     ForwardModel = clearfmcerberus(*newnodes)
 
-    print('INSIDE OF LOGLIKELIHOOD!!')
+    # ForwardModel is a 1xN matrix
+    #   flip the axes so that it aligns with ctxt.mcmcdat
+    # No! actually this makes it worse. end up with NxN and then **2 is a mess
+    # ForwardModel = ForwardModel.transpose()
+
+    ForwardModel = np.asarray(ForwardModel).reshape(-1)
 
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
-    # asdf
+
+    #  this is a very useful print statement. use it during debugging
+    # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
+
+    #  turn off normalization for now (it is constant, so no effect)
     # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
     # out -= Norm
-
-    print('  forwardmodel', ForwardModel.eval())
-    print('  out', out.eval())
-    print(
-        '  chi2_reduced for this model:',
-        -2 * np.sum(out.eval()) / len(out.eval()),
-    )
 
     return out
 
@@ -181,8 +175,6 @@ def crbmodel(
     radius solrad evenly log divided amongst nlevels steps
     '''
 
-    t0 = time.process_time()
-
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
     #  maybe put them inside runtime/ops.xml to ensure consistency?
@@ -203,9 +195,6 @@ def crbmodel(
     # print('delta-pressure',len(dp),dp)
     dPoverP = (p[1] - p[0]) / p[0]
 
-    t1 = time.process_time()
-    print('CPU: startup', t1 - t0)
-
     # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
         if cheq is None:
@@ -218,8 +207,6 @@ def crbmodel(
     else:
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
-    t2 = time.process_time()
-    print('CPU: mmw', t2 - t1)
 
     if debug:
         print('mmw', mmw * 6.022e26)
@@ -235,9 +222,6 @@ def crbmodel(
     rdz = abs(Hs / 2.0 * np.log(1.0 + dPoverP))
     dz = 2 * rdz
     z = dz * np.linspace(0, len(p) - 1, len(p))
-
-    t3 = time.process_time()
-    print('CPU: z grid', t3 - t2)
 
     rho = p * 1e5 / (cst.Boltzmann * temp)
     tau, tau_by_molecule, wtau = gettau(
@@ -265,8 +249,6 @@ def crbmodel(
         hzwscale=hzwscale,
         debug=debug,
     )
-    t4 = time.process_time()
-    print('CPU: gettau', t4 - t3)
 
     # print('tau', tau)
     # for molecule, tau in tau_by_molecule.items:
@@ -289,9 +271,8 @@ def crbmodel(
         pass
     if not np.all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
-        tloop0 = time.process_time()
-        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM  asdf
-        if 0:
+        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
+        if not temporarilydropcloudinterpolation:
             for index in np.arange(wtau.size):
                 # print('reversep', reversep)
                 # print('reversep', reversep.shape)
@@ -317,12 +298,9 @@ def crbmodel(
                         :cloudindex, index
                     ].set(0.0)
                 pass
-        tloop1 = time.process_time()
-        print('CPU:    loop substep1', tloop1 - tloop0)
-        tloop0 = time.process_time()
 
-        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM  asdf
-        if 0:
+        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
+        if not temporarilydropcloudinterpolation:
             print('reversep', reversep)
 
             taus = []
@@ -358,8 +336,6 @@ def crbmodel(
                     myspl = itp(reversep, tau_by_molecule[molecule][:, index])
                     taus_by_molecule.append(myspl(10.0**cloudtp))
 
-            tloopmid1 = time.process_time()
-
             tau = tau[cloudindex, :].set(np.array(taus))
             for molecule in molecules:
                 tau_by_molecule[molecule] = tau_by_molecule[molecule][
@@ -371,35 +347,24 @@ def crbmodel(
                     :cloudindex, :
                 ].set(0.0)
 
-            tloop1 = time.process_time()
-            print('CPU:    loop substep3redo', tloop1 - tloop0)
-            print('CPU:                 mid1', tloopmid1 - tloop0)
-            print('CPU:                 mid2', tloop1 - tloopmid1)
-
             ctpdpress = 10.0**cloudtp - p[cloudindex]
             ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
             rp0 += z[cloudindex] + ctpdz
         pass
     matrix1 = (rp0 + z) * dz
-    matrix2 = 1.0 - tensor.exp(-tau)
-    atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
-    model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
+    matrix2 = 1.0 - np.exp(-tau)
+    atmdepth = (2e0 * np.asmatrix(matrix1) * np.asmatrix(matrix2)).flatten()
 
-    t5 = time.process_time()
-    print('CPU: before molecule loop', t5 - t4)
+    model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
 
     models_by_molecule = {}
     for molecule in molecules:
-        # atmdepth = (
-        #    2e0
-        #    * np.array(
-        #        np.asmatrix((rp0 + np.array(z)) * np.array(dz))
-        #        * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
-        # ).flatten()
-        # )
-        atmdepth = 2e0 * tensor.nlinalg.matrix_dot(
-            (rp0 + z) * dz, 1.0 - tensor.exp(-tau_by_molecule[molecule])
-        )
+        atmdepth = (
+            2e0 *
+            np.asmatrix((rp0 + z) * dz)
+            * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
+            ).flatten()
+
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
         ) ** 2
@@ -441,15 +406,11 @@ def crbmodel(
             pass
         plt.show()
         pass
-    t6 = time.process_time()
-    print('CPU: last section', t6 - t5)
-    print('CPU: total cpu time', t6 - t0)
 
-    # print('crbmodel: model at end',model.eval())
+    # print('crbmodel: model at end',model)
 
-    #  asdf
-    #    if break_down_by_molecule:
-    #        return model[::-1], models_by_molecule
+    if break_down_by_molecule:
+        return model[::-1], models_by_molecule
     return model[::-1]
 
 
@@ -512,7 +473,6 @@ def gettau(
     # print('dl', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
-    t0 = time.process_time()
     for elem in mixratio:
         # tau_by_molecule[elem] = np.zeros((len(z), wgrid.size))
         mmr = 10.0 ** (mixratio[elem] - 6.0)
@@ -554,10 +514,7 @@ def gettau(
             tau = tau + mmr * sigma * np.array([rho]).T
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
-    t1 = time.process_time()
-    print('CPU time in gettau: molecule loop', t1 - t0)
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
-    t0 = time.process_time()
     for cia in cialist:
         if cia == 'H2-H2':
             f1 = fH2
@@ -586,8 +543,6 @@ def gettau(
             sigma[~np.isfinite(sigma)] = 0e0
         tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
         tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-    t1 = time.process_time()
-    print('CPU time in gettau: first tau add', t1 - t0)
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
@@ -638,8 +593,7 @@ def gettau(
                 rh[rh < 0] = 0e0
             else:
                 rh = thisfrh(np.log10(p)) * 0
-            # if debug:
-            if 0:
+            if debug:
                 jptprofile = 'J' + hzp
                 jdata = np.array(hzlib['PROFILE'][0][jptprofile])
                 jpres = np.array(hzlib['PROFILE'][0]['PRESSURE'])
@@ -683,24 +637,19 @@ def gettau(
         # print('lower haze',sigma)
         # print('lower haze', rh)
         hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
-        # convert the haze contribution to a tensor
-        #  otherwise haze will be different type than all other contributions
-        hazecontribution = tensor.as_tensor(hazecontribution)
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
 
-    tau = 2e0 * tensor.nlinalg.matrix_dot(tensor.as_tensor(dlarray), tau)
+    tau = (2e0 * np.asmatrix(dlarray) * np.asmatrix(tau))
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         # print(' MOLECULE:', molecule)
-        tau_by_molecule[molecule] = 2e0 * tensor.nlinalg.matrix_dot(
-            tensor.as_tensor(dlarray), tau_by_molecule[molecule]
-        )
+        tau_by_molecule[molecule] = (2e0 * np.asmatrix(dlarray) * \
+            np.asmatrix(tau_by_molecule[molecule]))
 
-    if 0:
-        # if debug:  #asdf
+    if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
             np.log10(tau),
@@ -864,9 +813,6 @@ def intflor(wave, dwave, nu, gamma):
 
 # -------------------------- -----------------------------------------
 # -- PYMC DETERMINISTIC FUNCTIONS -- ---------------------------------
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
@@ -963,8 +909,6 @@ def cloudyfmcerberus(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def clearfmcerberus(*crbinputs):
     '''
     Wrapper around Cerberus forward model - NO CLOUDS!
@@ -984,7 +928,7 @@ def clearfmcerberus(*crbinputs):
         mdp = crbinputs[0]
     else:
         tpr, mdp = crbinputs
-    print(' param values inside of forward model', tpr, mdp)
+    # print(' param values inside of forward model', tpr, mdp)
 
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -1054,19 +998,20 @@ def clearfmcerberus(*crbinputs):
         )
         pass
 
-    # print('FMC in clearfmcerberus pre-mean',fmc.eval())
-    # fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    # fmc = fmc[ctxt.cleanup] - np.mean(fmc[ctxt.cleanup])
-    fmc = fmc[ctxt.cleanup] - tensor.mean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    # print('FMC in clearfmcerberus final',fmc.eval())
+    # print('FMC in clearfmcerberus pre-mean',fmc)
+
+    fmc = fmc[:,ctxt.cleanup]
+
+    # fmc = fmc - np.nanmean(fmc)
+    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc - np.mean(fmc)
+    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
+
+    # print('FMC in clearfmcerberus final',fmc)
 
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1150,9 +1095,6 @@ def offcerberus(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1222,9 +1164,6 @@ def offcerberus1(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1282,8 +1221,8 @@ def offcerberus2(*crbinputs):
             debug=False,
         )
         pass
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+#    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
+#    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
     ww = ww[ctxt.cleanup]
     flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
@@ -1294,9 +1233,6 @@ def offcerberus2(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1366,9 +1302,6 @@ def offcerberus3(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1436,9 +1369,6 @@ def offcerberus4(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1508,9 +1438,6 @@ def offcerberus5(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1578,9 +1505,6 @@ def offcerberus6(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
@@ -1648,9 +1572,6 @@ def offcerberus7(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
