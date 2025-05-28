@@ -243,12 +243,19 @@ class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
     Do not touch the name of the methods
+    GB: R_op and grad definitions added to avoid abstract-method pylint error
     '''
 
     def make_node(self, *nodes) -> tnsrgraph.Apply:
         inputs = [tnsr.as_tensor(n) for n in nodes[0]]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
+
+    def R_op(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
+
+    def grad(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
 
     def perform(
         self,

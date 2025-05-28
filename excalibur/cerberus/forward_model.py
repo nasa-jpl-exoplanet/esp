@@ -105,6 +105,7 @@ class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
     Do not touch the name of the methods
+    GB: R_op and grad definitions added to avoid abstract-method pylint error
     '''
 
     def make_node(self, *nodes) -> tnsrgraph.Apply:
