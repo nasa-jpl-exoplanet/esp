@@ -14,6 +14,9 @@ import excalibur
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
 
+import pytensor.graph as tnsrgraph
+import pytensor.tensor as tnsr
+
 # -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
 from collections import namedtuple
 
@@ -98,6 +101,36 @@ def ctxtupdt(
     return
 
 
+class TensorShell(tnsrgraph.Op):
+    '''
+    GMR: Tensor Shell for custom models
+    Do not touch the name of the methods
+    GB: R_op and grad definitions added to avoid abstract-method pylint error
+    '''
+
+    def make_node(self, *nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
+        outputs = [tnsr.vector()]
+        return tnsrgraph.Apply(self, inputs, outputs)
+
+    def R_op(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
+
+    def grad(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
+
+    def perform(
+        self,
+        node: tnsrgraph.Apply,
+        inputs: list[np.ndarray],
+        output_storage: list[list[None]],
+    ) -> None:
+        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
+        return
+
+    pass
+
+
 # GMR: Gregoire s legacy
 def LogLikelihood(inputs):
     '''
@@ -152,9 +185,8 @@ def crbmodel(
     wgrid,
     lbroadening=False,
     lshifting=False,
-    # nlevels=100,  # asdf
-    # nlevels=7,
-    nlevels=5,
+    nlevels=100,
+    # nlevels=5,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
     solrad=10.0,

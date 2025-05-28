@@ -3,7 +3,7 @@
 # Heritage code shame:
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 #  more for customDist pymc method:
-# pylint: disable=abstract-method,arguments-differ,cell-var-from-loop,invalid-name
+# pylint: disable=invalid-name,cell-var-from-loop
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -14,7 +14,8 @@ from excalibur.target.targetlists import get_target_lists
 # from excalibur.cerberus.core import savesv
 from excalibur.cerberus.forward_model import (
     ctxtupdt,
-    LogLikelihood,
+    # LogLikelihood,
+    TensorShell,
     absorb,
     crbmodel,
     cloudyfmcerberus,
@@ -56,8 +57,6 @@ from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 
 import pymc
-import pytensor.graph as tnsrgraph
-import pytensor.tensor as tnsr
 
 
 log = logging.getLogger(__name__)
@@ -80,29 +79,6 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
-
-
-class TensorShell(tnsrgraph.Op):
-    '''
-    GMR: Tensor Shell for custom models
-    Do not touch the name of the methods
-    '''
-
-    def make_node(self, nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes]
-        outputs = [tnsr.vector()]
-        return tnsrgraph.Apply(self, inputs, outputs)
-
-    def perform(
-        self,
-        node: tnsrgraph.Apply,
-        inputs: list[np.ndarray],
-        output_storage: list[list[None]],
-    ) -> None:
-        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
-        return
-
-    pass
 
 
 # ----------------- --------------------------------------------------
@@ -2203,7 +2179,6 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # chi2modelrand = tnsr.sum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
                     print('chi2modelrand', chi2modelrand)
                     print('chi2best', chi2best)
