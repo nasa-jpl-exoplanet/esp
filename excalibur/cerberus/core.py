@@ -3,6 +3,7 @@
 # Heritage code shame:
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 #  more for customDist pymc method:
+# pylint: disable=invalid-name
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -1086,11 +1087,11 @@ def atmos(
 
                         TensorModel = TensorShell()
 
-                        def LogLH(_, nodes):
+                        def LogLH(_, xxxnodes):
                             '''
                             GMR: Fill in model tensor shell
                             '''
-                            return TensorModel(nodes)
+                            return TensorModel(xxxnodes)
 
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
