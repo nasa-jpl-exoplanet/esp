@@ -615,15 +615,18 @@ def atmos(
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
         modfam = ['TEC']  # Ariel sims are currently only TEC equilibrium models
-        # modparlbl = {'TEC':['XtoH', 'CtoO']}
         modparlbl = {'TEC': ['XtoH', 'CtoO', 'NtoO']}
 
         # ** select which Ariel model to fit **
         #   previously (with taurex) there were 8 options. now 4 options:
-        # atmosModels = ['cerberus', 'cerberusNoclouds',
+        # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
-        # arielModel = 'cerberusNoclouds'
-        arielmodel = 'cerberus'
+        if runtime_params.fitCloudParameters:
+            log.warning('--< CERBERUS: using CLOUDY arielsim forward model >--')
+            arielmodel = 'cerberus'
+        else:
+            log.warning('--< CERBERUS: using CLOUDFREE arielsim forward model >--')
+            arielmodel = 'cerberusNoclouds'
 
         # option to fix N/O
         if not runtime_params.fitNtoO:
