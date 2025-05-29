@@ -14,12 +14,10 @@ from excalibur.target.targetlists import get_target_lists
 # from excalibur.cerberus.core import savesv
 from excalibur.cerberus.forward_model import (
     ctxtupdt,
-    # LogLikelihood,
     TensorShell,
     absorb,
     crbmodel,
     cloudyfmcerberus,
-    # clearfmcerberus,
     offcerberus,
     offcerberus1,
     offcerberus2,
@@ -1076,6 +1074,12 @@ def atmos(
                         nodeshape=nodeshape,
                     )
 
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
+
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters:
                         # print('TURNING OFF CLOUDS!')
@@ -1087,16 +1091,10 @@ def atmos(
 
                         TensorModel = TensorShell()
 
-                        def LogLH(_, nodes):
-                            '''
-                            GMR: Fill in model tensor shell
-                            '''
-                            return TensorModel(nodes)
-
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
                         _ = pymc.CustomDist(
-                            "likelihood for fit spectrum",
+                            "likelihood for cloud-free spectrum",
                             nodes,
                             observed=tspectrum[cleanup],
                             logp=LogLH,
@@ -1198,18 +1196,20 @@ def atmos(
                                 pass
                         if 'STIS-WFC3' not in ext:
                             log.warning('--< STANDARD MCMC (WITH CLOUDS) >--')
-                            _ = pymc.Normal(
-                                'mcdata',
-                                mu=cloudyfmcerberus(*nodes),
-                                sigma=tspecerr[cleanup],
+
+                            # --< MODEL >--
+                            # print('nodes going into the tensor model', nodes)
+                            # print('nodes going into the tensor model', len(nodes))
+
+                            TensorModel = TensorShell()
+
+                            _ = pymc.CustomDist(
+                                "likelihood for cloudy spectrum",
+                                nodes,
                                 observed=tspectrum[cleanup],
+                                logp=LogLH,
                             )
-                            # tau=1e0/tspecerr[cleanup]**2,
-                            # tau=1e0/(np.nanmedian(tspecerr[cleanup])**2),
-                            # this (_mcdata) is similar to the input spectrum.
-                            #   maybe it's the final forward model?  (there's only one)
-                            #   oh right, this is just the definition; there's no sampling yet
-                            #   so why does it bother making one call.  what param values?
+                            # --------------
                         pass
 
                     if runtime_params.MCMC_sampler == 'slice':
