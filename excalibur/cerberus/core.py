@@ -2077,9 +2077,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 offsets_model = (
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
-                print('offsets_model', offsets_model)
                 chi2model = np.nansum(offsets_model**2)
-                print('chi2model', chi2model, 'TENSOR NO')
+                # print('chi2model', chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
@@ -2104,7 +2103,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 param_values_best_fit = param_values_profiled
                 fmcarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
-                print('# of walker steps', nwalkersteps)
+                # print('# of walker steps', nwalkersteps)
                 for _ in range(nrandomwalkers):
                     iwalker = int(nwalkersteps * np.random.rand())
 
@@ -2195,8 +2194,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
-                    print('chi2modelrand', chi2modelrand)
-                    print('chi2best', chi2best)
+                    # print('chi2modelrand', chi2modelrand)
+                    # print('chi2best', chi2best)
                     if chi2modelrand < chi2best:
                         # print('  using this as best', chi2modelrand)
                         chi2best = chi2modelrand
