@@ -625,7 +625,7 @@ def atmos(
             log.warning('--< CERBERUS: using CLOUDY arielsim forward model >--')
             arielmodel = 'cerberus'
         else:
-            log.warning('--< CERBERUS: using CLOUDFREE arielsim forward model >--')
+            log.warning('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel = 'cerberusNoclouds'
 
         # option to fix N/O

@@ -198,10 +198,7 @@ class AnalysisSv(ExcaliburSV):
         if self['STATUS'][-1]:
             for savedresult in self['data'].keys():
                 if 'plot' in savedresult:
-                    if (
-                        savedresult == 'plot_massVmetals'
-                        or savedresult == 'plot_mass_v_metals'
-                    ):
+                    if savedresult in ('plot_massVmetals', 'plot_mass_v_metals'):
                         plotlabel = 'Planet Mass vs Metallicity'
                     elif savedresult == 'plot_fitT':
                         plotlabel = 'T_eff'
