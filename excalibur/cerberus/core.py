@@ -2077,7 +2077,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 offsets_model = (
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
-                print('offsets_model')
+                print('offsets_model', offsets_model)
                 chi2model = np.nansum(offsets_model**2)
                 print('chi2model', chi2model, 'TENSOR NO')
 
