@@ -318,7 +318,12 @@ def crbmodel(
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
         ) ** 2
+
+        # convert matrix to 1-d array
+        models_by_molecule[molecule] = np.asarray(models_by_molecule[molecule]).reshape(-1)
+
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
+
     if verbose:
         plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
@@ -359,9 +364,18 @@ def crbmodel(
 
     # print('crbmodel: model at end',model)
 
+    # fmc is a 1xN matrix; it needs to be a 1-d array
+    #  otherwise some subsequent * or ** operations fail
+    #   flip the axes so that it aligns with ctxt.mcmcdat?
+    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
+    # fmc = fmc.transpose()
+    #  this does the trick:
+    model = np.asarray(model).reshape(-1)
+    model = model[::-1]
+
     if break_down_by_molecule:
-        return model[::-1], models_by_molecule
-    return model[::-1]
+        return model, models_by_molecule
+    return model
 
 
 # --------------------------- ----------------------------------------
@@ -854,13 +868,6 @@ def cloudyfmcerberus(*crbinputs):
     fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
     # print('FMC in cloudyfmcerberus final',fmc)
 
-    # fmc is a 1xN matrix; it needs to be a 1-d array
-    #   flip the axes so that it aligns with ctxt.mcmcdat?
-    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
-    # fmc = fmc.transpose()
-    #  this does the trick:
-    fmc = np.asarray(fmc).reshape(-1)
-
     return fmc
 
 
@@ -959,13 +966,6 @@ def clearfmcerberus(*crbinputs):
     fmc = fmc - np.mean(fmc)
     fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
     # print('FMC in clearfmcerberus final',fmc)
-
-    # fmc is a 1xN matrix; it needs to be a 1-d array
-    #   flip the axes so that it aligns with ctxt.mcmcdat?
-    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
-    # fmc = fmc.transpose()
-    #  this does the trick:
-    fmc = np.asarray(fmc).reshape(-1)
 
     return fmc
 
