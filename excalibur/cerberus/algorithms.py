@@ -221,6 +221,7 @@ class Atmos(dawgie.Algorithm):
                     MCMC_chain_length=runtime['cerberus_steps'],
                     # MCMC_sampler='slice',
                     MCMC_sampler='metropolis',
+                    # useCloudfreeArielsim=True,
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],

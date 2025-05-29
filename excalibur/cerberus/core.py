@@ -11,9 +11,10 @@ import excalibur
 import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
+from excalibur.cerberus.fmcontext import ctxtupdt
+
 # from excalibur.cerberus.core import savesv
 from excalibur.cerberus.forward_model import (
-    ctxtupdt,
     TensorShell,
     absorb,
     crbmodel,

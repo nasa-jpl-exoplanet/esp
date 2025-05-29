@@ -17,92 +17,11 @@ from excalibur.util.cerberus import crbce, getmmw
 import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
-from collections import namedtuple
+from excalibur.cerberus.fmcontext import ctxtupdt
 
-temporarilydropcloudinterpolation = True
+temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
-
-CONTEXT = namedtuple(
-    'CONTEXT',
-    [
-        'cleanup',
-        'model',
-        'p',
-        'solidr',
-        'orbp',
-        'tspectrum',
-        'xsl',
-        'spc',
-        'modparlbl',
-        'hzlib',
-        'fixedParams',
-        'mcmcdat',
-        'mcmcsig',
-        'nodeshape',
-        'forwardmodel',
-    ],
-)
-ctxt = CONTEXT(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixedParams=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    forwardmodel=None,
-)
-
-
-def ctxtupdt(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixed_params=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    forwardmodel=None,
-):
-    '''
-    G. ROUDIER: Update global context for pymc deterministics
-    '''
-    # sys.modules[__name__].ctxt = CONTEXT(
-    excalibur.cerberus.forward_model.ctxt = CONTEXT(
-        cleanup=cleanup,
-        model=model,
-        p=p,
-        solidr=solidr,
-        orbp=orbp,
-        tspectrum=tspectrum,
-        xsl=xsl,
-        spc=spc,
-        modparlbl=modparlbl,
-        hzlib=hzlib,
-        fixedParams=fixed_params,
-        mcmcdat=mcmcdat,
-        mcmcsig=mcmcsig,
-        nodeshape=nodeshape,
-        forwardmodel=forwardmodel,
-    )
-    # excalibur.cerberus.core.ctxt = excalibur.cerberus.forward_model.ctxt
-    return
 
 
 class TensorShell(tnsrgraph.Op):
