@@ -17,6 +17,7 @@ from excalibur.cerberus.forward_model import (
     TensorShell,
     absorb,
     crbmodel,
+    clearfmcerberus,
     cloudyfmcerberus,
     offcerberus,
     offcerberus1,
@@ -100,7 +101,6 @@ def myxsecs(spc, out, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
-    # logarithmicOpacitySumming = True
     logarithmic_opacity_summing = False
 
     # these used to be default parameters above, but are dangerous-default-values
@@ -127,19 +127,9 @@ def myxsecs(spc, out, verbose=False):
     for p in planet_letters:
         out['data'][p] = {}
 
-        # model has to be specified, if there is a list of models
-        # if 'models' in spc['data'].keys():
-        #    arielModel = spc['data']['models'][0]  # arbitrary model choice; all have same WB grid
-        #    wgrid = np.array(spc['data'][p][arielModel]['WB'])
-        # else:
-
         wgrid = np.array(spc['data'][p]['WB'])
         qtgrid = gettpf(knownspecies)
         library = {}
-
-        # EDIT HERE!
-        # print('cerb core  spc keys',spc['data'][p]['WB'])
-        # exit()
 
         nugrid = (1e4 / np.copy(wgrid))[::-1]
         dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
@@ -1056,24 +1046,6 @@ def atmos(
                         modparlbl[model],
                     )
 
-                    # before calling MCMC, save the fixed-parameter info in the context
-                    ctxtupdt(
-                        cleanup=cleanup,
-                        model=model,
-                        p=p,
-                        solidr=solidr,
-                        orbp=orbp,
-                        tspectrum=tspectrum,
-                        xsl=xsl,
-                        spc=spc,
-                        modparlbl=modparlbl,
-                        hzlib=crbhzlib,
-                        fixed_params=fixed_params,
-                        mcmcdat=tspectrum[cleanup],
-                        mcmcsig=tspecerr[cleanup],
-                        nodeshape=nodeshape,
-                    )
-
                     def LogLH(_, nodes):
                         '''
                         GMR: Fill in model tensor shell
@@ -1084,6 +1056,25 @@ def atmos(
                     if not runtime_params.fitCloudParameters:
                         # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
+
+                        # before calling MCMC, save the fixed-parameter info in the context
+                        ctxtupdt(
+                            cleanup=cleanup,
+                            model=model,
+                            p=p,
+                            solidr=solidr,
+                            orbp=orbp,
+                            tspectrum=tspectrum,
+                            xsl=xsl,
+                            spc=spc,
+                            modparlbl=modparlbl,
+                            hzlib=crbhzlib,
+                            fixed_params=fixed_params,
+                            mcmcdat=tspectrum[cleanup],
+                            mcmcsig=tspecerr[cleanup],
+                            nodeshape=nodeshape,
+                            forwardmodel=clearfmcerberus,
+                        )
 
                         # --< MODEL >--
                         # print('nodes going into the tensor model', nodes)
@@ -1196,6 +1187,25 @@ def atmos(
                                 pass
                         if 'STIS-WFC3' not in ext:
                             log.warning('--< STANDARD MCMC (WITH CLOUDS) >--')
+
+                            # before calling MCMC, save the fixed-parameter info in the context
+                            ctxtupdt(
+                                cleanup=cleanup,
+                                model=model,
+                                p=p,
+                                solidr=solidr,
+                                orbp=orbp,
+                                tspectrum=tspectrum,
+                                xsl=xsl,
+                                spc=spc,
+                                modparlbl=modparlbl,
+                                hzlib=crbhzlib,
+                                fixed_params=fixed_params,
+                                mcmcdat=tspectrum[cleanup],
+                                mcmcsig=tspecerr[cleanup],
+                                nodeshape=nodeshape,
+                                forwardmodel=cloudyfmcerberus,
+                            )
 
                             # --< MODEL >--
                             # print('nodes going into the tensor model', nodes)
@@ -2063,6 +2073,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 offsets_model = (
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
+                print('offsets_model')
                 chi2model = np.nansum(offsets_model**2)
                 print('chi2model', chi2model, 'TENSOR NO')
 
