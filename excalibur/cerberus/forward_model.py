@@ -150,7 +150,8 @@ def LogLikelihood(inputs):
         pass
     # ForwardModel = orbital(*newnodes)
     # ForwardModel = crbmodel(*newnodes)
-    ForwardModel = clearfmcerberus(*newnodes)
+    # ForwardModel = clearfmcerberus(*newnodes)
+    ForwardModel = cloudyfmcerberus(*newnodes)
 
     # ForwardModel is a 1xN matrix
     #   flip the axes so that it aligns with ctxt.mcmcdat
@@ -851,14 +852,15 @@ def cloudyfmcerberus(*crbinputs):
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
     ctp, hza, hzloc, hzthick, tpr, mdp = crbinputs
-    print(
-        ' not-fixed cloud parameters (cloudy):',
-        tpr,
-        ctp,
-        hza,
-        hzloc,
-        hzthick,
-    )
+    # print(
+    #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
+    #    ctp,
+    #    hza,
+    #    hzloc,
+    #    hzthick,
+    #    tpr,
+    #    mdp
+    # )
 
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -868,31 +870,20 @@ def cloudyfmcerberus(*crbinputs):
             tceqdict['XtoH'] = ctxt.fixedParams['XtoH']
         else:
             tceqdict['XtoH'] = mdp[mdpindex]
-            # tceqdict['XtoH'] = mdp[mdpindex]     make sure to fix/test this next!!!
-            # asdf
             mdpindex += 1
 
         if 'CtoO' in ctxt.fixedParams:
             tceqdict['CtoO'] = ctxt.fixedParams['CtoO']
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
-            # tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-            # tceqdict['NtoO'] = mdp[mdpindex]
-        # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+        # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
-        #        fmc = crbmodel(None, hza, ctp, ctxt.solidr, ctxt.orbp,
-        #                       ctxt.xsl['data'][ctxt.p]['XSECS'],
-        #                       ctxt.xsl['data'][ctxt.p]['QTGRID'],
-        #                       tpr, np.array(ctxt.spc['data'][ctxt.p]['WB']),
-        #                       hzlib=ctxt.hzlib,  hzp='AVERAGE', hztop=hzloc,
-        #                       hzwscale=hzthick, cheq=tceqdict, pnet=ctxt.p,
-        #                       verbose=False, debug=False)
         fmc = crbmodel(
             None,
             hza,
@@ -937,8 +928,15 @@ def cloudyfmcerberus(*crbinputs):
             debug=False,
         )
 
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc[:, ctxt.cleanup]
+    # print('FMC in clearfmcerberus pre-mean',fmc)
+
+    # fmc = fmc - np.nanmean(fmc)
+    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc - np.mean(fmc)
+    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
+    # print('FMC in clearfmcerberus final',fmc)
+
     return fmc
 
 
