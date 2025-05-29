@@ -41,6 +41,7 @@ CONTEXT = namedtuple(
         'mcmcdat',
         'mcmcsig',
         'nodeshape',
+        'forwardmodel',
     ],
 )
 ctxt = CONTEXT(
@@ -58,6 +59,7 @@ ctxt = CONTEXT(
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
+    forwardmodel=None,
 )
 
 
@@ -76,6 +78,7 @@ def ctxtupdt(
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
+    forwardmodel=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -96,6 +99,7 @@ def ctxtupdt(
         mcmcdat=mcmcdat,
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
+        forwardmodel=forwardmodel,
     )
     # excalibur.cerberus.core.ctxt = excalibur.cerberus.forward_model.ctxt
     return
@@ -151,7 +155,8 @@ def LogLikelihood(inputs):
     # ForwardModel = orbital(*newnodes)
     # ForwardModel = crbmodel(*newnodes)
     # ForwardModel = clearfmcerberus(*newnodes)
-    ForwardModel = cloudyfmcerberus(*newnodes)
+    # ForwardModel = cloudyfmcerberus(*newnodes)
+    ForwardModel = ctxt.forwardmodel(*newnodes)
 
     # ForwardModel is a 1xN matrix
     #   flip the axes so that it aligns with ctxt.mcmcdat
@@ -165,9 +170,9 @@ def LogLikelihood(inputs):
     #  this is a very useful print statement. use it during debugging
     # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
 
-    #  turn off normalization for now (it is constant, so no effect)
-    # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
-    # out -= Norm
+    # normalize the log(Likelihood); as a constant, it shouldn't have any effect
+    Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
+    out -= Norm
 
     return out
 
