@@ -85,4 +85,7 @@ def ctxtupdt(
         nodeshape=nodeshape,
         forwardmodel=forwardmodel,
     )
+
+    excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt
+
     return
