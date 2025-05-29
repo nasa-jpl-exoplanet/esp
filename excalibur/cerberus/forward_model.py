@@ -158,17 +158,10 @@ def LogLikelihood(inputs):
     # ForwardModel = cloudyfmcerberus(*newnodes)
     ForwardModel = ctxt.forwardmodel(*newnodes)
 
-    # ForwardModel is a 1xN matrix
-    #   flip the axes so that it aligns with ctxt.mcmcdat
-    # No! actually this makes it worse. end up with NxN and then **2 is a mess
-    # ForwardModel = ForwardModel.transpose()
-
-    ForwardModel = np.asarray(ForwardModel).reshape(-1)
-
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
 
-    #  this is a very useful print statement. use it during debugging
-    # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
+    # this is a useful check; chi2_red should decrease toward ~1 (for simulated data)
+    print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
 
     # normalize the log(Likelihood); as a constant, it shouldn't have any effect
     Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
@@ -934,13 +927,20 @@ def cloudyfmcerberus(*crbinputs):
         )
 
     fmc = fmc[:, ctxt.cleanup]
-    # print('FMC in clearfmcerberus pre-mean',fmc)
+    # print('FMC in cloudyfmcerberus pre-mean',fmc)
 
     # fmc = fmc - np.nanmean(fmc)
     # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     fmc = fmc - np.mean(fmc)
     fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
-    # print('FMC in clearfmcerberus final',fmc)
+    # print('FMC in cloudyfmcerberus final',fmc)
+
+    # fmc is a 1xN matrix; it needs to be a 1-d array
+    #   flip the axes so that it aligns with ctxt.mcmcdat?
+    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
+    # fmc = fmc.transpose()
+    #  this does the trick:
+    fmc = np.asarray(fmc).reshape(-1)
 
     return fmc
 
@@ -948,11 +948,9 @@ def cloudyfmcerberus(*crbinputs):
 def clearfmcerberus(*crbinputs):
     '''
     Wrapper around Cerberus forward model - NO CLOUDS!
+    (Note that this is not actually a cloud-free model; it is a fixed-cloud model!!)
     '''
-    # ctp = 3.    # cloud deck is very deep - 1000 bars
-    # hza = -10.  # small number means essentially no haze
-    # hzloc = 0.
-    # hzthick = 0.
+    # these fixed values are probably set in ariel/core, e.g. -10 for HScale
     ctp = ctxt.fixedParams['CTP']
     hza = ctxt.fixedParams['HScale']
     hzloc = ctxt.fixedParams['HLoc']
@@ -1034,16 +1032,21 @@ def clearfmcerberus(*crbinputs):
         )
         pass
 
-    # print('FMC in clearfmcerberus pre-mean',fmc)
-
     fmc = fmc[:, ctxt.cleanup]
+    # print('FMC in clearfmcerberus pre-mean',fmc)
 
     # fmc = fmc - np.nanmean(fmc)
     # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     fmc = fmc - np.mean(fmc)
     fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
-
     # print('FMC in clearfmcerberus final',fmc)
+
+    # fmc is a 1xN matrix; it needs to be a 1-d array
+    #   flip the axes so that it aligns with ctxt.mcmcdat?
+    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
+    # fmc = fmc.transpose()
+    #  this does the trick:
+    fmc = np.asarray(fmc).reshape(-1)
 
     return fmc
 
