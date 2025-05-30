@@ -10,11 +10,10 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-import excalibur
+# import excalibur
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
-
-from excalibur.cerberus.fmcontext import ctxtupdt
+# from excalibur.cerberus.fmcontext import ctxtupdt
 
 temporarilydropcloudinterpolation = True  # asdf
 
