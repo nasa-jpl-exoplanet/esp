@@ -332,9 +332,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             tempspc = {
                                 'data': {planet_letter: {'WB': wavelength_um}}
                             }
-                            if verbose: print('CALCulating cross-sections START')
+                            if verbose:
+                                print('CALCulating cross-sections START')
                             _ = myxsecs(tempspc, xslib)
-                            if verbose: print('CALCulating cross-sections DONE')
+                            if verbose:
+                                print('CALCulating cross-sections DONE')
                         else:
                             # make sure that it exists for this planet letter
                             if planet_letter in xslib['data']:
