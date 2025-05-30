@@ -10,165 +10,18 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-import excalibur
+# import excalibur
+# from excalibur.cerberus.fmcontext import ctxtupdt
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
 
-import pytensor.graph as tnsrgraph
-import pytensor.tensor as tnsr
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
-from collections import namedtuple
-
-temporarilydropcloudinterpolation = True
+temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
 
-CONTEXT = namedtuple(
-    'CONTEXT',
-    [
-        'cleanup',
-        'model',
-        'p',
-        'solidr',
-        'orbp',
-        'tspectrum',
-        'xsl',
-        'spc',
-        'modparlbl',
-        'hzlib',
-        'fixedParams',
-        'mcmcdat',
-        'mcmcsig',
-        'nodeshape',
-    ],
-)
-ctxt = CONTEXT(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixedParams=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-)
-
-
-def ctxtupdt(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixed_params=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-):
-    '''
-    G. ROUDIER: Update global context for pymc deterministics
-    '''
-    # sys.modules[__name__].ctxt = CONTEXT(
-    excalibur.cerberus.forward_model.ctxt = CONTEXT(
-        cleanup=cleanup,
-        model=model,
-        p=p,
-        solidr=solidr,
-        orbp=orbp,
-        tspectrum=tspectrum,
-        xsl=xsl,
-        spc=spc,
-        modparlbl=modparlbl,
-        hzlib=hzlib,
-        fixedParams=fixed_params,
-        mcmcdat=mcmcdat,
-        mcmcsig=mcmcsig,
-        nodeshape=nodeshape,
-    )
-    # excalibur.cerberus.core.ctxt = excalibur.cerberus.forward_model.ctxt
-    return
-
-
-class TensorShell(tnsrgraph.Op):
-    '''
-    GMR: Tensor Shell for custom models
-    Do not touch the name of the methods
-    GB: R_op and grad definitions added to avoid abstract-method pylint error
-    '''
-
-    def make_node(self, *nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
-        outputs = [tnsr.vector()]
-        return tnsrgraph.Apply(self, inputs, outputs)
-
-    def R_op(self, *_args, **_keywords):
-        raise NotImplementedError('not expecting this method to be used')
-
-    def grad(self, *_args, **_keywords):
-        raise NotImplementedError('not expecting this method to be used')
-
-    def perform(
-        self,
-        node: tnsrgraph.Apply,
-        inputs: list[np.ndarray],
-        output_storage: list[list[None]],
-    ) -> None:
-        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
-        return
-
-    pass
-
-
-# GMR: Gregoire s legacy
-def LogLikelihood(inputs):
-    '''
-    GMR: User defined loglikelihood
-    We stick to the proper definition of it
-    '''
-    newnodes = []
-    newindex = 0
-    for ns in ctxt.nodeshape:
-        if ns > 1:
-            newnodes.append(inputs[newindex : newindex + ns])
-            pass
-        else:
-            newnodes.append(inputs[newindex])
-            pass
-        newindex += ns
-        pass
-    # ForwardModel = orbital(*newnodes)
-    # ForwardModel = crbmodel(*newnodes)
-    ForwardModel = clearfmcerberus(*newnodes)
-
-    # ForwardModel is a 1xN matrix
-    #   flip the axes so that it aligns with ctxt.mcmcdat
-    # No! actually this makes it worse. end up with NxN and then **2 is a mess
-    # ForwardModel = ForwardModel.transpose()
-
-    ForwardModel = np.asarray(ForwardModel).reshape(-1)
-
-    out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
-
-    #  this is a very useful print statement. use it during debugging
-    # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
-
-    #  turn off normalization for now (it is constant, so no effect)
-    # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
-    # out -= Norm
-
-    return out
+# otherwise get an undefined-variable.  maybe move all the fmcontext.py code back here?
+ctxt = None
 
 
 # ----------- --------------------------------------------------------
@@ -400,7 +253,14 @@ def crbmodel(
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
         ) ** 2
+
+        # convert matrix to 1-d array
+        models_by_molecule[molecule] = np.asarray(
+            models_by_molecule[molecule]
+        ).reshape(-1)
+
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
+
     if verbose:
         plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
@@ -441,9 +301,18 @@ def crbmodel(
 
     # print('crbmodel: model at end',model)
 
+    # fmc is a 1xN matrix; it needs to be a 1-d array
+    #  otherwise some subsequent * or ** operations fail
+    #   flip the axes so that it aligns with ctxt.mcmcdat?
+    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
+    # fmc = fmc.transpose()
+    #  this does the trick:
+    model = np.asarray(model).reshape(-1)
+    model = model[::-1]
+
     if break_down_by_molecule:
-        return model[::-1], models_by_molecule
-    return model[::-1]
+        return model, models_by_molecule
+    return model
 
 
 # --------------------------- ----------------------------------------
@@ -851,14 +720,15 @@ def cloudyfmcerberus(*crbinputs):
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
     ctp, hza, hzloc, hzthick, tpr, mdp = crbinputs
-    print(
-        ' not-fixed cloud parameters (cloudy):',
-        tpr,
-        ctp,
-        hza,
-        hzloc,
-        hzthick,
-    )
+    # print(
+    #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
+    #    ctp,
+    #    hza,
+    #    hzloc,
+    #    hzthick,
+    #    tpr,
+    #    mdp
+    # )
 
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -868,31 +738,20 @@ def cloudyfmcerberus(*crbinputs):
             tceqdict['XtoH'] = ctxt.fixedParams['XtoH']
         else:
             tceqdict['XtoH'] = mdp[mdpindex]
-            # tceqdict['XtoH'] = mdp[mdpindex]     make sure to fix/test this next!!!
-            # asdf
             mdpindex += 1
 
         if 'CtoO' in ctxt.fixedParams:
             tceqdict['CtoO'] = ctxt.fixedParams['CtoO']
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
-            # tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-            # tceqdict['NtoO'] = mdp[mdpindex]
-        # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+        # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
-        #        fmc = crbmodel(None, hza, ctp, ctxt.solidr, ctxt.orbp,
-        #                       ctxt.xsl['data'][ctxt.p]['XSECS'],
-        #                       ctxt.xsl['data'][ctxt.p]['QTGRID'],
-        #                       tpr, np.array(ctxt.spc['data'][ctxt.p]['WB']),
-        #                       hzlib=ctxt.hzlib,  hzp='AVERAGE', hztop=hzloc,
-        #                       hzwscale=hzthick, cheq=tceqdict, pnet=ctxt.p,
-        #                       verbose=False, debug=False)
         fmc = crbmodel(
             None,
             hza,
@@ -937,19 +796,24 @@ def cloudyfmcerberus(*crbinputs):
             debug=False,
         )
 
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc[ctxt.cleanup]
+    # print('FMC in cloudyfmcerberus pre-mean',fmc)
+
+    # fmc = fmc - np.nanmean(fmc)
+    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc - np.mean(fmc)
+    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
+    # print('FMC in cloudyfmcerberus final',fmc)
+
     return fmc
 
 
 def clearfmcerberus(*crbinputs):
     '''
     Wrapper around Cerberus forward model - NO CLOUDS!
+    (Note that this is not actually a cloud-free model; it is a fixed-cloud model!!)
     '''
-    # ctp = 3.    # cloud deck is very deep - 1000 bars
-    # hza = -10.  # small number means essentially no haze
-    # hzloc = 0.
-    # hzthick = 0.
+    # these fixed values are probably set in ariel/core, e.g. -10 for HScale
     ctp = ctxt.fixedParams['CTP']
     hza = ctxt.fixedParams['HScale']
     hzloc = ctxt.fixedParams['HLoc']
@@ -1031,15 +895,13 @@ def clearfmcerberus(*crbinputs):
         )
         pass
 
+    fmc = fmc[ctxt.cleanup]
     # print('FMC in clearfmcerberus pre-mean',fmc)
-
-    fmc = fmc[:, ctxt.cleanup]
 
     # fmc = fmc - np.nanmean(fmc)
     # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     fmc = fmc - np.mean(fmc)
     fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
-
     # print('FMC in clearfmcerberus final',fmc)
 
     return fmc

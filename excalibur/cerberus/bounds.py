@@ -162,7 +162,6 @@ def add_priors(
 ):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
-    (that comment is for older pymc3 version; still working on this pymc version)
     '''
 
     prior_ranges = {}

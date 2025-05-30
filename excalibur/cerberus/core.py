@@ -12,14 +12,13 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
+from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
-    ctxtupdt,
-    # LogLikelihood,
-    TensorShell,
     absorb,
     crbmodel,
+    clearfmcerberus,
     cloudyfmcerberus,
-    # clearfmcerberus,
     offcerberus,
     offcerberus1,
     offcerberus2,
@@ -102,7 +101,6 @@ def myxsecs(spc, out, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
-    # logarithmicOpacitySumming = True
     logarithmic_opacity_summing = False
 
     # these used to be default parameters above, but are dangerous-default-values
@@ -129,19 +127,9 @@ def myxsecs(spc, out, verbose=False):
     for p in planet_letters:
         out['data'][p] = {}
 
-        # model has to be specified, if there is a list of models
-        # if 'models' in spc['data'].keys():
-        #    arielModel = spc['data']['models'][0]  # arbitrary model choice; all have same WB grid
-        #    wgrid = np.array(spc['data'][p][arielModel]['WB'])
-        # else:
-
         wgrid = np.array(spc['data'][p]['WB'])
         qtgrid = gettpf(knownspecies)
         library = {}
-
-        # EDIT HERE!
-        # print('cerb core  spc keys',spc['data'][p]['WB'])
-        # exit()
 
         nugrid = (1e4 / np.copy(wgrid))[::-1]
         dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
@@ -627,15 +615,18 @@ def atmos(
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
         modfam = ['TEC']  # Ariel sims are currently only TEC equilibrium models
-        # modparlbl = {'TEC':['XtoH', 'CtoO']}
         modparlbl = {'TEC': ['XtoH', 'CtoO', 'NtoO']}
 
         # ** select which Ariel model to fit **
         #   previously (with taurex) there were 8 options. now 4 options:
-        # atmosModels = ['cerberus', 'cerberusNoclouds',
+        # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
-        # arielModel = 'cerberusNoclouds'
-        arielmodel = 'cerberus'
+        if runtime_params.fitCloudParameters:
+            log.warning('--< CERBERUS: using CLOUDY arielsim forward model >--')
+            arielmodel = 'cerberus'
+        else:
+            log.warning('--< CERBERUS: using CLOUDFREE ariel forward model >--')
+            arielmodel = 'cerberusNoclouds'
 
         # option to fix N/O
         if not runtime_params.fitNtoO:
@@ -1058,28 +1049,38 @@ def atmos(
                         modparlbl[model],
                     )
 
-                    # before calling MCMC, save the fixed-parameter info in the context
-                    ctxtupdt(
-                        cleanup=cleanup,
-                        model=model,
-                        p=p,
-                        solidr=solidr,
-                        orbp=orbp,
-                        tspectrum=tspectrum,
-                        xsl=xsl,
-                        spc=spc,
-                        modparlbl=modparlbl,
-                        hzlib=crbhzlib,
-                        fixed_params=fixed_params,
-                        mcmcdat=tspectrum[cleanup],
-                        mcmcsig=tspecerr[cleanup],
-                        nodeshape=nodeshape,
-                    )
+                    # fixes the possibly-used-before-assignment error
+                    TensorModel = None
+
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
 
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters:
                         # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
+
+                        # before calling MCMC, save the fixed-parameter info in the context
+                        ctxtupdt(
+                            cleanup=cleanup,
+                            model=model,
+                            p=p,
+                            solidr=solidr,
+                            orbp=orbp,
+                            tspectrum=tspectrum,
+                            xsl=xsl,
+                            spc=spc,
+                            modparlbl=modparlbl,
+                            hzlib=crbhzlib,
+                            fixed_params=fixed_params,
+                            mcmcdat=tspectrum[cleanup],
+                            mcmcsig=tspecerr[cleanup],
+                            nodeshape=nodeshape,
+                            forwardmodel=clearfmcerberus,
+                        )
 
                         # --< MODEL >--
                         # print('nodes going into the tensor model', nodes)
@@ -1087,16 +1088,10 @@ def atmos(
 
                         TensorModel = TensorShell()
 
-                        def LogLH(_, nodes):
-                            '''
-                            GMR: Fill in model tensor shell
-                            '''
-                            return TensorModel(nodes)
-
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
                         _ = pymc.CustomDist(
-                            "likelihood for fit spectrum",
+                            "likelihood for cloud-free spectrum",
                             nodes,
                             observed=tspectrum[cleanup],
                             logp=LogLH,
@@ -1198,18 +1193,39 @@ def atmos(
                                 pass
                         if 'STIS-WFC3' not in ext:
                             log.warning('--< STANDARD MCMC (WITH CLOUDS) >--')
-                            _ = pymc.Normal(
-                                'mcdata',
-                                mu=cloudyfmcerberus(*nodes),
-                                sigma=tspecerr[cleanup],
-                                observed=tspectrum[cleanup],
+
+                            # before calling MCMC, save the fixed-parameter info in the context
+                            ctxtupdt(
+                                cleanup=cleanup,
+                                model=model,
+                                p=p,
+                                solidr=solidr,
+                                orbp=orbp,
+                                tspectrum=tspectrum,
+                                xsl=xsl,
+                                spc=spc,
+                                modparlbl=modparlbl,
+                                hzlib=crbhzlib,
+                                fixed_params=fixed_params,
+                                mcmcdat=tspectrum[cleanup],
+                                mcmcsig=tspecerr[cleanup],
+                                nodeshape=nodeshape,
+                                forwardmodel=cloudyfmcerberus,
                             )
-                            # tau=1e0/tspecerr[cleanup]**2,
-                            # tau=1e0/(np.nanmedian(tspecerr[cleanup])**2),
-                            # this (_mcdata) is similar to the input spectrum.
-                            #   maybe it's the final forward model?  (there's only one)
-                            #   oh right, this is just the definition; there's no sampling yet
-                            #   so why does it bother making one call.  what param values?
+
+                            # --< MODEL >--
+                            # print('nodes going into the tensor model', nodes)
+                            # print('nodes going into the tensor model', len(nodes))
+
+                            TensorModel = TensorShell()
+
+                            _ = pymc.CustomDist(
+                                "likelihood for cloudy spectrum",
+                                nodes,
+                                observed=tspectrum[cleanup],
+                                logp=LogLH,
+                            )
+                            # --------------
                         pass
 
                     if runtime_params.MCMC_sampler == 'slice':
@@ -1223,9 +1239,11 @@ def atmos(
                     log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # --< SAMPLING >--
+                    Ncores = 4
+                    # Ncores = 1
                     trace = pymc.sample(
                         chainlen,
-                        cores=4,
+                        cores=Ncores,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1362,6 +1380,7 @@ def atmos(
                     spc['data']['target'],
                     p,
                     './',
+                    Nchains=Ncores,
                     verbose=True,
                 )
 
@@ -2064,7 +2083,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     patmos_model - transitdata['depth']
                 ) / transitdata['error']
                 chi2model = np.nansum(offsets_model**2)
-                print('chi2model', chi2model, 'TENSOR NO')
+                # print('chi2model', chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
                 # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
@@ -2089,7 +2108,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 param_values_best_fit = param_values_profiled
                 fmcarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
-                print('# of walker steps', nwalkersteps)
+                # print('# of walker steps', nwalkersteps)
                 for _ in range(nrandomwalkers):
                     iwalker = int(nwalkersteps * np.random.rand())
 
@@ -2180,8 +2199,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     ) / transitdata['error']
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
-                    print('chi2modelrand', chi2modelrand)
-                    print('chi2best', chi2best)
+                    # print('chi2modelrand', chi2modelrand)
+                    # print('chi2best', chi2best)
                     if chi2modelrand < chi2best:
                         # print('  using this as best', chi2modelrand)
                         chi2best = chi2modelrand
