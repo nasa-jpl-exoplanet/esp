@@ -360,7 +360,6 @@ def simulate_spectra(target, system_dict, runtime_params, out):
 
                         # convert from tensor to normal float
                         fluxDepth = cerbModel
-                        print('spectrum in ariel.core', fluxDepth)
                         fluxDepth_by_molecule = {}
                         # for molecule in cerbModel_by_molecule:
                         for molecule, model in cerbModel_by_molecule.items():
