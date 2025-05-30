@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 def readCloudTable(
-    dataDir=excalibur.context['data_dir']+'/ariel/',
+    dataDir=excalibur.context['data_dir'] + '/ariel/',
     filename='estrela22_cloudFits.csv',
 ):
     '''
