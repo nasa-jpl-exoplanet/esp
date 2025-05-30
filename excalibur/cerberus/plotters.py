@@ -205,7 +205,7 @@ def plot_spectrumfit(
     chi2flat_red = chi2flat / (numPoints - numParam_flat)
 
     # add some labels off to the right side
-    xoffset = 0.10
+    xoffset = 1.2
     if truth_spectrum is not None:
         offsets_truth = (
             truth_spectrum['depth'] - transitdata['depth']
