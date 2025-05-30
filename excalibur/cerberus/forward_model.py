@@ -140,7 +140,7 @@ def crbmodel(
         tau_by_molecule = {}
     molecules = tau_by_molecule.keys()
     # SEMI FINITE CLOUD ------------------------------------------------------------------
-    reversep = np.array(p[::-1])
+    reversep = np.array(pressure[::-1])
     selectcloud = pressure > 10.0**cloudtp
     blocked = False
     if np.all(selectcloud):
