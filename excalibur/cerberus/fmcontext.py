@@ -31,23 +31,26 @@ CONTEXT = namedtuple(
     ],
 )
 
-# ctxt = CONTEXT(
-#    cleanup=None,
-#    model=None,
-#    p=None,
-#    solidr=None,
-#    orbp=None,
-#    tspectrum=None,
-#    xsl=None,
-#    spc=None,
-#    modparlbl=None,
-#    hzlib=None,
-#    fixedParams=None,
-#    mcmcdat=None,
-#    mcmcsig=None,
-#    nodeshape=None,
-#    forwardmodel=None,
-# )
+
+def ctxtinit():
+    ctxt = CONTEXT(
+        cleanup=None,
+        model=None,
+        p=None,
+        solidr=None,
+        orbp=None,
+        tspectrum=None,
+        xsl=None,
+        spc=None,
+        modparlbl=None,
+        hzlib=None,
+        fixedParams=None,
+        mcmcdat=None,
+        mcmcsig=None,
+        nodeshape=None,
+        forwardmodel=None,
+    )
+    return ctxt
 
 
 def ctxtupdt(

@@ -1240,7 +1240,6 @@ def atmos(
 
                     # --< SAMPLING >--
                     Ncores = 4
-                    # Ncores = 1
                     trace = pymc.sample(
                         chainlen,
                         cores=Ncores,
