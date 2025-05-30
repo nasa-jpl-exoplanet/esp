@@ -1,5 +1,8 @@
 '''cerberus fmcontext ds'''
 
+# Heritage code shame:
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+
 import excalibur
 
 from collections import namedtuple

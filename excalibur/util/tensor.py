@@ -1,5 +1,8 @@
 '''util tensor ds'''
 
+# Heritage code shame:
+# pylint: disable=invalid-name
+
 import numpy as np
 
 import pytensor.graph as tnsrgraph
