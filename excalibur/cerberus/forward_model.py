@@ -10,18 +10,17 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-# import excalibur
-# from excalibur.cerberus.fmcontext import ctxtupdt
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
+from excalibur.cerberus.fmcontext import ctxtinit
 
 
 temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
 
-# otherwise get an undefined-variable.  maybe move all the fmcontext.py code back here?
-ctxt = None
+# this doesn't change results at all; just needed to avoid undefined-variable pylint
+ctxt = ctxtinit()
 
 
 # ----------- --------------------------------------------------------
