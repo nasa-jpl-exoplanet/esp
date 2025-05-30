@@ -20,6 +20,8 @@ temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
 
+# otherwise get an undefined variable.  maybe move all the fmcontext.py code back here?
+ctxt = None
 
 # ----------- --------------------------------------------------------
 # -- CERBERUS MODEL -- -----------------------------------------------

@@ -1049,7 +1049,7 @@ def atmos(
                         modparlbl[model],
                     )
 
-                    # does this help with possibly-used-before-assignment error?
+                    # fixes the possibly-used-before-assignment error
                     TensorModel = None
 
                     def LogLH(_, nodes):
