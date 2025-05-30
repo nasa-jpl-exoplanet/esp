@@ -9,7 +9,7 @@ import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
 
-# otherwise get an undefined variable.  maybe move all the fmcontext.py code back here?
+# otherwise get an undefined-variable.  maybe move all the fmcontext.py code back here?
 ctxt = None
 
 
