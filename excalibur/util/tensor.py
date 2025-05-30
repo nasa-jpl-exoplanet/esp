@@ -9,6 +9,10 @@ import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
 
+# otherwise get an undefined variable.  maybe move all the fmcontext.py code back here?
+ctxt = None
+
+
 class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
