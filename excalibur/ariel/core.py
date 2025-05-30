@@ -253,16 +253,13 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         # print('C/O model param',model_params['C/O'])
 
                     # check whether this planet+metallicity combo is convergent/bound atmosphere
-                    # print('  METALLICITY', model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(
+                    _, Hs = calc_mmw_Hs(
                         pressure,
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
                     )
-                    # print('mmw,Hs new method', mmw, Hs)
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
-                    # print('HoverRp,mmw',HoverRp,mmw,atmosModel)
                     if HoverRp > 0.04:
                         log.warning(
                             '--< WARNING UNBOUND ATMOS: %s %s ; scale height / planet radius = %s %s >--',
