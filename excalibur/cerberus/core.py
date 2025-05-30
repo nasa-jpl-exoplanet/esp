@@ -11,11 +11,10 @@ import excalibur
 import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
-from excalibur.cerberus.fmcontext import ctxtupdt
-
 # from excalibur.cerberus.core import savesv
+from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
-    TensorShell,
     absorb,
     crbmodel,
     clearfmcerberus,
@@ -1050,6 +1049,9 @@ def atmos(
                         modparlbl[model],
                     )
 
+                    # does this help with possibly-used-before-assignment error?
+                    TensorModel = None
+
                     def LogLH(_, nodes):
                         '''
                         GMR: Fill in model tensor shell
@@ -1237,9 +1239,11 @@ def atmos(
                     log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # --< SAMPLING >--
+                    Ncores = 4
+                    # Ncores = 1
                     trace = pymc.sample(
                         chainlen,
-                        cores=4,
+                        cores=Ncores,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1376,6 +1380,7 @@ def atmos(
                     spc['data']['target'],
                     p,
                     './',
+                    Nchains=Ncores,
                     verbose=True,
                 )
 
