@@ -54,24 +54,23 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0):
     calculate the mean molecular weight and scale height
     '''
     mixratio, fH2, fHe = crbutil.crbce(pressureArray, temperature, X2Hr=X2Hr)
-    print('mixratio (inside)', mixratio, fH2, fHe)
+    # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
     # assume solar C/O and N/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
 
     mmw, fH2, fHe = crbutil.getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
-    print('mmw      (inside)', mmw.eval(), fH2.eval(), fHe.eval())
+    # print('mmw      (inside)', mmw, fH2, fHe)
 
     mmw_kg = mmw * cst.m_p  # [kg]
     Hs = (
         cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
     )  # [m]
 
-    # use eval() to convert tensors back to floats
-    return mmw.eval(), Hs.eval()
+    return mmw, Hs
 
 
-def simulate_spectra(target, system_dict, runtime_params, out):
+def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     '''
     Simulate Ariel spectra, adding noise based on the Ariel instrument model
     Mulitple spectra are now calculated, allowing a choice within cerberus.atmos fitting
@@ -172,7 +171,7 @@ def simulate_spectra(target, system_dict, runtime_params, out):
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
             # this is used for plot scaling
             Hssolar = Hs / (model_params['R*'] * sscmks['Rsun'])
-            print('mmw hs (solar)', mmwsolar, Hs, HoverRmax, Hssolar)
+            # print('mmw hs (solar)', mmwsolar, Hs, HoverRmax, Hssolar)
 
             # skip non-converging atmospheres!!
             # print()
@@ -254,16 +253,13 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         # print('C/O model param',model_params['C/O'])
 
                     # check whether this planet+metallicity combo is convergent/bound atmosphere
-                    print('  METALLICITY', model_params['metallicity'])
-                    mmw, Hs = calc_mmw_Hs(
+                    _, Hs = calc_mmw_Hs(
                         pressure,
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
                     )
-                    print('mmw,Hs new method', mmw, Hs)
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
-                    # print('HoverRp,mmw',HoverRp,mmw,atmosModel)
                     if HoverRp > 0.04:
                         log.warning(
                             '--< WARNING UNBOUND ATMOS: %s %s ; scale height / planet radius = %s %s >--',
@@ -333,9 +329,11 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                             tempspc = {
                                 'data': {planet_letter: {'WB': wavelength_um}}
                             }
-                            print('CALCulating cross-sections START')
+                            if verbose:
+                                print('CALCulating cross-sections START')
                             _ = myxsecs(tempspc, xslib)
-                            print('CALCulating cross-sections DONE')
+                            if verbose:
+                                print('CALCulating cross-sections DONE')
                         else:
                             # make sure that it exists for this planet letter
                             if planet_letter in xslib['data']:
@@ -360,12 +358,11 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                         )
 
                         # convert from tensor to normal float
-                        fluxDepth = cerbModel.eval()
-                        print('spectrum in ariel.core', fluxDepth)
+                        fluxDepth = cerbModel
                         fluxDepth_by_molecule = {}
                         # for molecule in cerbModel_by_molecule:
                         for molecule, model in cerbModel_by_molecule.items():
-                            fluxDepth_by_molecule[molecule] = model.eval()
+                            fluxDepth_by_molecule[molecule] = model
 
                     elif 'taurex' in atmosModel:
                         sys.exit('ERROR: taurex no longer an option')
@@ -452,14 +449,14 @@ def simulate_spectra(target, system_dict, runtime_params, out):
                     #  it has to be this way to match the formatting for regular spectra itk
 
                     # redo the chemsitry/mmw calculation for this metallicity
-                    print('metallicity [X/H]dex:', model_params['metallicity'])
+                    # print('metallicity [X/H]dex:', model_params['metallicity'])
                     mmwnow, Hs = calc_mmw_Hs(
                         pressure,
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
                     )
-                    print('lower mmw,Hs new method', mmwnow, Hs)
+                    # print('lower mmw,Hs new method', mmwnow, Hs)
 
                     out['data'][planet_letter][atmosModel]['Hs'] = (
                         Hssolar * mmwsolar / mmwnow

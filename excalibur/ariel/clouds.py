@@ -9,15 +9,19 @@ import numpy as np
 import csv
 import logging
 
+# from excalibur.cerberus.bounds import setPriorBound
+import excalibur
+
+
 log = logging.getLogger(__name__)
 
-# from excalibur.cerberus.bounds import setPriorBound
 
 # ______________________________________________________
 
 
 def readCloudTable(
-    dataDir='/proj/data/ariel/', filename='estrela22_cloudFits.csv'
+    dataDir=excalibur.context['data_dir'] + '/ariel/',
+    filename='estrela22_cloudFits.csv',
 ):
     '''
     Read in the best-fit cloud parameters from Estrela 2022
