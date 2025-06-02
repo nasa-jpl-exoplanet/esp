@@ -10,18 +10,15 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-# import excalibur
-# from excalibur.cerberus.fmcontext import ctxtupdt
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
+from excalibur.cerberus.fmcontext import ctxtinit
 
-
-temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
 
-# otherwise get an undefined-variable.  maybe move all the fmcontext.py code back here?
-ctxt = None
+# this doesn't change results at all; just needed to avoid undefined-variable pylint
+ctxt = ctxtinit()
 
 
 # ----------- --------------------------------------------------------
@@ -72,20 +69,20 @@ def crbmodel(
         np.log(solrad) + Hsmax / nlevels,
         Hsmax / (nlevels - 1),
     )
-    # print('pgrid before exponential',pgrid)
     pgrid = np.exp(pgrid)
-    # dp = np.diff(pgrid[::-1])
-    p = pgrid[::-1]
-    # print('pressure', len(p), p)
-    # print('delta-pressure',len(dp),dp)
-    dPoverP = (p[1] - p[0]) / p[0]
+    pressure = pgrid[::-1]
+    dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
     # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
         mixratio, fH2, fHe = crbce(
-            p, temp, C2Or=cheq['CtoO'], X2Hr=cheq['XtoH'], N2Or=cheq['NtoO']
+            pressure,
+            temp,
+            C2Or=cheq['CtoO'],
+            X2Hr=cheq['XtoH'],
+            N2Or=cheq['NtoO'],
         )
         # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
@@ -106,9 +103,9 @@ def crbmodel(
     #  drop dz[] and dzprime[] arrays and just use this constant instead
     rdz = abs(Hs / 2.0 * np.log(1.0 + dPoverP))
     dz = 2 * rdz
-    z = dz * np.linspace(0, len(p) - 1, len(p))
+    z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
 
-    rho = p * 1e5 / (cst.Boltzmann * temp)
+    rho = pressure * 1e5 / (cst.Boltzmann * temp)
     tau, tau_by_molecule, wtau = gettau(
         xsecs,
         qtgrid,
@@ -118,7 +115,7 @@ def crbmodel(
         dz,
         rho,
         rp0,
-        p,
+        pressure,
         wgrid,
         lbroadening,
         lshifting,
@@ -143,10 +140,8 @@ def crbmodel(
         tau_by_molecule = {}
     molecules = tau_by_molecule.keys()
     # SEMI FINITE CLOUD ------------------------------------------------------------------
-    reversep = np.array(p[::-1])
-    selectcloud = p > 10.0**cloudtp
-    # print('p',p)
-    # print('cloudtp',cloudtp)
+    reversep = np.array(pressure[::-1])
+    selectcloud = pressure > 10.0**cloudtp
     blocked = False
     if np.all(selectcloud):
         tau = tau * 0
@@ -155,99 +150,59 @@ def crbmodel(
         blocked = True
         pass
     if not np.all(~selectcloud) and not blocked:
-        cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
-        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
-        if not temporarilydropcloudinterpolation:
-            for index in np.arange(wtau.size):
-                # print('reversep', reversep)
-                # print('reversep', reversep.shape)
-                myspl = itp(reversep, tau[:, index])
-                # print('myspl',myspl)  # interp1d object
-                # print(' cloudtp', cloudtp)
-                # print(' powcheck', 10.0**cloudtp)
-                # print('  indices', cloudindex, index)
-                # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
-                # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
-                # print('  tau[]', tau[cloudindex, index])
-                tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
-                # print('  tau[]', tau[cloudindex, index])
-                # tau[:cloudindex, index] = 0.0
-                # --> this line can be done for all indices (outside of loop, I mean)
-                tau = tau[:cloudindex, index].set(0.0)
-                for molecule in molecules:
-                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
-                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                        cloudindex, index
-                    ].set(myspl(10.0**cloudtp))
-                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                        :cloudindex, index
-                    ].set(0.0)
-                pass
+        # 1) find the cloudtop location in the pressure grid
+        cloudtopindex = np.max(np.arange(len(pressure))[selectcloud]) + 1
 
-        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
-        if not temporarilydropcloudinterpolation:
-            print('reversep', reversep)
+        # 2) set atmos depth to zero for all cells deeper than that
+        tau[:cloudtopindex, :] = 0.0
+        for molecule in molecules:
+            tau_by_molecule[molecule][:cloudtopindex, :] = 0.0
 
-            taus = []
-            taus_by_molecule = []
-            for index in np.arange(wtau.size):
-                print('wavelength index', index)
-                print(' pressure grid len', len(reversep))
-                print(' tau shape5', len(list(tau[:, index])))  # 5. good!!
-                print(' tau shapeasdf', tau[:, index].flatten())
-                print(' tau shapeasdf', tau[:, index].flatten().shape)
-                print(' tau shapeasdf', tau[:, index].flatten().eval())
-                print(' tau shapeasdf', tau[:, index].flatten().eval().shape)
-                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval())
-                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval().shape)
-                print(' tau shapeasdfrav', tau[:, index].ravel().eval())
-                print(' tau shapeasdfrav', tau[:, index].ravel().eval().shape)
-                # print(' tau shape6',np.array(list(tau[:, index])).eval().shape)
-                # print(' tau shape8',np.array(tau[:, index]).shape)  # huh? () shape?!
-                # print(' tau shape7',np.array(list(tau[:, index])).shape) # (5,) !?
-                print(' HEYEEHEYEYEY1')
-                # maybe try list on both even?  nope. no help.  this line CRASHES!!
-                # seems like it wants array, not a sequence.  sure
-                # well gees, what about array on both?  ah well
-                # myspl = itp(np.array(reversep), np.array(list(tau[:, index])))
-                myspl = itp(reversep, tau[:, index].ravel())
-                print(' HEYEEHEYEYEY2')
-                print('myspl check1', myspl(1))
-                print('myspl check2', myspl(0.1))
-                print('myspl check3', 10.0**cloudtp)
-                print('myspl check3', myspl(10.0**cloudtp))
-                taus.append(myspl(10.0**cloudtp))
-                for molecule in molecules:
-                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
-                    taus_by_molecule.append(myspl(10.0**cloudtp))
-
-            tau = tau[cloudindex, :].set(np.array(taus))
+        # 3) interpolate atmos depth within that cell
+        for waveindex in np.arange(wtau.size):
+            myspl = itp(reversep, np.asarray(tau[:, waveindex]).flatten())
+            tau[cloudtopindex, waveindex] = myspl(10.0**cloudtp)
+            # this line can be done for all indices (outside of loop, I mean)
+            # tau[:cloudtopindex, waveindex] = 0.
             for molecule in molecules:
-                tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    cloudindex, :
-                ].set(np.array(taus_by_molecule))
-            tau = tau[:cloudindex, :].set(0.0)
-            for molecule in molecules:
-                tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    :cloudindex, :
-                ].set(0.0)
+                myspl = itp(
+                    reversep,
+                    np.asarray(
+                        tau_by_molecule[molecule][:, waveindex]
+                    ).flatten(),
+                )
+                tau_by_molecule[molecule][cloudtopindex, waveindex] = myspl(
+                    10.0**cloudtp
+                )
+                # tau_by_molecule[molecule][:cloudtopindex, waveindex] = 0.
+            pass
 
-            ctpdpress = 10.0**cloudtp - p[cloudindex]
-            ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
-            rp0 += z[cloudindex] + ctpdz
-        pass
-    matrix1 = (rp0 + z) * dz
-    matrix2 = 1.0 - np.exp(-tau)
-    atmdepth = (2e0 * np.asmatrix(matrix1) * np.asmatrix(matrix2)).flatten()
+        # adjust rp0 based on the cloudtop
+        ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
+        ctpdz = abs(
+            Hs / 2.0 * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+        )
+        rp0 += z[cloudtopindex] + ctpdz
+    pass
+
+    # note that original version had rp0+z as matrix then multiply by dz after
+    geometrygrid = (rp0 + z) * dz
+    absorptiongrid = 1.0 - np.exp(-tau)
+    atmdepth = (
+        2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
+    ).flatten()
 
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
+    # model is a 1xN matrix; it needs to be a 1-d array
+    #  otherwise some subsequent * or ** operations fail
+    model = np.asarray(model).reshape(-1)
+    model = model[::-1]
 
     models_by_molecule = {}
     for molecule in molecules:
+        absorptiongrid = 1.0 - np.exp(-tau_by_molecule[molecule])
         atmdepth = (
-            2e0
-            * np.asmatrix((rp0 + z) * dz)
-            * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
+            2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
         ).flatten()
 
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
@@ -258,7 +213,6 @@ def crbmodel(
         models_by_molecule[molecule] = np.asarray(
             models_by_molecule[molecule]
         ).reshape(-1)
-
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
 
     if verbose:
@@ -300,15 +254,6 @@ def crbmodel(
         pass
 
     # print('crbmodel: model at end',model)
-
-    # fmc is a 1xN matrix; it needs to be a 1-d array
-    #  otherwise some subsequent * or ** operations fail
-    #   flip the axes so that it aligns with ctxt.mcmcdat?
-    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
-    # fmc = fmc.transpose()
-    #  this does the trick:
-    model = np.asarray(model).reshape(-1)
-    model = model[::-1]
 
     if break_down_by_molecule:
         return model, models_by_molecule
