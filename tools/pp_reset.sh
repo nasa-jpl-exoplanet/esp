@@ -32,8 +32,6 @@ else
     fi
 fi
 
-myname=${DAWGIE_SSL_PEM_MYNAME:-excalibur.jpl.nasa.gov}
 myself=${DAWGIE_SSL_PEM_MYSELF:-/proj/sdp/${EXCALIBUR_USER}/certs/excalibur_identity.pem}
-let priv_port=${DAWGIE_FE_PORT:-8080}+5
 
-curl -XPOST --cert ${myself} "https://${myname}:${priv_port}/app/reset?archive=${DAWGIE_ARCHIVE:-true}"
+curl -XPOST --cert ${myself} "https://${EXCALIBUR_HOST:-localhost}:${DAWGIE_SFE_PORT:-9995}/app/reset?archive=${DAWGIE_ARCHIVE:-false}"
