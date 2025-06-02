@@ -14,6 +14,7 @@ services:
       dockerfile: .docker/Dockerfile.server
     container_name: pipeline-${EXCALIBUR_USER}
     environment:
+      - DAWGIE_FE_DEBUG=T
       - DAWGIE_AE_BASE_PACKAGE=${DAWGIE_AE_BASE_PACKAGE}
       - DAWGIE_AE_BASE_PATH=${EXCALIBUR_SOURCE_PATH}/${DAWGIE_AE_BASE_PACKAGE}
       - DAWGIE_DATA_DBSTOR=${DAWGIE_DATA_DBSTOR}
@@ -37,7 +38,7 @@ services:
       - EXCALIBUR_USER=${EXCALIBUR_USER}
       - PGPASS=${EXCALIBUR_PGPASS}
       - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
-      - USERNAME=${USERNAME}
+      - USERNAME=${EXCALIBUR_USER}
     image: esp/server:${ESP_VERSION}
     networks:
       - pipeline_domain
@@ -72,7 +73,7 @@ services:
       - EXCALIBUR_USER=${EXCALIBUR_USER}
       - PGPASS=${EXCALIBUR_PGPASS}
       - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
-      - USERNAME=${USERNAME}
+      - USERNAME=${EXCALIBUR_USER}
     image: esp/tools:${ESP_VERSION}
     networks:
       - pipeline_domain
@@ -105,7 +106,7 @@ services:
       - DAWGIE_SSL_PEM_MYSELF=${DAWGIE_SSL_PEM_MYSELF}
       - EXCALIBUR_LEVER_AND_KNOB_SETTINGS=${EXCALIBUR_LEVER_AND_KNOB_SETTINGS}
       - EXCALIBUR_USER=${EXCALIBUR_USER}
-      - USERNAME=${USERNAME}
+      - USERNAME=${EXCALIBUR_USER}
     image: esp/worker:latest
     init: true
     networks:
