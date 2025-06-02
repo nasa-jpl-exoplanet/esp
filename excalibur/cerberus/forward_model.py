@@ -10,84 +10,18 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-# import sys
-# import pytensor
-# from pytensor.ifelse import ifelse
-from pytensor import tensor
-
-import excalibur
-
-# 2/13/25 Geoff: this line has been here for a while. maybe not required anymore? We'll see...
-# import excalibur.cerberus.forward_model  # is this needed for the context updater?
+# import excalibur
+# from excalibur.cerberus.fmcontext import ctxtupdt
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
-from collections import namedtuple
+
+temporarilydropcloudinterpolation = True  # asdf
 
 log = logging.getLogger(__name__)
 
-CONTEXT = namedtuple(
-    'CONTEXT',
-    [
-        'cleanup',
-        'model',
-        'p',
-        'solidr',
-        'orbp',
-        'tspectrum',
-        'xsl',
-        'spc',
-        'modparlbl',
-        'hzlib',
-        'fixedParams',
-    ],
-)
-ctxt = CONTEXT(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixedParams=None,
-)
-
-
-def ctxtupdt(
-    cleanup=None,
-    model=None,
-    p=None,
-    solidr=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixed_params=None,
-):
-    '''
-    G. ROUDIER: Update context
-    '''
-    excalibur.cerberus.forward_model.ctxt = CONTEXT(
-        cleanup=cleanup,
-        model=model,
-        p=p,
-        solidr=solidr,
-        orbp=orbp,
-        tspectrum=tspectrum,
-        xsl=xsl,
-        spc=spc,
-        fixedParams=fixed_params,
-        modparlbl=modparlbl,
-        hzlib=hzlib,
-    )
-    return
+# otherwise get an undefined-variable.  maybe move all the fmcontext.py code back here?
+ctxt = None
 
 
 # ----------- --------------------------------------------------------
@@ -105,8 +39,7 @@ def crbmodel(
     lbroadening=False,
     lshifting=False,
     nlevels=100,
-    # TEMPORARY REDUCTION IN ATMOS RESOLUTION WHILE DEBUGGING PYMC
-    # nlevels=7,
+    # nlevels=5,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
     Hsmax=20.0,
     solrad=10.0,
@@ -147,26 +80,22 @@ def crbmodel(
     # print('delta-pressure',len(dp),dp)
     dPoverP = (p[1] - p[0]) / p[0]
 
-    # print()
+    # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
-        # print('SHOULD BE HERE')
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
         mixratio, fH2, fHe = crbce(
             p, temp, C2Or=cheq['CtoO'], X2Hr=cheq['XtoH'], N2Or=cheq['NtoO']
         )
+        # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:
-        # print('SHOULD NOT BE HERE')
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
+
     if debug:
-        if isinstance(mmw, tensor.variable.TensorVariable):
-            print('mmw YES TENSOR', mmw.eval() * 6.022e26)
-        else:
-            print('mmw NOT TENSOR', mmw * 6.022e26)
-            pass
-        pass
+        print('mmw', mmw * 6.022e26)
+
     Hs = (
         cst.Boltzmann
         * temp
@@ -176,52 +105,8 @@ def crbmodel(
     # when the Pressure grid is log-spaced, rdz is a constant
     #  drop dz[] and dzprime[] arrays and just use this constant instead
     rdz = abs(Hs / 2.0 * np.log(1.0 + dPoverP))
-
-    z = [0]
-    # dz = []
-    # addz = []
-    # for press, dpress in zip(p[:-1], dp):
-    # print('dp/p',dpress/press,np.log(1. + dpress/press),dPoverP)
-    # for press in p[:-1]:
-    # rdz = abs(Hs/2.*np.log(1. + dpress/press))
-    # rdz = abs(Hs/2.*np.log(1. + dPoverP))
-    # print('press,rdz',press,rdz.eval())
-    # if addz:
-    # dz.append(addz[-1]/2. + rdz)
-    # else:
-    # tem = tensor.dscalar()
-    # print('tem',tem)
-    # tem = 2.*rdz
-    # print('tem',tem)
-    # dz.append(tem)
-    # dz.append(2.*rdz)
-    # print('temp',dz[-1])
-    # addz.append(2.*rdz)
-    # z.append(z[-1]+addz[-1])
-    for _ in p[:-1]:
-        z.append(z[-1] + 2.0 * rdz)
-    # dz.append(addz[-1])
-    # print()
-    # print('len check on z',len(z))
-    # print('len check on dz',len(dz))
-    # print()
-    # print('z going into gettau',z)
-    # print('z going into gettau',[zlist.eval() for zlist in z[1:]])
-    # print('dz going into gettau',dz)
-    # print('dz going into gettau',[zlist.eval() for zlist in dz])
-    # print()
-
-    z = np.linspace(0, len(p) - 1, len(p))
-    z = 2 * rdz * z
-    # print('z', z.eval())
-    # print('z redo',[zlist.eval() for zlist in z[1:]])
-
-    # simplify dz.  will help tremendously below, where tensor keeps crashing
-    # dz = np.array([dz[0].eval()]*len(dz))
-    # print('new dz',dz)
-    # print(' rdz',rdz.eval()*2)
     dz = 2 * rdz
-    # print('new dz', dz.eval())
+    z = dz * np.linspace(0, len(p) - 1, len(p))
 
     rho = p * 1e5 / (cst.Boltzmann * temp)
     tau, tau_by_molecule, wtau = gettau(
@@ -250,9 +135,9 @@ def crbmodel(
         debug=debug,
     )
 
-    # print('tau', tau.eval())
+    # print('tau', tau)
     # for molecule, tau in tau_by_molecule.items:
-    #    print('tau', molecule, tau.eval())
+    #    print('tau', molecule, tau)
 
     if not break_down_by_molecule:
         tau_by_molecule = {}
@@ -271,79 +156,113 @@ def crbmodel(
         pass
     if not np.all(~selectcloud) and not blocked:
         cloudindex = np.max(np.arange(len(p))[selectcloud]) + 1
-        for index in np.arange(wtau.size):
-            # print('reversep', reversep)
-            # print('reversep', reversep.shape)
-            # print('tau check', index, tau[:, index].eval())
-            # print('tau check', index, tau[:, index].eval().shape)
-            myspl = itp(reversep, tau[:, index].eval())
-            # print('myspl',myspl)  # interp1d object
-            # print(' cloudtp', cloudtp)
-            # print(' powcheck', 10.0**cloudtp)
-            # print('  indices', cloudindex, index)
-            # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
-            # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
-            # print('  tau[]', tau[cloudindex, index].eval())
-            tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
-            # print('  tau[]', tau[cloudindex, index].eval())
-            # tau[:cloudindex, index] = 0.0
-            # --> this line can be done for all indices (outside of loop, I mean)
-            tau = tau[:cloudindex, index].set(0.0)
+        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
+        if not temporarilydropcloudinterpolation:
+            for index in np.arange(wtau.size):
+                # print('reversep', reversep)
+                # print('reversep', reversep.shape)
+                myspl = itp(reversep, tau[:, index])
+                # print('myspl',myspl)  # interp1d object
+                # print(' cloudtp', cloudtp)
+                # print(' powcheck', 10.0**cloudtp)
+                # print('  indices', cloudindex, index)
+                # asdf print(' DOES INTERP WORK?', myspl(10.0**cloudtp))
+                # tau[cloudindex, index] = myspl(10.0**cloudtp)  # fails. says to use .set or .inc
+                # print('  tau[]', tau[cloudindex, index])
+                tau = tau[cloudindex, index].set(myspl(10.0**cloudtp))
+                # print('  tau[]', tau[cloudindex, index])
+                # tau[:cloudindex, index] = 0.0
+                # --> this line can be done for all indices (outside of loop, I mean)
+                tau = tau[:cloudindex, index].set(0.0)
+                for molecule in molecules:
+                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
+                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                        cloudindex, index
+                    ].set(myspl(10.0**cloudtp))
+                    tau_by_molecule[molecule] = tau_by_molecule[molecule][
+                        :cloudindex, index
+                    ].set(0.0)
+                pass
+
+        # TEMPORARY COMMENT OUT THE INTERP1D PROBLEM
+        if not temporarilydropcloudinterpolation:
+            print('reversep', reversep)
+
+            taus = []
+            taus_by_molecule = []
+            for index in np.arange(wtau.size):
+                print('wavelength index', index)
+                print(' pressure grid len', len(reversep))
+                print(' tau shape5', len(list(tau[:, index])))  # 5. good!!
+                print(' tau shapeasdf', tau[:, index].flatten())
+                print(' tau shapeasdf', tau[:, index].flatten().shape)
+                print(' tau shapeasdf', tau[:, index].flatten().eval())
+                print(' tau shapeasdf', tau[:, index].flatten().eval().shape)
+                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval())
+                # print(' tau shapeasdf',tau[:, index].reshape(-1).eval().shape)
+                print(' tau shapeasdfrav', tau[:, index].ravel().eval())
+                print(' tau shapeasdfrav', tau[:, index].ravel().eval().shape)
+                # print(' tau shape6',np.array(list(tau[:, index])).eval().shape)
+                # print(' tau shape8',np.array(tau[:, index]).shape)  # huh? () shape?!
+                # print(' tau shape7',np.array(list(tau[:, index])).shape) # (5,) !?
+                print(' HEYEEHEYEYEY1')
+                # maybe try list on both even?  nope. no help.  this line CRASHES!!
+                # seems like it wants array, not a sequence.  sure
+                # well gees, what about array on both?  ah well
+                # myspl = itp(np.array(reversep), np.array(list(tau[:, index])))
+                myspl = itp(reversep, tau[:, index].ravel())
+                print(' HEYEEHEYEYEY2')
+                print('myspl check1', myspl(1))
+                print('myspl check2', myspl(0.1))
+                print('myspl check3', 10.0**cloudtp)
+                print('myspl check3', myspl(10.0**cloudtp))
+                taus.append(myspl(10.0**cloudtp))
+                for molecule in molecules:
+                    myspl = itp(reversep, tau_by_molecule[molecule][:, index])
+                    taus_by_molecule.append(myspl(10.0**cloudtp))
+
+            tau = tau[cloudindex, :].set(np.array(taus))
             for molecule in molecules:
-                myspl = itp(
-                    reversep, tau_by_molecule[molecule][:, index].eval()
-                )
                 tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    cloudindex, index
-                ].set(myspl(10.0**cloudtp))
+                    cloudindex, :
+                ].set(np.array(taus_by_molecule))
+            tau = tau[:cloudindex, :].set(0.0)
+            for molecule in molecules:
                 tau_by_molecule[molecule] = tau_by_molecule[molecule][
-                    :cloudindex, index
+                    :cloudindex, :
                 ].set(0.0)
-            pass
-        ctpdpress = 10.0**cloudtp - p[cloudindex]
-        ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
-        rp0 += z[cloudindex] + ctpdz
+
+            ctpdpress = 10.0**cloudtp - p[cloudindex]
+            ctpdz = abs(Hs / 2.0 * np.log(1.0 + ctpdpress / p[cloudindex]))
+            rp0 += z[cloudindex] + ctpdz
         pass
-    # atmdepth = (2e0 * np.array(
-    #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
-    #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
     matrix1 = (rp0 + z) * dz
-    matrix2 = 1.0 - tensor.exp(-tau)
-    # print('matrix1 shape', matrix1.eval().shape)
-    # print('matrix2 shape', matrix2.eval().shape)
-    atmdepth = 2e0 * tensor.nlinalg.matrix_dot(matrix1, matrix2)
-    # print('result shape', atmdepth.eval().shape)
-    #  flatten is not needed I think.  it's already 1-D, no?
-    # atmdepth = tensor.flatten(atmdepth)
-    # print('result shape',atmdepth.eval().shape)
-    # atmdepth = (2e0 * np.array(
-    #    np.asmatrix((rp0 + np.array(z)) * np.array(dz))
-    #    * np.asmatrix(1.0 - np.exp(-tau))).flatten())
+    matrix2 = 1.0 - np.exp(-tau)
+    atmdepth = (2e0 * np.asmatrix(matrix1) * np.asmatrix(matrix2)).flatten()
+
     model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
-    # print('final model result!', model.eval())
-    # print('final model result!', model.eval().shape)
+
     models_by_molecule = {}
     for molecule in molecules:
-        # atmdepth = (
-        #    2e0
-        #    * np.array(
-        #        np.asmatrix((rp0 + np.array(z)) * np.array(dz))
-        #        * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
-        # ).flatten()
-        # )
-        atmdepth = 2e0 * tensor.nlinalg.matrix_dot(
-            (rp0 + z) * dz, 1.0 - tensor.exp(-tau_by_molecule[molecule])
-        )
+        atmdepth = (
+            2e0
+            * np.asmatrix((rp0 + z) * dz)
+            * np.asmatrix(1.0 - np.exp(-tau_by_molecule[molecule]))
+        ).flatten()
+
         models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
             orbp['R*'] * ssc['Rsun']
         ) ** 2
+
+        # convert matrix to 1-d array
+        models_by_molecule[molecule] = np.asarray(
+            models_by_molecule[molecule]
+        ).reshape(-1)
+
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
+
     if verbose:
-        if isinstance(model, tensor.variable.TensorVariable):
-            plotmodel = model.eval()
-            pass
-        else:
-            plotmodel = model.copy()
+        plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
@@ -379,9 +298,21 @@ def crbmodel(
             pass
         plt.show()
         pass
+
+    # print('crbmodel: model at end',model)
+
+    # fmc is a 1xN matrix; it needs to be a 1-d array
+    #  otherwise some subsequent * or ** operations fail
+    #   flip the axes so that it aligns with ctxt.mcmcdat?
+    #   no! actually this makes it worse. end up with NxN and then **2 is a mess
+    # fmc = fmc.transpose()
+    #  this does the trick:
+    model = np.asarray(model).reshape(-1)
+    model = model[::-1]
+
     if break_down_by_molecule:
-        return model[::-1], models_by_molecule
-    return model[::-1]
+        return model, models_by_molecule
+    return model
 
 
 # --------------------------- ----------------------------------------
@@ -418,238 +349,29 @@ def gettau(
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(p)
-    # print('z (at start of gettau)', z.eval())
-    # tau = np.zeros((len(z), wgrid.size))
     tau = np.zeros((Nzones, wgrid.size))
     # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
-    dlarray = []
-    zprime = z
-    # zprime = np.array(z)
-    # dzprime = np.array(dz)
-    # zprime = z
-    # dzprime = dz
-    for thisz in z:
-        # print()
-        # if isinstance(thisz, tensor.variable.TensorVariable):
-        #    print('LOOP iz,thisz', iz, thisz.eval(), 'TENSOR')
-        # else:
-        #    print('LOOP iz,thisz', iz, thisz)
-        # dltemp = (rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2
-        # print('rp0',rp0)
-        # print('zprime',zprime)  # messed up.  first element (zero) is diff
-        # print('dzprime',dzprime) # messed up. first and last are diff (mul vs add)
-        # print('dzprime',[dzp.eval() for dzp in dzprime]) # ok
-        # print('dltemp',dltemp)
-        # print('dltemp',[dlt.eval()for dlt in dltemp]) # ok
-        # print('dltemp',dltemp.eval())  # fails.  no attribute eval for a numpy array. huh? oh i see it's an array of tensors ig
-        # dl = tensor.sqrt((rp0))
-        # print('dl sqrt works1?',dl.eval()) # ok
-        # pytensor.dprint(zprime)   # same as a regular print; doesn't show chart
-        # pytensor.dprint(dzprime)  # same as a regular print; doesn't show chart
-        # dl = tensor.sqrt((dzprime))    # <--- *** THIS FAILS ***
-        # dl = [tensor.sqrt(dzp) for dzp in dzprime]
-        # print('dl sqrt works1b?',[ddd.eval() for ddd in dl])  # ok
-        # dl = [tensor.sqrt(dzp) for dzp in zprime]
-        # print('dl sqrt works1c?',dl) # ok
+    zprime = np.broadcast_to(z, (Nzones, Nzones))
+    thisz = zprime.T
+    # print('zprime',zprime)
+    # print('thisz',thisz)
 
-        # dl11 = np.sqrt((rp0 + zprime + dzprime)**2)
-        # print('dl sqrt works first half?',dl11)
-        # dl22 = np.sqrt((rp0 + thisz)**2)
-        # print('dl sqrt works second part?',dl22)
-        # print('   failing?  loop it')
-        # testt = []
-        # for dl11element in dl11:
-        #    testt.append(dl11element - dl22)
-        # print('   schould work',testt)
-        # print('   worked',[t.eval() for t in testt])
-        # print('   failing?')
-        # testt = dl11 - dl22  # fails
-        # print('   schould fail')
-
-        # dl = tensor.sqrt((rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2) # fails
-
-        #  hmm weird.  this works on first pass of the loop, but not second
-        # dl = np.sqrt((rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2)  # second iteration trouble
-        # dl = np.sqrt((rp0 + zprime + dzprime)**2) - np.sqrt((rp0 + thisz)**2)  # fails
-        #  try making the list (first half) into an array first
-        # dl = np.sqrt(np.array((rp0 + zprime + dzprime))**2) - np.sqrt((rp0 + thisz)**2) # fails
-        # it's as if it's treating first part as a list.  so loop through it
-        # dl = []
-        # for zpr,dzpr in zip(zprime,dzprime):
-        # dl = np.zeros(len(zprime))
-        # dl = np.zeros(Nzones)
-        # print(' zprime', zprime.eval())
-        # print(' dz', dz.eval())
-        # print('dl',dl)
-        # WHAT ABOUT THIS NOW? Yes!
-        # dl = np.sqrt((rp0 + zprime + dz) ** 2)  # works!
-        # dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)  # works
-        # for izz in range(Nzones):
-        #    print(' subloop',izz,dl)
-        #    dl[izz] = rp0
-        #    print('  zprime!!!!',zprime)
-        #    print('  zprime!!!!',zprime[0])
-        #    print('  zprime!!!!',zprime[0])
-        #    print('  zprime!!!!',zprime[1])
-        #    dl[izz] = zprime[izz]
-        #    # print('  dzprime!!!!',dz)
-        #    # print('  dzprime!!!!',dz[0])
-        #    # print('  dzprime!!!!',dzprime[0].eval())
-        #    # print('  dzprime!!!!',dzprime[1])
-        #    # print('  dzprime!!!!',dzprime[1].eval())
-        #    print('  dz',dz.eval())
-        #    print('   izz',izz)
-        #    dl[izz] = dz
-        #    print('   izz',izz)
-        #    dl[izz] = rp0 + zprime[izz] + dz
-        #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2)
-        #    dl[izz] = np.sqrt((rp0 + zprime[izz] + dz)**2 - (rp0 + thisz)**2)
-        # print('dl sqrt works subtract both',dl)
-        # print('dl sqrt works subtract both',[d.eval() for d in dl])
-        # print('dl sqrt works subtract both', dl.eval() / dz.eval())
-
-        # for d in dl: print('loop check1',d.eval())
-        # for id,d in enumerate(dl): print('loop check2',id,d.eval())
-
-        # dl =(rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2
-        # print('dl sqrt works subtract sqrs?',dl)
-
-        # print('dl works py?',[d.eval() for d in dl])
-        # dl[:iz] = tensor.dscalar(0e0)  # fails.  must be a string
-        #  oh! it expects a string because it's the name.  how to put in a value?
-        # print('iz,len(dl)',iz,len(dl))
-        # print('dl1',dl)
-        # dl[:iz] = tensor.dscalar()  # I think you can leave the name blank
-        # print('dl2',dl)
-        # dl[:iz] = 0.
-        # dl[:iz+1] = 0.  # FAILS NOW (with dz/z update)
-        # print('dl after zeros at start',dl)
-        # print('dl just the zeros check',dl[:iz+1])
-        # dl = tensor.sqrt((rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2)
-        # dl[:iz] *= 0.
-        # print('dl4',dl)
-        # oof nasty bug here!
-        #  sometimes equal terms are off by the instrument precision
-        #  so sqrt(1e15 - 1e15) = sqrt(-1) = NaN
-        # take absolute value, just to be sure there's no problem
-        # dl[iz:] = dl[iz:] - np.sqrt((rp0 + zprime[iz:])**2 - (rp0 + thisz)**2)
-        #  convert this previous line to a tensor form
-        #   uh hold on, what's a tensor here?
-        # print('dl',dl)  # array of tensors
-        # print('zprime',zprime)  # array of tensors, except the first one is zero!
-        # print('thisz',thisz)  # float
-        # print('rp0',rp0)  # float
-        # print()
-        # dl = np.sqrt((rp0 + zprime + dzprime)**2 - (rp0 + thisz)**2)
-        # print('dl works?',[d.eval() for d in dl])
-        # test = (rp0 + thisz)**2
-        # print('test works1?',test)
-        # print('test works1?',[d.eval() for d in test]) # fails. it's a float not a list
-
-        # test = (rp0 + zprime[iz:])**2
-        # print('test works2?',test)
-        # print('test works2?',[d.eval() for d in test[1:]])  # no work for first cell
-        # test = (rp0 + zprime[iz:])**2 - (rp0 + thisz)**2
-        # print('test works3?',test)
-        # print('test works3?',[d.eval() for d in test])
-
-        # print(' *** thisz vs zprime check! ***',zprime[iz],thisz)
-        # test = (np.abs((rp0 + zprime[iz+1:])**2 - (rp0 + thisz)**2))
-        # print('test works4?',test)
-        # test = (np.abs((rp0 + zprime[iz:])**2 - (rp0 + thisz)**2))
-        # print('test works5?',test)
-        # test = np.sqrt(np.abs((rp0 + zprime[iz+1:])**2 - (rp0 + thisz)**2))
-        # print('test works6?',test)
-        # print('test works4?',[d.eval() for d in test])
-
-        # print()
-        # dl[iz:] = dl[iz:] - np.sqrt(np.abs((rp0 + zprime[iz:])**2 - (rp0 + thisz)**2))
-        # if 0:
-        #    for did, d in enumerate(dl):
-        #        print('loop check2', id, d.eval())
-        #        if did < iz + 1:
-        #            dl[did] = dl[did] * 0.0
-        #            print('hup', dl[did].eval())
-        #        else:
-        #            dl[did] = dl[did] - np.sqrt(
-        #                np.abs((rp0 + zprime[did]) ** 2 - (rp0 + thisz) ** 2)
-        #            )
-        #            print('dop', dl[did].eval())
-
-        # (above) dl = np.sqrt((rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2)
-
-        # dl = dl - np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
-        # print('dl with negative still',[dd.eval() for dd in dl])
-        # print('dl with negative still', dl.eval() / dz.eval())
-
-        # dl0 = np.sqrt(np.abs((rp0 + zprime) ** 2 - (rp0 + thisz) ** 2))
-        # print(' dl0 old', dl0.eval()/dz.eval())
-        # dl0 = np.sqrt(np.max([zprime*0,(rp0 + zprime)**2 - (rp0 + thisz)**2])) # fails
-        if isinstance(thisz, tensor.variable.TensorVariable):
-            # print('  TENSOR YES')
-            dl = np.sqrt(
-                tensor.max(
-                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
-                    axis=0,
-                )
-            )
-            dl0 = np.sqrt(
-                tensor.max(
-                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
-                    axis=0,
-                )
-            )
-        else:
-            # print('  TENSOR NO ')
-            dl = np.sqrt(
-                np.max(
-                    [zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2],
-                    axis=0,
-                )
-            )
-            dl0 = np.sqrt(
-                np.max(
-                    [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
-                    axis=0,
-                )
-            )
-        # print(' dl1 ', dl.eval() / dz.eval())
-        # print(' dl0 ', dl0.eval() / dz.eval())
-        dl = dl - dl0
-        # if isinstance(dl, tensor.variable.TensorVariable):
-        #    print(' dl new', dl.eval() / dz.eval())
-        # else:
-        #    print(' dl new', dl / dz)
-
-        # dl = ifelse(zprime > thisz, dl - dl0, dl * 0)  # fails
-        # print('dl with nan fixed?',dl.eval())
-
-        # if zprime > thisz:  # fails
-        #    dl = dl - dl0
-        # else:
-        #    dl = dl * 0
-        # print(' dl old part',iz,dl[:iz+1])
-        # print(' dl new part',iz,[d.eval() for d in dl[iz+1:]])
-        dlarray.append(dl)
-    # print('MADE IT!!!')
-    # print('dlarray',[d.eval() for d in dlarray])
-    # print('dlarray',dlarray.eval())  # fails.  it's a list
-    # print()
-    dlarray = np.array(dlarray)
-    # print('dlarray', [d.eval() for d in dlarray])
-    # print('dlarray',dlarray.eval()) still fails even after change list to array
-
-    # dlarray is a list of tensors which are 1-d arrays (yuch!)
-    # convert it to a 2-d tensor
-    if isinstance(dl, tensor.variable.TensorVariable):
-        dlarraymod = []
-        for dla in dlarray:
-            dlarraymod.append(dla.eval())
-        dlarray = np.array(dlarraymod)
-
-    # print('dlarray up top', dlarray)
+    dl = np.sqrt(
+        np.max(
+            ([zprime * 0, (rp0 + zprime + dz) ** 2 - (rp0 + thisz) ** 2]),
+            axis=0,
+        )
+    )
+    dl0 = np.sqrt(
+        np.max(
+            [zprime * 0, (rp0 + zprime) ** 2 - (rp0 + thisz) ** 2],
+            axis=0,
+        )
+    )
+    dlarray = dl - dl0
+    # print('dl', dlarray)
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
@@ -690,41 +412,8 @@ def gettau(
             sigma = sigma * 1e-4  # m^2/mol
             pass
         if isothermal:
-            # sigma cross-section comes from scipy interp, so it's a float
-            # but the other stuff (mmr, rho) are tensors
-            # print('mmr shape', mmr.eval())
-            # print('sigma shape', sigma)
-            # print('rho shape', rho.eval())
-            # print('mmr shape', mmr.eval().shape)  # single float (from tensor)
-            # print('sigma shape', sigma.shape)  # 110 float array
-            # if isinstance(rho, tensor.variable.TensorVariable):
-            #     print(
-            #    'rho shape', rho.eval().shape
-            # )  # 7 float array (from tensor)
-            # print('rho shape', np.array(rho.eval()).T.shape)
-            # else:
-            # print('rho shape', rho.shape)  # 7 float array
-            # print('tau check', tau[3][5])  # float (zero)
-            # print('tau shape', tau.shape)  # 7x110
-            if isinstance(rho, tensor.variable.TensorVariable):
-                #    check1 = sigma * np.array([rho.eval()]).T
-                #    print('check1 shape', check1.shape)
-                #    check2 = mmr.eval() * sigma * np.array([rho.eval()]).T
-                #    print('check2 shape', check2.shape)
-                tau = tau + mmr.eval() * sigma * np.array([rho.eval()]).T
-                tau_by_molecule[elem] = (
-                    mmr.eval() * sigma * np.array([rho.eval()]).T
-                )
-                #    print('tau shape after adding', tau.shape)
-                pass
-            else:
-                tau = tau + mmr * sigma * np.array([rho]).T
-                tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
-                pass
-            # print('    mmr', mmr)  # tensor
-            # print('    sigma', sigma) # 100 floats
-            # print('    rho', rho)  # 7 floats
-            # print('tau for this molecule', elem, tau_by_molecule[elem].eval())
+            tau = tau + mmr * sigma * np.array([rho]).T
+            tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
@@ -753,27 +442,15 @@ def gettau(
             sigma[sigma < 0] = 0e0
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
-        if isinstance(rho, tensor.variable.TensorVariable):
-            tau = tau + f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
-            tau_by_molecule[cia] = (
-                f1 * f2 * sigma * np.array([rho.eval() ** 2]).T
-            )
-        else:
-            tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
-            tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-        # print('tau for this molecule', cia, tau_by_molecule[cia].eval())
+        tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
+        tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
     # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
-    if isinstance(rho, tensor.variable.TensorVariable):
-        tau = tau + fH2 * sigma * np.array([rho.eval()]).T
-        tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho.eval()]).T
-    else:
-        tau = tau + fH2 * sigma * np.array([rho]).T
-        tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
-    # print('tau for this molecule', 'rayleigh', tau_by_molecule['rayleigh'].eval())
+    tau = tau + fH2 * sigma * np.array([rho]).T
+    tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
@@ -811,11 +488,6 @@ def gettau(
             )
             hzwdist = hztop - np.log10(p)
 
-            # it's probably easier to eval() hzwscale and hztop when passed in
-            # if isinstance(hzwscale, tensor.variable.TensorVariable):
-            #    hzwscale_float = hzwscale.eval()
-            # else:
-            #    hzwscale_float = hzwscale
             if hzwscale > 0:
                 preval = hztop - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
@@ -866,68 +538,23 @@ def gettau(
         # print('lower haze',sigma)
         # print('lower haze', rh)
         hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
-        # convert the haze contribution to a tensor
-        #  otherwise haze will be different type than all other contributions
-        hazecontribution = tensor.as_tensor(hazecontribution)
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
-    # careful, haze is the weird one. it's float, not tensor
-    # print('tau for this molecule', 'haze', tau_by_molecule['haze'])
-    # print('OVERALL TAU!!!', tau.eval())
 
-    # any trouble with this matrix multiplication?
-    # print('dlarray', dlarray)
-    # print('dlarray', dlarray.shape)  # 7x7 elements
-    # print('dlarray[0][0]', dlarray[0][0])
-    # print('tau', tau.eval().shape)  # 7x103 elements
-
-    # module 'pytensor.tensor' has no attribute 'as_matrix'. Did you mean: 'bmatrix'?
-    #    tau = 2e0 * np.array(tensor.as_matrix(dlarray) * tensor.as_matrix(tau))
-    # tau = 2e0 * dlarray * tau  # fails
-    # tau = 2e0 * tensor.nlinalg.matrix_dot(dlarray, tau)  # keyerror: 'object'
-
-    # print('dlarray', dlarray)
-    # TypeError: Unsupported dtype for TensorType: object
-    # testtest = tensor.as_tensor(dlarray)
-    # print('dlarray',testtest)
-
-    # dlarraymod = []
-    # for dla in dlarray: dlarraymod.append(dla.eval())
-    # dlarraymod = np.array(dlarraymod)
-    # print('dlarraymod',dlarraymod)
-    # print('dlarraymod shape',dlarraymod.shape)
-    # testtest = tensor.as_tensor(dlarraymod)
-    # print('dlarray as tensor',testtest)
-    # print('OK!')
-    # print()
-
-    # tau = 2e0 * np.array(np.asmatrix(dlarray) * np.asmatrix(tau))
-    # print('tau after matrixing',tau.shape)
-    tau = 2e0 * tensor.nlinalg.matrix_dot(tensor.as_tensor(dlarray), tau)
-    # print('tau shape after matrixing', tau.eval().shape)
+    tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         # print(' MOLECULE:', molecule)
-        # careful here.  most of the time this is a tensor
-        #  but for haze it comes out as a numpy array
-        #  (haze is based on a float-based density profile)
-        # print('tau[0][0] for molecule',
-        #      molecule, tau_by_molecule[molecule][0][0])
-        # this is only an issue for printing.  this handles either case fine
-        tau_by_molecule[molecule] = 2e0 * tensor.nlinalg.matrix_dot(
-            tensor.as_tensor(dlarray), tau_by_molecule[molecule]
+        tau_by_molecule[molecule] = (
+            2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
         )
-        # print(
-        #    'tau[0][0] for molecule',
-        #    molecule,
-        #    tau_by_molecule[molecule][0][0].eval(),
-        # )
+
     if debug:
         plt.figure(figsize=(12, 6))
         plt.imshow(
-            tensor.log10(tau).eval(),
+            np.log10(tau),
             aspect='auto',
             origin='lower',
             extent=[max(wgrid), min(wgrid), np.log10(max(p)), np.log10(min(p))],
@@ -1046,42 +673,12 @@ def getxmolxs(temp, xsecs):
     '''
     G. ROUDIER: Wrapper around EXOMOL Cerberus library
     '''
-    # print('--getxmolxs start--')
-    # print('xsecs',xsecs['SPL'])
-    # sigma = np.array([thisspl for thisspl in xsecs['SPL']])
-    # unneccessary-comprehension error here.  but itk maybe needed for tensor version?
-    sigma = np.array(list(xsecs['SPL']))
-    # print('sigma3', sigma[3])  # scipy.interp object
-    # print('sigma3', xsecs['SPL'][3])  # scipy.interp object
-    # print('nu', xsecs['SPLNU'])      # a list of floats
-    # print('nu3', xsecs['SPLNU'][3])  # a float
-    # temp is not a tensor, for ariel-sim call. for cerberus?  asdf
-
-    # print('temperature', temp)  # interesting!  prints as 'T'
-    # print('temperature', temp.eval())  # float
-    # print('  temp type', type(temp))  # <class 'pytensor.tensor.variable.TensorVariable'>
-    # print('  temp type', isinstance(temp, float))
-    #  yes this works:
-    # print('  temp type', isinstance(temp, tensor.variable.TensorVariable))
-
-    # for thisspl in xsecs['SPL']:
-    # print('does this single call work?', thisspl)  # interp object
-    # print('CHECK WITH A FLOAT?', thisspl(666.0))  # fine
-    # asdf
-    # if isinstance(temp, tensor.variable.TensorVariable):
-    #    print('does this single call work?', thisspl(temp.eval()))
-    # else:
-    #   print('does this single call work?', thisspl(temp))
-
-    if isinstance(temp, tensor.variable.TensorVariable):
-        sigma = np.array([thisspl(temp.eval()) for thisspl in xsecs['SPL']])
-    else:
-        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+    # sigma = np.array(list(xsecs['SPL']))
+    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
     nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]
-    # print('--getxmolxs end--')
     return sigma, nu
 
 
@@ -1091,10 +688,7 @@ def getciaxs(temp, xsecs):
     '''
     G. ROUDIER: Wrapper around CIA Cerberus library
     '''
-    if isinstance(temp, tensor.variable.TensorVariable):
-        sigma = np.array([thisspl(temp.eval()) for thisspl in xsecs['SPL']])
-    else:
-        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
     nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
@@ -1121,22 +715,20 @@ def intflor(wave, dwave, nu, gamma):
 
 # -------------------------- -----------------------------------------
 # -- PYMC DETERMINISTIC FUNCTIONS -- ---------------------------------
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
     ctp, hza, hzloc, hzthick, tpr, mdp = crbinputs
-    print(
-        ' not-fixed cloud parameters (cloudy):',
-        tpr.eval(),
-        ctp.eval(),
-        hza.eval(),
-        hzloc.eval(),
-        hzthick.eval(),
-    )
+    # print(
+    #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
+    #    ctp,
+    #    hza,
+    #    hzloc,
+    #    hzthick,
+    #    tpr,
+    #    mdp
+    # )
 
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -1145,36 +737,25 @@ def cloudyfmcerberus(*crbinputs):
         if 'XtoH' in ctxt.fixedParams:
             tceqdict['XtoH'] = ctxt.fixedParams['XtoH']
         else:
-            tceqdict['XtoH'] = mdp[mdpindex].eval()
-            # tceqdict['XtoH'] = mdp[mdpindex]     make sure to fix/test this next!!!
-            # asdf
+            tceqdict['XtoH'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'CtoO' in ctxt.fixedParams:
             tceqdict['CtoO'] = ctxt.fixedParams['CtoO']
         else:
-            tceqdict['CtoO'] = mdp[mdpindex].eval()
-            # tceqdict['CtoO'] = mdp[mdpindex]
+            tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
-            tceqdict['NtoO'] = mdp[mdpindex].eval()
-            # tceqdict['NtoO'] = mdp[mdpindex]
-        # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+            tceqdict['NtoO'] = mdp[mdpindex]
+        # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
-        #        fmc = crbmodel(None, hza.eval(), ctp.eval(), ctxt.solidr, ctxt.orbp,
-        #                       ctxt.xsl['data'][ctxt.p]['XSECS'],
-        #                       ctxt.xsl['data'][ctxt.p]['QTGRID'],
-        #                       tpr.eval(), np.array(ctxt.spc['data'][ctxt.p]['WB']),
-        #                       hzlib=ctxt.hzlib,  hzp='AVERAGE', hztop=hzloc.eval(),
-        #                       hzwscale=hzthick.eval(), cheq=tceqdict, pnet=ctxt.p,
-        #                       verbose=False, debug=False)
         fmc = crbmodel(
             None,
             hza,
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1183,8 +764,8 @@ def cloudyfmcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1193,59 +774,58 @@ def cloudyfmcerberus(*crbinputs):
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
-            mixratio[key] = mdp[index].eval()
+            mixratio[key] = mdp[index]
 
         fmc = crbmodel(
             mixratio,
-            hza.eval(),
-            ctp.eval(),
+            hza,
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
             ctxt.xsl['data'][ctxt.p]['QTGRID'],
-            tpr.eval(),
+            tpr,
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
 
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc[ctxt.cleanup]
+    # print('FMC in cloudyfmcerberus pre-mean',fmc)
+
+    # fmc = fmc - np.nanmean(fmc)
+    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc - np.mean(fmc)
+    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
+    # print('FMC in cloudyfmcerberus final',fmc)
+
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def clearfmcerberus(*crbinputs):
     '''
     Wrapper around Cerberus forward model - NO CLOUDS!
+    (Note that this is not actually a cloud-free model; it is a fixed-cloud model!!)
     '''
-    # ctp = 3.    # cloud deck is very deep - 1000 bars
-    # hza = -10.  # small number means essentially no haze
-    # hzloc = 0.
-    # hzthick = 0.
+    # these fixed values are probably set in ariel/core, e.g. -10 for HScale
     ctp = ctxt.fixedParams['CTP']
     hza = ctxt.fixedParams['HScale']
     hzloc = ctxt.fixedParams['HLoc']
     hzthick = ctxt.fixedParams['HThick']
     # print(' fixed cloud parameters (clear):',ctp,hza,hzloc,hzthick)
 
-    tpr, mdp = crbinputs
-
-    # if you don't want to fit Teq, fix it here. otherwise modify decorators somehow
-    # tpr = 593.5
-    # if 'T' in ctxt.fixedParams: exit('fixing T is tricky; need to adjust the decorators')
-    # if 'T' in ctxt.fixedParams:
-    #     tpr = ctxt.fixedParams['T']
-    #     mdp = crbinputs
-    # else:
-    #    tpr, mdp = crbinputs
+    if 'T' in ctxt.fixedParams:
+        tpr = ctxt.fixedParams['T']
+        mdp = crbinputs[0]
+    else:
+        tpr, mdp = crbinputs
+    # print(' param values inside of forward model', tpr, mdp)
 
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -1254,35 +834,35 @@ def clearfmcerberus(*crbinputs):
         if 'XtoH' in ctxt.fixedParams:
             tceqdict['XtoH'] = ctxt.fixedParams['XtoH']
         else:
-            tceqdict['XtoH'] = float(mdp[mdpindex])
+            tceqdict['XtoH'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'CtoO' in ctxt.fixedParams:
             tceqdict['CtoO'] = ctxt.fixedParams['CtoO']
         else:
-            tceqdict['CtoO'] = float(mdp[mdpindex])
+            tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
 
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
-            tceqdict['NtoO'] = float(mdp[mdpindex])
+            tceqdict['NtoO'] = mdp[mdpindex]
         # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            float(ctp),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
             ctxt.xsl['data'][ctxt.p]['QTGRID'],
-            float(tpr),
+            tpr,
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=float(hzloc),
+            hzwscale=float(hzthick),
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1292,36 +872,41 @@ def clearfmcerberus(*crbinputs):
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
-            mixratio[key] = float(mdp[index])
+            mixratio[key] = mdp[index]
             pass
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            float(ctp),
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
             ctxt.xsl['data'][ctxt.p]['QTGRID'],
-            float(tpr),
+            tpr,
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=float(hzloc),
+            hzwscale=float(hzthick),
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
         pass
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+
+    fmc = fmc[ctxt.cleanup]
+    # print('FMC in clearfmcerberus pre-mean',fmc)
+
+    # fmc = fmc - np.nanmean(fmc)
+    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    fmc = fmc - np.mean(fmc)
+    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
+    # print('FMC in clearfmcerberus final',fmc)
+
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1346,7 +931,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1355,8 +940,8 @@ def offcerberus(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1371,7 +956,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1380,8 +965,8 @@ def offcerberus(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1405,9 +990,6 @@ def offcerberus(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1423,7 +1005,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1432,8 +1014,8 @@ def offcerberus1(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1448,7 +1030,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1457,8 +1039,8 @@ def offcerberus1(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1477,9 +1059,6 @@ def offcerberus1(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1495,7 +1074,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1504,8 +1083,8 @@ def offcerberus2(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1520,7 +1099,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1529,16 +1108,16 @@ def offcerberus2(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
         pass
-    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
+    #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
+    #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
     ww = ww[ctxt.cleanup]
     flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
@@ -1549,9 +1128,6 @@ def offcerberus2(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1568,7 +1144,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1577,8 +1153,8 @@ def offcerberus3(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1593,7 +1169,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1602,8 +1178,8 @@ def offcerberus3(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1621,9 +1197,6 @@ def offcerberus3(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1640,7 +1213,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1649,8 +1222,8 @@ def offcerberus4(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1665,7 +1238,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1674,8 +1247,8 @@ def offcerberus4(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1691,9 +1264,6 @@ def offcerberus4(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1710,7 +1280,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1719,8 +1289,8 @@ def offcerberus5(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1735,7 +1305,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1744,8 +1314,8 @@ def offcerberus5(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1763,9 +1333,6 @@ def offcerberus5(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
@@ -1782,7 +1349,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1791,8 +1358,8 @@ def offcerberus6(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1807,7 +1374,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1816,8 +1383,8 @@ def offcerberus6(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1833,9 +1400,6 @@ def offcerberus6(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
@@ -1852,7 +1416,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1861,8 +1425,8 @@ def offcerberus7(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1877,7 +1441,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1886,8 +1450,8 @@ def offcerberus7(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,
@@ -1903,9 +1467,6 @@ def offcerberus7(*crbinputs):
     return fmc
 
 
-# @tco.as_op(itypes=[tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar, tt.dscalar,
-#                   tt.dscalar, tt.dscalar, tt.dvector],
-#           otypes=[tt.dvector])
 def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
@@ -1922,7 +1483,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             None,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1931,8 +1492,8 @@ def offcerberus8(*crbinputs):
             wbb,
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=tceqdict,
             pnet=ctxt.p,
             verbose=False,
@@ -1947,7 +1508,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             mixratio,
             float(hza),
-            ctp.eval(),
+            ctp,
             ctxt.solidr,
             ctxt.orbp,
             ctxt.xsl['data'][ctxt.p]['XSECS'],
@@ -1956,8 +1517,8 @@ def offcerberus8(*crbinputs):
             np.array(ctxt.spc['data'][ctxt.p]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
-            hztop=hzloc.eval(),
-            hzwscale=hzthick.eval(),
+            hztop=hzloc,
+            hzwscale=hzthick,
             cheq=None,
             pnet=ctxt.p,
             verbose=False,

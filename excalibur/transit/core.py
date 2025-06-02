@@ -5,7 +5,9 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 # GMR: I m out of juice for that
-# pylint: disable=abstract-method,arguments-differ,arguments-renamed,cell-var-from-loop
+# pylint: disable=cell-var-from-loop
+#  these should all be fixed now (as in cerberus)
+# abstract-method,arguments-differ,arguments-renamed
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -223,14 +225,17 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
+
     if ctxt.spec:
         ForwardModel = lcmodel(*newnodes)
         pass
     else:
         ForwardModel = orbital(*newnodes)
         pass
-    Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
+    # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
+    Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0 - Norm
+
     return out
 
 
@@ -238,12 +243,19 @@ class TensorShell(tnsrgraph.Op):
     '''
     GMR: Tensor Shell for custom models
     Do not touch the name of the methods
+    GB: R_op and grad definitions added to avoid abstract-method pylint error
     '''
 
-    def make_node(self, nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes]
+    def make_node(self, *nodes) -> tnsrgraph.Apply:
+        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
         outputs = [tnsr.vector()]
         return tnsrgraph.Apply(self, inputs, outputs)
+
+    def R_op(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
+
+    def grad(self, *_args, **_keywords):
+        raise NotImplementedError('not expecting this method to be used')
 
     def perform(
         self,
