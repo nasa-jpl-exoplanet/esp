@@ -205,6 +205,7 @@ class Autofill(dawgie.Algorithm):
         return
 
     def _autofill(self, crt, thistarget):
+        
         '''Core code call'''
         # currently we are running this on all filters, not just the available ones
         solved = trgcore.autofill(crt, thistarget, self.__out, fltrs)
