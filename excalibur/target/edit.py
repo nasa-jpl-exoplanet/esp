@@ -22,7 +22,7 @@ def createversion():
     1.7.0: Added confirmed planets in Ariel target list
     1.7.1: WFC3 targets 2023
     1.8.0: JWST filters
-    1.8.1: I.M HST run 
+    1.8.1: I.M HST run
     '''
     return dawgie.VERSION(1, 8, 1)
 
