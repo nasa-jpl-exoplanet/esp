@@ -1182,7 +1182,15 @@ def derive_inclination_from_impactParam(starInfo, planet_letter):
             inc_ref_derived.append('derived from impact parameter')
 
             # also fill in the uncertainty on inc, based on impact,R*,sma uncertainties
-            if Rstarerr1 == '' or smaerr1 == '' or impacterr1 == '':
+            # ines mertz : when impact is zero, the following else statement for lower error will cause
+            # a division by zero, so we go in the 'if statement' below
+
+            if (
+                Rstarerr1 == ''
+                or smaerr1 == ''
+                or impacterr1 == ''
+                or float(impact) == 0
+            ):
                 inc_lowerr_derived.append('')
             else:
                 cosincfractionalError1 = -numpy.sqrt(
@@ -1193,7 +1201,13 @@ def derive_inclination_from_impactParam(starInfo, planet_letter):
                 inc_lowerr_derived.append(
                     f'{(cosincfractionalError1 * 180 / numpy.pi):6.4f}'
                 )
-            if Rstarerr2 == '' or smaerr2 == '' or impacterr2 == '':
+            # ines mertz : same thing for upper error
+            if (
+                Rstarerr2 == ''
+                or smaerr2 == ''
+                or impacterr2 == ''
+                or float(impact) == 0
+            ):
                 inc_uperr_derived.append('')
             else:
                 cosincfractionalError2 = numpy.sqrt(

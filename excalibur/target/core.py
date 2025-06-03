@@ -1162,7 +1162,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         }
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         data = json.loads(datastr)
-        if data and data['data']:
+        if data and 'data' in data:
             donmast = True
         dtlvl = None
         clblvl = None
