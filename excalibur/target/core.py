@@ -1143,7 +1143,6 @@ def scrapeversion():
 # -- MAST -- ---------------------------------------------------------
 def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
     '''Uses MAST API tools to download data'''
-
     target = list(tfl['starID'].keys())[0]
     obstable = tfl['starID'][target]['datatable']
     obsids = [o['obsid'] for o in obstable]
