@@ -81,16 +81,16 @@ In bash, one can define an environment variable for the life of a command by pre
 
 The tool will empty the schedule of jobs, optionally archive the database, and then restart the pipeline. It works with both the operational pipeline and private pipelines..
 
-To reset private pipeline with archive: `pp_reset.sh`
+To reset your private pipeline without archive: `pp_reset.sh`
 
-To reset private pipeline without archive: `DAWGIE_ARCHIVE=false pp_reset.sh 8080`
+To reset your private pipeline with archive: `DAWGIE_ARCHIVE=true pp_reset.sh`
 
-To reset operational pipline: `DAWGIE_PIPELINE_HOST=excalibur.jpl.nasa.gov pp_reset.sh 8080`
+To reset operational pipline: `pp_reset.sh ops`
 
 The script triggers off these environment variables:
-- `DAWGIE_FE_PORT` - probably already defined in your bash profile and can be overriden by using the script argument. Default if not defined 8080.
-- `DAWGIE_PIPELINE_HOST` - for private pipelines, use computer name running the pipeline like mentor3. Default if not defined excalibur.jpl.nasa.gov.
-- `DAWGIE_SSL_PEM_MYSELF` - should default to your certificate and will use the one you have defined in your bash profile. Default if not defined ${HOME}/.ssh/myself.pem.
+- `DAWGIE_SFE_PORT` - probably already defined in your bash profile and can be overriden by using the script argument. Default if not defined 8080.
+- `EXCALIBUR_HOST` - for private pipelines, use computer name running the pipeline like mentor3. Default if not defined is localhost.
+- `DAWGIE_SSL_PEM_MYSELF` - should default to your certificate and will use the one you have defined in your bash profile. Default if not defined /proj/sdp/${EXCALIBUR_USER}/certs/excalibur_identity.pem.
 
 ### pp_start.sh
 
