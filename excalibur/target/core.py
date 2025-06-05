@@ -1164,6 +1164,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         # ines mertz : adding an if statement to test the length of data['data']
         if data and 'data' in data:
             if not data['data']:
+                log.warning('>>> data[data] is an empty list for target %s observation %s',target,o)
                 pass
             else:
                 donmast = True
