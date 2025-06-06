@@ -15,6 +15,7 @@ import logging
 from collections import defaultdict
 import numpy as np
 
+import excalibur
 import excalibur.transit.core as trncore
 import excalibur.transit.starspots as trnspots
 import excalibur.transit.states as trnstates
@@ -109,7 +110,9 @@ class Normalization(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for {self._type.upper()}.{self.name()}'
@@ -289,7 +292,9 @@ class WhiteLight(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for {self._type.upper()}.{self.name()}'
@@ -426,7 +431,9 @@ class Spectrum(dawgie.Algorithm):
             svupdate  # it will take all the elements that are not empty
         )
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for {self._type.upper()}.{self.name()}'
@@ -532,7 +539,9 @@ class StarSpots(dawgie.Algorithm):
 
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for {self._type.upper()}.{self.name()}'

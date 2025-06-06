@@ -11,6 +11,7 @@ import numexpr
 
 import logging
 
+import excalibur
 import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
 import excalibur.ancillary as anc
@@ -97,7 +98,9 @@ class XSLib(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -245,7 +248,9 @@ class Atmos(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -371,7 +376,9 @@ class Results(dawgie.Algorithm):
 
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -545,7 +552,9 @@ class Release(dawgie.Algorithm):
             svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'

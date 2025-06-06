@@ -95,6 +95,7 @@ class Alert(dawgie.Analyzer):
         self.__out['changes'].extend(c)
         self.__out['known'].extend(k)
         self.__out['table'].extend(t)
+        excalibur.Lagger()
         aspects.ds().update()
         return
 
@@ -130,6 +131,7 @@ class Create(dawgie.Analyzer):
         trgcore.scrapeids(aspects.ds(), self.__out[0], WEB, gen_ids=GEN_IDS)
         update = trgcore.createfltrs(self.__out[1])
         if update:
+            excalibur.Lagger()
             aspects.ds().update()
         else:
             raise dawgie.NoValidOutputDataError(
@@ -196,7 +198,9 @@ class Autofill(dawgie.Algorithm):
                 self._failure(errstring)
 
             if update:
+                _ = excalibur.Lagger()
                 ds.update()
+                pass
             else:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for TARGET.{self.name()}'
@@ -274,6 +278,7 @@ class Scrape(dawgie.Algorithm):
                 self._failure(errstring)
             # GMR: always update.
             # Sims / proceed() do not require data nor full set of system parameters.
+            _ = excalibur.Lagger()
             ds.update()
         return
 

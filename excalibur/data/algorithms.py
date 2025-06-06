@@ -9,6 +9,8 @@ import logging
 import dawgie
 import dawgie.context
 
+import excalibur
+
 import excalibur.data.core as datcore
 import excalibur.data.states as datstates
 
@@ -89,7 +91,9 @@ class Collect(dawgie.Algorithm):
                     update = update or ok
                     pass
                 if update:
+                    _ = excalibur.Lagger()
                     ds.update()
+                    pass
                 else:
                     self._raisenoout(self.name())
             else:
@@ -185,7 +189,9 @@ class Timing(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             self._raisenoout(self.name())
         return
@@ -284,7 +290,9 @@ class Calibration(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.Lagger()
             ds.update()
+            pass
         else:
             self._raisenoout(self.name())
         return

@@ -22,7 +22,9 @@ import dawgie
 # import scipy.stats
 
 import os
+import numpy as np
 
+from time import sleep
 # ------------- ------------------------------------------------------
 # GMR: CAN WE SET UP THIS MESS ONCE AND FORGET ABOUT IT
 # Ines Mertz : I fixed it
@@ -96,3 +98,21 @@ class ValueScalar(dawgie.Value):
         return self.__content
 
     pass
+
+def Lagger(wait=None, workers=288, verbose=False):
+    '''
+    GMR: Temporary staggering function to be called before an algo exec
+    Issue 101 https://github.com/nasa-jpl-exoplanet/esp/issues/101
+    wait: Forces value to a specific wait time in [s]
+    workers: number of workers
+    '''
+    if wait is not None:
+        out = wait
+        pass
+    else:
+        out = np.random.uniform(low=0, high=workers)
+        out *= 0.1 #  pseudo steps of 100 ms
+        pass
+    if verbose: print(f'Waiting {out} seconds')
+    sleep(out)
+    return out
