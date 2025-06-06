@@ -5,6 +5,7 @@ import logging
 
 import dawgie
 
+import excalibur
 import excalibur.ariel.core as arielcore
 import excalibur.ariel.states as arielstates
 import excalibur.runtime as rtime
@@ -87,7 +88,9 @@ class SimSpectrum(dawgie.Algorithm):
             else:
                 self._failure(errstring)
             if update:
+                _ = excalibur.lagger()
                 ds.update()
+                pass
             elif valid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for ARIEL.{self.name()}'
