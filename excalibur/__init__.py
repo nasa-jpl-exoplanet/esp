@@ -112,7 +112,9 @@ def lagger(wait=None, workers=288, verbose=False):
         out = wait
         pass
     else:
-        out = 0.1 * np.random.uniform(low=0, high=workers)  # pseudo steps of 100 ms
+        out = 0.1 * np.random.uniform(
+            low=0, high=workers
+        )  # pseudo steps of 100 ms
         pass
     if verbose:
         print(f'Waiting {out} seconds')
