@@ -87,7 +87,7 @@ class Validate(dawgie.Algorithm):
                 self._failure(errstring)
 
             if update:
-                _ = excalibur.Lagger()
+                _ = excalibur.lagger()
                 ds.update()
                 pass
             elif valid:
@@ -213,7 +213,7 @@ class Finalize(dawgie.Algorithm):
                 self._failure(errstring)
 
             if update:
-                _ = excalibur.Lagger()
+                _ = excalibur.lagger()
                 ds.update()
                 pass
             elif valid:

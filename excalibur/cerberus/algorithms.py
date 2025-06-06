@@ -98,7 +98,7 @@ class XSLib(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -248,7 +248,7 @@ class Atmos(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -376,7 +376,7 @@ class Results(dawgie.Algorithm):
 
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -552,7 +552,7 @@ class Release(dawgie.Algorithm):
             svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:

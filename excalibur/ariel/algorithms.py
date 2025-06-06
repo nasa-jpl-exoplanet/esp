@@ -88,7 +88,7 @@ class SimSpectrum(dawgie.Algorithm):
             else:
                 self._failure(errstring)
             if update:
-                _ = excalibur.Lagger()
+                _ = excalibur.lagger()
                 ds.update()
                 pass
             elif valid:

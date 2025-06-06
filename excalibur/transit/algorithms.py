@@ -110,7 +110,7 @@ class Normalization(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -292,7 +292,7 @@ class WhiteLight(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -431,7 +431,7 @@ class Spectrum(dawgie.Algorithm):
             svupdate  # it will take all the elements that are not empty
         )
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -539,7 +539,7 @@ class StarSpots(dawgie.Algorithm):
 
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:

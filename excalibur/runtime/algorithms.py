@@ -91,7 +91,7 @@ class Autofill(dawgie.Algorithm):
         core.isolate(
             self.__status, self.__parent.sv_as_dict()['composite'], table_index
         )
-        _ = excalibur.Lagger()
+        _ = excalibur.lagger()
         ds.update()
         return
 

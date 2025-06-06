@@ -103,7 +103,7 @@ class pcnormalization(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -183,7 +183,7 @@ class pcwhitelight(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:

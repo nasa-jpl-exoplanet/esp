@@ -91,7 +91,7 @@ class Collect(dawgie.Algorithm):
                     update = update or ok
                     pass
                 if update:
-                    _ = excalibur.Lagger()
+                    _ = excalibur.lagger()
                     ds.update()
                     pass
                 else:
@@ -189,7 +189,7 @@ class Timing(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
@@ -290,7 +290,7 @@ class Calibration(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
-            _ = excalibur.Lagger()
+            _ = excalibur.lagger()
             ds.update()
             pass
         else:
