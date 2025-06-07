@@ -202,6 +202,27 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     ariel_simspectrum_thorngrenMassMetals = property(__ariel_simspectrum_thorngrenMassMetals.value, __ariel_simspectrum_thorngrenMassMetals.set, None, None)
 
+        # Attribute cerberus.atmos.crbmodel.lbroadening uses Python identifier cerberus_atmos_crbmodel_lbroadening
+    __cerberus_atmos_crbmodel_lbroadening = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.lbroadening'), 'cerberus_atmos_crbmodel_lbroadening', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_lbroadening', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_lbroadening._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 57, 4)
+    __cerberus_atmos_crbmodel_lbroadening._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 57, 4)
+
+    cerberus_atmos_crbmodel_lbroadening = property(__cerberus_atmos_crbmodel_lbroadening.value, __cerberus_atmos_crbmodel_lbroadening.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.lshifting uses Python identifier cerberus_atmos_crbmodel_lshifting
+    __cerberus_atmos_crbmodel_lshifting = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.lshifting'), 'cerberus_atmos_crbmodel_lshifting', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_lshifting', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_lshifting._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 59, 4)
+    __cerberus_atmos_crbmodel_lshifting._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 59, 4)
+
+    cerberus_atmos_crbmodel_lshifting = property(__cerberus_atmos_crbmodel_lshifting.value, __cerberus_atmos_crbmodel_lshifting.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.isothermal uses Python identifier cerberus_atmos_crbmodel_isothermal
+    __cerberus_atmos_crbmodel_isothermal = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.isothermal'), 'cerberus_atmos_crbmodel_isothermal', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_isothermal', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_isothermal._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 61, 4)
+    __cerberus_atmos_crbmodel_isothermal._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 61, 4)
+
+    cerberus_atmos_crbmodel_isothermal = property(__cerberus_atmos_crbmodel_isothermal.value, __cerberus_atmos_crbmodel_isothermal.set, None, None)
+
     _ElementMap.update({
         
     })
@@ -211,6 +232,9 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __cerberus_atmos_fitCtoO.name() : __cerberus_atmos_fitCtoO,
         __cerberus_atmos_fitT.name() : __cerberus_atmos_fitT,
         __cerberus_atmos_sliceSampler.name() : __cerberus_atmos_sliceSampler,
+        __cerberus_atmos_crbmodel_lbroadening.name() : __cerberus_atmos_crbmodel_lbroadening,
+        __cerberus_atmos_crbmodel_lshifting.name() : __cerberus_atmos_crbmodel_lshifting,
+        __cerberus_atmos_crbmodel_isothermal.name() : __cerberus_atmos_crbmodel_isothermal,
         __target_autofill_selectMostRecent.name() : __target_autofill_selectMostRecent,
         __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
         __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,

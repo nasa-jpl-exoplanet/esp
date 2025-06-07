@@ -44,6 +44,12 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.sliceSampler"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.lbroadening"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.lshifting"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.isothermal"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="target.autofill.selectMostRecent"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="target.autofill.maximizeSelfConsistency"
