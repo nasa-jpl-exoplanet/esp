@@ -44,14 +44,29 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         allowed_names.discard(exclude)
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
-        'ariel_simulate_spectra_includeMetallicityDispersion',
-        'cerberus_atmos_fitCloudParameters',
-        'cerberus_atmos_fitNtoO',
-        'cerberus_atmos_fitCtoO',
-        'cerberus_atmos_fitT',
-        'cerberus_atmos_sliceSampler',
-        'target_autofill_selectMostRecent',
-        'target_autofill_maximizeSelfConsistency',
+        'target.autofill.selectMostRecent',
+	'target.autofill.maximizeSelfConsistency',
+	'cerberus.atmos.fitCloudParameters',
+        'cerberus.atmos.fitNtoO',
+        'cerberus.atmos.fitCtoO',
+        'cerberus.atmos.fitT',
+        'cerberus.atmos.sliceSampler',
+	'cerberus.atmos.crbmodel.nlevels',
+	'cerberus.atmos.crbmodel.Hsmax',
+	'cerberus.atmos.crbmodel.solrad',
+	'cerberus.atmos.crbmodel.lbroadening',
+	'cerberus.atmos.crbmodel.lshifting',
+	'cerberus.atmos.crbmodel.isothermal',
+	'cerberus.results.nrandomwalkers',
+	'cerberus.results.randomseed',
+	'ariel.simspectrum.tier',
+	'ariel.simspectrum.randomseed',
+	'ariel.simspectrum.randomCloudProperties',
+        'ariel.simspectrum.thorngrenMassMetals',
+        'ariel.simspectrum.includeMetallicityDispersion',
+	'ariel.simspectrum.metallicityDispersion',
+	'ariel.simspectrum.CtoOaverage',
+	'ariel.simspectrum.CtoOdispersion',
     ]:
         sv[key] = table['controls'][key].new()
     pymc = table['pymc-cerberuschainlen']
