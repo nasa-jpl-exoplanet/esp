@@ -158,7 +158,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     
     cerberus_atmos_fitT = property(__cerberus_atmos_fitT.value, __cerberus_atmos_fitT.set, None, None)
 
-    
+
     # Attribute target.autofill.selectMostRecent uses Python identifier target_autofill_selectMostRecent
     __target_autofill_selectMostRecent = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.selectMostRecent'), 'target_autofill_selectMostRecent', '__AbsentNamespace0_control_type_target_autofill_selectMostRecent', pyxb.binding.datatypes.boolean, required=True)
     __target_autofill_selectMostRecent._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
@@ -174,6 +174,20 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     
     ariel_simulate_spectra_includeMetallicityDispersion = property(__ariel_simulate_spectra_includeMetallicityDispersion.value, __ariel_simulate_spectra_includeMetallicityDispersion.set, None, None)
 
+    # Attribute cerberus.atmos.sliceSampler uses Python identifier cerberus_atmos_sliceSampler
+    __cerberus_atmos_sliceSampler = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.sliceSampler'), 'cerberus_atmos_sliceSampler', '__AbsentNamespace0_control_type_cerberus_atmos_sliceSampler', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_sliceSampler._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 49, 4)
+    __cerberus_atmos_sliceSampler._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 49, 4)
+
+    cerberus_atmos_sliceSampler = property(__cerberus_atmos_sliceSampler.value, __cerberus_atmos_sliceSampler.set, None, None)
+
+    # Attribute target.autofill.maximizeSelfConsistency uses Python identifier target_autofill_maximizeSelfConsistency
+    __target_autofill_maximizeSelfConsistency = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.maximizeSelfConsistency'), 'target_autofill_maximizeSelfConsistency', '__AbsentNamespace0_control_type_target_autofill_maximizeSelfConsistency', pyxb.binding.datatypes.boolean, required=True)
+    __target_autofill_maximizeSelfConsistency._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+    __target_autofill_maximizeSelfConsistency._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+
+    target_autofill_maximizeSelfConsistency = property(__target_autofill_maximizeSelfConsistency.value, __target_autofill_maximizeSelfConsistency.set, None, None)
+
     _ElementMap.update({
         
     })
@@ -182,7 +196,9 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __cerberus_atmos_fitNtoO.name() : __cerberus_atmos_fitNtoO,
         __cerberus_atmos_fitCtoO.name() : __cerberus_atmos_fitCtoO,
         __cerberus_atmos_fitT.name() : __cerberus_atmos_fitT,
+        __cerberus_atmos_sliceSampler.name() : __cerberus_atmos_sliceSampler,
         __target_autofill_selectMostRecent.name() : __target_autofill_selectMostRecent,
+        __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
         __ariel_simulate_spectra_includeMetallicityDispersion.name() : __ariel_simulate_spectra_includeMetallicityDispersion
     })
 _module_typeBindings.control_type = control_type
@@ -365,22 +381,33 @@ class pymc_type (pyxb.binding.basis.complexTypeDefinition):
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
-    # Element cerberus uses Python identifier cerberus
-    __cerberus = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberus'), 'cerberus', '__AbsentNamespace0_pymc_type_cerberus', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6), )
+    # Element cerberuschainlen uses Python identifier cerberuschainlen
+    __cerberuschainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), 'cerberuschainlen', '__AbsentNamespace0_pymc_type_cerberuschainlen', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6), )
 
-    
-    cerberus = property(__cerberus.value, __cerberus.set, None, None)
+    cerberuschainlen = property(__cerberuschainlen.value, __cerberuschainlen.set, None, None)
 
+    # Element spectrumchainlen uses Python identifier spectrumchainlen
+    __spectrumchainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), 'spectrumchainlen', '__AbsentNamespace0_pymc_type_spectrumchainlen', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6), )
     
-    # Element spectrum uses Python identifier spectrum
-    __spectrum = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrum'), 'spectrum', '__AbsentNamespace0_pymc_type_spectrum', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6), )
+    spectrumchainlen = property(__spectrumchainlen.value, __spectrumchainlen.set, None, None)
 
-    
-    spectrum = property(__spectrum.value, __spectrum.set, None, None)
+    # Element cerberuschains uses Python identifier cerberuschains
+#    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6), )
+
+#    cerberuschains = property(__cerberuschains.value, __cerberuschains.set, None, None)
+
+#asdf
+
+    # Element spectrumchains uses Python identifier spectrumchains
+#    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6), )
+
+#    spectrumchains = property(__spectrumchains.value, __spectrumchains.set, None, None)
 
     _ElementMap.update({
-        __cerberus.name() : __cerberus,
-        __spectrum.name() : __spectrum
+#        __cerberuschains.name() : __cerberuschains,
+        __cerberuschainlen.name() : __cerberuschainlen,
+#        __spectrumchains.name() : __spectrumchains,
+        __spectrumchainlen.name() : __spectrumchainlen
     })
     _AttributeMap.update({
         
@@ -728,9 +755,9 @@ pymc_count_type._Automaton = _BuildAutomaton_7()
 
 
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberus'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6)))
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrum'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6)))
 
 def _BuildAutomaton_9 ():
     # Remove this helper function from the namespace after it is invoked
@@ -741,7 +768,7 @@ def _BuildAutomaton_9 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberus')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschainlen')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -757,7 +784,7 @@ def _BuildAutomaton_10 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrum')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchainlen')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []

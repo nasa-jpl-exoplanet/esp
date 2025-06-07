@@ -52,26 +52,28 @@ class CompositeSV(dawgie.StateVector):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''Show the configutation information'''
         for key in sorted(self):
-            self[key].view(visitor)
+            self[key].view(caller, visitor)
         return
 
     pass
 
 
 class ControlsSV(dawgie.StateVector, dawgie.Value):
-    '''State representation of the filters to be included/excluded'''
+    '''State representation of the parameter controls'''
 
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
+        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
         self['ariel_simulate_spectra_includeMetallicityDispersion'] = (
             BoolValue()
         )
+        self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
-        self['cerberus_atmos_fitNtoO'] = BoolValue()
-        self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
-        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['cerberus_atmos_fitCtoO'] = BoolValue()
+        self['cerberus_atmos_fitNtoO'] = BoolValue()
         return
 
     def features(self):
@@ -86,7 +88,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
-            ['Switch', 'State'], len(self) + 1, 'Processing Control Switches'
+            ['Switch', 'State'], len(self) + 1, 'Processing Control Switches and Other Parameters'
         )
         for row, key in enumerate(sorted(self)):
             table.get_cell(row + 1, 0).add_primitive(key)
@@ -145,7 +147,7 @@ class FilterSV(dawgie.StateVector, dawgie.Value):
 
 
 class PymcSV(dawgie.StateVector, dawgie.Value):
-    '''State representation of the filters to be included/excluded'''
+    '''State representation of the PYMC parameters'''
 
     def __init__(self, name: str = 'undefined'):
         '''init the state vector with empty values'''
@@ -202,11 +204,15 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
+        # self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
+        self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['isValidTarget'] = BoolValue()
         self['runTarget'] = BoolValue(True)
+        # self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['target_autofill_selectMostRecent'] = BoolValue()
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
 
     def name(self):
         '''database name'''
@@ -244,26 +250,34 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline(' this target', tag='span')
         visitor.add_declaration_inline('', div='</h3></div>')
         visitor.add_declaration_inline('', div='<div><hr>')
-        visitor.add_declaration_inline('Chain lengths for PYMC', tag='b')
-        table = visitor.add_table(['Algorithm', 'Length'], 2)
+        visitor.add_declaration_inline('Sampling parameters for PYMC', tag='b')
+        table = visitor.add_table(['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2)
         table.get_cell(0, 0).add_primitive('cerberus')
-        table.get_cell(0, 1).add_primitive(self['cerberus_steps'].value())
+        table.get_cell(0, 1).add_primitive('metropolis-hastings')
+        # table.get_cell(0, 2).add_primitive(self['cerberus_chains'].value())
+        table.get_cell(0, 2).add_primitive(self['cerberus_steps'].value())
+        table.get_cell(0, 3).add_primitive(self['cerberus_steps'].value())
         table.get_cell(1, 0).add_primitive('spectrum')
-        table.get_cell(1, 1).add_primitive(self['spectrum_steps'].value())
+        table.get_cell(1, 1).add_primitive('metropolis-hastings')
+        # table.get_cell(1, 2).add_primitive(self['spectrum_chains'].value())
+        table.get_cell(1, 2).add_primitive(self['spectrum_steps'].value())
+        table.get_cell(1, 3).add_primitive(self['spectrum_steps'].value())
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
-            'Control switches and their state', tag='b'
+            'Control switches/parameters and their state', tag='b'
         )
         switches = [
-            'ariel_simulate_spectra_includeMetallicityDispersion',
-            'cerberus_atmos_fitCloudParameters',
-            'cerberus_atmos_fitNtoO',
-            'cerberus_atmos_fitCtoO',
-            'cerberus_atmos_fitT',
-            'isValidTarget',
             'runTarget',
+            'isValidTarget',
             'target_autofill_selectMostRecent',
+            'target_autofill_maximizeSelfConsistency',
+            'ariel_simulate_spectra_includeMetallicityDispersion',
+            'cerberus_atmos_sliceSampler',
+            'cerberus_atmos_fitT',
+            'cerberus_atmos_fitCtoO',
+            'cerberus_atmos_fitNtoO',
+            'cerberus_atmos_fitCloudParameters',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):

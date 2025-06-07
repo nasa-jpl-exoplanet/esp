@@ -107,8 +107,10 @@ class Create(dawgie.Analyzer):
         self.__table = [
             states.ControlsSV(),
             states.FilterSV(),
-            states.PymcSV('cerberus'),
-            states.PymcSV('spectrum'),
+#            states.PymcSV('cerberuschains'),
+            states.PymcSV('cerberuschainlen'),
+#            states.PymcSV('spectrumchains'),
+            states.PymcSV('spectrumchainlen'),
             states.TargetsSV('run_only'),
             states.TargetsSV('sequester'),
         ]

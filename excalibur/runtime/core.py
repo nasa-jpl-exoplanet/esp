@@ -49,14 +49,22 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
         'cerberus_atmos_fitT',
+        'cerberus_atmos_sliceSampler',
         'target_autofill_selectMostRecent',
+	'target_autofill_maximizeSelfConsistency',
     ]:
         sv[key] = table['controls'][key].new()
-    pymc = table['pymc-cerberus']
+    pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+#asdf
+#    pymc = table['pymc-cerberuschains']
+#    default = pymc['default'].value()
+#    sv['cerberus_chains'] = sv['cerberus_chains'].new(
+#        pymc['overrides'].get(tn, default)
+#    )
     sv['isValidTarget'] = sv['isValidTarget'].new(
         tn
         not in [
@@ -72,11 +80,17 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
                 for targetandreason in table['run_only']['targets']
             ]
         )
-    pymc = table['pymc-spectrum']
+    pymc = table['pymc-spectrumchainlen']
     default = pymc['default'].value()
     sv['spectrum_steps'] = sv['spectrum_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+#asdf
+#    pymc = table['pymc-spectrumchains']
+#    default = pymc['default'].value()
+#    sv['spectrum_chains'] = sv['spectrum_chains'].new(
+#        pymc['overrides'].get(tn, default)
+#    )
 
 
 def load(sv_dict: {str: {}}, targets) -> None:
@@ -100,7 +114,10 @@ def load(sv_dict: {str: {}}, targets) -> None:
     sv_dict['filters']['includes'].extend(
         [str(s) for s in settings.filters.include]
     )
-    for pymc in ['cerberus', 'spectrum']:
+#    for pymc in ['cerberus-chains', 'cerberus-chainlen',
+#                 'spectrum-chains', 'spectrum-chainlen']:
+# asdf
+    for pymc in ['cerberus-chainlen', 'spectrum-chainlen']:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']
         sv['default'] = sv['default'].new(cf.default)
