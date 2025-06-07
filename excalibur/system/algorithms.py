@@ -10,6 +10,7 @@ import dawgie
 
 from collections import defaultdict
 
+import excalibur
 import excalibur.runtime.algorithms as rtalg
 
 import excalibur.system.core as syscore
@@ -86,7 +87,9 @@ class Validate(dawgie.Algorithm):
                 self._failure(errstring)
 
             if update:
+                _ = excalibur.lagger()
                 ds.update()
+                pass
             elif valid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for SYSTEM.{self.name()}'
@@ -210,7 +213,9 @@ class Finalize(dawgie.Algorithm):
                 self._failure(errstring)
 
             if update:
+                _ = excalibur.lagger()
                 ds.update()
+                pass
             elif valid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for SYSTEM.{self.name()}'

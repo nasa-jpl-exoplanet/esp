@@ -22,16 +22,20 @@ import dawgie
 # import scipy.stats
 
 import os
+import numpy as np
+
+from time import sleep
 
 # ------------- ------------------------------------------------------
 # GMR: CAN WE SET UP THIS MESS ONCE AND FORGET ABOUT IT
+# Ines Mertz : I fixed it
 context = {
-    'data_cal': os.environ.get('DATA_CALIBR', '/proj/data/cal'),
+    'data_cal': os.environ.get('DATA_CALIBR', '/proj/sdp/data/cal'),
     'data_dir': os.environ.get('DATA_BASEDIR', '/proj/sdp/data'),
-    'data_sci': os.environ.get('DATA_SCIENC', '/proj/data/sci'),
-    'ldtk_root': os.environ.get('LDTK_ROOT', '/proj/data/ldtk'),
+    'data_sci': os.environ.get('DATA_SCIENC', '/proj/sdp/data/sci'),
+    'ldtk_root': os.environ.get('LDTK_ROOT', '/proj/sdp/data/ldtk'),
     'target_list': os.environ.get(
-        'TARGET_LIST', '/proj/data/WFC3_target_list.xlsx'
+        'TARGET_LIST', '/proj/sdp/data/WFC3_target_list.xlsx'
     ),
 }
 os.environ['LDTK_ROOT'] = context['ldtk_root']
@@ -95,3 +99,25 @@ class ValueScalar(dawgie.Value):
         return self.__content
 
     pass
+
+
+def lagger(wait=None, workers=288, verbose=False):
+    '''
+    GMR: Temporary staggering function to be called before an algo exec
+    Issue 101 https://github.com/nasa-jpl-exoplanet/esp/issues/101
+    wait: Forces value to a specific wait time in [s]
+    workers: number of workers
+    '''
+    if wait is not None:
+        out = wait
+        pass
+    else:
+        out = 0.1 * np.random.uniform(
+            low=0, high=workers
+        )  # pseudo steps of 100 ms
+        pass
+    if verbose:
+        print(f'Waiting {out} seconds')
+        pass
+    sleep(out)
+    return out

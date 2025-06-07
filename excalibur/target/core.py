@@ -1161,8 +1161,19 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         }
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         data = json.loads(datastr)
+        # ines mertz : adding an if statement to test the length of data['data']
         if data and 'data' in data:
-            donmast = True
+            if not data['data']:
+                log.warning(
+                    '>>> data[data] is an empty list for target %s observation %s',
+                    target,
+                    o,
+                )
+                pass
+            else:
+                donmast = True
+                pass
+            pass
         dtlvl = None
         clblvl = None
         obscol = ''
