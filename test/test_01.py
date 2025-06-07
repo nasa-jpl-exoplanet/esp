@@ -34,7 +34,7 @@ class Pyxb(unittest.TestCase):
                 self.assertEqual(
                     cksum,
                     hashlib.md5(content).hexdigest(),
-                    'please run bash/autogen.sh because checksums '
+                    'please run tools/autogen.sh because checksums '
                     f'do not match for {fn}',
                 )
 
