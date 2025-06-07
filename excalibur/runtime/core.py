@@ -112,10 +112,8 @@ def load(sv_dict: {str: {}}, targets) -> None:
     sv_dict['filters']['includes'].extend(
         [str(s) for s in settings.filters.include]
     )
-    # asdf
-    # for pymc in ['cerberuschains', 'cerberuschainlen',
-    #             'spectrumchains', 'spectrumchainlen']:
-    for pymc in ['cerberuschainlen', 'spectrumchainlen']:
+    for pymc in ['cerberuschains', 'cerberuschainlen',
+                 'spectrumchains', 'spectrumchainlen']:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']
         sv['default'] = sv['default'].new(cf.default)
