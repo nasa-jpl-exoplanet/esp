@@ -118,7 +118,9 @@
       </xs:documentation>
     </xs:annotation>
     <xs:all>
+      <xs:element name="cerberuschains" type="pymc_count_type"/>
       <xs:element name="cerberuschainlen" type="pymc_count_type"/>
+      <xs:element name="spectrumchains" type="pymc_count_type"/>
       <xs:element name="spectrumchainlen" type="pymc_count_type"/>
     </xs:all>
   </xs:complexType>

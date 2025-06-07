@@ -392,19 +392,19 @@ class pymc_type (pyxb.binding.basis.complexTypeDefinition):
     spectrumchainlen = property(__spectrumchainlen.value, __spectrumchainlen.set, None, None)
 
     # Element cerberuschains uses Python identifier cerberuschains
-#    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6), )
+    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6), )
 
-#    cerberuschains = property(__cerberuschains.value, __cerberuschains.set, None, None)
+    cerberuschains = property(__cerberuschains.value, __cerberuschains.set, None, None)
 
     # Element spectrumchains uses Python identifier spectrumchains
-#    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6), )
+    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6), )
 
-#    spectrumchains = property(__spectrumchains.value, __spectrumchains.set, None, None)
+    spectrumchains = property(__spectrumchains.value, __spectrumchains.set, None, None)
 
     _ElementMap.update({
-#        __cerberuschains.name() : __cerberuschains,
+        __cerberuschains.name() : __cerberuschains,
         __cerberuschainlen.name() : __cerberuschainlen,
-#        __spectrumchains.name() : __spectrumchains,
+        __spectrumchains.name() : __spectrumchains,
         __spectrumchainlen.name() : __spectrumchainlen
     })
     _AttributeMap.update({
@@ -757,9 +757,25 @@ pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(Non
 
 pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6)))
 
-# pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6)))
 
-# pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6)))
+
+def _BuildAutomaton_11 ():
+    # Remove this helper function from the namespace after it is invoked
+    global _BuildAutomaton_11
+    del _BuildAutomaton_11
+    import pyxb.utils.fac as fac
+
+    counters = set()
+    states = []
+    final_update = set()
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschains')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
+    st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
+    states.append(st_0)
+    transitions = []
+    st_0._set_transitionSet(transitions)
+    return fac.Automaton(states, counters, False, containing_state=st_0)
 
 def _BuildAutomaton_9 ():
     # Remove this helper function from the namespace after it is invoked
@@ -793,6 +809,22 @@ def _BuildAutomaton_10 ():
     st_0._set_transitionSet(transitions)
     return fac.Automaton(states, counters, False, containing_state=st_0)
 
+def _BuildAutomaton_12 ():
+    # Remove this helper function from the namespace after it is invoked
+    global _BuildAutomaton_12
+    del _BuildAutomaton_12
+    import pyxb.utils.fac as fac
+
+    counters = set()
+    states = []
+    final_update = set()
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchains')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
+    st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
+    states.append(st_0)
+    transitions = []
+    st_0._set_transitionSet(transitions)
+    return fac.Automaton(states, counters, False, containing_state=st_0)
+
 def _BuildAutomaton_8 ():
     # Remove this helper function from the namespace after it is invoked
     global _BuildAutomaton_8
@@ -804,6 +836,8 @@ def _BuildAutomaton_8 ():
     sub_automata = []
     sub_automata.append(_BuildAutomaton_9())
     sub_automata.append(_BuildAutomaton_10())
+    sub_automata.append(_BuildAutomaton_11())
+    sub_automata.append(_BuildAutomaton_12())
     final_update = set()
     symbol = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 116, 4)
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=True)
