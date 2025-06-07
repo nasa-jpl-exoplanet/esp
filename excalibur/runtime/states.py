@@ -170,16 +170,25 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
+        if (self.__name).endswith('chainlen'):
+            paramname = 'Chain Length'
+            taskname = (self.__name)[:-8]
+        elif (self.__name).endswith('chains'):
+            paramname = '# of Chains'
+            taskname = (self.__name)[:-6]
+        else:
+            paramname = 'Value'
+            taskname = self.__name
         visitor.add_declaration_inline(
-            f'PYMC for {self.__name} default chain '
-            f'length: {self["default"].value()}',
+            f'PYMC in taskname: default {paramname} = '
+            f'{self["default"].value()}',
             tag='b',
         )
         if self['overrides']:
             table = visitor.add_table(
-                ['Target', 'Chainlength'],
+                ['Target', paramname],
                 len(self['overrides']) + 1,
-                f'Overrides for {self.__name}',
+                f'Overrides:',
             )
             for row, tn in enumerate(sorted(self['overrides'])):
                 table.get_cell(row + 1, 0).add_primitive(tn)
@@ -324,7 +333,7 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
         if self._name == 'run_only':
             title = 'Run only these targets:'
             if not self['targets']:
-                title = 'Run ALL targets.'
+                title = 'Run ALL targets'
         else:
             title = 'Never run these targets:'
             if not self['targets']:
@@ -334,7 +343,7 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
 
         if self['targets']:
             table = visitor.add_table(
-                ['Target', 'Why'], len(self['targets']) + 1, 'Target table'
+                ['Target', 'Why'], len(self['targets']) + 1, ''
             )
             for row, tn in enumerate(
                 sorted(self['targets'], key=lambda t: t[0])
