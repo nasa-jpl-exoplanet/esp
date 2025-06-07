@@ -180,7 +180,7 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
             paramname = 'Value'
             taskname = self.__name
         visitor.add_declaration_inline(
-            f'PYMC in taskname: default {paramname} = '
+            f'PYMC in {taskname}: default {paramname} = '
             f'{self["default"].value()}',
             tag='b',
         )
