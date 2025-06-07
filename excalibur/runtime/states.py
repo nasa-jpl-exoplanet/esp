@@ -88,7 +88,9 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
-            ['Switch', 'State'], len(self) + 1, 'Processing Control Switches and Other Parameters'
+            ['Switch', 'State'],
+            len(self) + 1,
+            'Processing Control Switches and Other Parameters',
         )
         for row, key in enumerate(sorted(self)):
             table.get_cell(row + 1, 0).add_primitive(key)
@@ -251,7 +253,9 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='</h3></div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline('Sampling parameters for PYMC', tag='b')
-        table = visitor.add_table(['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2)
+        table = visitor.add_table(
+            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2
+        )
         table.get_cell(0, 0).add_primitive('cerberus')
         table.get_cell(0, 1).add_primitive('metropolis-hastings')
         # table.get_cell(0, 2).add_primitive(self['cerberus_chains'].value())
