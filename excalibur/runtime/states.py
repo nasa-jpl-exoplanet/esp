@@ -194,7 +194,7 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
                 table.get_cell(row + 1, 0).add_primitive(tn)
                 table.get_cell(row + 1, 1).add_primitive(self['overrides'][tn])
         else:
-            visitor.add_primitive(' with no overrides')
+            visitor.add_primitive(' Overrides:  None')
         visitor.add_declaration_inline('', div='</div>')
         return
 
