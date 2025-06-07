@@ -21,10 +21,6 @@ def massMetalRelationDisp(logmetStar, Mp, thorngren=False):
     '''
     logmet = massMetalRelation(logmetStar, Mp, thorngren=thorngren)
 
-    # FINESSE used a dispersion of just 0.3
-    #  Swain analysis of Thorgren 2016 finds a lot more scatter (0.8)
-    # dispersion = 0.8
-    # march 22, 2024 (RUNID > 923) switching back to 0.3
     dispersion = 0.3
 
     logmet += np.random.normal(scale=dispersion)

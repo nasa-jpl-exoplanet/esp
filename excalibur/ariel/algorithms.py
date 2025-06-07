@@ -72,7 +72,7 @@ class SimSpectrum(dawgie.Algorithm):
                     tier=1,
                     randomSeed=123,
                     randomCloudProperties=True,
-                    thorgrenMassMetals=True,
+                    thorngrenMassMetals=True,
                     includeMetallicityDispersion=runtime[
                         'ariel_simulate_spectra_includeMetallicityDispersion'
                     ],
