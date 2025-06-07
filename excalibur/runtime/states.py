@@ -64,20 +64,20 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
+        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
-        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
+        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
         self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
         self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
-        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
-        #        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
-        self['target_autofill_selectMostRecent'] = BoolValue()
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
+        # self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
         return
 
     def features(self):
