@@ -167,12 +167,12 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     target_autofill_selectMostRecent = property(__target_autofill_selectMostRecent.value, __target_autofill_selectMostRecent.set, None, None)
 
     
-    # Attribute ariel.simulate_spectra.includeMetallicityDispersion uses Python identifier ariel_simulate_spectra_includeMetallicityDispersion
-    __ariel_simulate_spectra_includeMetallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simulate_spectra.includeMetallicityDispersion'), 'ariel_simulate_spectra_includeMetallicityDispersion', '__AbsentNamespace0_control_type_ariel_simulate_spectra_includeMetallicityDispersion', pyxb.binding.datatypes.boolean, required=True)
-    __ariel_simulate_spectra_includeMetallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
-    __ariel_simulate_spectra_includeMetallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
+    # Attribute ariel.simspectra.includeMetallicityDispersion uses Python identifier ariel_simspectrum_includeMetallicityDispersion
+    __ariel_simspectrum_includeMetallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.includeMetallicityDispersion'), 'ariel_simspectrum_includeMetallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_includeMetallicityDispersion', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_includeMetallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
+    __ariel_simspectrum_includeMetallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
     
-    ariel_simulate_spectra_includeMetallicityDispersion = property(__ariel_simulate_spectra_includeMetallicityDispersion.value, __ariel_simulate_spectra_includeMetallicityDispersion.set, None, None)
+    ariel_simspectrum_includeMetallicityDispersion = property(__ariel_simspectrum_includeMetallicityDispersion.value, __ariel_simspectrum_includeMetallicityDispersion.set, None, None)
 
     # Attribute cerberus.atmos.sliceSampler uses Python identifier cerberus_atmos_sliceSampler
     __cerberus_atmos_sliceSampler = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.sliceSampler'), 'cerberus_atmos_sliceSampler', '__AbsentNamespace0_control_type_cerberus_atmos_sliceSampler', pyxb.binding.datatypes.boolean, required=True)
@@ -188,6 +188,20 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     target_autofill_maximizeSelfConsistency = property(__target_autofill_maximizeSelfConsistency.value, __target_autofill_maximizeSelfConsistency.set, None, None)
 
+    # Attribute ariel.simspectrum.randomCloudProperties uses Python identifier ariel_simspectrum_randomCloudProperties
+    __ariel_simspectrum_randomCloudProperties = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.randomCloudProperties'), 'ariel_simspectrum_randomCloudProperties', '__AbsentNamespace0_control_type_ariel_simspectrum_randomCloudProperties', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_randomCloudProperties._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 53, 4)
+    __ariel_simspectrum_randomCloudProperties._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 53, 4)
+
+    ariel_simspectrum_randomCloudProperties = property(__ariel_simspectrum_randomCloudProperties.value, __ariel_simspectrum_randomCloudProperties.set, None, None)
+
+    # Attribute ariel.simspectrum.thorngrenMassMetals uses Python identifier ariel_simspectrum_thorngrenMassMetals
+    __ariel_simspectrum_thorngrenMassMetals = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.thorngrenMassMetals'), 'ariel_simspectrum_thorngrenMassMetals', '__AbsentNamespace0_control_type_ariel_simspectrum_thorngrenMassMetals', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_thorngrenMassMetals._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 55, 4)
+    __ariel_simspectrum_thorngrenMassMetals._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 55, 4)
+
+    ariel_simspectrum_thorngrenMassMetals = property(__ariel_simspectrum_thorngrenMassMetals.value, __ariel_simspectrum_thorngrenMassMetals.set, None, None)
+
     _ElementMap.update({
         
     })
@@ -199,7 +213,9 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __cerberus_atmos_sliceSampler.name() : __cerberus_atmos_sliceSampler,
         __target_autofill_selectMostRecent.name() : __target_autofill_selectMostRecent,
         __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
-        __ariel_simulate_spectra_includeMetallicityDispersion.name() : __ariel_simulate_spectra_includeMetallicityDispersion
+        __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,
+        __ariel_simspectrum_randomCloudProperties.name() : __ariel_simspectrum_randomCloudProperties,
+        __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals
     })
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)

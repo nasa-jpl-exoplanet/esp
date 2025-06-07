@@ -48,7 +48,11 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="target.autofill.maximizeSelfConsistency"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="ariel.simulate_spectra.includeMetallicityDispersion"
+    <xs:attribute name="ariel.simspectrum.includeMetallicityDispersion"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.randomCloudProperties"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
                   type="xs:boolean" use="required"/>
   </xs:complexType>
 

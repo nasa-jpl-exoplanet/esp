@@ -64,16 +64,16 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
-        self['target_autofill_selectMostRecent'] = BoolValue()
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
-        self['ariel_simulate_spectra_includeMetallicityDispersion'] = (
-            BoolValue()
-        )
+        self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
+        self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
+        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
+        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
         return
 
     def features(self):
@@ -208,9 +208,9 @@ class StatusSV(dawgie.StateVector):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
-        self['ariel_simulate_spectra_includeMetallicityDispersion'] = (
-            BoolValue()
-        )
+        self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
+        self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
+        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
@@ -283,7 +283,9 @@ class StatusSV(dawgie.StateVector):
             'isValidTarget',
             'target_autofill_selectMostRecent',
             'target_autofill_maximizeSelfConsistency',
-            'ariel_simulate_spectra_includeMetallicityDispersion',
+            'ariel_simspectrum_includeMetallicityDispersion',
+            'ariel_simspectrum_randomCloudProperties',
+            'ariel_simspectrum_thorngrenMassMetals',
             'cerberus_atmos_sliceSampler',
             'cerberus_atmos_fitT',
             'cerberus_atmos_fitCtoO',
