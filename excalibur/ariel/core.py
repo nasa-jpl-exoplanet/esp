@@ -41,7 +41,7 @@ ArielParams = namedtuple(
         'tier',
         'randomSeed',
         'randomCloudProperties',
-        'thorgrenMassMetals',
+        'thorngrenMassMetals',
         'includeMetallicityDispersion',
     ],
 )
@@ -198,18 +198,18 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     metallicity_planet_dex = massMetalRelationDisp(
                         metallicity_star_dex,
                         M_p,
-                        thorngren=runtime_params.thorgrenMassMetals,
+                        thorngren=runtime_params.thorngrenMassMetals,
                     )
                 else:
                     metallicity_planet_dex = massMetalRelation(
                         metallicity_star_dex,
                         M_p,
-                        thorngren=runtime_params.thorgrenMassMetals,
+                        thorngren=runtime_params.thorngrenMassMetals,
                     )
                 # print('metallicity_star_dex',metallicity_star_dex)
                 # print('metallicity_planet_dex',metallicity_planet_dex)
                 # metallicity_planet_dex_nonrandom = massMetalRelation(metallicity_star_dex, M_p,
-                #              thorngren=runtime_params.thorgrenMassMetals)
+                #              thorngren=runtime_params.thorngrenMassMetals)
                 # print('metallicity_planet_dex (non random)',metallicity_planet_dex_nonrandom)
                 # print('planet mass',M_p)
 
