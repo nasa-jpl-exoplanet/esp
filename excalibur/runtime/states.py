@@ -192,7 +192,7 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
             table = visitor.add_table(
                 ['Target', paramname],
                 len(self['overrides']) + 1,
-                f'Overrides:',
+                'Overrides:',
             )
             for row, tn in enumerate(sorted(self['overrides'])):
                 table.get_cell(row + 1, 0).add_primitive(tn)
