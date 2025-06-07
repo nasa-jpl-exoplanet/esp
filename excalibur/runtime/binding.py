@@ -223,6 +223,13 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     cerberus_atmos_crbmodel_isothermal = property(__cerberus_atmos_crbmodel_isothermal.value, __cerberus_atmos_crbmodel_isothermal.set, None, None)
 
+    # Attribute ariel.simspectrum.tier uses Python identifier ariel_simspectrum_tier
+    __ariel_simspectrum_tier = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.tier'), 'ariel_simspectrum_tier', '__AbsentNamespace0_control_type_ariel_simspectrum_tier', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_tier._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
+    __ariel_simspectrum_tier._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
+
+    ariel_simspectrum_tier = property(__ariel_simspectrum_tier.value, __ariel_simspectrum_tier.set, None, None)
+
     _ElementMap.update({
         
     })
@@ -239,7 +246,8 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
         __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,
         __ariel_simspectrum_randomCloudProperties.name() : __ariel_simspectrum_randomCloudProperties,
-        __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals
+        __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals,
+        __ariel_simspectrum_tier.name() : __ariel_simspectrum_tier
     })
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)
@@ -265,10 +273,9 @@ class filter_type (pyxb.binding.basis.complexTypeDefinition):
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
-    
+
     # Element exclude uses Python identifier exclude
     __exclude = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'exclude'), 'exclude', '__AbsentNamespace0_filter_type_exclude', True, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 6), )
-
     
     exclude = property(__exclude.value, __exclude.set, None, None)
 

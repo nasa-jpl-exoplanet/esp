@@ -69,6 +69,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
+        self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
@@ -92,15 +93,18 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
-            ['Switch', 'State'],
+            # ['Switch', 'State'],
+            ['Parameter', 'Value'],
             len(self) + 1,
-            'Processing Control Switches and Other Parameters',
+            'Processing Control Parameters',
+            # 'Processing Control Switches and Other Parameters',
         )
         for row, key in enumerate(sorted(self)):
             table.get_cell(row + 1, 0).add_primitive(key)
-            table.get_cell(row + 1, 1).add_primitive(
-                'on' if self[key] else 'off'
-            )
+            # table.get_cell(row + 1, 1).add_primitive(
+            #     'on' if self[key] else 'off'
+            # )
+            table.get_cell(row + 1, 1).add_primitive(self[key])
         visitor.add_declaration_inline('', div='</div>')
         return
 
@@ -215,6 +219,7 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
@@ -294,6 +299,7 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
+            'ariel_simspectrum_tier',
             'cerberus_atmos_sliceSampler',
             'cerberus_atmos_fitT',
             'cerberus_atmos_fitCtoO',

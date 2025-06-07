@@ -59,7 +59,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_crbmodel_isothermal',
         # 'cerberus_results_nrandomwalkers',
         # 'cerberus_results_randomseed',
-        # 'ariel_simspectrum_tier',
+        'ariel_simspectrum_tier',
         # 'ariel_simspectrum_randomseed',
         'ariel_simspectrum_randomCloudProperties',
         'ariel_simspectrum_thorngrenMassMetals',
