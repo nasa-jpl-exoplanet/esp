@@ -45,28 +45,28 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
         'target.autofill.selectMostRecent',
-	'target.autofill.maximizeSelfConsistency',
-	'cerberus.atmos.fitCloudParameters',
+        'target.autofill.maximizeSelfConsistency',
+        'cerberus.atmos.fitCloudParameters',
         'cerberus.atmos.fitNtoO',
         'cerberus.atmos.fitCtoO',
         'cerberus.atmos.fitT',
         'cerberus.atmos.sliceSampler',
-	'cerberus.atmos.crbmodel.nlevels',
-	'cerberus.atmos.crbmodel.Hsmax',
-	'cerberus.atmos.crbmodel.solrad',
-	'cerberus.atmos.crbmodel.lbroadening',
-	'cerberus.atmos.crbmodel.lshifting',
-	'cerberus.atmos.crbmodel.isothermal',
-	'cerberus.results.nrandomwalkers',
-	'cerberus.results.randomseed',
-	'ariel.simspectrum.tier',
-	'ariel.simspectrum.randomseed',
-	'ariel.simspectrum.randomCloudProperties',
+        'cerberus.atmos.crbmodel.nlevels',
+        'cerberus.atmos.crbmodel.Hsmax',
+        'cerberus.atmos.crbmodel.solrad',
+        'cerberus.atmos.crbmodel.lbroadening',
+        'cerberus.atmos.crbmodel.lshifting',
+        'cerberus.atmos.crbmodel.isothermal',
+        'cerberus.results.nrandomwalkers',
+        'cerberus.results.randomseed',
+        'ariel.simspectrum.tier',
+        'ariel.simspectrum.randomseed',
+        'ariel.simspectrum.randomCloudProperties',
         'ariel.simspectrum.thorngrenMassMetals',
         'ariel.simspectrum.includeMetallicityDispersion',
-	'ariel.simspectrum.metallicityDispersion',
-	'ariel.simspectrum.CtoOaverage',
-	'ariel.simspectrum.CtoOdispersion',
+        'ariel.simspectrum.metallicityDispersion',
+        'ariel.simspectrum.CtoOaverage',
+        'ariel.simspectrum.CtoOdispersion',
     ]:
         sv[key] = table['controls'][key].new()
     pymc = table['pymc-cerberuschainlen']
@@ -127,8 +127,12 @@ def load(sv_dict: {str: {}}, targets) -> None:
     sv_dict['filters']['includes'].extend(
         [str(s) for s in settings.filters.include]
     )
-    for pymc in ['cerberuschains', 'cerberuschainlen',
-                 'spectrumchains', 'spectrumchainlen']:
+    for pymc in [
+        'cerberuschains',
+        'cerberuschainlen',
+        'spectrumchains',
+        'spectrumchainlen',
+    ]:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']
         sv['default'] = sv['default'].new(cf.default)

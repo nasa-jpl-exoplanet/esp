@@ -75,7 +75,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
         self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
         self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
-        # self['cerberus_atmos_crbmodel_'] = excalibur.ValueScalar()
+        #        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
         self['target_autofill_selectMostRecent'] = BoolValue()
         self['target_autofill_maximizeSelfConsistency'] = BoolValue()
         return
@@ -222,6 +222,7 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
         self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
         self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
+        #        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
@@ -301,6 +302,7 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_crbmodel_lbroadening',
             'cerberus_atmos_crbmodel_lshifting',
             'cerberus_atmos_crbmodel_isothermal',
+            #            'cerberus_atmos_crbmodel_solrad',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):
