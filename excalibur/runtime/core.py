@@ -1,11 +1,14 @@
 '''science functionality separated from dawgie'''
 
-import logging
-
 import os
 import re
 
+import excalibur
+
 from . import binding
+
+import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +71,11 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         # 'ariel_simspectrum_CtoOaverage',
         # 'ariel_simspectrum_CtoOdispersion',
     ]:
-        sv[key] = table['controls'][key].new()
+        if isinstance(table['controls'][key],
+                      excalibur.runtime.states.BoolValue):
+            sv[key] = table['controls'][key].new()
+        else:
+            sv[key] = table['controls'][key]
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
