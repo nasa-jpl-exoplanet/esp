@@ -108,7 +108,6 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
             # table.get_cell(row + 1, 1).add_primitive(
             #     'on' if self[key] else 'off'
             # )
-            table.get_cell(row + 1, 1).add_primitive(self[key])
         visitor.add_declaration_inline('', div='</div>')
         return
 
