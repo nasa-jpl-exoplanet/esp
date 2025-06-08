@@ -230,6 +230,35 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     ariel_simspectrum_tier = property(__ariel_simspectrum_tier.value, __ariel_simspectrum_tier.set, None, None)
 
+
+    # Attribute ariel.simspectrum.randomseed uses Python identifier ariel_simspectrum_randomseed
+    __ariel_simspectrum_randomseed = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.randomseed'), 'ariel_simspectrum_randomseed', '__AbsentNamespace0_control_type_ariel_simspectrum_randomseed', pyxb.binding.datatypes.integer, required=True)
+    __ariel_simspectrum_randomseed._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 4)
+    __ariel_simspectrum_randomseed._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 4)
+
+    ariel_simspectrum_randomseed = property(__ariel_simspectrum_randomseed.value, __ariel_simspectrum_randomseed.set, None, None)
+
+    # Attribute ariel.simspectrum.metallicityDispersion uses Python identifier ariel_simspectrum_metallicityDispersion
+    __ariel_simspectrum_metallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.metallicityDispersion'), 'ariel_simspectrum_metallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_metallicityDispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_metallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 67, 4)
+    __ariel_simspectrum_metallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 67, 4)
+
+    ariel_simspectrum_metallicityDispersion = property(__ariel_simspectrum_metallicityDispersion.value, __ariel_simspectrum_metallicityDispersion.set, None, None)
+
+    # Attribute ariel.simspectrum.CtoOaverage uses Python identifier ariel_simspectrum_CtoOaverage
+    __ariel_simspectrum_CtoOaverage = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOaverage'), 'ariel_simspectrum_CtoOaverage', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOaverage', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOaverage._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 69, 4)
+    __ariel_simspectrum_CtoOaverage._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 69, 4)
+
+    ariel_simspectrum_CtoOaverage = property(__ariel_simspectrum_CtoOaverage.value, __ariel_simspectrum_CtoOaverage.set, None, None)
+
+    # Attribute ariel.simspectrum.CtoOdispersion uses Python identifier ariel_simspectrum_CtoOdispersion
+    __ariel_simspectrum_CtoOdispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOdispersion'), 'ariel_simspectrum_CtoOdispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOdispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOdispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 71, 4)
+    __ariel_simspectrum_CtoOdispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 71, 4)
+
+    ariel_simspectrum_CtoOdispersion = property(__ariel_simspectrum_CtoOdispersion.value, __ariel_simspectrum_CtoOdispersion.set, None, None)
+
     _ElementMap.update({
         
     })
@@ -247,8 +276,13 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,
         __ariel_simspectrum_randomCloudProperties.name() : __ariel_simspectrum_randomCloudProperties,
         __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals,
+        __ariel_simspectrum_randomseed.name() : __ariel_simspectrum_randomseed,
+        __ariel_simspectrum_metallicityDispersion.name() : __ariel_simspectrum_metallicityDispersion,
+        __ariel_simspectrum_CtoOaverage.name() : __ariel_simspectrum_CtoOaverage,
+        __ariel_simspectrum_CtoOdispersion.name() : __ariel_simspectrum_CtoOdispersion,
         __ariel_simspectrum_tier.name() : __ariel_simspectrum_tier
     })
+
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)
 

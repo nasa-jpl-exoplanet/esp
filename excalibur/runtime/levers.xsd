@@ -61,7 +61,15 @@
     <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.tier"
-                  type="xs:boolean" use="required"/>
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="ariel.simspectrum.randomseed"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="ariel.simspectrum.metallicityDispersion"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="ariel.simspectrum.CtoOaverage"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="ariel.simspectrum.CtoOdispersion"
+                  type="xs:float" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="filter_type">

@@ -70,6 +70,10 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
@@ -223,6 +227,10 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
@@ -303,6 +311,10 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
             'ariel_simspectrum_tier',
+            'ariel_simspectrum_randomseed',
+            'ariel_simspectrum_metallicityDispersion',
+            'ariel_simspectrum_CtoOaverage',
+            'ariel_simspectrum_CtoOdispersion',
             'cerberus_atmos_sliceSampler',
             'cerberus_atmos_fitT',
             'cerberus_atmos_fitCtoO',
@@ -318,7 +330,7 @@ class StatusSV(dawgie.StateVector):
             table.get_cell(row, 0).add_primitive(switch)
             # table.get_cell(row, 1).add_primitive(
             #    'on' if self[switch] else 'off'
-            if isinstance(self[key], excalibur.ValueScalar):
+            if isinstance(self[switch], excalibur.ValueScalar):
                  table.get_cell(row, 1).add_primitive(self[switch].value())
             else:
                  table.get_cell(row, 1).add_primitive(self[switch])

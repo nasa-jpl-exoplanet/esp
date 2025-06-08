@@ -63,13 +63,13 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         # 'cerberus_results_nrandomwalkers',
         # 'cerberus_results_randomseed',
         'ariel_simspectrum_tier',
-        # 'ariel_simspectrum_randomseed',
+        'ariel_simspectrum_randomseed',
         'ariel_simspectrum_randomCloudProperties',
         'ariel_simspectrum_thorngrenMassMetals',
         'ariel_simspectrum_includeMetallicityDispersion',
-        # 'ariel_simspectrum_metallicityDispersion',
-        # 'ariel_simspectrum_CtoOaverage',
-        # 'ariel_simspectrum_CtoOdispersion',
+        'ariel_simspectrum_metallicityDispersion',
+        'ariel_simspectrum_CtoOaverage',
+        'ariel_simspectrum_CtoOdispersion',
     ]:
         if isinstance(table['controls'][key],
                       excalibur.runtime.states.BoolValue):
