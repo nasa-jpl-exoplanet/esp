@@ -224,7 +224,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     cerberus_atmos_crbmodel_isothermal = property(__cerberus_atmos_crbmodel_isothermal.value, __cerberus_atmos_crbmodel_isothermal.set, None, None)
 
     # Attribute ariel.simspectrum.tier uses Python identifier ariel_simspectrum_tier
-    __ariel_simspectrum_tier = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.tier'), 'ariel_simspectrum_tier', '__AbsentNamespace0_control_type_ariel_simspectrum_tier', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_tier = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.tier'), 'ariel_simspectrum_tier', '__AbsentNamespace0_control_type_ariel_simspectrum_tier', pyxb.binding.datatypes.integer, required=True)
     __ariel_simspectrum_tier._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
     __ariel_simspectrum_tier._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
 
