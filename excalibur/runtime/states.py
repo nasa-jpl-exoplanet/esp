@@ -102,19 +102,24 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
             # ['Switch', 'State'],
-            ['Parameter', 'Value'],
+            ['Task', 'Parameter', 'Value'],
             len(self) + 1,
             'Processing Control Parameters',
-            # 'Processing Control Switches and Other Parameters',
+            # 'Processing Control Switches',
         )
         #  let's drop this alphabetical sorting and organize more chronologically
         # for row, key in enumerate(sorted(self)):
         for row, key in enumerate(self):
-            table.get_cell(row + 1, 0).add_primitive(key)
+            isplitter = key.rfind('_')
+            task = key[:isplitter]
+            param = key[isplitter+1:]
+            table.get_cell(row + 1, 0).add_primitive(task)
+            table.get_cell(row + 1, 1).add_primitive(param)
             if isinstance(self[key], excalibur.ValueScalar):
-                 table.get_cell(row + 1, 1).add_primitive(self[key].value())
+                 table.get_cell(row + 1, 2).add_primitive(self[key].value())
             else:
-                 table.get_cell(row + 1, 1).add_primitive(self[key])
+                 table.get_cell(row + 1, 2).add_primitive(self[key])
+            # table.get_cell(row + 1, 0).add_primitive(key)
             # table.get_cell(row + 1, 1).add_primitive(
             #     'on' if self[key] else 'off'
             # )

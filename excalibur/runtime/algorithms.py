@@ -109,12 +109,12 @@ class Create(dawgie.Analyzer):
         '''init the create process'''
         self._version_ = dawgie.VERSION(1, 0, 1)
         self.__table = [
-            states.ControlsSV(),
             states.FilterSV(),
             states.PymcSV('cerberuschains'),
             states.PymcSV('cerberuschainlen'),
             states.PymcSV('spectrumchains'),
             states.PymcSV('spectrumchainlen'),
+            states.ControlsSV(),
             states.TargetsSV('run_only'),
             states.TargetsSV('sequester'),
         ]
