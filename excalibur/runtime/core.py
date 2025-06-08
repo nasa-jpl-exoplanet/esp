@@ -71,8 +71,9 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
     ]:
-        if isinstance(table['controls'][key],
-                      excalibur.runtime.states.BoolValue):
+        if isinstance(
+            table['controls'][key], excalibur.runtime.states.BoolValue
+        ):
             sv[key] = table['controls'][key].new()
         else:
             sv[key] = table['controls'][key]

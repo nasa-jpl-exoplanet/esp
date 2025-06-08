@@ -71,7 +71,9 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
-        self['ariel_simspectrum_metallicityDispersion'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = (
+            excalibur.ValueScalar()
+        )
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
@@ -112,13 +114,13 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         for row, key in enumerate(self):
             isplitter = key.rfind('_')
             task = key[:isplitter]
-            param = key[isplitter+1:]
+            param = key[isplitter + 1 :]
             table.get_cell(row + 1, 0).add_primitive(task)
             table.get_cell(row + 1, 1).add_primitive(param)
             if isinstance(self[key], excalibur.ValueScalar):
-                 table.get_cell(row + 1, 2).add_primitive(self[key].value())
+                table.get_cell(row + 1, 2).add_primitive(self[key].value())
             else:
-                 table.get_cell(row + 1, 2).add_primitive(self[key])
+                table.get_cell(row + 1, 2).add_primitive(self[key])
             # table.get_cell(row + 1, 0).add_primitive(key)
             # table.get_cell(row + 1, 1).add_primitive(
             #     'on' if self[key] else 'off'
@@ -239,7 +241,9 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
-        self['ariel_simspectrum_metallicityDispersion'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = (
+            excalibur.ValueScalar()
+        )
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
@@ -315,7 +319,8 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
-            'Processing Control Parameters', tag='b'
+            'Processing Control Parameters',
+            tag='b',
             # 'Control switches/parameters and their state', tag='b'
         )
         switches = [
@@ -351,9 +356,9 @@ class StatusSV(dawgie.StateVector):
             # table.get_cell(row, 1).add_primitive(
             #    'on' if self[switch] else 'off'
             if isinstance(self[switch], excalibur.ValueScalar):
-                 table.get_cell(row, 1).add_primitive(self[switch].value())
+                table.get_cell(row, 1).add_primitive(self[switch].value())
             else:
-                 table.get_cell(row, 1).add_primitive(self[switch])
+                table.get_cell(row, 1).add_primitive(self[switch])
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr><ul>')
         visitor.add_declaration_inline(
