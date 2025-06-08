@@ -101,6 +101,10 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         )
         for row, key in enumerate(sorted(self)):
             table.get_cell(row + 1, 0).add_primitive(key)
+            if isinstance(self[key], excalibur.ValueScalar):
+                 table.get_cell(row + 1, 1).add_primitive(self[key].value())
+            else:
+                 table.get_cell(row + 1, 1).add_primitive(self[key])
             # table.get_cell(row + 1, 1).add_primitive(
             #     'on' if self[key] else 'off'
             # )
@@ -313,9 +317,12 @@ class StatusSV(dawgie.StateVector):
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):
             table.get_cell(row, 0).add_primitive(switch)
-            table.get_cell(row, 1).add_primitive(
-                'on' if self[switch] else 'off'
-            )
+            # table.get_cell(row, 1).add_primitive(
+            #    'on' if self[switch] else 'off'
+            if isinstance(self[key], excalibur.ValueScalar):
+                 table.get_cell(row, 1).add_primitive(self[switch].value())
+            else:
+                 table.get_cell(row, 1).add_primitive(self[switch])
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr><ul>')
         visitor.add_declaration_inline(
