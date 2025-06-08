@@ -82,7 +82,11 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
         self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
         self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
-        # self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_results_randomseed'] = excalibur.ValueScalar()
+        self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         return
 
     def features(self):
@@ -103,7 +107,9 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
             'Processing Control Parameters',
             # 'Processing Control Switches and Other Parameters',
         )
-        for row, key in enumerate(sorted(self)):
+        #  let's drop this alphabetical sorting and organize more chronologically
+        # for row, key in enumerate(sorted(self)):
+        for row, key in enumerate(self):
             table.get_cell(row + 1, 0).add_primitive(key)
             if isinstance(self[key], excalibur.ValueScalar):
                  table.get_cell(row + 1, 1).add_primitive(self[key].value())
@@ -148,7 +154,7 @@ class FilterSV(dawgie.StateVector, dawgie.Value):
             table = visitor.add_table(
                 ['Exclude', 'Include'],
                 table_len + 1,
-                'Mission-Platform-Instrument-Mode Filters',
+                'Mission/Instrument Filters',
             )
             for row in range(table_len):
                 for col, filt in enumerate(['excludes', 'includes']):
@@ -238,7 +244,11 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
         self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
         self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
-        #        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_results_randomseed'] = excalibur.ValueScalar()
+        self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
@@ -285,7 +295,7 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline(' this target', tag='span')
         visitor.add_declaration_inline('', div='</h3></div>')
         visitor.add_declaration_inline('', div='<div><hr>')
-        visitor.add_declaration_inline('Sampling parameters for PYMC', tag='b')
+        visitor.add_declaration_inline('PYMC Sampling Parameters', tag='b')
         table = visitor.add_table(
             ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2
         )
@@ -300,7 +310,8 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
-            'Control switches/parameters and their state', tag='b'
+            'Processing Control Parameters', tag='b'
+            # 'Control switches/parameters and their state', tag='b'
         )
         switches = [
             'runTarget',
@@ -323,7 +334,11 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_crbmodel_lbroadening',
             'cerberus_atmos_crbmodel_lshifting',
             'cerberus_atmos_crbmodel_isothermal',
-            #            'cerberus_atmos_crbmodel_solrad',
+            'cerberus_atmos_crbmodel_nlevels',
+            'cerberus_atmos_crbmodel_solrad',
+            'cerberus_atmos_crbmodel_Hsmax',
+            'cerberus_results_nrandomwalkers',
+            'cerberus_results_randomseed',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):
@@ -337,7 +352,7 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr><ul>')
         visitor.add_declaration_inline(
-            'Mission-Platform-Instrument-Mode filters to process', tag='b'
+            'Mission/Instrument Filters to Process', tag='b'
         )
         for name in self['allowed_filter_names']:
             visitor.add_declaration_inline(name, tag='li')

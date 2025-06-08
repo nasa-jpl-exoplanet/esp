@@ -50,6 +50,16 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.crbmodel.isothermal"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.nlevels"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.solrad"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.Hsmax"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.results.nrandomwalkers"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.results.randomseed"
+                  type="xs:integer" use="required"/>
     <xs:attribute name="target.autofill.selectMostRecent"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="target.autofill.maximizeSelfConsistency"
