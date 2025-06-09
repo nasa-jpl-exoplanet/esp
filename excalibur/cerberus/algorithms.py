@@ -277,7 +277,8 @@ class Atmos(dawgie.Algorithm):
     def _atmos(self, fin, xsl, spc, runtime_params, index, fltr):
         '''Core code call'''
 
-        mcmc_chain_length = runtime_params.MCMC_chain_length.value()
+        mcmc_chains = runtime_params.MCMC_chains
+        mcmc_chain_length = runtime_params.MCMC_chain_length
         # print('MCMC_chain_length', mcmc_chain_length)
         # mcmc_chain_length = 1000
         # mcmc_chain_length = 10
@@ -293,6 +294,7 @@ class Atmos(dawgie.Algorithm):
             runtime_params,
             self.__out[index],
             fltr,
+            Nchains=mcmc_chains,
             chainlen=mcmc_chain_length,
             verbose=False,
         )  # singlemod='TEC' after chainlen
