@@ -92,8 +92,7 @@ def randomStarMetal():
 # ______________________________________________________
 
 
-def randomCtoO_linear(logCtoOaverage=-0.26,
-                      logCtoOdispersion=0.3):
+def randomCtoO_linear(logCtoOaverage=-0.26, logCtoOdispersion=0.3):
     '''
     Assign a random C-to-O ratio to each system
     Allow a small fraction (~5%) of stars to have more C than O

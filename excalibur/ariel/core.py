@@ -49,6 +49,7 @@ ArielParams = namedtuple(
     ],
 )
 
+
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
 def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0):
