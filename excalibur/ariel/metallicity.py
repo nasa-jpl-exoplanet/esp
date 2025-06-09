@@ -14,14 +14,12 @@ log = logging.getLogger(__name__)
 # ______________________________________________________
 
 
-def massMetalRelationDisp(logmetStar, Mp, thorngren=False):
+def massMetalRelationDisp(logmetStar, Mp, thorngren=False, dispersion=0.3):
     '''
     Add some realistic scatter to the mass-metallicity relation
     (not that we know reality)
     '''
     logmet = massMetalRelation(logmetStar, Mp, thorngren=thorngren)
-
-    dispersion = 0.3
 
     logmet += np.random.normal(scale=dispersion)
 
@@ -94,7 +92,8 @@ def randomStarMetal():
 # ______________________________________________________
 
 
-def randomCtoO_linear():
+def randomCtoO_linear(logCtoOaverage=-0.26,
+                      logCtoOdispersion=0.3):
     '''
     Assign a random C-to-O ratio to each system
     Allow a small fraction (~5%) of stars to have more C than O
@@ -116,9 +115,9 @@ def randomCtoO_linear():
     # logCtoO=-0.2 + 0.12*np.random.normal()
     # logCtoO=-0.2 + 0.1*np.random.normal()
 
-    logCtoO_solar = -0.26  # solar C/O is 0.55
+    # logCtoO_solar = -0.26  # solar C/O is 0.55
 
-    logCtoO = logCtoO_solar + 0.3 * np.random.normal()
+    logCtoO = logCtoOaverage + logCtoOdispersion * np.random.normal()
 
     CtoO = 10.0**logCtoO
     return CtoO
