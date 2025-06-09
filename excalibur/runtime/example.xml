@@ -1,11 +1,28 @@
 <?xml version="1.0" ?>
 <levers>
-  <controls cerberus.atmos.fitCloudParameters="true"
+  <controls target.autofill.selectMostRecent="false"
+	    target.autofill.maximizeSelfConsistency="true"
+	    cerberus.atmos.fitCloudParameters="true"
             cerberus.atmos.fitNtoO="false"
             cerberus.atmos.fitCtoO="true"
             cerberus.atmos.fitT="true"
-            target.autofill.selectMostRecent="false"
-            ariel.simulate_spectra.includeMetallicityDispersion="true"/>
+            cerberus.atmos.sliceSampler="false"
+	    cerberus.atmos.crbmodel.nlevels="100"
+	    cerberus.atmos.crbmodel.Hsmax="20"
+	    cerberus.atmos.crbmodel.solrad="10"
+	    cerberus.atmos.crbmodel.lbroadening="false"
+	    cerberus.atmos.crbmodel.lshifting="false"
+	    cerberus.atmos.crbmodel.isothermal="true"
+	    cerberus.results.nrandomwalkers="1000"
+	    cerberus.results.randomseed="1"
+	    ariel.simspectrum.tier="1"
+	    ariel.simspectrum.randomseed="123"
+	    ariel.simspectrum.randomCloudProperties="true"
+            ariel.simspectrum.thorngrenMassMetals="true"
+            ariel.simspectrum.includeMetallicityDispersion="true"
+	    ariel.simspectrum.metallicityDispersion="0.3"
+	    ariel.simspectrum.CtoOaverage="-0.26"
+	    ariel.simspectrum.CtoOdispersion="0.3"/>
   <filters>
     <exclude>HST-STIS-CCD-G750L-STARE</exclude>
     <include>HST-WFC3-IR-G141-SCAN</include>
@@ -13,26 +30,38 @@
     <include>Spitzer-IRAC-IR-45-SUB</include>
   </filters>
   <pymc>
-    <cerberus default="15000">
+    <cerberuschains default="4"/>
+    <cerberuschainlen default="15000">
       <target name="55 Cnc" steps="10000"/>
       <target name="HD 189733" steps="20000"/>
-    </cerberus>
-    <spectrum default="10000"/>
+    </cerberuschainlen>
+    <spectrumchains default="4"/>
+    <spectrumchainlen default="10000"/>
   </pymc>
   <sequester>
-    <target because="??">HR 8799</target>
+    <target because="directly imaged planets (not transiting)">HR 8799</target>
     <target because="does not exist in the Exoplanet Archive">GJ 3193</target>
-    <target because="this is K2-93">HIP 41378</target>
-    <target because="??">HD 185603</target>
-    <target because="??">HD 195689</target>
-    <target because="??">HD 197481</target>
-    <target because="??">KIC 12266812</target>
-    <target because="??">TIC 184892124</target>
+    <target because="alias for K2-93">HIP 41378</target>
+    <target because="alias for KELT-20">HD 185603</target>
+    <target because="alias for KELT-9">HD 195689</target>
+    <target because="alias for AU Mic">HD 197481</target>
+    <target because="does not exist in the Exoplanet Archive table">KIC 12266812</target>
+    <target because="does not exist in the Exoplanet Archive">TIC 184892124</target>
     <target because="has G141, but doesn't exist in the Exoplanet Archive (listed as false positive)">LHS 6343</target>
-    <target because="??">TOI-175</target>
-    <target because="??">TOI-193</target>
+    <target because="alias for L 98-59">TOI-175</target>
+    <target because="alias for LTT 9779">TOI-193</target>
     <target because="alias for GJ 3053">LHS 1140</target>
+    <target because="faint V=19 Galactic center survey">SWEEPS-4</target>
+    <target because="faint V=20 Galactic center survey">SWEEPS-11</target>
+    <target because="old shorthand for WD 1856+534">WD 1856</target>
     <target because="taurex-sim targets waste CPU" isRegex="true">.*\(taurex sim @TS\)$</target>
+    <target because="false positive (Morton et al 2016)">Kepler-470</target>
+    <target because="false positive (Morton et al 2016)">Kepler-488</target>
+    <target because="false positive (Morton et al 2016)">Kepler-494</target>
+    <target because="false positive (Morton et al 2016)">Kepler-628</target>
+    <target because="false positive (Morton et al 2016)">Kepler-706</target>
+    <target because="false positive (Morton et al 2016)">Kepler-807</target>
+    <target because="false positive (Lillo-Box et al 2024)">K2-399</target>
   </sequester>
   <run_only/>
 </levers>

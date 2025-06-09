@@ -75,7 +75,9 @@ class Validate(dawgie.Algorithm):
             runtime = self.__rt.sv_as_dict()['status']
 
             runtime_params = syscore.SystemParams(
-                maximizeSelfConsistency=True,
+                maximizeSelfConsistency=runtime[
+                    'target_autofill_maximizeSelfConsistency'
+                ],
                 selectMostRecent=runtime['target_autofill_selectMostRecent'],
             )
 
