@@ -221,16 +221,33 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
 
                 runtime_params = crbcore.CerbParams(
-                    MCMC_chain_length=runtime['cerberus_steps'],
-                    # MCMC_sampler='slice',
-                    MCMC_sampler='metropolis',
-                    # useCloudfreeArielsim=True,
+                    MCMC_chain_length=runtime['cerberus_steps'].value(),
+                    MCMC_chains=runtime['cerberus_chains'].value(),
+                    MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    nlevels=runtime[
+                        'cerberus_atmos_crbmodel_nlevels'
+                    ].value(),
+                    solrad=runtime[
+                        'cerberus_atmos_crbmodel_solrad'
+                    ].value(),
+                    Hsmax=runtime[
+                        'cerberus_atmos_crbmodel_Hsmax'
+                    ].value(),
+                    lbroadening=runtime[
+                        'cerberus_atmos_crbmodel_lbroadening'
+                    ],
+                    lshifting=runtime[
+                        'cerberus_atmos_crbmodel_lshifting'
+                    ],
+                    isothermal=runtime[
+                        'cerberus_atmos_crbmodel_isothermal'
+                    ],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
