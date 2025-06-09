@@ -606,6 +606,7 @@ def atmos(
     ext,
     hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
     singlemod=None,
+    Nchains=4,
     chainlen=int(1e4),
     verbose=False,
 ):
@@ -1245,11 +1246,12 @@ def atmos(
                     # log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
+                    # asdf: careful here. #-chains and #-cores are same thing?
+
                     # --< SAMPLING >--
-                    Ncores = 4
                     trace = pymc.sample(
                         chainlen,
-                        cores=Ncores,
+                        cores=Nchains,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1386,7 +1388,7 @@ def atmos(
                     spc['data']['target'],
                     p,
                     './',
-                    Nchains=Ncores,
+                    Nchains=Nchains,
                     verbose=True,
                 )
 
