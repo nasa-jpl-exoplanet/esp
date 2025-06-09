@@ -65,12 +65,19 @@ pymclog.setLevel(logging.ERROR)
 CerbParams = namedtuple(
     'cerberus_params_from_runtime',
     [
+        'MCMC_chains',
         'MCMC_chain_length',
-        'MCMC_sampler',
+        'MCMC_sliceSampler',
         'fitCloudParameters',
         'fitT',
         'fitCtoO',
         'fitNtoO',
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -1228,7 +1235,7 @@ def atmos(
                             # --------------
                         pass
 
-                    if runtime_params.MCMC_sampler == 'slice':
+                    if runtime_params.MCMC_sliceSampler:
                         log.warning('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
