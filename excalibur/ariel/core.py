@@ -43,9 +43,11 @@ ArielParams = namedtuple(
         'randomCloudProperties',
         'thorngrenMassMetals',
         'includeMetallicityDispersion',
+        'metallicityDispersion',
+        'CtoOaverage',
+        'CtoOdispersion',
     ],
 )
-
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
@@ -199,6 +201,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         metallicity_star_dex,
                         M_p,
                         thorngren=runtime_params.thorngrenMassMetals,
+                        dispersion=runtime_params.metallicityDispersion,
                     )
                 else:
                     metallicity_planet_dex = massMetalRelation(
@@ -216,7 +219,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 # make sure that the random C/O is fixed for each target planet
                 np.random.seed(intFromTarget + 12345)
                 # this is linear C/O, not dex
-                CtoO_planet_linear = randomCtoO_linear()
+                CtoO_planet_linear = randomCtoO_linear(
+                    logCtoOaverage=runtime_params.CtoOaverage,
+                    logCtoOdispersion=runtime_params.CtoOdispersion,
+                )
                 # print('CtoO_planet_linear',CtoO_planet_linear)
 
                 # Load the instrument model and rescale based on #-of-transits
