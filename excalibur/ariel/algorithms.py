@@ -72,10 +72,10 @@ class SimSpectrum(dawgie.Algorithm):
                 runtime_params = arielcore.ArielParams(
                     tier=runtime[
                         'ariel_simspectrum_tier'
-                    ],
+                    ].value(),
                     randomSeed=runtime[
                         'ariel_simspectrum_randomseed'
-                    ],
+                    ].value(),
                     randomCloudProperties=runtime[
                         'ariel_simspectrum_randomCloudProperties'
                     ],
@@ -87,13 +87,13 @@ class SimSpectrum(dawgie.Algorithm):
                     ],
                     metallicityDispersion=runtime[
                         'ariel_simspectrum_metallicityDispersion'
-                    ],
+                    ].value(),
                     CtoOaverage=runtime[
                         'ariel_simspectrum_CtoOaverage'
-                    ],
+                    ].value(),
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
-                    ],
+                    ].value(),
                 )
                 update = self._sim_spectrum(
                     repr(self).split('.')[1],  # this is the target name
