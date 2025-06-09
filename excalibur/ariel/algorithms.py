@@ -74,7 +74,7 @@ class SimSpectrum(dawgie.Algorithm):
                         'ariel_simspectrum_tier'
                     ],
                     randomSeed=runtime[
-                        'ariel_simspectrum_randomSeed'
+                        'ariel_simspectrum_randomseed'
                     ],
                     randomCloudProperties=runtime[
                         'ariel_simspectrum_randomCloudProperties'
