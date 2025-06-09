@@ -70,15 +70,31 @@ class SimSpectrum(dawgie.Algorithm):
             if valid:
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
-                    tier=1,
-                    randomSeed=123,
-                    randomCloudProperties=True,
-                    thorngrenMassMetals=True,
+                    tier=runtime[
+                        'ariel_simspectrum_tier'
+                    ],
+                    randomSeed=runtime[
+                        'ariel_simspectrum_randomSeed'
+                    ],
+                    randomCloudProperties=runtime[
+                        'ariel_simspectrum_randomCloudProperties'
+                    ],
+                    thorngrenMassMetals=runtime[
+                        'ariel_simspectrum_thorngrenMassMetals'
+                    ],
                     includeMetallicityDispersion=runtime[
-                        'ariel_simulate_spectra_includeMetallicityDispersion'
+                        'ariel_simspectrum_includeMetallicityDispersion'
+                    ],
+                    metallicityDispersion=runtime[
+                        'ariel_simspectrum_metallicityDispersion'
+                    ],
+                    CtoOaverage=runtime[
+                        'ariel_simspectrum_CtoOaverage'
+                    ],
+                    CtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
                     ],
                 )
-                # FIXMEE: this code needs repaired by moving out to config (Geoff added)
                 update = self._sim_spectrum(
                     repr(self).split('.')[1],  # this is the target name
                     system_dict,
