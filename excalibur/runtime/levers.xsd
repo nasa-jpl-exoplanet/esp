@@ -8,7 +8,7 @@
        continuous stream of anonymous types.
 
        All of the complex types are first in alphabetical order of their name.
-       The simple types follow. Normally the simnple types are used to constrain
+       The simple types follow. Normally the simple types are used to constrain
        a general schema type. Lastly is the root node for the document.
 
        The annotation-documentation nodes are used to define the type. -->
@@ -26,6 +26,15 @@
 
   -->
 
+  <xs:complexType name="hilo">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="lo" type="xs:decimal" use="required"/>
+    <xs:attribute name="hi" type="xs:decimal" use="required"/>
+  </xs:complexType>
+
   <xs:complexType name="control_type">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -34,6 +43,18 @@
         be exercised while false means it will not.
       </xs:documentation>
     </xs:annotation>
+    <xs:attribute name="cerberus.atmos.bounds.Teq"
+		  type="xs:string" use="required"/>
+    <xs:attribute name="cerberus.atmos.bounds.abundances"
+		  type="xs:string" use="required"/>
+    <xs:attribute name="cerberus.atmos.bounds.CTP"
+		  type="xs:string" use="required"/>
+    <xs:attribute name="cerberus.atmos.bounds.HLoc"
+		  type="xs:string" use="required"/>
+    <xs:attribute name="cerberus.atmos.bounds.HScale"
+		  type="xs:string" use="required"/>
+    <xs:attribute name="cerberus.atmos.bounds.HThick"
+		  type="xs:string" use="required"/>
     <xs:attribute name="cerberus.atmos.fitCloudParameters"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitNtoO"
@@ -68,6 +89,8 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.randomCloudProperties"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.SNRadjustment"
+                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.tier"

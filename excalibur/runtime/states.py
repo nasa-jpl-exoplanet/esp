@@ -71,6 +71,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
@@ -87,6 +88,12 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         return
@@ -241,6 +248,7 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
@@ -256,6 +264,12 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
@@ -333,6 +347,7 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_thorngrenMassMetals',
             'ariel_simspectrum_tier',
             'ariel_simspectrum_randomseed',
+            'ariel_simspectrum_SNRadjustment',
             'ariel_simspectrum_metallicityDispersion',
             'ariel_simspectrum_CtoOaverage',
             'ariel_simspectrum_CtoOdispersion',
@@ -347,6 +362,12 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_crbmodel_nlevels',
             'cerberus_atmos_crbmodel_solrad',
             'cerberus_atmos_crbmodel_Hsmax',
+            'cerberus_atmos_bounds_Teq',
+            'cerberus_atmos_bounds_abundances',
+            'cerberus_atmos_bounds_CTP',
+            'cerberus_atmos_bounds_HLoc',
+            'cerberus_atmos_bounds_HScale',
+            'cerberus_atmos_bounds_HThick',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
         ]
