@@ -5,6 +5,7 @@ import logging
 
 import dawgie
 
+import excalibur
 import excalibur.ariel.core as arielcore
 import excalibur.ariel.states as arielstates
 import excalibur.runtime as rtime
@@ -69,15 +70,27 @@ class SimSpectrum(dawgie.Algorithm):
             if valid:
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
-                    tier=1,
-                    randomSeed=123,
-                    randomCloudProperties=True,
-                    thorgrenMassMetals=True,
-                    includeMetallicityDispersion=runtime[
-                        'ariel_simulate_spectra_includeMetallicityDispersion'
+                    tier=runtime['ariel_simspectrum_tier'].value(),
+                    randomSeed=runtime['ariel_simspectrum_randomseed'].value(),
+                    randomCloudProperties=runtime[
+                        'ariel_simspectrum_randomCloudProperties'
                     ],
+                    thorngrenMassMetals=runtime[
+                        'ariel_simspectrum_thorngrenMassMetals'
+                    ],
+                    includeMetallicityDispersion=runtime[
+                        'ariel_simspectrum_includeMetallicityDispersion'
+                    ],
+                    metallicityDispersion=runtime[
+                        'ariel_simspectrum_metallicityDispersion'
+                    ].value(),
+                    CtoOaverage=runtime[
+                        'ariel_simspectrum_CtoOaverage'
+                    ].value(),
+                    CtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
+                    ].value(),
                 )
-                # FIXMEE: this code needs repaired by moving out to config (Geoff added)
                 update = self._sim_spectrum(
                     repr(self).split('.')[1],  # this is the target name
                     system_dict,
@@ -87,7 +100,9 @@ class SimSpectrum(dawgie.Algorithm):
             else:
                 self._failure(errstring)
             if update:
+                _ = excalibur.lagger()
                 ds.update()
+                pass
             elif valid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for ARIEL.{self.name()}'

@@ -52,26 +52,43 @@ class CompositeSV(dawgie.StateVector):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''Show the configutation information'''
         for key in sorted(self):
-            self[key].view(visitor)
+            self[key].view(caller, visitor)
         return
 
     pass
 
 
 class ControlsSV(dawgie.StateVector, dawgie.Value):
-    '''State representation of the filters to be included/excluded'''
+    '''State representation of the parameter controls'''
 
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
-        self['ariel_simulate_spectra_includeMetallicityDispersion'] = (
-            BoolValue()
-        )
-        self['cerberus_atmos_fitCloudParameters'] = BoolValue()
-        self['cerberus_atmos_fitNtoO'] = BoolValue()
-        self['cerberus_atmos_fitCtoO'] = BoolValue()
-        self['cerberus_atmos_fitT'] = BoolValue()
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
         self['target_autofill_selectMostRecent'] = BoolValue()
+        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
+        self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
+        self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = (
+            excalibur.ValueScalar()
+        )
+        self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
+        self['cerberus_atmos_sliceSampler'] = BoolValue()
+        self['cerberus_atmos_fitCloudParameters'] = BoolValue()
+        self['cerberus_atmos_fitT'] = BoolValue()
+        self['cerberus_atmos_fitCtoO'] = BoolValue()
+        self['cerberus_atmos_fitNtoO'] = BoolValue()
+        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
+        self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
+        self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
+        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_results_randomseed'] = excalibur.ValueScalar()
+        self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         return
 
     def features(self):
@@ -86,13 +103,28 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
-            ['Switch', 'State'], len(self) + 1, 'Processing Control Switches'
+            # ['Switch', 'State'],
+            ['Task', 'Parameter', 'Value'],
+            len(self) + 1,
+            'Processing Control Parameters',
+            # 'Processing Control Switches',
         )
-        for row, key in enumerate(sorted(self)):
-            table.get_cell(row + 1, 0).add_primitive(key)
-            table.get_cell(row + 1, 1).add_primitive(
-                'on' if self[key] else 'off'
-            )
+        #  let's drop this alphabetical sorting and organize more chronologically
+        # for row, key in enumerate(sorted(self)):
+        for row, key in enumerate(self):
+            isplitter = key.rfind('_')
+            task = key[:isplitter]
+            param = key[isplitter + 1 :]
+            table.get_cell(row + 1, 0).add_primitive(task)
+            table.get_cell(row + 1, 1).add_primitive(param)
+            if isinstance(self[key], excalibur.ValueScalar):
+                table.get_cell(row + 1, 2).add_primitive(self[key].value())
+            else:
+                table.get_cell(row + 1, 2).add_primitive(self[key])
+            # table.get_cell(row + 1, 0).add_primitive(key)
+            # table.get_cell(row + 1, 1).add_primitive(
+            #     'on' if self[key] else 'off'
+            # )
         visitor.add_declaration_inline('', div='</div>')
         return
 
@@ -129,7 +161,7 @@ class FilterSV(dawgie.StateVector, dawgie.Value):
             table = visitor.add_table(
                 ['Exclude', 'Include'],
                 table_len + 1,
-                'Mission-Platform-Instrument-Mode Filters',
+                'Mission/Instrument Filters',
             )
             for row in range(table_len):
                 for col, filt in enumerate(['excludes', 'includes']):
@@ -145,7 +177,7 @@ class FilterSV(dawgie.StateVector, dawgie.Value):
 
 
 class PymcSV(dawgie.StateVector, dawgie.Value):
-    '''State representation of the filters to be included/excluded'''
+    '''State representation of the PYMC parameters'''
 
     def __init__(self, name: str = 'undefined'):
         '''init the state vector with empty values'''
@@ -166,22 +198,31 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''Show the configutation information'''
         visitor.add_declaration_inline('', div='<div><hr>')
+        if (self.__name).endswith('chainlen'):
+            paramname = 'Chain Length'
+            taskname = (self.__name)[:-8]
+        elif (self.__name).endswith('chains'):
+            paramname = '# of Chains'
+            taskname = (self.__name)[:-6]
+        else:
+            paramname = 'Value'
+            taskname = self.__name
         visitor.add_declaration_inline(
-            f'PYMC for {self.__name} default chain '
-            f'length: {self["default"].value()}',
+            f'PYMC in {taskname}: default {paramname} = '
+            f'{self["default"].value()}',
             tag='b',
         )
         if self['overrides']:
             table = visitor.add_table(
-                ['Target', 'Chainlength'],
+                ['Target', paramname],
                 len(self['overrides']) + 1,
-                f'Overrides for {self.__name}',
+                'Overrides:',
             )
             for row, tn in enumerate(sorted(self['overrides'])):
                 table.get_cell(row + 1, 0).add_primitive(tn)
                 table.get_cell(row + 1, 1).add_primitive(self['overrides'][tn])
         else:
-            visitor.add_primitive(' with no overrides')
+            visitor.add_primitive(' Overrides:  None')
         visitor.add_declaration_inline('', div='</div>')
         return
 
@@ -195,18 +236,37 @@ class StatusSV(dawgie.StateVector):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
-        self['ariel_simulate_spectra_includeMetallicityDispersion'] = (
-            BoolValue()
+        self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
+        self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
+        self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_metallicityDispersion'] = (
+            excalibur.ValueScalar()
         )
+        self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
+        self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
+        self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
+        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
+        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_results_randomseed'] = excalibur.ValueScalar()
+        self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
+        self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
+        self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['isValidTarget'] = BoolValue()
         self['runTarget'] = BoolValue(True)
+        self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['target_autofill_selectMostRecent'] = BoolValue()
+        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
 
     def name(self):
         '''database name'''
@@ -244,37 +304,65 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline(' this target', tag='span')
         visitor.add_declaration_inline('', div='</h3></div>')
         visitor.add_declaration_inline('', div='<div><hr>')
-        visitor.add_declaration_inline('Chain lengths for PYMC', tag='b')
-        table = visitor.add_table(['Algorithm', 'Length'], 2)
+        visitor.add_declaration_inline('PYMC Sampling Parameters', tag='b')
+        table = visitor.add_table(
+            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2
+        )
         table.get_cell(0, 0).add_primitive('cerberus')
-        table.get_cell(0, 1).add_primitive(self['cerberus_steps'].value())
+        table.get_cell(0, 1).add_primitive('metropolis-hastings')
+        table.get_cell(0, 2).add_primitive(self['cerberus_chains'].value())
+        table.get_cell(0, 3).add_primitive(self['cerberus_steps'].value())
         table.get_cell(1, 0).add_primitive('spectrum')
-        table.get_cell(1, 1).add_primitive(self['spectrum_steps'].value())
+        table.get_cell(1, 1).add_primitive('metropolis-hastings')
+        table.get_cell(1, 2).add_primitive(self['spectrum_chains'].value())
+        table.get_cell(1, 3).add_primitive(self['spectrum_steps'].value())
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
-            'Control switches and their state', tag='b'
+            'Processing Control Parameters',
+            tag='b',
+            # 'Control switches/parameters and their state', tag='b'
         )
         switches = [
-            'ariel_simulate_spectra_includeMetallicityDispersion',
-            'cerberus_atmos_fitCloudParameters',
-            'cerberus_atmos_fitNtoO',
-            'cerberus_atmos_fitCtoO',
-            'cerberus_atmos_fitT',
-            'isValidTarget',
             'runTarget',
+            'isValidTarget',
             'target_autofill_selectMostRecent',
+            'target_autofill_maximizeSelfConsistency',
+            'ariel_simspectrum_includeMetallicityDispersion',
+            'ariel_simspectrum_randomCloudProperties',
+            'ariel_simspectrum_thorngrenMassMetals',
+            'ariel_simspectrum_tier',
+            'ariel_simspectrum_randomseed',
+            'ariel_simspectrum_metallicityDispersion',
+            'ariel_simspectrum_CtoOaverage',
+            'ariel_simspectrum_CtoOdispersion',
+            'cerberus_atmos_sliceSampler',
+            'cerberus_atmos_fitT',
+            'cerberus_atmos_fitCtoO',
+            'cerberus_atmos_fitNtoO',
+            'cerberus_atmos_fitCloudParameters',
+            'cerberus_atmos_crbmodel_lbroadening',
+            'cerberus_atmos_crbmodel_lshifting',
+            'cerberus_atmos_crbmodel_isothermal',
+            'cerberus_atmos_crbmodel_nlevels',
+            'cerberus_atmos_crbmodel_solrad',
+            'cerberus_atmos_crbmodel_Hsmax',
+            'cerberus_results_nrandomwalkers',
+            'cerberus_results_randomseed',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):
             table.get_cell(row, 0).add_primitive(switch)
-            table.get_cell(row, 1).add_primitive(
-                'on' if self[switch] else 'off'
-            )
+            # table.get_cell(row, 1).add_primitive(
+            #    'on' if self[switch] else 'off'
+            if isinstance(self[switch], excalibur.ValueScalar):
+                table.get_cell(row, 1).add_primitive(self[switch].value())
+            else:
+                table.get_cell(row, 1).add_primitive(self[switch])
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr><ul>')
         visitor.add_declaration_inline(
-            'Mission-Platform-Instrument-Mode filters to process', tag='b'
+            'Mission/Instrument Filters to Process', tag='b'
         )
         for name in self['allowed_filter_names']:
             visitor.add_declaration_inline(name, tag='li')
@@ -308,7 +396,7 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
         if self._name == 'run_only':
             title = 'Run only these targets:'
             if not self['targets']:
-                title = 'Run ALL targets.'
+                title = 'Run ALL targets'
         else:
             title = 'Never run these targets:'
             if not self['targets']:
@@ -318,7 +406,7 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
 
         if self['targets']:
             table = visitor.add_table(
-                ['Target', 'Why'], len(self['targets']) + 1, 'Target table'
+                ['Target', 'Why'], len(self['targets']) + 1, ''
             )
             for row, tn in enumerate(
                 sorted(self['targets'], key=lambda t: t[0])

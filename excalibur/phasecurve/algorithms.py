@@ -10,6 +10,7 @@ import dawgie.context
 
 import logging
 
+import excalibur
 import excalibur.phasecurve.states as phcstates
 import excalibur.phasecurve.core as phccore
 
@@ -102,7 +103,9 @@ class pcnormalization(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for PHASECURVE.{self.name()}'
@@ -180,7 +183,9 @@ class pcwhitelight(dawgie.Algorithm):
             pass
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for PHASECURVE.{self.name()}'

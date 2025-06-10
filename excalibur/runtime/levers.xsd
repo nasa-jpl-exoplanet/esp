@@ -42,10 +42,44 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitT"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.sliceSampler"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.lbroadening"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.lshifting"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.isothermal"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.nlevels"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.solrad"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="cerberus.atmos.crbmodel.Hsmax"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.results.nrandomwalkers"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.results.randomseed"
+                  type="xs:integer" use="required"/>
     <xs:attribute name="target.autofill.selectMostRecent"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="ariel.simulate_spectra.includeMetallicityDispersion"
+    <xs:attribute name="target.autofill.maximizeSelfConsistency"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.includeMetallicityDispersion"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.randomCloudProperties"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.tier"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="ariel.simspectrum.randomseed"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="ariel.simspectrum.metallicityDispersion"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="ariel.simspectrum.CtoOaverage"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="ariel.simspectrum.CtoOdispersion"
+                  type="xs:float" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="filter_type">
@@ -114,8 +148,10 @@
       </xs:documentation>
     </xs:annotation>
     <xs:all>
-      <xs:element name="cerberus" type="pymc_count_type"/>
-      <xs:element name="spectrum" type="pymc_count_type"/>
+      <xs:element name="cerberuschains" type="pymc_count_type"/>
+      <xs:element name="cerberuschainlen" type="pymc_count_type"/>
+      <xs:element name="spectrumchains" type="pymc_count_type"/>
+      <xs:element name="spectrumchainlen" type="pymc_count_type"/>
     </xs:all>
   </xs:complexType>
 
