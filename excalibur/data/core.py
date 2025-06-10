@@ -1621,7 +1621,9 @@ def isolate(
     eachprofile = np.nansum(flooded, axis=axis)
     eachpixels = np.arange(eachprofile.size)
     loc = eachpixels[eachprofile > 0]
-    if loc:
+    # ines mertz : changed the "if" statement from "if loc: " to "if loc.size:" since loc is now numpy.ndarray
+    # if loc:
+    if loc.size:
         diffloc = [0]
         diffloc.extend(np.diff(loc))
         minlocs = [np.nanmin(loc)]
