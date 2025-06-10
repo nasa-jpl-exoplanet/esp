@@ -11,6 +11,7 @@ import numexpr
 
 import logging
 
+import excalibur
 import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
 import excalibur.ancillary as anc
@@ -97,7 +98,9 @@ class XSLib(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -218,16 +221,21 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
 
                 runtime_params = crbcore.CerbParams(
-                    MCMC_chain_length=runtime['cerberus_steps'],
-                    # MCMC_sampler='slice',
-                    MCMC_sampler='metropolis',
-                    # useCloudfreeArielsim=True,
+                    MCMC_chain_length=runtime['cerberus_steps'].value(),
+                    MCMC_chains=runtime['cerberus_chains'].value(),
+                    MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
+                    isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
@@ -245,7 +253,9 @@ class Atmos(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -255,7 +265,8 @@ class Atmos(dawgie.Algorithm):
     def _atmos(self, fin, xsl, spc, runtime_params, index, fltr):
         '''Core code call'''
 
-        mcmc_chain_length = runtime_params.MCMC_chain_length.value()
+        mcmc_chains = runtime_params.MCMC_chains
+        mcmc_chain_length = runtime_params.MCMC_chain_length
         # print('MCMC_chain_length', mcmc_chain_length)
         # mcmc_chain_length = 1000
         # mcmc_chain_length = 10
@@ -271,6 +282,7 @@ class Atmos(dawgie.Algorithm):
             runtime_params,
             self.__out[index],
             fltr,
+            Nchains=mcmc_chains,
             chainlen=mcmc_chain_length,
             verbose=False,
         )  # singlemod='TEC' after chainlen
@@ -371,7 +383,9 @@ class Results(dawgie.Algorithm):
 
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'
@@ -545,7 +559,9 @@ class Release(dawgie.Algorithm):
             svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
         if self.__out:
+            _ = excalibur.lagger()
             ds.update()
+            pass
         else:
             raise dawgie.NoValidOutputDataError(
                 f'No output created for CERBERUS.{self.name()}'

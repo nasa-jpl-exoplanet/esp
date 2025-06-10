@@ -1146,8 +1146,8 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
     target = list(tfl['starID'].keys())[0]
     obstable = tfl['starID'][target]['datatable']
     obsids = [o['obsid'] for o in obstable]
-    obsids = set(obsids)
     # obsids are generally repeated many times. this will save lots of time
+    obsids = set(obsids)
     allsci = []
     allurl = []
     allmiss = []

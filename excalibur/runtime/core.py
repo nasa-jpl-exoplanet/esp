@@ -1,11 +1,14 @@
 '''science functionality separated from dawgie'''
 
-import logging
-
 import os
 import re
 
+import excalibur
+
 from . import binding
+
+import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -44,17 +47,44 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         allowed_names.discard(exclude)
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
-        'ariel_simulate_spectra_includeMetallicityDispersion',
+        'target_autofill_selectMostRecent',
+        'target_autofill_maximizeSelfConsistency',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
         'cerberus_atmos_fitT',
-        'target_autofill_selectMostRecent',
+        'cerberus_atmos_sliceSampler',
+        'cerberus_atmos_crbmodel_nlevels',
+        'cerberus_atmos_crbmodel_Hsmax',
+        'cerberus_atmos_crbmodel_solrad',
+        'cerberus_atmos_crbmodel_lbroadening',
+        'cerberus_atmos_crbmodel_lshifting',
+        'cerberus_atmos_crbmodel_isothermal',
+        'cerberus_results_nrandomwalkers',
+        'cerberus_results_randomseed',
+        'ariel_simspectrum_tier',
+        'ariel_simspectrum_randomseed',
+        'ariel_simspectrum_randomCloudProperties',
+        'ariel_simspectrum_thorngrenMassMetals',
+        'ariel_simspectrum_includeMetallicityDispersion',
+        'ariel_simspectrum_metallicityDispersion',
+        'ariel_simspectrum_CtoOaverage',
+        'ariel_simspectrum_CtoOdispersion',
     ]:
-        sv[key] = table['controls'][key].new()
-    pymc = table['pymc-cerberus']
+        if isinstance(
+            table['controls'][key], excalibur.runtime.states.BoolValue
+        ):
+            sv[key] = table['controls'][key].new()
+        else:
+            sv[key] = table['controls'][key]
+    pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
+        pymc['overrides'].get(tn, default)
+    )
+    pymc = table['pymc-cerberuschains']
+    default = pymc['default'].value()
+    sv['cerberus_chains'] = sv['cerberus_chains'].new(
         pymc['overrides'].get(tn, default)
     )
     sv['isValidTarget'] = sv['isValidTarget'].new(
@@ -72,9 +102,14 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
                 for targetandreason in table['run_only']['targets']
             ]
         )
-    pymc = table['pymc-spectrum']
+    pymc = table['pymc-spectrumchainlen']
     default = pymc['default'].value()
     sv['spectrum_steps'] = sv['spectrum_steps'].new(
+        pymc['overrides'].get(tn, default)
+    )
+    pymc = table['pymc-spectrumchains']
+    default = pymc['default'].value()
+    sv['spectrum_chains'] = sv['spectrum_chains'].new(
         pymc['overrides'].get(tn, default)
     )
 
@@ -100,7 +135,12 @@ def load(sv_dict: {str: {}}, targets) -> None:
     sv_dict['filters']['includes'].extend(
         [str(s) for s in settings.filters.include]
     )
-    for pymc in ['cerberus', 'spectrum']:
+    for pymc in [
+        'cerberuschains',
+        'cerberuschainlen',
+        'spectrumchains',
+        'spectrumchainlen',
+    ]:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']
         sv['default'] = sv['default'].new(cf.default)

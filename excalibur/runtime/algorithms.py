@@ -7,6 +7,8 @@ import dawgie.context
 import dawgie.db
 import os
 
+import excalibur
+
 from . import core
 from . import states
 from importlib import import_module as fetch  # avoid cyclic-import
@@ -89,7 +91,9 @@ class Autofill(dawgie.Algorithm):
         core.isolate(
             self.__status, self.__parent.sv_as_dict()['composite'], table_index
         )
+        _ = excalibur.lagger()
         ds.update()
+        return
 
     def state_vectors(self):
         '''state vectors generated from this algorithm'''
@@ -105,10 +109,12 @@ class Create(dawgie.Analyzer):
         '''init the create process'''
         self._version_ = dawgie.VERSION(1, 0, 1)
         self.__table = [
-            states.ControlsSV(),
             states.FilterSV(),
-            states.PymcSV('cerberus'),
-            states.PymcSV('spectrum'),
+            states.PymcSV('cerberuschains'),
+            states.PymcSV('cerberuschainlen'),
+            states.PymcSV('spectrumchains'),
+            states.PymcSV('spectrumchainlen'),
+            states.ControlsSV(),
             states.TargetsSV('run_only'),
             states.TargetsSV('sequester'),
         ]

@@ -158,7 +158,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     
     cerberus_atmos_fitT = property(__cerberus_atmos_fitT.value, __cerberus_atmos_fitT.set, None, None)
 
-    
+
     # Attribute target.autofill.selectMostRecent uses Python identifier target_autofill_selectMostRecent
     __target_autofill_selectMostRecent = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.selectMostRecent'), 'target_autofill_selectMostRecent', '__AbsentNamespace0_control_type_target_autofill_selectMostRecent', pyxb.binding.datatypes.boolean, required=True)
     __target_autofill_selectMostRecent._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
@@ -167,12 +167,132 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     target_autofill_selectMostRecent = property(__target_autofill_selectMostRecent.value, __target_autofill_selectMostRecent.set, None, None)
 
     
-    # Attribute ariel.simulate_spectra.includeMetallicityDispersion uses Python identifier ariel_simulate_spectra_includeMetallicityDispersion
-    __ariel_simulate_spectra_includeMetallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simulate_spectra.includeMetallicityDispersion'), 'ariel_simulate_spectra_includeMetallicityDispersion', '__AbsentNamespace0_control_type_ariel_simulate_spectra_includeMetallicityDispersion', pyxb.binding.datatypes.boolean, required=True)
-    __ariel_simulate_spectra_includeMetallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
-    __ariel_simulate_spectra_includeMetallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
+    # Attribute ariel.simspectra.includeMetallicityDispersion uses Python identifier ariel_simspectrum_includeMetallicityDispersion
+    __ariel_simspectrum_includeMetallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.includeMetallicityDispersion'), 'ariel_simspectrum_includeMetallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_includeMetallicityDispersion', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_includeMetallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
+    __ariel_simspectrum_includeMetallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 47, 4)
     
-    ariel_simulate_spectra_includeMetallicityDispersion = property(__ariel_simulate_spectra_includeMetallicityDispersion.value, __ariel_simulate_spectra_includeMetallicityDispersion.set, None, None)
+    ariel_simspectrum_includeMetallicityDispersion = property(__ariel_simspectrum_includeMetallicityDispersion.value, __ariel_simspectrum_includeMetallicityDispersion.set, None, None)
+
+    # Attribute cerberus.atmos.sliceSampler uses Python identifier cerberus_atmos_sliceSampler
+    __cerberus_atmos_sliceSampler = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.sliceSampler'), 'cerberus_atmos_sliceSampler', '__AbsentNamespace0_control_type_cerberus_atmos_sliceSampler', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_sliceSampler._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 49, 4)
+    __cerberus_atmos_sliceSampler._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 49, 4)
+
+    cerberus_atmos_sliceSampler = property(__cerberus_atmos_sliceSampler.value, __cerberus_atmos_sliceSampler.set, None, None)
+
+    # Attribute target.autofill.maximizeSelfConsistency uses Python identifier target_autofill_maximizeSelfConsistency
+    __target_autofill_maximizeSelfConsistency = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.maximizeSelfConsistency'), 'target_autofill_maximizeSelfConsistency', '__AbsentNamespace0_control_type_target_autofill_maximizeSelfConsistency', pyxb.binding.datatypes.boolean, required=True)
+    __target_autofill_maximizeSelfConsistency._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+    __target_autofill_maximizeSelfConsistency._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+
+    target_autofill_maximizeSelfConsistency = property(__target_autofill_maximizeSelfConsistency.value, __target_autofill_maximizeSelfConsistency.set, None, None)
+
+    # Attribute ariel.simspectrum.randomCloudProperties uses Python identifier ariel_simspectrum_randomCloudProperties
+    __ariel_simspectrum_randomCloudProperties = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.randomCloudProperties'), 'ariel_simspectrum_randomCloudProperties', '__AbsentNamespace0_control_type_ariel_simspectrum_randomCloudProperties', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_randomCloudProperties._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 53, 4)
+    __ariel_simspectrum_randomCloudProperties._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 53, 4)
+
+    ariel_simspectrum_randomCloudProperties = property(__ariel_simspectrum_randomCloudProperties.value, __ariel_simspectrum_randomCloudProperties.set, None, None)
+
+    # Attribute ariel.simspectrum.thorngrenMassMetals uses Python identifier ariel_simspectrum_thorngrenMassMetals
+    __ariel_simspectrum_thorngrenMassMetals = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.thorngrenMassMetals'), 'ariel_simspectrum_thorngrenMassMetals', '__AbsentNamespace0_control_type_ariel_simspectrum_thorngrenMassMetals', pyxb.binding.datatypes.boolean, required=True)
+    __ariel_simspectrum_thorngrenMassMetals._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 55, 4)
+    __ariel_simspectrum_thorngrenMassMetals._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 55, 4)
+
+    ariel_simspectrum_thorngrenMassMetals = property(__ariel_simspectrum_thorngrenMassMetals.value, __ariel_simspectrum_thorngrenMassMetals.set, None, None)
+
+        # Attribute cerberus.atmos.crbmodel.lbroadening uses Python identifier cerberus_atmos_crbmodel_lbroadening
+    __cerberus_atmos_crbmodel_lbroadening = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.lbroadening'), 'cerberus_atmos_crbmodel_lbroadening', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_lbroadening', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_lbroadening._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 57, 4)
+    __cerberus_atmos_crbmodel_lbroadening._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 57, 4)
+
+    cerberus_atmos_crbmodel_lbroadening = property(__cerberus_atmos_crbmodel_lbroadening.value, __cerberus_atmos_crbmodel_lbroadening.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.lshifting uses Python identifier cerberus_atmos_crbmodel_lshifting
+    __cerberus_atmos_crbmodel_lshifting = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.lshifting'), 'cerberus_atmos_crbmodel_lshifting', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_lshifting', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_lshifting._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 59, 4)
+    __cerberus_atmos_crbmodel_lshifting._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 59, 4)
+
+    cerberus_atmos_crbmodel_lshifting = property(__cerberus_atmos_crbmodel_lshifting.value, __cerberus_atmos_crbmodel_lshifting.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.isothermal uses Python identifier cerberus_atmos_crbmodel_isothermal
+    __cerberus_atmos_crbmodel_isothermal = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.isothermal'), 'cerberus_atmos_crbmodel_isothermal', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_isothermal', pyxb.binding.datatypes.boolean, required=True)
+    __cerberus_atmos_crbmodel_isothermal._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 61, 4)
+    __cerberus_atmos_crbmodel_isothermal._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 61, 4)
+
+    cerberus_atmos_crbmodel_isothermal = property(__cerberus_atmos_crbmodel_isothermal.value, __cerberus_atmos_crbmodel_isothermal.set, None, None)
+
+    # Attribute ariel.simspectrum.tier uses Python identifier ariel_simspectrum_tier
+    __ariel_simspectrum_tier = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.tier'), 'ariel_simspectrum_tier', '__AbsentNamespace0_control_type_ariel_simspectrum_tier', pyxb.binding.datatypes.integer, required=True)
+    __ariel_simspectrum_tier._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
+    __ariel_simspectrum_tier._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 63, 4)
+
+    ariel_simspectrum_tier = property(__ariel_simspectrum_tier.value, __ariel_simspectrum_tier.set, None, None)
+
+
+    # Attribute ariel.simspectrum.randomseed uses Python identifier ariel_simspectrum_randomseed
+    __ariel_simspectrum_randomseed = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.randomseed'), 'ariel_simspectrum_randomseed', '__AbsentNamespace0_control_type_ariel_simspectrum_randomseed', pyxb.binding.datatypes.integer, required=True)
+    __ariel_simspectrum_randomseed._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 4)
+    __ariel_simspectrum_randomseed._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 4)
+
+    ariel_simspectrum_randomseed = property(__ariel_simspectrum_randomseed.value, __ariel_simspectrum_randomseed.set, None, None)
+
+    # Attribute ariel.simspectrum.metallicityDispersion uses Python identifier ariel_simspectrum_metallicityDispersion
+    __ariel_simspectrum_metallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.metallicityDispersion'), 'ariel_simspectrum_metallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_metallicityDispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_metallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 67, 4)
+    __ariel_simspectrum_metallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 67, 4)
+
+    ariel_simspectrum_metallicityDispersion = property(__ariel_simspectrum_metallicityDispersion.value, __ariel_simspectrum_metallicityDispersion.set, None, None)
+
+    # Attribute ariel.simspectrum.CtoOaverage uses Python identifier ariel_simspectrum_CtoOaverage
+    __ariel_simspectrum_CtoOaverage = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOaverage'), 'ariel_simspectrum_CtoOaverage', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOaverage', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOaverage._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 69, 4)
+    __ariel_simspectrum_CtoOaverage._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 69, 4)
+
+    ariel_simspectrum_CtoOaverage = property(__ariel_simspectrum_CtoOaverage.value, __ariel_simspectrum_CtoOaverage.set, None, None)
+
+    # Attribute ariel.simspectrum.CtoOdispersion uses Python identifier ariel_simspectrum_CtoOdispersion
+    __ariel_simspectrum_CtoOdispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOdispersion'), 'ariel_simspectrum_CtoOdispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOdispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOdispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 71, 4)
+    __ariel_simspectrum_CtoOdispersion._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 71, 4)
+
+    ariel_simspectrum_CtoOdispersion = property(__ariel_simspectrum_CtoOdispersion.value, __ariel_simspectrum_CtoOdispersion.set, None, None)
+
+    # Attribute cerberus.results.nrandomwalkers uses Python identifier cerberus_results_nrandomwalkers
+    __cerberus_results_nrandomwalkers = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.results.nrandomwalkers'), 'cerberus_results_nrandomwalkers', '__AbsentNamespace0_control_type_cerberus_results_nrandomwalkers', pyxb.binding.datatypes.integer, required=True)
+    __cerberus_results_nrandomwalkers._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 73, 4)
+    __cerberus_results_nrandomwalkers._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 73, 4)
+
+    cerberus_results_nrandomwalkers = property(__cerberus_results_nrandomwalkers.value, __cerberus_results_nrandomwalkers.set, None, None)
+
+    # Attribute cerberus.results.randomseed uses Python identifier cerberus_results_randomseed
+    __cerberus_results_randomseed = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.results.randomseed'), 'cerberus_results_randomseed', '__AbsentNamespace0_control_type_cerberus_results_randomseed', pyxb.binding.datatypes.integer, required=True)
+    __cerberus_results_randomseed._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 75, 4)
+    __cerberus_results_randomseed._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 75, 4)
+
+    cerberus_results_randomseed = property(__cerberus_results_randomseed.value, __cerberus_results_randomseed.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.nlevels uses Python identifier cerberus_atmos_crbmodel_nlevels
+    __cerberus_atmos_crbmodel_nlevels = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.nlevels'), 'cerberus_atmos_crbmodel_nlevels', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_nlevels', pyxb.binding.datatypes.integer, required=True)
+    __cerberus_atmos_crbmodel_nlevels._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 77, 4)
+    __cerberus_atmos_crbmodel_nlevels._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 77, 4)
+
+    cerberus_atmos_crbmodel_nlevels = property(__cerberus_atmos_crbmodel_nlevels.value, __cerberus_atmos_crbmodel_nlevels.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.Hsmax uses Python identifier cerberus_atmos_crbmodel_Hsmax
+    __cerberus_atmos_crbmodel_Hsmax = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.Hsmax'), 'cerberus_atmos_crbmodel_Hsmax', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_Hsmax', pyxb.binding.datatypes.integer, required=True)
+    __cerberus_atmos_crbmodel_Hsmax._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 79, 4)
+    __cerberus_atmos_crbmodel_Hsmax._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 79, 4)
+
+    cerberus_atmos_crbmodel_Hsmax = property(__cerberus_atmos_crbmodel_Hsmax.value, __cerberus_atmos_crbmodel_Hsmax.set, None, None)
+
+    # Attribute cerberus.atmos.crbmodel.solrad uses Python identifier cerberus_atmos_crbmodel_solrad
+    __cerberus_atmos_crbmodel_solrad = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.solrad'), 'cerberus_atmos_crbmodel_solrad', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_solrad', pyxb.binding.datatypes.float, required=True)
+    __cerberus_atmos_crbmodel_solrad._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 81, 4)
+    __cerberus_atmos_crbmodel_solrad._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 81, 4)
+
+    cerberus_atmos_crbmodel_solrad = property(__cerberus_atmos_crbmodel_solrad.value, __cerberus_atmos_crbmodel_solrad.set, None, None)
 
     _ElementMap.update({
         
@@ -182,9 +302,27 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __cerberus_atmos_fitNtoO.name() : __cerberus_atmos_fitNtoO,
         __cerberus_atmos_fitCtoO.name() : __cerberus_atmos_fitCtoO,
         __cerberus_atmos_fitT.name() : __cerberus_atmos_fitT,
+        __cerberus_atmos_sliceSampler.name() : __cerberus_atmos_sliceSampler,
+        __cerberus_atmos_crbmodel_lbroadening.name() : __cerberus_atmos_crbmodel_lbroadening,
+        __cerberus_atmos_crbmodel_lshifting.name() : __cerberus_atmos_crbmodel_lshifting,
+        __cerberus_atmos_crbmodel_isothermal.name() : __cerberus_atmos_crbmodel_isothermal,
+        __cerberus_atmos_crbmodel_solrad.name() : __cerberus_atmos_crbmodel_solrad,
+        __cerberus_atmos_crbmodel_Hsmax.name() : __cerberus_atmos_crbmodel_Hsmax,
+        __cerberus_atmos_crbmodel_nlevels.name() : __cerberus_atmos_crbmodel_nlevels,
+        __cerberus_results_randomseed.name() : __cerberus_results_randomseed,
+        __cerberus_results_nrandomwalkers.name() : __cerberus_results_nrandomwalkers,
         __target_autofill_selectMostRecent.name() : __target_autofill_selectMostRecent,
-        __ariel_simulate_spectra_includeMetallicityDispersion.name() : __ariel_simulate_spectra_includeMetallicityDispersion
+        __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
+        __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,
+        __ariel_simspectrum_randomCloudProperties.name() : __ariel_simspectrum_randomCloudProperties,
+        __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals,
+        __ariel_simspectrum_randomseed.name() : __ariel_simspectrum_randomseed,
+        __ariel_simspectrum_metallicityDispersion.name() : __ariel_simspectrum_metallicityDispersion,
+        __ariel_simspectrum_CtoOaverage.name() : __ariel_simspectrum_CtoOaverage,
+        __ariel_simspectrum_CtoOdispersion.name() : __ariel_simspectrum_CtoOdispersion,
+        __ariel_simspectrum_tier.name() : __ariel_simspectrum_tier
     })
+
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)
 
@@ -209,10 +347,9 @@ class filter_type (pyxb.binding.basis.complexTypeDefinition):
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
-    
+
     # Element exclude uses Python identifier exclude
     __exclude = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'exclude'), 'exclude', '__AbsentNamespace0_filter_type_exclude', True, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 65, 6), )
-
     
     exclude = property(__exclude.value, __exclude.set, None, None)
 
@@ -365,22 +502,31 @@ class pymc_type (pyxb.binding.basis.complexTypeDefinition):
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
-    # Element cerberus uses Python identifier cerberus
-    __cerberus = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberus'), 'cerberus', '__AbsentNamespace0_pymc_type_cerberus', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6), )
+    # Element cerberuschainlen uses Python identifier cerberuschainlen
+    __cerberuschainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), 'cerberuschainlen', '__AbsentNamespace0_pymc_type_cerberuschainlen', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6), )
 
-    
-    cerberus = property(__cerberus.value, __cerberus.set, None, None)
+    cerberuschainlen = property(__cerberuschainlen.value, __cerberuschainlen.set, None, None)
 
+    # Element spectrumchainlen uses Python identifier spectrumchainlen
+    __spectrumchainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), 'spectrumchainlen', '__AbsentNamespace0_pymc_type_spectrumchainlen', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6), )
     
-    # Element spectrum uses Python identifier spectrum
-    __spectrum = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrum'), 'spectrum', '__AbsentNamespace0_pymc_type_spectrum', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6), )
+    spectrumchainlen = property(__spectrumchainlen.value, __spectrumchainlen.set, None, None)
 
-    
-    spectrum = property(__spectrum.value, __spectrum.set, None, None)
+    # Element cerberuschains uses Python identifier cerberuschains
+    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6), )
+
+    cerberuschains = property(__cerberuschains.value, __cerberuschains.set, None, None)
+
+    # Element spectrumchains uses Python identifier spectrumchains
+    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6), )
+
+    spectrumchains = property(__spectrumchains.value, __spectrumchains.set, None, None)
 
     _ElementMap.update({
-        __cerberus.name() : __cerberus,
-        __spectrum.name() : __spectrum
+        __cerberuschains.name() : __cerberuschains,
+        __cerberuschainlen.name() : __cerberuschainlen,
+        __spectrumchains.name() : __spectrumchains,
+        __spectrumchainlen.name() : __spectrumchainlen
     })
     _AttributeMap.update({
         
@@ -728,9 +874,29 @@ pymc_count_type._Automaton = _BuildAutomaton_7()
 
 
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberus'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6)))
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrum'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6)))
+
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 119, 6)))
+
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 120, 6)))
+
+def _BuildAutomaton_11 ():
+    # Remove this helper function from the namespace after it is invoked
+    global _BuildAutomaton_11
+    del _BuildAutomaton_11
+    import pyxb.utils.fac as fac
+
+    counters = set()
+    states = []
+    final_update = set()
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschains')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
+    st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
+    states.append(st_0)
+    transitions = []
+    st_0._set_transitionSet(transitions)
+    return fac.Automaton(states, counters, False, containing_state=st_0)
 
 def _BuildAutomaton_9 ():
     # Remove this helper function from the namespace after it is invoked
@@ -741,7 +907,7 @@ def _BuildAutomaton_9 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberus')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschainlen')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 117, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -757,7 +923,23 @@ def _BuildAutomaton_10 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrum')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchainlen')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
+    st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
+    states.append(st_0)
+    transitions = []
+    st_0._set_transitionSet(transitions)
+    return fac.Automaton(states, counters, False, containing_state=st_0)
+
+def _BuildAutomaton_12 ():
+    # Remove this helper function from the namespace after it is invoked
+    global _BuildAutomaton_12
+    del _BuildAutomaton_12
+    import pyxb.utils.fac as fac
+
+    counters = set()
+    states = []
+    final_update = set()
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchains')), pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 118, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -775,6 +957,8 @@ def _BuildAutomaton_8 ():
     sub_automata = []
     sub_automata.append(_BuildAutomaton_9())
     sub_automata.append(_BuildAutomaton_10())
+    sub_automata.append(_BuildAutomaton_11())
+    sub_automata.append(_BuildAutomaton_12())
     final_update = set()
     symbol = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 116, 4)
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=True)

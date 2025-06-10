@@ -71,7 +71,7 @@ def LogLikelihood(inputs):
     out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
 
     # this is a useful check; chi2_red should decrease toward ~1 (for simulated data)
-    print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
+    # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
 
     # normalize the log(Likelihood); as a constant, it shouldn't have any effect
     Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
