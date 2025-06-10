@@ -104,7 +104,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
             # ['Switch', 'State'],
-            ['Task', 'Parameter', 'Value'],
+            ['Algorithm', 'Parameter', 'Value'],
             len(self) + 1,
             'Processing Control Parameters',
             # 'Processing Control Switches',
@@ -113,9 +113,9 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         # for row, key in enumerate(sorted(self)):
         for row, key in enumerate(self):
             isplitter = key.rfind('_')
-            task = key[:isplitter]
+            algorithm = key[:isplitter]
             param = key[isplitter + 1 :]
-            table.get_cell(row + 1, 0).add_primitive(task)
+            table.get_cell(row + 1, 0).add_primitive(algorithm)
             table.get_cell(row + 1, 1).add_primitive(param)
             if isinstance(self[key], excalibur.ValueScalar):
                 table.get_cell(row + 1, 2).add_primitive(self[key].value())
@@ -200,15 +200,15 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
         visitor.add_declaration_inline('', div='<div><hr>')
         if (self.__name).endswith('chainlen'):
             paramname = 'Chain Length'
-            taskname = (self.__name)[:-8]
+            algorithmname = (self.__name)[:-8]
         elif (self.__name).endswith('chains'):
             paramname = '# of Chains'
-            taskname = (self.__name)[:-6]
+            algorithmname = (self.__name)[:-6]
         else:
             paramname = 'Value'
-            taskname = self.__name
+            algorithmname = self.__name
         visitor.add_declaration_inline(
-            f'PYMC in {taskname}: default {paramname} = '
+            f'PYMC in {algorithmname}: default {paramname} = '
             f'{self["default"].value()}',
             tag='b',
         )
