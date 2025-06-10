@@ -64,8 +64,8 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
-        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['system_validate_maximizeSelfConsistency'] = BoolValue()
+        self['system_validate_selectMostRecent'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
@@ -265,8 +265,8 @@ class StatusSV(dawgie.StateVector):
         self['runTarget'] = BoolValue(True)
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
-        self['target_autofill_selectMostRecent'] = BoolValue()
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
+        self['system_validate_selectMostRecent'] = BoolValue()
+        self['system_validate_maximizeSelfConsistency'] = BoolValue()
 
     def name(self):
         '''database name'''
@@ -326,8 +326,8 @@ class StatusSV(dawgie.StateVector):
         switches = [
             'runTarget',
             'isValidTarget',
-            'target_autofill_selectMostRecent',
-            'target_autofill_maximizeSelfConsistency',
+            'system_validate_selectMostRecent',
+            'system_validate_maximizeSelfConsistency',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',

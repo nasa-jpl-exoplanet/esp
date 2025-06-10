@@ -47,8 +47,8 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         allowed_names.discard(exclude)
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
-        'target_autofill_selectMostRecent',
-        'target_autofill_maximizeSelfConsistency',
+        'system_validate_selectMostRecent',
+        'system_validate_maximizeSelfConsistency',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',

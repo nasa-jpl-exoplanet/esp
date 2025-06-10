@@ -159,12 +159,12 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     cerberus_atmos_fitT = property(__cerberus_atmos_fitT.value, __cerberus_atmos_fitT.set, None, None)
 
 
-    # Attribute target.autofill.selectMostRecent uses Python identifier target_autofill_selectMostRecent
-    __target_autofill_selectMostRecent = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.selectMostRecent'), 'target_autofill_selectMostRecent', '__AbsentNamespace0_control_type_target_autofill_selectMostRecent', pyxb.binding.datatypes.boolean, required=True)
-    __target_autofill_selectMostRecent._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
-    __target_autofill_selectMostRecent._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
+    # Attribute system.validate.selectMostRecent uses Python identifier system_validate_selectMostRecent
+    __system_validate_selectMostRecent = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'system.validate.selectMostRecent'), 'system_validate_selectMostRecent', '__AbsentNamespace0_control_type_system_validate_selectMostRecent', pyxb.binding.datatypes.boolean, required=True)
+    __system_validate_selectMostRecent._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
+    __system_validate_selectMostRecent._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 45, 4)
     
-    target_autofill_selectMostRecent = property(__target_autofill_selectMostRecent.value, __target_autofill_selectMostRecent.set, None, None)
+    system_validate_selectMostRecent = property(__system_validate_selectMostRecent.value, __system_validate_selectMostRecent.set, None, None)
 
     
     # Attribute ariel.simspectra.includeMetallicityDispersion uses Python identifier ariel_simspectrum_includeMetallicityDispersion
@@ -181,12 +181,12 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     cerberus_atmos_sliceSampler = property(__cerberus_atmos_sliceSampler.value, __cerberus_atmos_sliceSampler.set, None, None)
 
-    # Attribute target.autofill.maximizeSelfConsistency uses Python identifier target_autofill_maximizeSelfConsistency
-    __target_autofill_maximizeSelfConsistency = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'target.autofill.maximizeSelfConsistency'), 'target_autofill_maximizeSelfConsistency', '__AbsentNamespace0_control_type_target_autofill_maximizeSelfConsistency', pyxb.binding.datatypes.boolean, required=True)
-    __target_autofill_maximizeSelfConsistency._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
-    __target_autofill_maximizeSelfConsistency._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+    # Attribute system.validate.maximizeSelfConsistency uses Python identifier system_validate_maximizeSelfConsistency
+    __system_validate_maximizeSelfConsistency = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'system.validate.maximizeSelfConsistency'), 'system_validate_maximizeSelfConsistency', '__AbsentNamespace0_control_type_system_validate_maximizeSelfConsistency', pyxb.binding.datatypes.boolean, required=True)
+    __system_validate_maximizeSelfConsistency._DeclarationLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
+    __system_validate_maximizeSelfConsistency._UseLocation = pyxb.utils.utility.Location('/home/niessner/Projects/esp/excalibur/runtime/levers.xsd', 51, 4)
 
-    target_autofill_maximizeSelfConsistency = property(__target_autofill_maximizeSelfConsistency.value, __target_autofill_maximizeSelfConsistency.set, None, None)
+    system_validate_maximizeSelfConsistency = property(__system_validate_maximizeSelfConsistency.value, __system_validate_maximizeSelfConsistency.set, None, None)
 
     # Attribute ariel.simspectrum.randomCloudProperties uses Python identifier ariel_simspectrum_randomCloudProperties
     __ariel_simspectrum_randomCloudProperties = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.randomCloudProperties'), 'ariel_simspectrum_randomCloudProperties', '__AbsentNamespace0_control_type_ariel_simspectrum_randomCloudProperties', pyxb.binding.datatypes.boolean, required=True)
@@ -311,8 +311,8 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __cerberus_atmos_crbmodel_nlevels.name() : __cerberus_atmos_crbmodel_nlevels,
         __cerberus_results_randomseed.name() : __cerberus_results_randomseed,
         __cerberus_results_nrandomwalkers.name() : __cerberus_results_nrandomwalkers,
-        __target_autofill_selectMostRecent.name() : __target_autofill_selectMostRecent,
-        __target_autofill_maximizeSelfConsistency.name() : __target_autofill_maximizeSelfConsistency,
+        __system_validate_selectMostRecent.name() : __system_validate_selectMostRecent,
+        __system_validate_maximizeSelfConsistency.name() : __system_validate_maximizeSelfConsistency,
         __ariel_simspectrum_includeMetallicityDispersion.name() : __ariel_simspectrum_includeMetallicityDispersion,
         __ariel_simspectrum_randomCloudProperties.name() : __ariel_simspectrum_randomCloudProperties,
         __ariel_simspectrum_thorngrenMassMetals.name() : __ariel_simspectrum_thorngrenMassMetals,

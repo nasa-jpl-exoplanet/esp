@@ -60,9 +60,9 @@
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.results.randomseed"
                   type="xs:integer" use="required"/>
-    <xs:attribute name="target.autofill.selectMostRecent"
+    <xs:attribute name="system.validate.selectMostRecent"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="target.autofill.maximizeSelfConsistency"
+    <xs:attribute name="system.validate.maximizeSelfConsistency"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.includeMetallicityDispersion"
                   type="xs:boolean" use="required"/>
