@@ -805,7 +805,12 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters:
+                    # ines mertz : adding another "if" statement in order to make the 'HST' filters cases work (don't fit HST with no clouds)
+                    if 'HST' in ext:
+                        runtime_params = runtime_params._replace(
+                            fitCloudParameters=True, fitT=True, fitCtoO=True
+                        )
+                    elif not runtime_params.fitCloudParameters:
                         # note: crashes for HST, since there's no model_params!!
                         #  (so don't fit HST with no clouds!?)
 
