@@ -407,10 +407,10 @@ class Results(dawgie.Algorithm):
             )
         return
 
-    def _results(self, trgt, fltr, fin, ancil, xsl, atm, index):
+    def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
         '''Core code call'''
         resout = crbcore.results(
-            trgt, fltr, fin, ancil, xsl, atm, self.__out[index], verbose=False
+            trgt, fltr, runtime_params, fin, ancil, xsl, atm, self.__out[index], verbose=False
         )
         return resout
 
