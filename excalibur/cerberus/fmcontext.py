@@ -13,7 +13,6 @@ from collections import namedtuple
 CONTEXT = namedtuple(
     'CONTEXT',
     [
-        'runtime',
         'cleanup',
         'model',
         'planet',
@@ -29,13 +28,18 @@ CONTEXT = namedtuple(
         'mcmcsig',
         'nodeshape',
         'forwardmodel',
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
 
 def ctxtinit():
     ctxt = CONTEXT(
-        runtime=None,
         cleanup=None,
         model=None,
         planet=None,
@@ -51,6 +55,12 @@ def ctxtinit():
         mcmcsig=None,
         nodeshape=None,
         forwardmodel=None,
+        nlevels=None,
+        solrad=None,
+        Hsmax=None,
+        lbroadening=None,
+        lshifting=None,
+        isothermal=None,
     )
     return ctxt
 
@@ -94,6 +104,12 @@ def ctxtupdt(
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
         forwardmodel=forwardmodel,
+        nlevels=runtime.nlevels,
+        solrad=runtime.solrad,
+        Hsmax=runtime.Hsmax,
+        lbroadening=runtime.lbroadening,
+        lshifting=runtime.lshifting,
+        isothermal=runtime.isothermal,
     )
 
     excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt
