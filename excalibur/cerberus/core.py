@@ -1762,8 +1762,6 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
     if verbose:
         print('cerberus/results for target:', trgt)
 
-    print('runtime_params',runtime_params)
-        
     completed_at_least_one_planet = False
 
     # load in the table of limits used for profiling
@@ -2115,15 +2113,13 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 # print('chi2 after profiling',chi2modelProfiled)
 
                 # make an array of some randomly selected walker results
-                nrandomwalkers = 100
-
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
                     1  # arbitrary initialization for the random seed
                 )
                 for char in trgt + ' ' + p:
                     int_from_target = (
-                        123 * int_from_target + ord(char)
+                        runtime_params.randomseed * int_from_target + ord(char)
                     ) % 100000
                 np.random.seed(int_from_target)
 
@@ -2133,7 +2129,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmcarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
-                for _ in range(nrandomwalkers):
+                for _ in range(runtime_params.nrandomwalkers):
                     iwalker = int(nwalkersteps * np.random.rand())
 
                     if fit_cloud_parameters:
