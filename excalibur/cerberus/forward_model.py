@@ -33,11 +33,6 @@ def crbmodel(
     qtgrid,
     temp,
     wgrid,
-    nlevels=100,
-    # nlevels=5,
-    # increase the number of scale heights from 15 to 20, to match the Ariel forward model
-    Hsmax=20.0,
-    solrad=10.0,
     hzlib=None,
     hzp=None,
     hzslope=-4.0,
@@ -63,9 +58,9 @@ def crbmodel(
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
-        np.log(solrad) - Hsmax,
-        np.log(solrad) + Hsmax / nlevels,
-        Hsmax / (nlevels - 1),
+        np.log(ctxt.solrad) - ctxt.Hsmax,
+        np.log(ctxt.solrad) + ctxt.Hsmax / ctxt.nlevels,
+        ctxt.Hsmax / (ctxt.nlevels - 1),
     )
     pgrid = np.exp(pgrid)
     pressure = pgrid[::-1]
