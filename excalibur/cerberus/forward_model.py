@@ -33,8 +33,6 @@ def crbmodel(
     qtgrid,
     temp,
     wgrid,
-    lbroadening=False,
-    lshifting=False,
     nlevels=100,
     # nlevels=5,
     # increase the number of scale heights from 15 to 20, to match the Ariel forward model
@@ -117,8 +115,6 @@ def crbmodel(
         rp0,
         pressure,
         wgrid,
-        lbroadening,
-        lshifting,
         cialist,
         fH2,
         fHe,
@@ -273,8 +269,6 @@ def gettau(
     rp0,
     p,
     wgrid,
-    lbroadening,
-    lshifting,
     cialist,
     fH2,
     fHe,
@@ -284,13 +278,13 @@ def gettau(
     hzp,
     hzslope,
     hztop,
-    isothermal=True,
     hzwscale=1e0,
     debug=False,
 ):
     '''
     G. ROUDIER: Builds optical depth matrix
     '''
+
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(p)
@@ -333,8 +327,6 @@ def gettau(
                 temp,
                 p,
                 mmr,
-                lbroadening,
-                lshifting,
                 wgrid,
                 debug=False,
             )
@@ -356,7 +348,7 @@ def gettau(
             # sigma = np.array(sigma)*1e-4  # m^2/mol
             sigma = sigma * 1e-4  # m^2/mol
             pass
-        if isothermal:
+        if ctxt.isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
@@ -530,8 +522,6 @@ def absorb(
     T,
     p,
     mmr,
-    lbroadening,
-    lshifting,
     wgrid,
     iso=0,
     Tref=296.0,
@@ -565,8 +555,8 @@ def absorb(
         np.asmatrix(p - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
         + np.asmatrix(ps).T * np.asmatrix(gself)
     )
-    if lbroadening:
-        if lshifting:
+    if ctxt.lbroadening:
+        if ctxt.lshifting:
             matnu = np.array(
                 np.asmatrix(np.ones(p.size)).T * np.asmatrix(nu)
                 + np.asmatrix(p).T * np.asmatrix(delta)
@@ -579,7 +569,7 @@ def absorb(
     absgrid = []
     nugrid = (1e4 / wgrid)[::-1]
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
-    if lbroadening:
+    if ctxt.lbroadening:
         for mymatnu, mygamma in zip(matnu, gamma):
             binsigma = np.asmatrix(sigma) * np.asmatrix(
                 intflor(
