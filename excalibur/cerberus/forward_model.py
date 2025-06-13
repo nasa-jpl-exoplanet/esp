@@ -40,7 +40,6 @@ def crbmodel(
     hzwscale=1e0,
     cheq=None,
     logx=False,
-    pnet='b',
     break_down_by_molecule=False,
     verbose=False,
     debug=False,
@@ -89,7 +88,7 @@ def crbmodel(
     Hs = (
         cst.Boltzmann
         * temp
-        / (mmw * 1e-2 * (10.0 ** float(orbp[pnet]['logg'])))
+        / (mmw * 1e-2 * (10.0 ** float(orbp[ctxt.planet]['logg'])))
     )  # [m]
 
     # when the Pressure grid is log-spaced, rdz is a constant
@@ -688,16 +687,15 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -712,16 +710,15 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -785,16 +782,15 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=float(hzloc),
             hzwscale=float(hzthick),
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -810,16 +806,15 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=float(hzloc),
             hzwscale=float(hzthick),
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -849,8 +844,8 @@ def offcerberus(*crbinputs):
     #     hzthick = 5.58950953
     #     tpr = 1551.41137
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     #  cond_wav = (wbb < 0.56) | (wbb > 1.02)
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
@@ -864,8 +859,8 @@ def offcerberus(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -873,7 +868,6 @@ def offcerberus(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -889,16 +883,15 @@ def offcerberus(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -925,7 +918,7 @@ def offcerberus1(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -938,8 +931,8 @@ def offcerberus1(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -947,7 +940,6 @@ def offcerberus1(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -963,16 +955,15 @@ def offcerberus1(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -981,7 +972,7 @@ def offcerberus1(*crbinputs):
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
     ww = ww[ctxt.cleanup]
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430L-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750L-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -994,7 +985,7 @@ def offcerberus2(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -1007,8 +998,8 @@ def offcerberus2(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1016,7 +1007,6 @@ def offcerberus2(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1032,16 +1022,15 @@ def offcerberus2(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1050,7 +1039,7 @@ def offcerberus2(*crbinputs):
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
     ww = ww[ctxt.cleanup]
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -1063,9 +1052,9 @@ def offcerberus3(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1077,8 +1066,8 @@ def offcerberus3(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1086,7 +1075,6 @@ def offcerberus3(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1102,16 +1090,15 @@ def offcerberus3(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1132,9 +1119,9 @@ def offcerberus4(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1146,8 +1133,8 @@ def offcerberus4(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1155,7 +1142,6 @@ def offcerberus4(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1171,16 +1157,15 @@ def offcerberus4(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1199,9 +1184,9 @@ def offcerberus5(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1213,8 +1198,8 @@ def offcerberus5(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1222,7 +1207,6 @@ def offcerberus5(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1238,16 +1222,15 @@ def offcerberus5(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1268,9 +1251,9 @@ def offcerberus6(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1282,8 +1265,8 @@ def offcerberus6(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1291,7 +1274,6 @@ def offcerberus6(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1307,16 +1289,15 @@ def offcerberus6(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1335,9 +1316,9 @@ def offcerberus7(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1349,8 +1330,8 @@ def offcerberus7(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1358,7 +1339,6 @@ def offcerberus7(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1374,16 +1354,15 @@ def offcerberus7(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1402,9 +1381,9 @@ def offcerberus8(*crbinputs):
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
@@ -1416,8 +1395,8 @@ def offcerberus8(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
             wbb,
             hzlib=ctxt.hzlib,
@@ -1425,7 +1404,6 @@ def offcerberus8(*crbinputs):
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
@@ -1441,16 +1419,15 @@ def offcerberus8(*crbinputs):
             ctp,
             ctxt.solidr,
             ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
+            ctxt.xsl['data'][ctxt.planet]['XSECS'],
+            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
+            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
             hzlib=ctxt.hzlib,
             hzp='AVERAGE',
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=None,
-            pnet=ctxt.p,
             verbose=False,
             debug=False,
         )
