@@ -88,7 +88,6 @@ def ctxtupdt(
     '''
     # sys.modules[__name__].ctxt = CONTEXT(
     excalibur.cerberus.forward_model.ctxt = CONTEXT(
-        runtime=runtime,
         cleanup=cleanup,
         model=model,
         planet=planet,
