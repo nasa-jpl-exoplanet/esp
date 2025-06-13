@@ -76,9 +76,9 @@ class Validate(dawgie.Algorithm):
 
             runtime_params = syscore.SystemParams(
                 maximizeSelfConsistency=runtime[
-                    'target_autofill_maximizeSelfConsistency'
+                    'system_validate_maximizeSelfConsistency'
                 ],
-                selectMostRecent=runtime['target_autofill_selectMostRecent'],
+                selectMostRecent=runtime['system_validate_selectMostRecent'],
             )
 
             update = False

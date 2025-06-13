@@ -15,7 +15,7 @@ CONTEXT = namedtuple(
     [
         'cleanup',
         'model',
-        'p',
+        'planet',
         'solidr',
         'orbp',
         'tspectrum',
@@ -28,6 +28,12 @@ CONTEXT = namedtuple(
         'mcmcsig',
         'nodeshape',
         'forwardmodel',
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -36,7 +42,7 @@ def ctxtinit():
     ctxt = CONTEXT(
         cleanup=None,
         model=None,
-        p=None,
+        planet=None,
         solidr=None,
         orbp=None,
         tspectrum=None,
@@ -49,14 +55,21 @@ def ctxtinit():
         mcmcsig=None,
         nodeshape=None,
         forwardmodel=None,
+        nlevels=None,
+        solrad=None,
+        Hsmax=None,
+        lbroadening=None,
+        lshifting=None,
+        isothermal=None,
     )
     return ctxt
 
 
 def ctxtupdt(
+    runtime=None,
     cleanup=None,
     model=None,
-    p=None,
+    planet=None,
     solidr=None,
     orbp=None,
     tspectrum=None,
@@ -77,7 +90,7 @@ def ctxtupdt(
     excalibur.cerberus.forward_model.ctxt = CONTEXT(
         cleanup=cleanup,
         model=model,
-        p=p,
+        planet=planet,
         solidr=solidr,
         orbp=orbp,
         tspectrum=tspectrum,
@@ -90,6 +103,12 @@ def ctxtupdt(
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
         forwardmodel=forwardmodel,
+        nlevels=runtime.nlevels,
+        solrad=runtime.solrad,
+        Hsmax=runtime.Hsmax,
+        lbroadening=runtime.lbroadening,
+        lshifting=runtime.lshifting,
+        isothermal=runtime.isothermal,
     )
 
     excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt

@@ -47,8 +47,8 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         allowed_names.discard(exclude)
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
-        'target_autofill_selectMostRecent',
-        'target_autofill_maximizeSelfConsistency',
+        'system_validate_selectMostRecent',
+        'system_validate_maximizeSelfConsistency',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
@@ -60,10 +60,17 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_crbmodel_lbroadening',
         'cerberus_atmos_crbmodel_lshifting',
         'cerberus_atmos_crbmodel_isothermal',
+        'cerberus_atmos_bounds_Teq',
+        'cerberus_atmos_bounds_abundances',
+        'cerberus_atmos_bounds_CTP',
+        'cerberus_atmos_bounds_HLoc',
+        'cerberus_atmos_bounds_HScale',
+        'cerberus_atmos_bounds_HThick',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
         'ariel_simspectrum_tier',
         'ariel_simspectrum_randomseed',
+        'ariel_simspectrum_SNRadjustment',
         'ariel_simspectrum_randomCloudProperties',
         'ariel_simspectrum_thorngrenMassMetals',
         'ariel_simspectrum_includeMetallicityDispersion',

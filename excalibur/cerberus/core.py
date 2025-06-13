@@ -62,8 +62,8 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbParams = namedtuple(
-    'cerberus_params_from_runtime',
+CerbAtmosParams = namedtuple(
+    'cerberus_atmos_params_from_runtime',
     [
         'MCMC_chains',
         'MCMC_chain_length',
@@ -78,6 +78,20 @@ CerbParams = namedtuple(
         'lbroadening',
         'lshifting',
         'isothermal',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
+    ],
+)
+
+CerbResultsParams = namedtuple(
+    'cerberus_results_params_from_runtime',
+    [
+        'nrandomwalkers',
+        'randomseed',
     ],
 )
 
@@ -778,22 +792,10 @@ def atmos(
             solidr = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
-                ctxtupdt(
-                    cleanup=cleanup,
-                    model=model,
-                    p=p,
-                    solidr=solidr,
-                    orbp=orbp,
-                    tspectrum=tspectrum,
-                    xsl=xsl,
-                    spc=spc,
-                    modparlbl=modparlbl,
-                    hzlib=crbhzlib,
-                )
                 out['data'][p][model] = {}
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
-                prior_range_table = set_prior_bound(eqtemp)
+                prior_range_table = set_prior_bound(eqtemp, runtime_params)
 
                 out['data'][p][model]['prior_ranges'] = {}
                 # keep track of the bounds put on each parameter
@@ -1073,9 +1075,10 @@ def atmos(
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
+                            runtime=runtime_params,
                             cleanup=cleanup,
                             model=model,
-                            p=p,
+                            planet=p,
                             solidr=solidr,
                             orbp=orbp,
                             tspectrum=tspectrum,
@@ -1204,9 +1207,10 @@ def atmos(
 
                             # before calling MCMC, save the fixed-parameter info in the context
                             ctxtupdt(
+                                runtime=runtime_params,
                                 cleanup=cleanup,
                                 model=model,
-                                p=p,
+                                planet=p,
                                 solidr=solidr,
                                 orbp=orbp,
                                 tspectrum=tspectrum,
@@ -1732,7 +1736,7 @@ def resultsversion():
 
 
 # ------------------------------ -------------------------------------
-def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
+def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
     '''
     Plot out the results from atmos()
     trgt [INPUT]: target name
@@ -2099,15 +2103,13 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 # print('chi2 after profiling',chi2modelProfiled)
 
                 # make an array of some randomly selected walker results
-                nrandomwalkers = 100
-
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
                     1  # arbitrary initialization for the random seed
                 )
                 for char in trgt + ' ' + p:
                     int_from_target = (
-                        123 * int_from_target + ord(char)
+                        runtime_params.randomseed * int_from_target + ord(char)
                     ) % 100000
                 np.random.seed(int_from_target)
 
@@ -2117,7 +2119,7 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 fmcarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
-                for _ in range(nrandomwalkers):
+                for _ in range(runtime_params.nrandomwalkers):
                     iwalker = int(nwalkersteps * np.random.rand())
 
                     if fit_cloud_parameters:

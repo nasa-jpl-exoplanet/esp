@@ -220,7 +220,7 @@ class Atmos(dawgie.Algorithm):
                 log.warning('--< CERBERUS ATMOS: %s >--', fltr)
                 runtime = self.__rt.sv_as_dict()['status']
 
-                runtime_params = crbcore.CerbParams(
+                runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
                     MCMC_chains=runtime['cerberus_chains'].value(),
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
@@ -236,6 +236,12 @@ class Atmos(dawgie.Algorithm):
                     lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
                     lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
+                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
@@ -363,9 +369,22 @@ class Results(dawgie.Algorithm):
                 if vxsl and vatm:
                     log.warning('--< CERBERUS RESULTS: %s >--', fltr)
                     # FIXMEE: this code needs repaired by moving out to config (Geoff added)
+
+                    runtime = self.__rt.sv_as_dict()['status']
+
+                    runtime_params = crbcore.CerbResultsParams(
+                        nrandomwalkers=runtime[
+                            'cerberus_results_nrandomwalkers'
+                        ].value(),
+                        randomseed=runtime[
+                            'cerberus_results_randomseed'
+                        ].value(),
+                    )
+
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
+                        runtime_params,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -392,10 +411,18 @@ class Results(dawgie.Algorithm):
             )
         return
 
-    def _results(self, trgt, fltr, fin, ancil, xsl, atm, index):
+    def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
         '''Core code call'''
         resout = crbcore.results(
-            trgt, fltr, fin, ancil, xsl, atm, self.__out[index], verbose=False
+            trgt,
+            fltr,
+            runtime_params,
+            fin,
+            ancil,
+            xsl,
+            atm,
+            self.__out[index],
+            verbose=False,
         )
         return resout
 

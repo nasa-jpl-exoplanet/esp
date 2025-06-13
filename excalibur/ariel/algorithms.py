@@ -71,6 +71,7 @@ class SimSpectrum(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
                     tier=runtime['ariel_simspectrum_tier'].value(),
+                    SNRfactor=runtime['ariel_simspectrum_SNRadjustment'].value(),
                     randomSeed=runtime['ariel_simspectrum_randomseed'].value(),
                     randomCloudProperties=runtime[
                         'ariel_simspectrum_randomCloudProperties'
