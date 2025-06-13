@@ -236,12 +236,12 @@ class Atmos(dawgie.Algorithm):
                     lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
                     lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
-                    boundTeq=runtime['cerberus.atmos.bounds.Teq'],
-                    boundAbundances=runtime['cerberus.atmos.bounds.abundances'],
-                    boundCTP=runtime['cerberus.atmos.bounds.CTP'],
-                    boundHLoc=runtime['cerberus.atmos.bounds.HLoc'],
-                    boundHScale=runtime['cerberus.atmos.bounds.HScale'],
-                    boundHThick=runtime['cerberus.atmos.bounds.HThick'],
+                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
