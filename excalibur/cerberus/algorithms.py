@@ -373,8 +373,12 @@ class Results(dawgie.Algorithm):
                     runtime = self.__rt.sv_as_dict()['status']
 
                     runtime_params = crbcore.CerbResultsParams(
-                        nrandomwalkers=runtime['cerberus_results_nrandomwalkers'].value(),
-                        randomseed=runtime['cerberus_results_randomseed'].value(),
+                        nrandomwalkers=runtime[
+                            'cerberus_results_nrandomwalkers'
+                        ].value(),
+                        randomseed=runtime[
+                            'cerberus_results_randomseed'
+                        ].value(),
                     )
 
                     update = self._results(
@@ -410,7 +414,15 @@ class Results(dawgie.Algorithm):
     def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
         '''Core code call'''
         resout = crbcore.results(
-            trgt, fltr, runtime_params, fin, ancil, xsl, atm, self.__out[index], verbose=False
+            trgt,
+            fltr,
+            runtime_params,
+            fin,
+            ancil,
+            xsl,
+            atm,
+            self.__out[index],
+            verbose=False,
         )
         return resout
 

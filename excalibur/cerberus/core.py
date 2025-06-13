@@ -92,7 +92,7 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
-    ]
+    ],
 )
 
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
@@ -792,19 +792,6 @@ def atmos(
             solidr = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
-#                ctxtupdt(
-#                    runtime=runtime_params,
-#                    cleanup=cleanup,
-#                    model=model,
-#                    p=p,
-#                    solidr=solidr,
-#                    orbp=orbp,
-#                    tspectrum=tspectrum,
-#                    xsl=xsl,
-#                    spc=spc,
-#                    modparlbl=modparlbl,
-#                    hzlib=crbhzlib,
-#                )
                 out['data'][p][model] = {}
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
