@@ -792,22 +792,23 @@ def atmos(
             solidr = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
-                ctxtupdt(
-                    cleanup=cleanup,
-                    model=model,
-                    p=p,
-                    solidr=solidr,
-                    orbp=orbp,
-                    tspectrum=tspectrum,
-                    xsl=xsl,
-                    spc=spc,
-                    modparlbl=modparlbl,
-                    hzlib=crbhzlib,
-                )
+#                ctxtupdt(
+#                    runtime=runtime_params,
+#                    cleanup=cleanup,
+#                    model=model,
+#                    p=p,
+#                    solidr=solidr,
+#                    orbp=orbp,
+#                    tspectrum=tspectrum,
+#                    xsl=xsl,
+#                    spc=spc,
+#                    modparlbl=modparlbl,
+#                    hzlib=crbhzlib,
+#                )
                 out['data'][p][model] = {}
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
-                prior_range_table = set_prior_bound(eqtemp)
+                prior_range_table = set_prior_bound(eqtemp, runtime_params)
 
                 out['data'][p][model]['prior_ranges'] = {}
                 # keep track of the bounds put on each parameter
@@ -1087,6 +1088,7 @@ def atmos(
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
+                            runtime=runtime_params,
                             cleanup=cleanup,
                             model=model,
                             p=p,
@@ -1218,6 +1220,7 @@ def atmos(
 
                             # before calling MCMC, save the fixed-parameter info in the context
                             ctxtupdt(
+                                runtime=runtime_params,
                                 cleanup=cleanup,
                                 model=model,
                                 p=p,

@@ -13,6 +13,7 @@ from collections import namedtuple
 CONTEXT = namedtuple(
     'CONTEXT',
     [
+        'runtime',
         'cleanup',
         'model',
         'p',
@@ -34,6 +35,7 @@ CONTEXT = namedtuple(
 
 def ctxtinit():
     ctxt = CONTEXT(
+        runtime=None,
         cleanup=None,
         model=None,
         p=None,
@@ -54,6 +56,7 @@ def ctxtinit():
 
 
 def ctxtupdt(
+    runtime=None,
     cleanup=None,
     model=None,
     p=None,
@@ -75,6 +78,7 @@ def ctxtupdt(
     '''
     # sys.modules[__name__].ctxt = CONTEXT(
     excalibur.cerberus.forward_model.ctxt = CONTEXT(
+        runtime=runtime,
         cleanup=cleanup,
         model=model,
         p=p,
