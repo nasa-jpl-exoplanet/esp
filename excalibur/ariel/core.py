@@ -39,6 +39,7 @@ ArielParams = namedtuple(
     'ariel_params_from_runtime',
     [
         'tier',
+        'SNRfactor',
         'randomSeed',
         'randomCloudProperties',
         'thorngrenMassMetals',
@@ -233,6 +234,9 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
 
                 uncertainties /= np.sqrt(float(visits))
+
+                # allow for arbitrary scaling of the spectrum SNR during testing
+                uncertainties *= runtime_params.SNRfactor
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
                 for atmosModel in atmosModels:
