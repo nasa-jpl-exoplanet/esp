@@ -220,7 +220,7 @@ class Atmos(dawgie.Algorithm):
                 log.warning('--< CERBERUS ATMOS: %s >--', fltr)
                 runtime = self.__rt.sv_as_dict()['status']
 
-                runtime_params = crbcore.CerbParams(
+                runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
                     MCMC_chains=runtime['cerberus_chains'].value(),
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
@@ -236,6 +236,12 @@ class Atmos(dawgie.Algorithm):
                     lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
                     lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
+                    boundTeq=runtime['cerberus.atmos.bounds.Teq'],
+                    boundAbundances=runtime['cerberus.atmos.bounds.abundances'],
+                    boundCTP=runtime['cerberus.atmos.bounds.CTP'],
+                    boundHLoc=runtime['cerberus.atmos.bounds.HLoc'],
+                    boundHScale=runtime['cerberus.atmos.bounds.HScale'],
+                    boundHThick=runtime['cerberus.atmos.bounds.HThick'],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
@@ -363,9 +369,18 @@ class Results(dawgie.Algorithm):
                 if vxsl and vatm:
                     log.warning('--< CERBERUS RESULTS: %s >--', fltr)
                     # FIXMEE: this code needs repaired by moving out to config (Geoff added)
+
+                    runtime = self.__rt.sv_as_dict()['status']
+
+                    runtime_params = crbcore.CerbResultsParams(
+                        nrandomwalkers=runtime['cerberus_results_nrandomwalkers'].value(),
+                        randomseed=runtime['cerberus_results_randomseed'].value(),
+                    )
+
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
+                        runtime_params,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
