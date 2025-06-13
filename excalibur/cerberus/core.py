@@ -62,8 +62,8 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbParams = namedtuple(
-    'cerberus_params_from_runtime',
+CerbAtmosParams = namedtuple(
+    'cerberus_atmos_params_from_runtime',
     [
         'MCMC_chains',
         'MCMC_chain_length',
@@ -78,7 +78,21 @@ CerbParams = namedtuple(
         'lbroadening',
         'lshifting',
         'isothermal',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
     ],
+)
+
+CerbResultsParams = namedtuple(
+    'cerberus_results_params_from_runtime',
+    [
+        'nrandomwalkers',
+        'randomseed',
+    ]
 )
 
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
@@ -1732,7 +1746,7 @@ def resultsversion():
 
 
 # ------------------------------ -------------------------------------
-def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
+def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
     '''
     Plot out the results from atmos()
     trgt [INPUT]: target name
@@ -1748,6 +1762,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
     if verbose:
         print('cerberus/results for target:', trgt)
 
+    print('runtime_params',runtime_params)
+        
     completed_at_least_one_planet = False
 
     # load in the table of limits used for profiling
