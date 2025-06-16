@@ -62,6 +62,17 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
+CerbXSlibParams = namedtuple(
+    'cerberus_xslib_params_from_runtime',
+    [
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+    ],
+)
+
 CerbAtmosParams = namedtuple(
     'cerberus_atmos_params_from_runtime',
     [
@@ -118,7 +129,7 @@ def myxsecsversion():
 # GMR: Should be in the param list
 
 
-def myxsecs(spc, out, verbose=False):
+def myxsecs(spc, runtime_params, out, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
@@ -453,23 +464,21 @@ def myxsecs(spc, out, verbose=False):
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
             mmr = 2.3  # Fortney 2015 for hot Jupiters
-            solrad = 10.0
-            hsmax = 15.0
-            # increase the number of scale heights from 15 to 20, to match the Ariel forward model
-            # (this is the range used for xslib; also has to be set for atmos)
-            hsmax = 20.0
-            nlevels = 100.0
+            # solrad = 10.0
+            # hsmax = 20.0
+            # nlevels = 100.0
             pgrid = np.arange(
-                np.log(solrad) - hsmax,
-                np.log(solrad) + hsmax / nlevels,
-                hsmax / (nlevels - 1),
+                np.log(runtime_params.solrad) - runtime_params.Hsmax,
+                np.log(runtime_params.solrad)
+                + runtime_params.Hsmax / runtime_params.nlevels,
+                runtime_params.Hsmax / (runtime_params.nlevels - 1),
             )
             pgrid = np.exp(pgrid)
             pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
-            for tstep in np.arange(300, 2000, 100):
+            for tstep in np.arange(300, 2000, 100):  # asdf put in runtime?
                 # log.warning('>---- %s K', str(Tstep))
                 sigma, lsig = absorb(
                     library[ks],
@@ -477,8 +486,8 @@ def myxsecs(spc, out, verbose=False):
                     tstep,
                     pressuregrid,
                     mmr,
-                    False,
-                    False,
+                    runtime_params.lbroadening,
+                    runtime_params.lshifting,
                     wgrid,
                     debug=False,
                 )
@@ -808,19 +817,34 @@ def atmos(
                     fixed_params = {}
 
                     if not runtime_params.fitCloudParameters:
-                        # note: crashes for HST, since there's no model_params!!
-                        #  (so don't fit HST with no clouds!?)
+                        # For Ariel, cloud params are fixed to model_params values
+                        # For HST, set cloud/haze parameters to a cloud/haze free case
 
-                        fixed_params['CTP'] = input_data['model_params']['CTP']
-                        fixed_params['HScale'] = input_data['model_params'][
-                            'HScale'
-                        ]
-                        fixed_params['HLoc'] = input_data['model_params'][
-                            'HLoc'
-                        ]
-                        fixed_params['HThick'] = input_data['model_params'][
-                            'HThick'
-                        ]
+                        if 'CTP' in input_data['model_params']:
+                            fixed_params['CTP'] = input_data['model_params'][
+                                'CTP'
+                            ]
+                        else:
+                            # cloud deck is very deep - 1000 bars
+                            fixed_params['CTP'] = 3.0
+                        if 'HScale' in input_data['model_params']:
+                            fixed_params['HScale'] = input_data['model_params'][
+                                'HScale'
+                            ]
+                        else:
+                            fixed_params['HScale'] = -10.0
+                        if 'HLoc' in input_data['model_params']:
+                            fixed_params['HLoc'] = input_data['model_params'][
+                                'HLoc'
+                            ]
+                        else:
+                            fixed_params['HLoc'] = 0.0
+                        if 'HThick' in input_data['model_params']:
+                            fixed_params['HThick'] = input_data['model_params'][
+                                'HThick'
+                            ]
+                        else:
+                            fixed_params['HThick'] = 0.0
 
                     # print('model params',input_data['model_params'])
 
@@ -1069,7 +1093,7 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters:
+                    if not runtime_params.fitCloudParameters and 'sim' in ext:
                         # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
 
@@ -2041,19 +2065,17 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(hza),
                     float(ctp),
                     solidr,
-                    fin['priors'],
                     xsl[p]['XSECS'],
                     xsl[p]['QTGRID'],
                     float(tpr),
                     transitdata['wavelength'],
+                    orbp=fin['priors'],
                     hzlib=crbhzlib,
                     hzp='AVERAGE',
                     hztop=float(hloc),
                     hzwscale=float(hthc),
                     cheq=tceqdict,
-                    pnet=p,
-                    verbose=False,
-                    debug=False,
+                    planet=p,
                 )
                 # print('median fmc',np.nanmedian(fmc))
                 # print('mean model',np.nanmean(fmc))
@@ -2069,19 +2091,17 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(hza_profiled),
                     float(ctp_profiled),
                     solidr,
-                    fin['priors'],
                     xsl[p]['XSECS'],
                     xsl[p]['QTGRID'],
                     float(tpr_profiled),
                     transitdata['wavelength'],
+                    orbp=fin['priors'],
                     hzlib=crbhzlib,
                     hzp='AVERAGE',
                     hztop=float(hloc_profiled),
                     hzwscale=float(hthc_profiled),
                     cheq=tceqdict_profiled,
-                    pnet=p,
-                    verbose=False,
-                    debug=False,
+                    planet=p,
                 )
                 # convert tensor to numpy array
                 patmos_model_profiled = (
@@ -2177,19 +2197,17 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         float(hza),
                         float(ctp),
                         solidr,
-                        fin['priors'],
                         xsl[p]['XSECS'],
                         xsl[p]['QTGRID'],
                         float(tpr),
                         transitdata['wavelength'],
+                        orbp=fin['priors'],
                         hzlib=crbhzlib,
                         hzp='AVERAGE',
                         hztop=float(hloc),
                         hzwscale=float(hthc),
                         cheq=tceqdict,
-                        pnet=p,
-                        verbose=False,
-                        debug=False,
+                        planet=p,
                     )
 
                     # print('len',len(fmcrand))
