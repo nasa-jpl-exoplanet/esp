@@ -242,7 +242,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 uncertainties /= np.sqrt(float(visits))
 
                 # allow for arbitrary scaling of the spectrum SNR during testing
-                uncertainties *= runtime_params.SNRfactor
+                if runtime_params.SNRfactor:
+                    uncertainties *= runtime_params.SNRfactor
                 # print('SNR adjustment factor:', runtime_params.SNRfactor)
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
