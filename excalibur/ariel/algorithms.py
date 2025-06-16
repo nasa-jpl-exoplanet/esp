@@ -71,7 +71,9 @@ class SimSpectrum(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
                     tier=runtime['ariel_simspectrum_tier'].value(),
-                    SNRfactor=runtime['ariel_simspectrum_SNRadjustment'].value(),
+                    SNRfactor=runtime[
+                        'ariel_simspectrum_SNRadjustment'
+                    ].value(),
                     randomSeed=runtime['ariel_simspectrum_randomseed'].value(),
                     randomCloudProperties=runtime[
                         'ariel_simspectrum_randomCloudProperties'
@@ -91,6 +93,12 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
+                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
+                    isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
                     repr(self).split('.')[1],  # this is the target name
