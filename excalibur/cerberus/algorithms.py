@@ -89,7 +89,17 @@ class XSLib(dawgie.Algorithm):
 
             if vspc:
                 log.warning('--< CERBERUS XSLIB: %s >--', fltr)
-                update = self._xslib(sv, fltrs.index(fltr))
+
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = crbcore.CerbXSlibParams(
+                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
+                )
+
+                update = self._xslib(sv, runtime_params, fltrs.index(fltr))
             else:
                 errstr = [m for m in [sspc] if m is not None]
                 self._failure(errstr[0])
@@ -107,9 +117,11 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, index):
+    def _xslib(self, spc, runtime_params, index):
         '''Core code call'''
-        cs = crbcore.myxsecs(spc, self.__out[index], verbose=False)
+        cs = crbcore.myxsecs(
+            spc, runtime_params, self.__out[index], verbose=False
+        )
         return cs
 
     @staticmethod
@@ -218,8 +230,8 @@ class Atmos(dawgie.Algorithm):
 
             if vfin and vxsl and vspc:
                 log.warning('--< CERBERUS ATMOS: %s >--', fltr)
-                runtime = self.__rt.sv_as_dict()['status']
 
+                runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
                     MCMC_chains=runtime['cerberus_chains'].value(),
@@ -368,10 +380,8 @@ class Results(dawgie.Algorithm):
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
                 if vxsl and vatm:
                     log.warning('--< CERBERUS RESULTS: %s >--', fltr)
-                    # FIXMEE: this code needs repaired by moving out to config (Geoff added)
 
                     runtime = self.__rt.sv_as_dict()['status']
-
                     runtime_params = crbcore.CerbResultsParams(
                         nrandomwalkers=runtime[
                             'cerberus_results_nrandomwalkers'
