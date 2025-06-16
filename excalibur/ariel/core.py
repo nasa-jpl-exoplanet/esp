@@ -47,6 +47,12 @@ ArielParams = namedtuple(
         'metallicityDispersion',
         'CtoOaverage',
         'CtoOdispersion',
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -237,6 +243,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
 
                 # allow for arbitrary scaling of the spectrum SNR during testing
                 uncertainties *= runtime_params.SNRfactor
+                # print('SNR adjustment factor:', runtime_params.SNRfactor)
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
                 for atmosModel in atmosModels:
@@ -342,7 +349,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             }
                             if verbose:
                                 print('CALCulating cross-sections START')
-                            _ = myxsecs(tempspc, xslib)
+                            _ = myxsecs(tempspc, runtime_params, xslib)
                             if verbose:
                                 print('CALCulating cross-sections DONE')
                         else:
@@ -361,11 +368,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                                 ]
 
                         cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
+                            runtime_params,
                             wavelength_um,
                             model_params,
                             xslib,
                             planet_letter,
-                            Hsmax=20,
                         )
 
                         # convert from tensor to normal float
