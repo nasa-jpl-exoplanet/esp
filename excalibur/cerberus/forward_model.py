@@ -12,13 +12,16 @@ import logging
 
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
-from excalibur.cerberus.fmcontext import ctxtinit
+
+from excalibur.cerberus.fmcontext import ctxtupdt
+
+# from excalibur.cerberus.fmcontext import ctxtinit
 
 
 log = logging.getLogger(__name__)
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
-ctxt = ctxtinit()
+# ctxt = ctxtinit()
 
 
 # ----------- --------------------------------------------------------
@@ -28,11 +31,17 @@ def crbmodel(
     rayleigh,
     cloudtp,
     rp0,
-    orbp,
     xsecs,
     qtgrid,
     temp,
     wgrid,
+    orbp=None,
+    lbroadening=None,
+    lshifting=None,
+    isothermal=None,
+    nlevels=None,
+    Hsmax=None,
+    solrad=None,
     hzlib=None,
     hzp=None,
     hzslope=-4.0,
@@ -40,6 +49,7 @@ def crbmodel(
     hzwscale=1e0,
     cheq=None,
     logx=False,
+    planet=None,
     break_down_by_molecule=False,
     verbose=False,
     debug=False,
@@ -49,6 +59,25 @@ def crbmodel(
     radius solrad evenly log divided amongst nlevels steps
     '''
 
+    # asdf: replace with a passed in context equivalent?
+    #  that would be cleaner here, but a bit more work in the notebook calls
+    if planet == None:
+        planet = ctxt.planet
+    if orbp == None:
+        orbp = ctxt.orbp
+    if nlevels == None:
+        nlevels = ctxt.nlevels
+    if Hsmax == None:
+        Hsmax = ctxt.Hsmax
+    if solrad == None:
+        solrad = ctxt.solrad
+    if lshifting == None:
+        lshifting = ctxt.lshifting
+    if lbroadening == None:
+        lbroadening = ctxt.lbroadening
+    if isothermal == None:
+        isothermal = ctxt.isothermal
+
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
     #  maybe put them inside runtime/ops.xml to ensure consistency?
@@ -57,9 +86,9 @@ def crbmodel(
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
-        np.log(ctxt.solrad) - ctxt.Hsmax,
-        np.log(ctxt.solrad) + ctxt.Hsmax / ctxt.nlevels,
-        ctxt.Hsmax / (ctxt.nlevels - 1),
+        np.log(solrad) - Hsmax,
+        np.log(solrad) + Hsmax / nlevels,
+        Hsmax / (nlevels - 1),
     )
     pgrid = np.exp(pgrid)
     pressure = pgrid[::-1]
@@ -88,7 +117,7 @@ def crbmodel(
     Hs = (
         cst.Boltzmann
         * temp
-        / (mmw * 1e-2 * (10.0 ** float(orbp[ctxt.planet]['logg'])))
+        / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
     )  # [m]
 
     # when the Pressure grid is log-spaced, rdz is a constant
@@ -109,6 +138,8 @@ def crbmodel(
         rp0,
         pressure,
         wgrid,
+        lbroadening,
+        lshifting,
         cialist,
         fH2,
         fHe,
@@ -118,6 +149,7 @@ def crbmodel(
         hzp,
         hzslope,
         hztop,
+        isothermal,
         hzwscale=hzwscale,
         debug=debug,
     )
@@ -261,8 +293,10 @@ def gettau(
     dz,
     rho,
     rp0,
-    p,
+    pressure,
     wgrid,
+    lbroadening,
+    lshifting,
     cialist,
     fH2,
     fHe,
@@ -272,6 +306,7 @@ def gettau(
     hzp,
     hzslope,
     hztop,
+    isothermal,
     hzwscale=1e0,
     debug=False,
 ):
@@ -281,7 +316,7 @@ def gettau(
 
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
-    Nzones = len(p)
+    Nzones = len(pressure)
     tau = np.zeros((Nzones, wgrid.size))
     # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
@@ -319,10 +354,11 @@ def gettau(
                 xsecs[elem],
                 qtgrid[elem],
                 temp,
-                p,
+                pressure,
                 mmr,
+                lbroadening,
+                lshifting,
                 wgrid,
-                debug=False,
             )
             # sigma = np.array(sigma)  # cm^2/mol
             if True in (sigma < 0):
@@ -342,7 +378,7 @@ def gettau(
             # sigma = np.array(sigma)*1e-4  # m^2/mol
             sigma = sigma * 1e-4  # m^2/mol
             pass
-        if ctxt.isothermal:
+        if isothermal:
             tau = tau + mmr * sigma * np.array([rho]).T
             tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
         pass
@@ -405,26 +441,26 @@ def gettau(
         )
         if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
             frh = hzlib['PROFILE'][0][hzp][0]
-            rh = frh(p)
+            rh = frh(pressure)
             rh[rh < 0] = 0.0
-            refhzp = float(p[rh == np.max(rh)])
+            refhzp = float(pressure[rh == np.max(rh)])
             if hztop is None:
                 hzshift = 0e0
             else:
                 hzshift = hztop - np.log10(refhzp)
-            splp = np.log10(p[::-1])
+            splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
-            hzwdist = hztop - np.log10(p)
+            hzwdist = hztop - np.log10(pressure)
 
             if hzwscale > 0:
                 preval = hztop - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
-                rh = thisfrh(np.log10(p)) * 0
+                rh = thisfrh(np.log10(pressure)) * 0
             if debug:
                 jptprofile = 'J' + hzp
                 jdata = np.array(hzlib['PROFILE'][0][jptprofile])
@@ -434,8 +470,15 @@ def gettau(
                     1e6 * jdata, jpres, color='blue', label='Lavvas et al. 2017'
                 )
                 plt.axhline(refhzp, linestyle='--', color='blue')
-                plt.plot(1e6 * rh, p, 'r', label='Parametrized density profile')
-                plt.plot(1e6 * thisfrh(np.log10(p) - hzshift), p, 'g^')
+                plt.plot(
+                    1e6 * rh,
+                    pressure,
+                    'r',
+                    label='Parametrized density profile',
+                )
+                plt.plot(
+                    1e6 * thisfrh(np.log10(pressure) - hzshift), pressure, 'g^'
+                )
                 if hztop is not None:
                     plt.axhline(10**hztop, linestyle='--', color='red')
                     pass
@@ -488,7 +531,12 @@ def gettau(
             np.log10(tau),
             aspect='auto',
             origin='lower',
-            extent=[max(wgrid), min(wgrid), np.log10(max(p)), np.log10(min(p))],
+            extent=[
+                max(wgrid),
+                min(wgrid),
+                np.log10(max(pressure)),
+                np.log10(min(pressure)),
+            ],
         )
         plt.ylabel('log10(Pressure)', fontsize=24)
         plt.xlabel('Wavelength [$\\mu m$]', fontsize=24)
@@ -514,8 +562,10 @@ def absorb(
     xsecs,
     qtgrid,
     T,
-    p,
+    pressure,
     mmr,
+    lbroadening,
+    lshifting,
     wgrid,
     iso=0,
     Tref=296.0,
@@ -524,6 +574,8 @@ def absorb(
     '''
     G. ROUDIER: HITRAN HITEMP database parser
     '''
+
+    select = np.array(xsecs['I']) == (iso + 1)
     select = np.array(xsecs['I']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
@@ -532,7 +584,9 @@ def absorb(
     delta = np.array(xsecs['delta'])[select]
     eta = np.array(xsecs['eta'])[select]
     gair = np.array(xsecs['g_air'])[select]
+
     Qref = float(qtgrid['SPL'][iso](Tref))
+
     try:
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:
@@ -544,26 +598,26 @@ def absorb(
     if np.all(~np.isfinite(tips)):
         tips = 0
     sigma = S * tips
-    ps = mmr * p
+    ps = mmr * pressure
     gamma = np.array(
-        np.asmatrix(p - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+        np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
         + np.asmatrix(ps).T * np.asmatrix(gself)
     )
-    if ctxt.lbroadening:
-        if ctxt.lshifting:
+    if lbroadening:
+        if lshifting:
             matnu = np.array(
-                np.asmatrix(np.ones(p.size)).T * np.asmatrix(nu)
-                + np.asmatrix(p).T * np.asmatrix(delta)
+                np.asmatrix(np.ones(pressure.size)).T * np.asmatrix(nu)
+                + np.asmatrix(pressure).T * np.asmatrix(delta)
             )
         else:
-            matnu = np.array(nu) * np.array([np.ones(len(p))]).T
+            matnu = np.array(nu) * np.array([np.ones(len(pressure))]).T
         pass
     else:
         matnu = np.array(nu)
     absgrid = []
     nugrid = (1e4 / wgrid)[::-1]
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
-    if ctxt.lbroadening:
+    if lbroadening:
         for mymatnu, mygamma in zip(matnu, gamma):
             binsigma = np.asmatrix(sigma) * np.asmatrix(
                 intflor(
@@ -596,7 +650,7 @@ def absorb(
     return absgrid, nugrid
 
 
-# --------- ----------------------------------------------------------
+# --------- ------`<----------------------------------------------------
 # -- EXOMOL -- -------------------------------------------------------
 def getxmolxs(temp, xsecs):
     '''
@@ -686,7 +740,6 @@ def cloudyfmcerberus(*crbinputs):
             hza,
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
@@ -709,7 +762,6 @@ def cloudyfmcerberus(*crbinputs):
             hza,
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
@@ -781,7 +833,6 @@ def clearfmcerberus(*crbinputs):
             float(hza),
             float(ctp),
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
@@ -805,7 +856,6 @@ def clearfmcerberus(*crbinputs):
             float(hza),
             float(ctp),
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
@@ -858,7 +908,6 @@ def offcerberus(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -882,7 +931,6 @@ def offcerberus(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -930,7 +978,6 @@ def offcerberus1(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -954,7 +1001,6 @@ def offcerberus1(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -997,7 +1043,6 @@ def offcerberus2(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1021,7 +1066,6 @@ def offcerberus2(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1065,7 +1109,6 @@ def offcerberus3(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1089,7 +1132,6 @@ def offcerberus3(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1132,7 +1174,6 @@ def offcerberus4(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1156,7 +1197,6 @@ def offcerberus4(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1197,7 +1237,6 @@ def offcerberus5(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1221,7 +1260,6 @@ def offcerberus5(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1264,7 +1302,6 @@ def offcerberus6(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1288,7 +1325,6 @@ def offcerberus6(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1329,7 +1365,6 @@ def offcerberus7(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1353,7 +1388,6 @@ def offcerberus7(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1394,7 +1428,6 @@ def offcerberus8(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
@@ -1418,7 +1451,6 @@ def offcerberus8(*crbinputs):
             float(hza),
             ctp,
             ctxt.solidr,
-            ctxt.orbp,
             ctxt.xsl['data'][ctxt.planet]['XSECS'],
             ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
