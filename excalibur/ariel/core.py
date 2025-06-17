@@ -368,7 +368,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                                     existingPlanetLetter
                                 ]
 
-                        cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
+                        # cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
+                        fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
                             runtime_params,
                             wavelength_um,
                             model_params,
@@ -376,12 +377,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             planet_letter,
                         )
 
-                        # convert from tensor to normal float
-                        fluxDepth = cerbModel
-                        fluxDepth_by_molecule = {}
-                        # for molecule in cerbModel_by_molecule:
-                        for molecule, model in cerbModel_by_molecule.items():
-                            fluxDepth_by_molecule[molecule] = model
+                        # fluxDepth = cerbModel
+                        # fluxDepth_by_molecule = {}
+                        # for molecule, model in cerbModel_by_molecule.items():
+                        #    fluxDepth_by_molecule[molecule] = model
 
                     elif 'taurex' in atmosModel:
                         sys.exit('ERROR: taurex no longer an option')
