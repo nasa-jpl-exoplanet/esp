@@ -392,18 +392,14 @@ class Results(dawgie.Algorithm):
                         lbroadening=runtime[
                             'cerberus_atmos_crbmodel_lbroadening'
                         ],
-                        lshifting=runtime[
-                            'cerberus_atmos_crbmodel_lshifting'
-                        ],
+                        lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
                         isothermal=runtime[
                             'cerberus_atmos_crbmodel_isothermal'
                         ],
                         nlevels=runtime[
                             'cerberus_atmos_crbmodel_nlevels'
                         ].value(),
-                        Hsmax=runtime[
-                            'cerberus_atmos_crbmodel_Hsmax'
-                        ].value(),
+                        Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
                         solrad=runtime[
                             'cerberus_atmos_crbmodel_solrad'
                         ].value(),
