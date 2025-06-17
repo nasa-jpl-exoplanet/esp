@@ -25,28 +25,28 @@ ctxt = ctxtinit()
 # ----------- --------------------------------------------------------
 # -- CERBERUS MODEL -- -----------------------------------------------
 def crbmodel(
-    mixratio,
-    rayleigh,
-    cloudtp,
-    rp0,
-    xsecs,
-    qtgrid,
     temp,
-    wgrid,
-    orbp=ctxt.orbp,
+    cloudtp,
+    cheq=None,
+    mixratio=None,
+    rayleigh=0.,
+    hzwscale=1e0,
+    hzslope=-4.0,
+    hztop=None,
+    hzp='AVERAGE',
+    hzlib=ctxt.hzlib,
     planet=ctxt.planet,
+    rp0=ctxt.solidr,
+    orbp=ctxt.orbp,
+    wgrid=np.array(ctxt.spc['data'][ctxt.p]['WB']),
+    xsecs=ctxt.xsl['data'][ctxt.p]['XSECS'],
+    qtgrid=ctxt.xsl['data'][ctxt.p]['QTGRID'],
+    isothermal=ctxt.isothermal,
     lbroadening=ctxt.lbroadening,
     lshifting=ctxt.lshifting,
-    isothermal=ctxt.isothermal,
     nlevels=ctxt.nlevels,
     Hsmax=ctxt.Hsmax,
     solrad=ctxt.solrad,
-    hzlib=None,
-    hzp=None,
-    hzslope=-4.0,
-    hztop=None,
-    hzwscale=1e0,
-    cheq=None,
     break_down_by_molecule=False,
     logx=False,
     verbose=False,
@@ -75,6 +75,17 @@ def crbmodel(
         lbroadening = ctxt.lbroadening
     if not bool(isothermal):
         isothermal = ctxt.isothermal
+
+    if rp0 is None:
+        rp0 = ctxt.solidr
+    if xsecs is None:
+        xsecs = ctxt.xsl['data'][ctxt.p]['XSECS']
+    if qtgrid is None:
+        qtgrid = ctxt.xsl['data'][ctxt.p]['QTGRID']
+    if wgrid is None:
+        wgrid = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    if hzlib is None:
+        hzlib = ctxt.hzlib
 
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
@@ -734,21 +745,12 @@ def cloudyfmcerberus(*crbinputs):
         # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
         fmc = crbmodel(
-            None,
-            hza,
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=hza,
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
     else:
         mixratio = {}
@@ -756,21 +758,12 @@ def cloudyfmcerberus(*crbinputs):
             mixratio[key] = mdp[index]
 
         fmc = crbmodel(
-            mixratio,
-            hza,
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=hza,
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
 
     fmc = fmc[ctxt.cleanup]
@@ -827,21 +820,12 @@ def clearfmcerberus(*crbinputs):
         # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
         fmc = crbmodel(
-            None,
-            float(hza),
-            float(ctp),
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            float(ctp),
+            rayleigh=float(hza),
             hztop=float(hzloc),
             hzwscale=float(hzthick),
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
         pass
     else:
@@ -850,21 +834,12 @@ def clearfmcerberus(*crbinputs):
             mixratio[key] = mdp[index]
             pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            float(ctp),
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            float(ctp),
+            rayleigh=float(hza),
             hztop=float(hzloc),
             hzwscale=float(hzthick),
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
         pass
 
@@ -892,9 +867,7 @@ def offcerberus(*crbinputs):
     #     hzthick = 5.58950953
     #     tpr = 1551.41137
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    #  cond_wav = (wbb < 0.56) | (wbb > 1.02)
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -902,46 +875,25 @@ def offcerberus(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
     cond_G141 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G141-SCAN'
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
@@ -964,7 +916,6 @@ def offcerberus1(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -972,46 +923,25 @@ def offcerberus1(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1029,7 +959,6 @@ def offcerberus2(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -1037,46 +966,25 @@ def offcerberus2(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1094,7 +1002,6 @@ def offcerberus3(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1103,46 +1010,25 @@ def offcerberus3(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1159,7 +1045,6 @@ def offcerberus4(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1168,46 +1053,25 @@ def offcerberus4(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1222,7 +1086,6 @@ def offcerberus5(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1231,46 +1094,25 @@ def offcerberus5(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1287,7 +1129,6 @@ def offcerberus6(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1296,46 +1137,25 @@ def offcerberus6(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1350,7 +1170,6 @@ def offcerberus7(*crbinputs):
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1359,46 +1178,25 @@ def offcerberus7(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb
@@ -1413,7 +1211,6 @@ def offcerberus8(*crbinputs):
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
     ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1422,46 +1219,25 @@ def offcerberus8(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.xsl['data'][ctxt.planet]['XSECS'],
-            ctxt.xsl['data'][ctxt.planet]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
+            ctp,
+            rayleigh=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
-            cheq=None,
-            verbose=False,
-            debug=False,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     ww = wbb

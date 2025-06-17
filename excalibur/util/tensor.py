@@ -63,7 +63,6 @@ def LogLikelihood(inputs):
         newindex += ns
         pass
     # ForwardModel = orbital(*newnodes)
-    # ForwardModel = crbmodel(*newnodes)
     # ForwardModel = clearfmcerberus(*newnodes)
     # ForwardModel = cloudyfmcerberus(*newnodes)
     ForwardModel = ctxt.forwardmodel(*newnodes)
