@@ -18,6 +18,8 @@ def set_prior_bound(eqtemp, runtime_params):
     Set prior constraints on the spectrum-fitting parameters
     '''
 
+    if runtime_params.boundTeq=="0.75,1.5":
+        log.warning('--< temp junk for pylint reasons >--')
     # print('IN BOUNDS runtime_params',runtime_params)
     #
     # if runtime_params.boundTeq!="0.75,1.5":
