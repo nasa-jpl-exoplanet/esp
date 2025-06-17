@@ -12,19 +12,17 @@ from excalibur.cerberus.forward_model import crbmodel
 
 # ----------------------------------------------------------------------------------------------
 def make_cerberus_atmos(
+    runtime_params,
     wavelength_um,
     model_params,
     xslib,
     planet_letter,
     mixratios=None,
-    Hsmax=15.0,
-    solrad=10.0,
 ):
     '''
     Create a simulated spectrum using the code that's better than the other ones
     '''
-
-    # print('modelparams',model_params)
+    # print('modelparams', model_params)
 
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
@@ -45,18 +43,17 @@ def make_cerberus_atmos(
         tceqdict['XtoH'] = model_params['metallicity']
         tceqdict['CtoO'] = model_params['C/O']
         tceqdict['NtoO'] = 0
-        # print('cloudfree forward model input chem =',tceqdict)
+        # print('cloudfree forward model input chem =', tceqdict)
 
     ssc = syscore.ssconstants(mks=True)
     solidr = model_params['Rp'] * ssc['Rjup']  # MK
-    # orbp = fin['priors'].copy()
-    # orbp = model_params   # just hope this covers it ig
-    # orbp = {'sma':model_params['sma']}
-    # planet_letter = 'placeholder'
-    orbp = {
-        'R*': model_params['R*'],
-        planet_letter: {'logg': model_params['logg']},
-    }
+    # orbp = {
+    #    'R*': model_params['R*'],
+    #    planet_letter: {'logg': model_params['logg']},
+    # }
+    # model_params doesn't have same structure as system.finalize info
+    #  there's no planet_letter dictionary, so one mod needed for planet logg
+    model_params[planet_letter] = {'logg': model_params['logg']}
 
     crbhzlib = {'PROFILE': []}
     # hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
@@ -64,29 +61,29 @@ def make_cerberus_atmos(
     hazelib(crbhzlib)
     # print('haze lib',crbhzlib)
 
-    # print('wavelength range',wavelength_um[0],wavelength_um[-1])
-
     # CERBERUS FORWARD MODEL
-    # fmc, fmc_by_molecule = crbmodel(None, float(hza), float(ctp), solidr, orbp,
     fmc, fmc_by_molecule = crbmodel(
         mixratios,
         float(hza),
         float(ctp),
         solidr,
-        orbp,
         xslib['data'][planet_letter]['XSECS'],
         xslib['data'][planet_letter]['QTGRID'],
         float(Teq),
         wavelength_um,
-        Hsmax=Hsmax,
-        solrad=solrad,
-        # np.array(ctxt.spc['data'][ctxt.p]['WB']),
+        orbp=model_params,
+        lbroadening=runtime_params.lbroadening,
+        lshifting=runtime_params.lshifting,
+        isothermal=runtime_params.isothermal,
+        nlevels=runtime_params.nlevels,
+        Hsmax=runtime_params.Hsmax,
+        solrad=runtime_params.solrad,
         hzlib=crbhzlib,
         hzp='AVERAGE',
         hztop=float(hzloc),
         hzwscale=float(hzthick),
         cheq=tceqdict,
-        pnet=planet_letter,
+        planet=planet_letter,
         verbose=False,
         debug=False,
         break_down_by_molecule=True,
