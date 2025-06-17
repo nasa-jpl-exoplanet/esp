@@ -77,9 +77,6 @@ def collect(name, scrape, out):
             ok = ok and (scrape['name'][rootname]['filter'] in [fil.strip()])
             ok = ok and (scrape['name'][rootname]['mode'] in [mod.strip()])
             if ok:
-                import pdb
-
-                pdb.set_trace()
                 out['activefilters'][name]['ROOTNAME'].append(rootname)
                 loc = (
                     scrape['name'][rootname]['md5']
