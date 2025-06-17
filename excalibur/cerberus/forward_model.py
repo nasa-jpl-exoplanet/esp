@@ -15,13 +15,13 @@ from excalibur.util.cerberus import crbce, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtupdt
 
-# from excalibur.cerberus.fmcontext import ctxtinit
+from excalibur.cerberus.fmcontext import ctxtinit
 
 
 log = logging.getLogger(__name__)
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
-# ctxt = ctxtinit()
+ctxt = ctxtinit()
 
 
 # ----------- --------------------------------------------------------
@@ -35,22 +35,22 @@ def crbmodel(
     qtgrid,
     temp,
     wgrid,
-    orbp=None,
-    lbroadening=None,
-    lshifting=None,
-    isothermal=None,
-    nlevels=None,
-    Hsmax=None,
-    solrad=None,
+    orbp=ctxt.orbp,
+    planet=ctxt.planet,
+    lbroadening=ctxt.lbroadening,
+    lshifting=ctxt.lshifting,
+    isothermal=ctxt.isothermal,
+    nlevels=ctxt.nlevels,
+    Hsmax=ctxt.Hsmax,
+    solrad=ctxt.solrad,
     hzlib=None,
     hzp=None,
     hzslope=-4.0,
     hztop=None,
     hzwscale=1e0,
     cheq=None,
-    logx=False,
-    planet=None,
     break_down_by_molecule=False,
+    logx=False,
     verbose=False,
     debug=False,
 ):
@@ -61,22 +61,25 @@ def crbmodel(
 
     # asdf: replace with a passed in context equivalent?
     #  that would be cleaner here, but a bit more work in the notebook calls
-    if planet == None:
+    print('solrad,isothermal',solrad,isothermal)
+    if planet is None:
         planet = ctxt.planet
-    if orbp == None:
+    if orbp is None:
         orbp = ctxt.orbp
-    if nlevels == None:
+    if nlevels is None:
         nlevels = ctxt.nlevels
-    if Hsmax == None:
+    if Hsmax is None:
         Hsmax = ctxt.Hsmax
-    if solrad == None:
+    if solrad is None:
         solrad = ctxt.solrad
-    if lshifting == None:
+    if not bool(lshifting):
         lshifting = ctxt.lshifting
-    if lbroadening == None:
+    if not bool(lbroadening):
         lbroadening = ctxt.lbroadening
-    if isothermal == None:
+    if not bool(isothermal):
         isothermal = ctxt.isothermal
+    print('solrad,isothermal',solrad,isothermal)
+    print()
 
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
