@@ -806,19 +806,34 @@ def atmos(
                     fixed_params = {}
 
                     if not runtime_params.fitCloudParameters:
-                        # note: crashes for HST, since there's no model_params!!
-                        #  (so don't fit HST with no clouds!?)
+                        # For Ariel, cloud params are fixed to model_params values
+                        # For HST, set cloud/haze parameters to a cloud/haze free case
 
-                        fixed_params['CTP'] = input_data['model_params']['CTP']
-                        fixed_params['HScale'] = input_data['model_params'][
-                            'HScale'
-                        ]
-                        fixed_params['HLoc'] = input_data['model_params'][
-                            'HLoc'
-                        ]
-                        fixed_params['HThick'] = input_data['model_params'][
-                            'HThick'
-                        ]
+                        if 'CTP' in input_data['model_params']:
+                            fixed_params['CTP'] = input_data['model_params'][
+                                'CTP'
+                            ]
+                        else:
+                            # cloud deck is very deep - 1000 bars
+                            fixed_params['CTP'] = 3.0
+                        if 'HScale' in input_data['model_params']:
+                            fixed_params['HScale'] = input_data['model_params'][
+                                'HScale'
+                            ]
+                        else:
+                            fixed_params['HScale'] = -10.0
+                        if 'HLoc' in input_data['model_params']:
+                            fixed_params['HLoc'] = input_data['model_params'][
+                                'HLoc'
+                            ]
+                        else:
+                            fixed_params['HLoc'] = 0.0
+                        if 'HThick' in input_data['model_params']:
+                            fixed_params['HThick'] = input_data['model_params'][
+                                'HThick'
+                            ]
+                        else:
+                            fixed_params['HThick'] = 0.0
 
                     # print('model params',input_data['model_params'])
 
@@ -1067,7 +1082,7 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters:
+                    if not runtime_params.fitCloudParameters and 'sim' in ext:
                         # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
 
