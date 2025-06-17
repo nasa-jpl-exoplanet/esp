@@ -3,4 +3,5 @@ export DAWGIE_FE_PORT=10200 \
        EXCALIBUR_LOG_LEVEL="logging.INFO" \
        EXCALIBUR_PORT=${DAWGIE_FE_PORT} \
        EXCALIBUR_SOURCE_PATH=/home/imertz/github/esp \
-       EXCALIBUR_UID=${UID}
+       EXCALIBUR_UID=${UID} \
+       RUNID=99
