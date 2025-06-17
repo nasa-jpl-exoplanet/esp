@@ -1219,7 +1219,8 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                     and (x.get("productSubGroupDescription", None) == 'UNCAL')
                     and (x.get('obsID') in sciids)
                 ]
-                allraw.extend(rawdata)
+                # ines mertz : for now, ignore JWST raw (uncalibrated) data
+                # allraw.extend(rawdata)
                 # --<
                 # Downloads JWST data only
                 # allsci.extend(scidata)
@@ -1318,7 +1319,9 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             log.warning('>-- %s %s', os.path.getsize(fileout), fileout)
             pass
         pass
-    if allraw:
+    # ines mertz : for now, ignore JWST raw (uncalibrated) data
+    # "if allraw:" temporarily becomes "if False":
+    if False:
         for irow, row in enumerate(allraw):
             # print('  downloading',irow,len(allraw))
             payload = {"uri": row['dataURI']}
@@ -1526,6 +1529,7 @@ def dbscp(target, locations, dbs, out, verbose=False):
                     else:
                         filedict['mode'] = mainheader.get('GRATING', '')
                     key = mainheader.get("FILENAME").split('.')[0]
+
                     out['name'][key] = filedict
                     if verbose:
                         log.warning(

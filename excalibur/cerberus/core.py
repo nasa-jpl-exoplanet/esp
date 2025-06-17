@@ -807,9 +807,8 @@ def atmos(
 
                     # ines mertz : adding another "if" statement in order to make the 'HST' filters cases work (don't fit HST with no clouds)
                     if 'HST' in ext:
-                        runtime_params = runtime_params._replace(
-                            fitCloudParameters=True, fitT=True, fitCtoO=True
-                        )
+                        pass
+
                     elif not runtime_params.fitCloudParameters:
                         # note: crashes for HST, since there's no model_params!!
                         #  (so don't fit HST with no clouds!?)
@@ -1072,7 +1071,11 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters:
+                    # ines mertz : for 'HST', don't run the MCMC with no clouds
+                    if 'HST' in ext:
+                        pass
+
+                    elif not runtime_params.fitCloudParameters:
                         # print('TURNING OFF CLOUDS!')
                         log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
 
