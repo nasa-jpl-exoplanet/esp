@@ -72,7 +72,7 @@ def make_cerberus_atmos(
         cheq=tceqdict,
         mixratio=mixratios,
         rp0=solidr,
-        xsec=xslib['data'][planet_letter]['XSECS'],
+        xsecs=xslib['data'][planet_letter]['XSECS'],
         qtgrid=xslib['data'][planet_letter]['QTGRID'],
         wgrid=wavelength_um,
         planet=planet_letter,
