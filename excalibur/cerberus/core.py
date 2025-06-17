@@ -103,6 +103,12 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
+        'nlevels',
+        'Hsmax',
+        'solrad',
     ],
 )
 
@@ -1792,7 +1798,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
         # check whether this planet was analyzed
         # (some planets are skipped, because they have an unbound atmosphere)
-        print('atmkeys', atm.keys())
+        if verbose:
+            print('atmkeys', atm.keys())
         if p not in atm.keys():
             log.warning(
                 '>-- CERBERUS.RESULTS: this planet is missing cerb fit: %s %s',
@@ -2075,6 +2082,12 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     orbp=fin['priors'],
                     hzlib=crbhzlib,
                     planet=p,
+                    lbroadening=runtime_params.lbroadening,
+                    lshifting=runtime_params.lshifting,
+                    isothermal=runtime_params.isothermal,
+                    nlevels=runtime_params.nlevels,
+                    Hsmax=runtime_params.Hsmax,
+                    solrad=runtime_params.solrad,
                 )
                 # print('median fmc',np.nanmedian(fmc))
                 # print('mean model',np.nanmean(fmc))
@@ -2100,6 +2113,12 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hzlib=crbhzlib,
                     cheq=tceqdict_profiled,
                     planet=p,
+                    lbroadening=runtime_params.lbroadening,
+                    lshifting=runtime_params.lshifting,
+                    isothermal=runtime_params.isothermal,
+                    nlevels=runtime_params.nlevels,
+                    Hsmax=runtime_params.Hsmax,
+                    solrad=runtime_params.solrad,
                 )
                 # convert tensor to numpy array
                 patmos_model_profiled = (
@@ -2205,6 +2224,12 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         hzlib=crbhzlib,
                         cheq=tceqdict,
                         planet=p,
+                        lbroadening=runtime_params.lbroadening,
+                        lshifting=runtime_params.lshifting,
+                        isothermal=runtime_params.isothermal,
+                        nlevels=runtime_params.nlevels,
+                        Hsmax=runtime_params.Hsmax,
+                        solrad=runtime_params.solrad,
                     )
 
                     # print('len',len(fmcrand))

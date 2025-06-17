@@ -389,6 +389,24 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
+                        lbroadening=runtime[
+                            'cerberus_atmos_crbmodel_lbroadening'
+                        ].value(),
+                        lshifting=runtime[
+                            'cerberus_atmos_crbmodel_lshifting'
+                        ].value(),
+                        isothermal=runtime[
+                            'cerberus_atmos_crbmodel_isothermal'
+                        ].value(),
+                        nlevels=runtime[
+                            'cerberus_atmos_crbmodel_nlevels'
+                        ].value(),
+                        Hsmax=runtime[
+                            'cerberus_atmos_crbmodel_Hsmax'
+                        ].value(),
+                        solrad=runtime[
+                            'cerberus_atmos_crbmodel_solrad'
+                        ].value(),
                     )
 
                     update = self._results(
