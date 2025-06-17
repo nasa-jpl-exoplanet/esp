@@ -901,8 +901,6 @@ def offcerberus(*crbinputs):
     fmc = fmc + np.nanmean(tspectrum_clean[cond_G141])
     #     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G750L-STARE'
     cond_G102 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G102-SCAN'
     fmc[cond_G430] = fmc[cond_G430] - 1e-2 * float(off0)
@@ -944,8 +942,6 @@ def offcerberus1(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430L-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750L-STARE' in flt
@@ -987,8 +983,6 @@ def offcerberus2(*crbinputs):
         )
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1031,8 +1025,6 @@ def offcerberus3(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -1074,8 +1066,6 @@ def offcerberus4(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
     return fmc
@@ -1115,8 +1105,6 @@ def offcerberus5(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
@@ -1158,8 +1146,6 @@ def offcerberus6(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
     return fmc
@@ -1199,8 +1185,6 @@ def offcerberus7(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
     return fmc
@@ -1240,8 +1224,6 @@ def offcerberus8(*crbinputs):
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     fmc[cond_G102] = fmc[cond_G102] + 1e-2 * float(off0)
     return fmc
