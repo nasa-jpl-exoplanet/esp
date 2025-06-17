@@ -29,7 +29,7 @@ def crbmodel(
     cloudtp,
     cheq=None,
     mixratio=None,
-    rayleigh=0.,
+    rayleigh=0.0,
     hzwscale=1e0,
     hzslope=-4.0,
     hztop=None,
@@ -38,9 +38,9 @@ def crbmodel(
     planet=ctxt.planet,
     rp0=ctxt.solidr,
     orbp=ctxt.orbp,
-    wgrid=np.array(ctxt.spc['data'][ctxt.p]['WB']),
-    xsecs=ctxt.xsl['data'][ctxt.p]['XSECS'],
-    qtgrid=ctxt.xsl['data'][ctxt.p]['QTGRID'],
+    wgrid=None,  # np.array(ctxt.spc['data'][ctxt.planet]['WB']),
+    xsecs=None,  # ctxt.xsl['data'][ctxt.planet]['XSECS'],
+    qtgrid=None,  # ctxt.xsl['data'][ctxt.planet]['QTGRID'],
     isothermal=ctxt.isothermal,
     lbroadening=ctxt.lbroadening,
     lshifting=ctxt.lshifting,
@@ -79,11 +79,11 @@ def crbmodel(
     if rp0 is None:
         rp0 = ctxt.solidr
     if xsecs is None:
-        xsecs = ctxt.xsl['data'][ctxt.p]['XSECS']
+        xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
     if qtgrid is None:
-        qtgrid = ctxt.xsl['data'][ctxt.p]['QTGRID']
+        qtgrid = ctxt.xsl['data'][ctxt.planet]['QTGRID']
     if wgrid is None:
-        wgrid = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+        wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     if hzlib is None:
         hzlib = ctxt.hzlib
 
