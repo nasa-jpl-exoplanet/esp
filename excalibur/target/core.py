@@ -1151,6 +1151,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
     allsci = []
     allurl = []
     allmiss = []
+    # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
     # allraw = []
     for o in obsids:
         donmast = False
@@ -1207,25 +1208,26 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 and (x.get("calib_level", None) == clblvl)
                 and (x.get("productSubGroupDescription", None) == dtlvl)
             ]
+            # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
             # Associated L1b JWST data (UNCAL)
             # if 'JWST' in obscol and scidata:
-                # sciids = [x.get('obsID', None) for x in scidata]
-                # rawdata = [
-                    # x
-                    # for x in data['data']
-                    # if (x.get("productType", None) == 'SCIENCE')
-                    # and (x.get("dataRights", None) == 'PUBLIC')
-                    # and (x.get("calib_level", None) == 1)
-                    # and (x.get("productSubGroupDescription", None) == 'UNCAL')
-                    # and (x.get('obsID') in sciids)
-                # ]
-                # allraw.extend(rawdata)
-                # --<
-                # Downloads JWST data only
-                # allsci.extend(scidata)
-                # allmiss.extend([obscol] * len(scidata))
-                # allurl.extend([thisurl] * len(scidata))
-                # pass
+            # sciids = [x.get('obsID', None) for x in scidata]
+            # rawdata = [
+            # x
+            # for x in data['data']
+            # if (x.get("productType", None) == 'SCIENCE')
+            # and (x.get("dataRights", None) == 'PUBLIC')
+            # and (x.get("calib_level", None) == 1)
+            # and (x.get("productSubGroupDescription", None) == 'UNCAL')
+            # and (x.get('obsID') in sciids)
+            # ]
+            # allraw.extend(rawdata)
+            # --<
+            # Downloads JWST data only
+            # allsci.extend(scidata)
+            # allmiss.extend([obscol] * len(scidata))
+            # allurl.extend([thisurl] * len(scidata))
+            # pass
             # Downloads all missions
             allsci.extend(scidata)
             allmiss.extend([obscol] * len(scidata))
@@ -1318,26 +1320,27 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             log.warning('>-- %s %s', os.path.getsize(fileout), fileout)
             pass
         pass
+    # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
     # if allraw:
-        # for irow, row in enumerate(allraw):
-            # print('  downloading',irow,len(allraw))
-            # payload = {"uri": row['dataURI']}
-            # try:
-                # resp = requests.get(allurl[irow], params=payload, timeout=42)
-                # fileout = os.path.join(
-                #     tempdir, os.path.basename(row['productFilename'])
-                # )
-                # with open(fileout, 'wb') as flt:
-                    # flt.write(resp.content)
-            # except requests.exceptions.ReadTimeout:
-                # log.warning(
-                    # '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
-                    # target,
-                    # irow,
-                    # len(allraw),
-                # )
-            # pass
-        # pass
+    # for irow, row in enumerate(allraw):
+    # print('  downloading',irow,len(allraw))
+    # payload = {"uri": row['dataURI']}
+    # try:
+    # resp = requests.get(allurl[irow], params=payload, timeout=42)
+    # fileout = os.path.join(
+    #     tempdir, os.path.basename(row['productFilename'])
+    # )
+    # with open(fileout, 'wb') as flt:
+    # flt.write(resp.content)
+    # except requests.exceptions.ReadTimeout:
+    # log.warning(
+    # '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
+    # target,
+    # irow,
+    # len(allraw),
+    # )
+    # pass
+    # pass
     locations = [tempdir]
     new = dbscp(target, locations, dbs, out)
     # Delete local copy /proj/sdp/data/stg
