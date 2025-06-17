@@ -172,7 +172,9 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
             )
             pgrid = np.exp(
                 np.arange(
-                    np.log(10.0) - 15.0, np.log(10.0) + 15.0 / 100, 15.0 / 99
+                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
+                    np.log(runtime_params.solrad) + runtime_params.Hsmax / runtime_params.nlevels,
+                    runtime_params.Hsmax / (runtime_params.nlevels - 1)
                 )
             )
             pressure = pgrid[::-1]
