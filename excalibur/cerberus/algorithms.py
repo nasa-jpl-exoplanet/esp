@@ -391,13 +391,13 @@ class Results(dawgie.Algorithm):
                         ].value(),
                         lbroadening=runtime[
                             'cerberus_atmos_crbmodel_lbroadening'
-                        ].value(),
+                        ],
                         lshifting=runtime[
                             'cerberus_atmos_crbmodel_lshifting'
-                        ].value(),
+                        ],
                         isothermal=runtime[
                             'cerberus_atmos_crbmodel_isothermal'
-                        ].value(),
+                        ],
                         nlevels=runtime[
                             'cerberus_atmos_crbmodel_nlevels'
                         ].value(),
