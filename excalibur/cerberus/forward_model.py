@@ -61,7 +61,6 @@ def crbmodel(
 
     # asdf: replace with a passed in context equivalent?
     #  that would be cleaner here, but a bit more work in the notebook calls
-    print('solrad,isothermal',solrad,isothermal)
     if planet is None:
         planet = ctxt.planet
     if orbp is None:
@@ -78,8 +77,6 @@ def crbmodel(
         lbroadening = ctxt.lbroadening
     if not bool(isothermal):
         isothermal = ctxt.isothermal
-    print('solrad,isothermal',solrad,isothermal)
-    print()
 
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
