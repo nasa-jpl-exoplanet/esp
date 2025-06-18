@@ -92,11 +92,11 @@ class XSLib(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
-                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                 )
 
                 update = self._xslib(sv, runtime_params, fltrs.index(fltr))
@@ -242,12 +242,12 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
-                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
-                    isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_crbmodel_lshifting'],
+                    isothermal=runtime['cerberus_crbmodel_isothermal'],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
@@ -390,18 +390,18 @@ class Results(dawgie.Algorithm):
                             'cerberus_results_randomseed'
                         ].value(),
                         lbroadening=runtime[
-                            'cerberus_atmos_crbmodel_lbroadening'
+                            'cerberus_crbmodel_lbroadening'
                         ],
-                        lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
+                        lshifting=runtime['cerberus_crbmodel_lshifting'],
                         isothermal=runtime[
-                            'cerberus_atmos_crbmodel_isothermal'
+                            'cerberus_crbmodel_isothermal'
                         ],
                         nlevels=runtime[
-                            'cerberus_atmos_crbmodel_nlevels'
+                            'cerberus_crbmodel_nlevels'
                         ].value(),
-                        Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
+                        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime[
-                            'cerberus_atmos_crbmodel_solrad'
+                            'cerberus_crbmodel_solrad'
                         ].value(),
                     )
 

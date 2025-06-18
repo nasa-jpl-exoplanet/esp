@@ -31,8 +31,8 @@
       <xs:documentation xml:lang="en">
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute name="lo" type="xs:decimal" use="required"/>
-    <xs:attribute name="hi" type="xs:decimal" use="required"/>
+    <xs:attribute name="lo" type="xs:float" use="required"/>
+    <xs:attribute name="hi" type="xs:float" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="control_type">
@@ -65,17 +65,17 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.sliceSampler"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.lbroadening"
+    <xs:attribute name="cerberus.crbmodel.lbroadening"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.lshifting"
+    <xs:attribute name="cerberus.crbmodel.lshifting"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.isothermal"
+    <xs:attribute name="cerberus.crbmodel.isothermal"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.nlevels"
+    <xs:attribute name="cerberus.crbmodel.nlevels"
                   type="xs:integer" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.solrad"
-                  type="xs:decimal" use="required"/>
-    <xs:attribute name="cerberus.atmos.crbmodel.Hsmax"
+    <xs:attribute name="cerberus.crbmodel.solrad"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="cerberus.crbmodel.Hsmax"
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.results.nrandomwalkers"
                   type="xs:integer" use="required"/>
@@ -85,12 +85,14 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="system.validate.maximizeSelfConsistency"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.SNRfactor"
+                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.includeMetallicityDispersion"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.randomCloudProperties"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.SNRadjustment"
-                  type="xs:decimal" use="required"/>
+                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.tier"
@@ -98,11 +100,11 @@
     <xs:attribute name="ariel.simspectrum.randomseed"
                   type="xs:integer" use="required"/>
     <xs:attribute name="ariel.simspectrum.metallicityDispersion"
-                  type="xs:decimal" use="required"/>
+                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOaverage"
-                  type="xs:decimal" use="required"/>
+                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
-                  type="xs:decimal" use="required"/>
+                  type="xs:float" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="filter_type">

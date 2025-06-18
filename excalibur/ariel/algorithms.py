@@ -93,12 +93,12 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
-                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
-                    isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_crbmodel_lshifting'],
+                    isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
                     repr(self).split('.')[1],  # this is the target name
