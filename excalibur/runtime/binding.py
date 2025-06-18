@@ -1,7 +1,7 @@
 # ./excalibur/runtime/binding.py
 # -*- coding: utf-8 -*-
 # PyXB bindings for NM:e92452c8d3e28a9e27abfc9994d2007779e7f4c9
-# Generated 2025-06-16 08:40:07.550837 by PyXB version 1.3.3 using Python 3.12.3.final.0
+# Generated 2025-06-17 16:51:58.674735 by PyXB version 1.3.3 using Python 3.12.3.final.0
 # Namespace AbsentNamespace0
 
 from __future__ import unicode_literals
@@ -14,7 +14,7 @@ import pyxb.utils.domutils
 import sys
 import pyxb.utils.sal as _six
 # Unique identifier for bindings created at the same time
-_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:2e0845ef-4ac8-11f0-a0d9-0cc47aaa0c06')
+_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:0e78f315-4bd6-11f0-911d-0cc47aaa0c06')
 
 # Version of PyXB used to generate the bindings
 _PyXBVersion = '1.3.3'
@@ -287,7 +287,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute cerberus.atmos.crbmodel.solrad uses Python identifier cerberus_atmos_crbmodel_solrad
-    __cerberus_atmos_crbmodel_solrad = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.solrad'), 'cerberus_atmos_crbmodel_solrad', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_solrad', pyxb.binding.datatypes.float, required=True)
+    __cerberus_atmos_crbmodel_solrad = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.atmos.crbmodel.solrad'), 'cerberus_atmos_crbmodel_solrad', '__AbsentNamespace0_control_type_cerberus_atmos_crbmodel_solrad', pyxb.binding.datatypes.decimal, required=True)
     __cerberus_atmos_crbmodel_solrad._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 76, 4)
     __cerberus_atmos_crbmodel_solrad._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 76, 4)
     
@@ -351,7 +351,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute ariel.simspectrum.SNRadjustment uses Python identifier ariel_simspectrum_SNRadjustment
-    __ariel_simspectrum_SNRadjustment = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.SNRadjustment'), 'ariel_simspectrum_SNRadjustment', '__AbsentNamespace0_control_type_ariel_simspectrum_SNRadjustment', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_SNRadjustment = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.SNRadjustment'), 'ariel_simspectrum_SNRadjustment', '__AbsentNamespace0_control_type_ariel_simspectrum_SNRadjustment', pyxb.binding.datatypes.decimal, required=True)
     __ariel_simspectrum_SNRadjustment._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 92, 4)
     __ariel_simspectrum_SNRadjustment._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 92, 4)
     
@@ -383,7 +383,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute ariel.simspectrum.metallicityDispersion uses Python identifier ariel_simspectrum_metallicityDispersion
-    __ariel_simspectrum_metallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.metallicityDispersion'), 'ariel_simspectrum_metallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_metallicityDispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_metallicityDispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.metallicityDispersion'), 'ariel_simspectrum_metallicityDispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_metallicityDispersion', pyxb.binding.datatypes.decimal, required=True)
     __ariel_simspectrum_metallicityDispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 100, 4)
     __ariel_simspectrum_metallicityDispersion._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 100, 4)
     
@@ -391,7 +391,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute ariel.simspectrum.CtoOaverage uses Python identifier ariel_simspectrum_CtoOaverage
-    __ariel_simspectrum_CtoOaverage = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOaverage'), 'ariel_simspectrum_CtoOaverage', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOaverage', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOaverage = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOaverage'), 'ariel_simspectrum_CtoOaverage', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOaverage', pyxb.binding.datatypes.decimal, required=True)
     __ariel_simspectrum_CtoOaverage._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 102, 4)
     __ariel_simspectrum_CtoOaverage._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 102, 4)
     
@@ -399,7 +399,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute ariel.simspectrum.CtoOdispersion uses Python identifier ariel_simspectrum_CtoOdispersion
-    __ariel_simspectrum_CtoOdispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOdispersion'), 'ariel_simspectrum_CtoOdispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOdispersion', pyxb.binding.datatypes.float, required=True)
+    __ariel_simspectrum_CtoOdispersion = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ariel.simspectrum.CtoOdispersion'), 'ariel_simspectrum_CtoOdispersion', '__AbsentNamespace0_control_type_ariel_simspectrum_CtoOdispersion', pyxb.binding.datatypes.decimal, required=True)
     __ariel_simspectrum_CtoOdispersion._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 104, 4)
     __ariel_simspectrum_CtoOdispersion._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 104, 4)
     
