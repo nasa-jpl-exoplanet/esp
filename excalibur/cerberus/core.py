@@ -822,9 +822,10 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters:
-                        # For Ariel, cloud params are fixed to model_params values
-                        # For HST, set cloud/haze parameters to a cloud/haze free case
+                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                        # only consider cloud-free case for simulated data
+                        #  for Ariel, cloud params are fixed to model_params values
+                        #  if blank, set parameters to a cloud/haze-free case
 
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
