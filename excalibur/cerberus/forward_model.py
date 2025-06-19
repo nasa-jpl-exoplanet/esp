@@ -31,7 +31,7 @@ def crbmodel(
     mixratio=None,
     HScale=0.0,
     HThick=1.0,
-    hzslope=-4.0,
+    HSlope=-4.0,
     HLoc=None,
     hzp='AVERAGE',
     hzlib=ctxt.hzlib,
@@ -156,7 +156,7 @@ def crbmodel(
         HScale,
         hzlib,
         hzp,
-        hzslope,
+        HSlope,
         HLoc,
         isothermal,
         HThick=HThick,
@@ -313,7 +313,7 @@ def gettau(
     HScale,
     hzlib,
     hzp,
-    hzslope,
+    HSlope,
     HLoc,
     isothermal,
     HThick=1.0,
@@ -431,7 +431,7 @@ def gettau(
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
-        sigma = sray0 * (wgrid[::-1] / slambda0) ** (hzslope)
+        sigma = sray0 * (wgrid[::-1] / slambda0) ** (HSlope)
         hazedensity = np.ones(len(z))
         tau = tau + 10.0**HScale * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
@@ -441,11 +441,11 @@ def gettau(
         # WEST ET AL. 2004
         sigma = (
             0.0083
-            * (wgrid[::-1]) ** (hzslope)
+            * (wgrid[::-1]) ** (HSlope)
             * (
                 1e0
-                + 0.014 * (wgrid[::-1]) ** (hzslope / 2e0)
-                + 0.00027 * (wgrid[::-1]) ** (hzslope)
+                + 0.014 * (wgrid[::-1]) ** (HSlope / 2e0)
+                + 0.00027 * (wgrid[::-1]) ** (HSlope)
             )
         )
         if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
