@@ -1382,7 +1382,7 @@ def atmos(
                 #    ctp,
                 #    hazescale,
                 #    hazeloc,
-                #    HThick,
+                #    hazethick,
                 #    tceqdict,
                 #    mixratio,
                 # )
@@ -1937,15 +1937,15 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
                     hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
                     hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    HThicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
                     hazescale = np.median(hazescaletrace)
                     hazeloc = np.median(hazeloctrace)
-                    HThick = np.median(HThicktrace)
+                    hazethick = np.median(hazethicktrace)
                     # print('fit results; CTP:', ctp)
                     # print('fit results; HScale:', hazescale)
                     # print('fit results; HLoc:', hazeloc)
-                    # print('fit results; HThick:', HThick)
+                    # print('fit results; HThick:', hazethick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
@@ -1955,22 +1955,22 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hazeloctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
                         keepers
                     ]
-                    HThicktrace_profiled = atm[p][model_name]['MCTRACE'][
+                    hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
                     ctp_profiled = np.median(ctptrace_profiled)
                     hazescale_profiled = np.median(hazescaletrace_profiled)
                     hazeloc_profiled = np.median(hazeloctrace_profiled)
-                    HThick_profiled = np.median(HThicktrace_profiled)
+                    hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
                     ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
                     hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     hazeloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
-                    HThick = atm[p]['TRUTH_MODELPARAMS']['HThick']
+                    hazethick = atm[p]['TRUTH_MODELPARAMS']['HThick']
                     ctp_profiled = ctp
                     hazescale_profiled = hazescale
                     hazeloc_profiled = hazeloc
-                    HThick_profiled = HThick
+                    hazethick_profiled = hazethick
                 mdp = np.median(np.array(mdptrace), axis=1)
                 mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
@@ -2050,7 +2050,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctp,
                     hazescale,
                     hazeloc,
-                    HThick,
+                    hazethick,
                     tceqdict,
                     mixratio,
                 )
@@ -2059,7 +2059,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctp_profiled,
                     hazescale_profiled,
                     hazeloc_profiled,
-                    HThick_profiled,
+                    hazethick_profiled,
                     tceqdict_profiled,
                     mixratio_profiled,
                 )
@@ -2071,7 +2071,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(ctp),
                     hazescale=float(hazescale),
                     hazeloc=float(hazeloc),
-                    HThick=float(HThick),
+                    hazethick=float(hazethick),
                     mixratio=mixratio,
                     cheq=tceqdict,
                     rp0=solidr,
@@ -2102,7 +2102,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(ctp_profiled),
                     hazescale=float(hazescale_profiled),
                     hazeloc=float(hazeloc_profiled),
-                    HThick=float(HThick_profiled),
+                    hazethick=float(hazethick_profiled),
                     mixratio=mixratio_profiled,
                     rp0=solidr,
                     xsecs=xsl[p]['XSECS'],
@@ -2162,7 +2162,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         ctp = ctptrace[iwalker]
                         hazescale = hazescaletrace[iwalker]
                         hazeloc = hazeloctrace[iwalker]
-                        HThick = HThicktrace[iwalker]
+                        hazethick = hazethicktrace[iwalker]
                     if fit_t:
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
@@ -2171,7 +2171,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', hazeloc)
-                    #    print('fit results; HThick:', HThick)
+                    #    print('fit results; HThick:', hazethick)
                     # print('fit results; T:', tpr)
                     # print('fit results; mdplist:', mdp)
 
@@ -2213,7 +2213,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         float(ctp),
                         hazescale=float(hazescale),
                         hazeloc=float(hazeloc),
-                        HThick=float(HThick),
+                        hazethick=float(hazethick),
                         mixratio=mixratio,
                         rp0=solidr,
                         xsecs=xsl[p]['XSECS'],
@@ -2259,7 +2259,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             ctp,
                             hazescale,
                             hazeloc,
-                            HThick,
+                            hazethick,
                             tceqdict,
                             mixratio,
                         )

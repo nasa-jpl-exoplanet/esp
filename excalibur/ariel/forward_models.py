@@ -31,7 +31,7 @@ def make_cerberus_atmos(
     ctp = model_params['CTP']
     hazescale = model_params['HScale']
     hazeloc = model_params['HLoc']
-    HThick = model_params['HThick']
+    hazethick = model_params['HThick']
 
     # ABUNDANCES
     if mixratios:
@@ -67,7 +67,7 @@ def make_cerberus_atmos(
         float(ctp),
         hazescale=float(hazescale),
         hazeloc=float(hazeloc),
-        HThick=float(HThick),
+        hazethick=float(hazethick),
         hzlib=crbhzlib,
         cheq=tceqdict,
         mixratio=mixratios,
