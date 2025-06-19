@@ -39,6 +39,7 @@ ArielParams = namedtuple(
     'ariel_params_from_runtime',
     [
         'tier',
+        'SNRfactor',
         'randomSeed',
         'randomCloudProperties',
         'thorngrenMassMetals',
@@ -46,6 +47,12 @@ ArielParams = namedtuple(
         'metallicityDispersion',
         'CtoOaverage',
         'CtoOdispersion',
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -165,7 +172,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
             )
             pgrid = np.exp(
                 np.arange(
-                    np.log(10.0) - 15.0, np.log(10.0) + 15.0 / 100, 15.0 / 99
+                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
+                    np.log(runtime_params.solrad)
+                    + runtime_params.Hsmax / runtime_params.nlevels,
+                    runtime_params.Hsmax / (runtime_params.nlevels - 1),
                 )
             )
             pressure = pgrid[::-1]
@@ -233,6 +243,12 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
 
                 uncertainties /= np.sqrt(float(visits))
+
+                # allow for arbitrary scaling of the spectrum SNR during testing
+                if verbose:
+                    print('SNR adjustment factor:', runtime_params.SNRfactor)
+                if runtime_params.SNRfactor:
+                    uncertainties *= runtime_params.SNRfactor
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
                 for atmosModel in atmosModels:
@@ -338,7 +354,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             }
                             if verbose:
                                 print('CALCulating cross-sections START')
-                            _ = myxsecs(tempspc, xslib)
+                            _ = myxsecs(tempspc, runtime_params, xslib)
                             if verbose:
                                 print('CALCulating cross-sections DONE')
                         else:
@@ -356,20 +372,19 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                                     existingPlanetLetter
                                 ]
 
-                        cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
+                        # cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
+                        fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
+                            runtime_params,
                             wavelength_um,
                             model_params,
                             xslib,
                             planet_letter,
-                            Hsmax=20,
                         )
 
-                        # convert from tensor to normal float
-                        fluxDepth = cerbModel
-                        fluxDepth_by_molecule = {}
-                        # for molecule in cerbModel_by_molecule:
-                        for molecule, model in cerbModel_by_molecule.items():
-                            fluxDepth_by_molecule[molecule] = model
+                        # fluxDepth = cerbModel
+                        # fluxDepth_by_molecule = {}
+                        # for molecule, model in cerbModel_by_molecule.items():
+                        #    fluxDepth_by_molecule[molecule] = model
 
                     elif 'taurex' in atmosModel:
                         sys.exit('ERROR: taurex no longer an option')

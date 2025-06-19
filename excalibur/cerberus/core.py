@@ -62,8 +62,19 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbParams = namedtuple(
-    'cerberus_params_from_runtime',
+CerbXSlibParams = namedtuple(
+    'cerberus_xslib_params_from_runtime',
+    [
+        'nlevels',
+        'solrad',
+        'Hsmax',
+        'lbroadening',
+        'lshifting',
+    ],
+)
+
+CerbAtmosParams = namedtuple(
+    'cerberus_atmos_params_from_runtime',
     [
         'MCMC_chains',
         'MCMC_chain_length',
@@ -78,6 +89,26 @@ CerbParams = namedtuple(
         'lbroadening',
         'lshifting',
         'isothermal',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
+    ],
+)
+
+CerbResultsParams = namedtuple(
+    'cerberus_results_params_from_runtime',
+    [
+        'nrandomwalkers',
+        'randomseed',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
+        'nlevels',
+        'Hsmax',
+        'solrad',
     ],
 )
 
@@ -104,7 +135,7 @@ def myxsecsversion():
 # GMR: Should be in the param list
 
 
-def myxsecs(spc, out, verbose=False):
+def myxsecs(spc, runtime_params, out, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
@@ -439,23 +470,21 @@ def myxsecs(spc, out, verbose=False):
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
             mmr = 2.3  # Fortney 2015 for hot Jupiters
-            solrad = 10.0
-            hsmax = 15.0
-            # increase the number of scale heights from 15 to 20, to match the Ariel forward model
-            # (this is the range used for xslib; also has to be set for atmos)
-            hsmax = 20.0
-            nlevels = 100.0
+            # solrad = 10.0
+            # hsmax = 20.0
+            # nlevels = 100.0
             pgrid = np.arange(
-                np.log(solrad) - hsmax,
-                np.log(solrad) + hsmax / nlevels,
-                hsmax / (nlevels - 1),
+                np.log(runtime_params.solrad) - runtime_params.Hsmax,
+                np.log(runtime_params.solrad)
+                + runtime_params.Hsmax / runtime_params.nlevels,
+                runtime_params.Hsmax / (runtime_params.nlevels - 1),
             )
             pgrid = np.exp(pgrid)
             pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
-            for tstep in np.arange(300, 2000, 100):
+            for tstep in np.arange(300, 2000, 100):  # asdf put in runtime?
                 # log.warning('>---- %s K', str(Tstep))
                 sigma, lsig = absorb(
                     library[ks],
@@ -463,8 +492,8 @@ def myxsecs(spc, out, verbose=False):
                     tstep,
                     pressuregrid,
                     mmr,
-                    False,
-                    False,
+                    runtime_params.lbroadening,
+                    runtime_params.lshifting,
                     wgrid,
                     debug=False,
                 )
@@ -775,25 +804,13 @@ def atmos(
             twav[cleanup2] = np.nan
             # cleanup = np.isfinite(tspectrum) & (tspecerr < 1e0)
             cleanup = np.isfinite(tspectrum)
-            solidr = orbp[p]['rp'] * ssc['Rjup']  # MK
+            rp0 = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
-                ctxtupdt(
-                    cleanup=cleanup,
-                    model=model,
-                    p=p,
-                    solidr=solidr,
-                    orbp=orbp,
-                    tspectrum=tspectrum,
-                    xsl=xsl,
-                    spc=spc,
-                    modparlbl=modparlbl,
-                    hzlib=crbhzlib,
-                )
                 out['data'][p][model] = {}
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
-                prior_range_table = set_prior_bound(eqtemp)
+                prior_range_table = set_prior_bound(eqtemp, runtime_params)
 
                 out['data'][p][model]['prior_ranges'] = {}
                 # keep track of the bounds put on each parameter
@@ -805,9 +822,10 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters:
-                        # For Ariel, cloud params are fixed to model_params values
-                        # For HST, set cloud/haze parameters to a cloud/haze free case
+                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                        # only consider cloud-free case for simulated data
+                        #  for Ariel, cloud params are fixed to model_params values
+                        #  if blank, set parameters to a cloud/haze-free case
 
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
@@ -1088,10 +1106,11 @@ def atmos(
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
+                            runtime=runtime_params,
                             cleanup=cleanup,
                             model=model,
-                            p=p,
-                            solidr=solidr,
+                            planet=p,
+                            rp0=rp0,
                             orbp=orbp,
                             tspectrum=tspectrum,
                             xsl=xsl,
@@ -1219,10 +1238,11 @@ def atmos(
 
                             # before calling MCMC, save the fixed-parameter info in the context
                             ctxtupdt(
+                                runtime=runtime_params,
                                 cleanup=cleanup,
                                 model=model,
-                                p=p,
-                                solidr=solidr,
+                                planet=p,
+                                rp0=rp0,
                                 orbp=orbp,
                                 tspectrum=tspectrum,
                                 xsl=xsl,
@@ -1361,9 +1381,9 @@ def atmos(
                 # param_values_median = (
                 #    tpr,
                 #    ctp,
-                #    hza,
-                #    hloc,
-                #    hthc,
+                #    hazescale,
+                #    hazeloc,
+                #    hazethick,
                 #    tceqdict,
                 #    mixratio,
                 # )
@@ -1747,7 +1767,7 @@ def resultsversion():
 
 
 # ------------------------------ -------------------------------------
-def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
+def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
     '''
     Plot out the results from atmos()
     trgt [INPUT]: target name
@@ -1779,7 +1799,8 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
 
         # check whether this planet was analyzed
         # (some planets are skipped, because they have an unbound atmosphere)
-        print('atmkeys', atm.keys())
+        if verbose:
+            print('atmkeys', atm.keys())
         if p not in atm.keys():
             log.warning(
                 '>-- CERBERUS.RESULTS: this planet is missing cerb fit: %s %s',
@@ -1915,49 +1936,48 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                     )
                 if fit_cloud_parameters:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    hzatrace = atm[p][model_name]['MCTRACE']['HScale']
-                    hloctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    hthicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
+                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
+                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    hza = np.median(hzatrace)
-                    hloc = np.median(hloctrace)
-                    hthc = np.median(hthicktrace)
-                    # print('fit results; CTP:',ctp)
-                    # print('fit results; HScale:',hza)
-                    # print('fit results; HLoc:',hloc)
-                    # print('fit results; HThick:',hthc)
+                    hazescale = np.median(hazescaletrace)
+                    hazeloc = np.median(hazeloctrace)
+                    hazethick = np.median(hazethicktrace)
+                    # print('fit results; CTP:', ctp)
+                    # print('fit results; HScale:', hazescale)
+                    # print('fit results; HLoc:', hazeloc)
+                    # print('fit results; HThick:', hazethick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
-                    hzatrace_profiled = atm[p][model_name]['MCTRACE']['HScale'][
-                        keepers
-                    ]
-                    hloctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
-                        keepers
-                    ]
-                    hthicktrace_profiled = atm[p][model_name]['MCTRACE'][
+                    hazescaletrace_profiled = atm[p][model_name]['MCTRACE'][
+                        'HScale'
+                    ][keepers]
+                    hazeloctrace_profiled = atm[p][model_name]['MCTRACE'][
+                        'HLoc'
+                    ][keepers]
+                    hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
                     ctp_profiled = np.median(ctptrace_profiled)
-                    hza_profiled = np.median(hzatrace_profiled)
-                    hloc_profiled = np.median(hloctrace_profiled)
-                    hthc_profiled = np.median(hthicktrace_profiled)
+                    hazescale_profiled = np.median(hazescaletrace_profiled)
+                    hazeloc_profiled = np.median(hazeloctrace_profiled)
+                    hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
                     ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
-                    hza = atm[p]['TRUTH_MODELPARAMS']['HScale']
-                    hloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
-                    hthc = atm[p]['TRUTH_MODELPARAMS']['HThick']
+                    hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
+                    hazeloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
+                    hazethick = atm[p]['TRUTH_MODELPARAMS']['HThick']
                     ctp_profiled = ctp
-                    hza_profiled = hza
-                    hloc_profiled = hloc
-                    hthc_profiled = hthc
-                    # print(' ctp hza hloc hthc',ctp,hza,hloc,hthc)
+                    hazescale_profiled = hazescale
+                    hazeloc_profiled = hazeloc
+                    hazethick_profiled = hazethick
                 mdp = np.median(np.array(mdptrace), axis=1)
                 mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
                 # print('fit results; mdplist:',mdp)
 
-                solidr = fin['priors'][p]['rp'] * ssc['Rjup']
+                rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
 
                 if model_name == 'TEC':
                     # if len(mdp)!=3: log.warning('--< Expecting 3 molecules for TEQ model! >--')
@@ -2029,18 +2049,18 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 param_values_median = (
                     tpr,
                     ctp,
-                    hza,
-                    hloc,
-                    hthc,
+                    hazescale,
+                    hazeloc,
+                    hazethick,
                     tceqdict,
                     mixratio,
                 )
                 param_values_profiled = (
                     tpr_profiled,
                     ctp_profiled,
-                    hza_profiled,
-                    hloc_profiled,
-                    hthc_profiled,
+                    hazescale_profiled,
+                    hazeloc_profiled,
+                    hazethick_profiled,
                     tceqdict_profiled,
                     mixratio_profiled,
                 )
@@ -2048,23 +2068,26 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 # print('median fmc',np.nanmedian(fmc))
                 fmc = np.zeros(transitdata['depth'].size)
                 fmc = crbmodel(
-                    mixratio,
-                    float(hza),
-                    float(ctp),
-                    solidr,
-                    fin['priors'],
-                    xsl[p]['XSECS'],
-                    xsl[p]['QTGRID'],
                     float(tpr),
-                    transitdata['wavelength'],
-                    hzlib=crbhzlib,
-                    hzp='AVERAGE',
-                    hztop=float(hloc),
-                    hzwscale=float(hthc),
+                    float(ctp),
+                    hazescale=float(hazescale),
+                    hazeloc=float(hazeloc),
+                    hazethick=float(hazethick),
+                    mixratio=mixratio,
                     cheq=tceqdict,
-                    pnet=p,
-                    verbose=False,
-                    debug=False,
+                    rp0=rp0,
+                    xsecs=xsl[p]['XSECS'],
+                    qtgrid=xsl[p]['QTGRID'],
+                    wgrid=transitdata['wavelength'],
+                    orbp=fin['priors'],
+                    hzlib=crbhzlib,
+                    planet=p,
+                    lbroadening=runtime_params.lbroadening,
+                    lshifting=runtime_params.lshifting,
+                    isothermal=runtime_params.isothermal,
+                    nlevels=runtime_params.nlevels,
+                    Hsmax=runtime_params.Hsmax,
+                    solrad=runtime_params.solrad,
                 )
                 # print('median fmc',np.nanmedian(fmc))
                 # print('mean model',np.nanmean(fmc))
@@ -2076,23 +2099,26 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
                 fmc_profiled = crbmodel(
-                    mixratio_profiled,
-                    float(hza_profiled),
-                    float(ctp_profiled),
-                    solidr,
-                    fin['priors'],
-                    xsl[p]['XSECS'],
-                    xsl[p]['QTGRID'],
                     float(tpr_profiled),
-                    transitdata['wavelength'],
+                    float(ctp_profiled),
+                    hazescale=float(hazescale_profiled),
+                    hazeloc=float(hazeloc_profiled),
+                    hazethick=float(hazethick_profiled),
+                    mixratio=mixratio_profiled,
+                    rp0=rp0,
+                    xsecs=xsl[p]['XSECS'],
+                    qtgrid=xsl[p]['QTGRID'],
+                    wgrid=transitdata['wavelength'],
+                    orbp=fin['priors'],
                     hzlib=crbhzlib,
-                    hzp='AVERAGE',
-                    hztop=float(hloc_profiled),
-                    hzwscale=float(hthc_profiled),
                     cheq=tceqdict_profiled,
-                    pnet=p,
-                    verbose=False,
-                    debug=False,
+                    planet=p,
+                    lbroadening=runtime_params.lbroadening,
+                    lshifting=runtime_params.lshifting,
+                    isothermal=runtime_params.isothermal,
+                    nlevels=runtime_params.nlevels,
+                    Hsmax=runtime_params.Hsmax,
+                    solrad=runtime_params.solrad,
                 )
                 # convert tensor to numpy array
                 patmos_model_profiled = (
@@ -2114,15 +2140,13 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 # print('chi2 after profiling',chi2modelProfiled)
 
                 # make an array of some randomly selected walker results
-                nrandomwalkers = 100
-
                 # fix the random seed for each target/planet, so that results are reproducable
                 int_from_target = (
                     1  # arbitrary initialization for the random seed
                 )
                 for char in trgt + ' ' + p:
                     int_from_target = (
-                        123 * int_from_target + ord(char)
+                        runtime_params.randomseed * int_from_target + ord(char)
                     ) % 100000
                 np.random.seed(int_from_target)
 
@@ -2132,23 +2156,23 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                 fmcarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
-                for _ in range(nrandomwalkers):
+                for _ in range(runtime_params.nrandomwalkers):
                     iwalker = int(nwalkersteps * np.random.rand())
 
                     if fit_cloud_parameters:
                         ctp = ctptrace[iwalker]
-                        hza = hzatrace[iwalker]
-                        hloc = hloctrace[iwalker]
-                        hthc = hthicktrace[iwalker]
+                        hazescale = hazescaletrace[iwalker]
+                        hazeloc = hazeloctrace[iwalker]
+                        hazethick = hazethicktrace[iwalker]
                     if fit_t:
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
                     # if runtime_params.fitCloudParameters:
                     #    print('fit results; CTP:', ctp)
-                    #    print('fit results; HScale:', hza)
-                    #    print('fit results; HLoc:', hloc)
-                    #    print('fit results; HThick:', hthc)
+                    #    print('fit results; HScale:', hazescale)
+                    #    print('fit results; HLoc:', hazeloc)
+                    #    print('fit results; HThick:', hazethick)
                     # print('fit results; T:', tpr)
                     # print('fit results; mdplist:', mdp)
 
@@ -2186,23 +2210,26 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
 
                     fmcrand = np.zeros(transitdata['depth'].size)
                     fmcrand = crbmodel(
-                        mixratio,
-                        float(hza),
-                        float(ctp),
-                        solidr,
-                        fin['priors'],
-                        xsl[p]['XSECS'],
-                        xsl[p]['QTGRID'],
                         float(tpr),
-                        transitdata['wavelength'],
+                        float(ctp),
+                        hazescale=float(hazescale),
+                        hazeloc=float(hazeloc),
+                        hazethick=float(hazethick),
+                        mixratio=mixratio,
+                        rp0=rp0,
+                        xsecs=xsl[p]['XSECS'],
+                        qtgrid=xsl[p]['QTGRID'],
+                        wgrid=transitdata['wavelength'],
+                        orbp=fin['priors'],
                         hzlib=crbhzlib,
-                        hzp='AVERAGE',
-                        hztop=float(hloc),
-                        hzwscale=float(hthc),
                         cheq=tceqdict,
-                        pnet=p,
-                        verbose=False,
-                        debug=False,
+                        planet=p,
+                        lbroadening=runtime_params.lbroadening,
+                        lshifting=runtime_params.lshifting,
+                        isothermal=runtime_params.isothermal,
+                        nlevels=runtime_params.nlevels,
+                        Hsmax=runtime_params.Hsmax,
+                        solrad=runtime_params.solrad,
                     )
 
                     # print('len',len(fmcrand))
@@ -2231,9 +2258,9 @@ def results(trgt, filt, fin, anc, xsl, atm, out, verbose=False):
                         param_values_best_fit = (
                             tpr,
                             ctp,
-                            hza,
-                            hloc,
-                            hthc,
+                            hazescale,
+                            hazeloc,
+                            hazethick,
                             tceqdict,
                             mixratio,
                         )

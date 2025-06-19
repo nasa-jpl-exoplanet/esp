@@ -89,7 +89,17 @@ class XSLib(dawgie.Algorithm):
 
             if vspc:
                 log.warning('--< CERBERUS XSLIB: %s >--', fltr)
-                update = self._xslib(sv, fltrs.index(fltr))
+
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = crbcore.CerbXSlibParams(
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_crbmodel_lshifting'],
+                )
+
+                update = self._xslib(sv, runtime_params, fltrs.index(fltr))
             else:
                 errstr = [m for m in [sspc] if m is not None]
                 self._failure(errstr[0])
@@ -107,9 +117,11 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, index):
+    def _xslib(self, spc, runtime_params, index):
         '''Core code call'''
-        cs = crbcore.myxsecs(spc, self.__out[index], verbose=False)
+        cs = crbcore.myxsecs(
+            spc, runtime_params, self.__out[index], verbose=False
+        )
         return cs
 
     @staticmethod
@@ -218,9 +230,9 @@ class Atmos(dawgie.Algorithm):
 
             if vfin and vxsl and vspc:
                 log.warning('--< CERBERUS ATMOS: %s >--', fltr)
-                runtime = self.__rt.sv_as_dict()['status']
 
-                runtime_params = crbcore.CerbParams(
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
                     MCMC_chains=runtime['cerberus_chains'].value(),
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
@@ -230,12 +242,18 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
-                    nlevels=runtime['cerberus_atmos_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_atmos_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_atmos_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_atmos_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_atmos_crbmodel_lshifting'],
-                    isothermal=runtime['cerberus_atmos_crbmodel_isothermal'],
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                    lshifting=runtime['cerberus_crbmodel_lshifting'],
+                    isothermal=runtime['cerberus_crbmodel_isothermal'],
+                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
                 # print('runtime params',runtime_params)
                 update = self._atmos(
@@ -362,10 +380,27 @@ class Results(dawgie.Algorithm):
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
                 if vxsl and vatm:
                     log.warning('--< CERBERUS RESULTS: %s >--', fltr)
-                    # FIXMEE: this code needs repaired by moving out to config (Geoff added)
+
+                    runtime = self.__rt.sv_as_dict()['status']
+                    runtime_params = crbcore.CerbResultsParams(
+                        nrandomwalkers=runtime[
+                            'cerberus_results_nrandomwalkers'
+                        ].value(),
+                        randomseed=runtime[
+                            'cerberus_results_randomseed'
+                        ].value(),
+                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                        lshifting=runtime['cerberus_crbmodel_lshifting'],
+                        isothermal=runtime['cerberus_crbmodel_isothermal'],
+                        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                        solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                    )
+
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
+                        runtime_params,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -392,10 +427,18 @@ class Results(dawgie.Algorithm):
             )
         return
 
-    def _results(self, trgt, fltr, fin, ancil, xsl, atm, index):
+    def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
         '''Core code call'''
         resout = crbcore.results(
-            trgt, fltr, fin, ancil, xsl, atm, self.__out[index], verbose=False
+            trgt,
+            fltr,
+            runtime_params,
+            fin,
+            ancil,
+            xsl,
+            atm,
+            self.__out[index],
+            verbose=False,
         )
         return resout
 

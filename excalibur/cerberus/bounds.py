@@ -13,10 +13,27 @@ log = logging.getLogger(__name__)
 
 
 # -------------------------------------------------------------------
-def set_prior_bound(eqtemp):
+def set_prior_bound(eqtemp, runtime_params):
     '''
     Set prior constraints on the spectrum-fitting parameters
     '''
+
+    if runtime_params.boundTeq is None:
+        log.warning('--< temp junk for pylint reasons >--')
+    # print('IN BOUNDS runtime_params',runtime_params)
+    #
+    # if runtime_params.boundTeq!="0.75,1.5":
+    #    log.warning('--< Non-standard prior range for Teq >--')
+    # if runtime_params.boundAbundances!="-6,6":
+    #    log.warning('--< Non-standard prior range for abundances >--')
+    # if runtime_params.boundCTP!="-6,1":
+    #    log.warning('--< Non-standard prior range for CTP >--')
+    # if runtime_params.boundHLoc!="-6,1":
+    #    log.warning('--< Non-standard prior range for HLoc >--')
+    # if runtime_params.boundHScale!="-6,6":
+    #    log.warning('--< Non-standard prior range for HScale >--')
+    # if runtime_params.boundHThick!="1,20":
+    #    log.warning('--< Non-standard prior range for HThick >--')
 
     prior_ranges = {}
 

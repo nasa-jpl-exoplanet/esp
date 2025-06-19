@@ -64,13 +64,14 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
     def __init__(self):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
-        self['target_autofill_selectMostRecent'] = BoolValue()
+        self['system_validate_maximizeSelfConsistency'] = BoolValue()
+        self['system_validate_selectMostRecent'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
@@ -81,12 +82,18 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_fitT'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
-        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
-        self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
-        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
-        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
-        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_isothermal'] = BoolValue()
+        self['cerberus_crbmodel_lbroadening'] = BoolValue()
+        self['cerberus_crbmodel_lshifting'] = BoolValue()
+        self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         return
@@ -104,7 +111,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         visitor.add_declaration_inline('', div='<div><hr>')
         table = visitor.add_table(
             # ['Switch', 'State'],
-            ['Task', 'Parameter', 'Value'],
+            ['Algorithm', 'Parameter', 'Value'],
             len(self) + 1,
             'Processing Control Parameters',
             # 'Processing Control Switches',
@@ -113,9 +120,9 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         # for row, key in enumerate(sorted(self)):
         for row, key in enumerate(self):
             isplitter = key.rfind('_')
-            task = key[:isplitter]
+            algorithm = key[:isplitter]
             param = key[isplitter + 1 :]
-            table.get_cell(row + 1, 0).add_primitive(task)
+            table.get_cell(row + 1, 0).add_primitive(algorithm)
             table.get_cell(row + 1, 1).add_primitive(param)
             if isinstance(self[key], excalibur.ValueScalar):
                 table.get_cell(row + 1, 2).add_primitive(self[key].value())
@@ -200,15 +207,15 @@ class PymcSV(dawgie.StateVector, dawgie.Value):
         visitor.add_declaration_inline('', div='<div><hr>')
         if (self.__name).endswith('chainlen'):
             paramname = 'Chain Length'
-            taskname = (self.__name)[:-8]
+            algorithmname = (self.__name)[:-8]
         elif (self.__name).endswith('chains'):
             paramname = '# of Chains'
-            taskname = (self.__name)[:-6]
+            algorithmname = (self.__name)[:-6]
         else:
             paramname = 'Value'
-            taskname = self.__name
+            algorithmname = self.__name
         visitor.add_declaration_inline(
-            f'PYMC in {taskname}: default {paramname} = '
+            f'PYMC in {algorithmname}: default {paramname} = '
             f'{self["default"].value()}',
             tag='b',
         )
@@ -241,6 +248,7 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
+        self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
@@ -250,12 +258,18 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
-        self['cerberus_atmos_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_atmos_crbmodel_lshifting'] = BoolValue()
-        self['cerberus_atmos_crbmodel_isothermal'] = BoolValue()
-        self['cerberus_atmos_crbmodel_nlevels'] = excalibur.ValueScalar()
-        self['cerberus_atmos_crbmodel_solrad'] = excalibur.ValueScalar()
-        self['cerberus_atmos_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_lbroadening'] = BoolValue()
+        self['cerberus_crbmodel_lshifting'] = BoolValue()
+        self['cerberus_crbmodel_isothermal'] = BoolValue()
+        self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
@@ -265,8 +279,8 @@ class StatusSV(dawgie.StateVector):
         self['runTarget'] = BoolValue(True)
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
-        self['target_autofill_selectMostRecent'] = BoolValue()
-        self['target_autofill_maximizeSelfConsistency'] = BoolValue()
+        self['system_validate_selectMostRecent'] = BoolValue()
+        self['system_validate_maximizeSelfConsistency'] = BoolValue()
 
     def name(self):
         '''database name'''
@@ -326,13 +340,14 @@ class StatusSV(dawgie.StateVector):
         switches = [
             'runTarget',
             'isValidTarget',
-            'target_autofill_selectMostRecent',
-            'target_autofill_maximizeSelfConsistency',
+            'system_validate_selectMostRecent',
+            'system_validate_maximizeSelfConsistency',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
             'ariel_simspectrum_tier',
             'ariel_simspectrum_randomseed',
+            'ariel_simspectrum_SNRadjustment',
             'ariel_simspectrum_metallicityDispersion',
             'ariel_simspectrum_CtoOaverage',
             'ariel_simspectrum_CtoOdispersion',
@@ -341,12 +356,18 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_fitCtoO',
             'cerberus_atmos_fitNtoO',
             'cerberus_atmos_fitCloudParameters',
-            'cerberus_atmos_crbmodel_lbroadening',
-            'cerberus_atmos_crbmodel_lshifting',
-            'cerberus_atmos_crbmodel_isothermal',
-            'cerberus_atmos_crbmodel_nlevels',
-            'cerberus_atmos_crbmodel_solrad',
-            'cerberus_atmos_crbmodel_Hsmax',
+            'cerberus_crbmodel_lbroadening',
+            'cerberus_crbmodel_lshifting',
+            'cerberus_crbmodel_isothermal',
+            'cerberus_crbmodel_nlevels',
+            'cerberus_crbmodel_solrad',
+            'cerberus_crbmodel_Hsmax',
+            'cerberus_atmos_bounds_Teq',
+            'cerberus_atmos_bounds_abundances',
+            'cerberus_atmos_bounds_CTP',
+            'cerberus_atmos_bounds_HLoc',
+            'cerberus_atmos_bounds_HScale',
+            'cerberus_atmos_bounds_HThick',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
         ]

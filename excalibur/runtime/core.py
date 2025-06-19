@@ -47,23 +47,30 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         allowed_names.discard(exclude)
     sv['allowed_filter_names'].extend(allowed_names)
     for key in [
-        'target_autofill_selectMostRecent',
-        'target_autofill_maximizeSelfConsistency',
+        'system_validate_selectMostRecent',
+        'system_validate_maximizeSelfConsistency',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
         'cerberus_atmos_fitT',
         'cerberus_atmos_sliceSampler',
-        'cerberus_atmos_crbmodel_nlevels',
-        'cerberus_atmos_crbmodel_Hsmax',
-        'cerberus_atmos_crbmodel_solrad',
-        'cerberus_atmos_crbmodel_lbroadening',
-        'cerberus_atmos_crbmodel_lshifting',
-        'cerberus_atmos_crbmodel_isothermal',
+        'cerberus_crbmodel_nlevels',
+        'cerberus_crbmodel_Hsmax',
+        'cerberus_crbmodel_solrad',
+        'cerberus_crbmodel_lbroadening',
+        'cerberus_crbmodel_lshifting',
+        'cerberus_crbmodel_isothermal',
+        'cerberus_atmos_bounds_Teq',
+        'cerberus_atmos_bounds_abundances',
+        'cerberus_atmos_bounds_CTP',
+        'cerberus_atmos_bounds_HLoc',
+        'cerberus_atmos_bounds_HScale',
+        'cerberus_atmos_bounds_HThick',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
         'ariel_simspectrum_tier',
         'ariel_simspectrum_randomseed',
+        'ariel_simspectrum_SNRadjustment',
         'ariel_simspectrum_randomCloudProperties',
         'ariel_simspectrum_thorngrenMassMetals',
         'ariel_simspectrum_includeMetallicityDispersion',
@@ -76,7 +83,12 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         ):
             sv[key] = table['controls'][key].new()
         else:
+            # these are excalibur.ValueScalar objects. value() converts to float/int/string
             sv[key] = table['controls'][key]
+            # print(key,table['controls'][key].value(),type(table['controls'][key].value()))
+            # converting with value() ends up creating a later error
+            # dawgie.NotValidImplementationError: StateVector contains data that does not extend dawgie.Value correctly
+            # sv[key] = table['controls'][key].value()
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(

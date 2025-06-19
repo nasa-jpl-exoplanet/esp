@@ -12,6 +12,7 @@ import logging
 
 import excalibur.system.core as syscore
 from excalibur.util.cerberus import crbce, getmmw
+
 from excalibur.cerberus.fmcontext import ctxtinit
 
 
@@ -24,31 +25,30 @@ ctxt = ctxtinit()
 # ----------- --------------------------------------------------------
 # -- CERBERUS MODEL -- -----------------------------------------------
 def crbmodel(
-    mixratio,
-    rayleigh,
-    cloudtp,
-    rp0,
-    orbp,
-    xsecs,
-    qtgrid,
     temp,
-    wgrid,
-    lbroadening=False,
-    lshifting=False,
-    nlevels=100,
-    # nlevels=5,
-    # increase the number of scale heights from 15 to 20, to match the Ariel forward model
-    Hsmax=20.0,
-    solrad=10.0,
-    hzlib=None,
-    hzp=None,
-    hzslope=-4.0,
-    hztop=None,
-    hzwscale=1e0,
+    cloudtp,
     cheq=None,
-    logx=False,
-    pnet='b',
+    mixratio=None,
+    hazescale=0.0,
+    hazethick=1.0,
+    hazeslope=-4.0,
+    hazeloc=None,
+    hazeprof='AVERAGE',
+    hzlib=None,
+    planet=None,
+    rp0=None,
+    orbp=None,
+    wgrid=None,
+    xsecs=None,
+    qtgrid=None,
+    isothermal=None,
+    lbroadening=None,
+    lshifting=None,
+    nlevels=None,
+    Hsmax=None,
+    solrad=None,
     break_down_by_molecule=False,
+    logx=False,
     verbose=False,
     debug=False,
 ):
@@ -56,6 +56,33 @@ def crbmodel(
     G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
     radius solrad evenly log divided amongst nlevels steps
     '''
+
+    if planet is None:
+        planet = ctxt.planet
+    if orbp is None:
+        orbp = ctxt.orbp
+    if nlevels is None:
+        nlevels = ctxt.nlevels
+    if Hsmax is None:
+        Hsmax = ctxt.Hsmax
+    if solrad is None:
+        solrad = ctxt.solrad
+    if not bool(lshifting):
+        lshifting = ctxt.lshifting
+    if not bool(lbroadening):
+        lbroadening = ctxt.lbroadening
+    if not bool(isothermal):
+        isothermal = ctxt.isothermal
+    if rp0 is None:
+        rp0 = ctxt.rp0
+    if xsecs is None:
+        xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
+    if qtgrid is None:
+        qtgrid = ctxt.xsl['data'][ctxt.planet]['QTGRID']
+    if wgrid is None:
+        wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
+    if hzlib is None:
+        hzlib = ctxt.hzlib
 
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
@@ -96,7 +123,7 @@ def crbmodel(
     Hs = (
         cst.Boltzmann
         * temp
-        / (mmw * 1e-2 * (10.0 ** float(orbp[pnet]['logg'])))
+        / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
     )  # [m]
 
     # when the Pressure grid is log-spaced, rdz is a constant
@@ -123,12 +150,13 @@ def crbmodel(
         fH2,
         fHe,
         xmollist,
-        rayleigh,
+        hazescale,
         hzlib,
-        hzp,
-        hzslope,
-        hztop,
-        hzwscale=hzwscale,
+        hazeprof,
+        hazeslope,
+        hazeloc,
+        isothermal,
+        hazethick,
         debug=debug,
     )
 
@@ -271,7 +299,7 @@ def gettau(
     dz,
     rho,
     rp0,
-    p,
+    pressure,
     wgrid,
     lbroadening,
     lshifting,
@@ -279,21 +307,22 @@ def gettau(
     fH2,
     fHe,
     xmollist,
-    rayleigh,
+    hazescale,
     hzlib,
-    hzp,
-    hzslope,
-    hztop,
-    isothermal=True,
-    hzwscale=1e0,
+    hazeprof,
+    hazeslope,
+    hazeloc,
+    isothermal,
+    hazethick,
     debug=False,
 ):
     '''
     G. ROUDIER: Builds optical depth matrix
     '''
+
     # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
-    Nzones = len(p)
+    Nzones = len(pressure)
     tau = np.zeros((Nzones, wgrid.size))
     # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
@@ -331,12 +360,11 @@ def gettau(
                 xsecs[elem],
                 qtgrid[elem],
                 temp,
-                p,
+                pressure,
                 mmr,
                 lbroadening,
                 lshifting,
                 wgrid,
-                debug=False,
             )
             # sigma = np.array(sigma)  # cm^2/mol
             if True in (sigma < 0):
@@ -400,58 +428,67 @@ def gettau(
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
-        sigma = sray0 * (wgrid[::-1] / slambda0) ** (hzslope)
+        sigma = sray0 * (wgrid[::-1] / slambda0) ** (hazeslope)
         hazedensity = np.ones(len(z))
-        tau = tau + 10.0**rayleigh * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0**hazescale * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            10.0**rayleigh * sigma * np.array([hazedensity]).T
+            10.0**hazescale * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
         sigma = (
             0.0083
-            * (wgrid[::-1]) ** (hzslope)
+            * (wgrid[::-1]) ** (hazeslope)
             * (
                 1e0
-                + 0.014 * (wgrid[::-1]) ** (hzslope / 2e0)
-                + 0.00027 * (wgrid[::-1]) ** (hzslope)
+                + 0.014 * (wgrid[::-1]) ** (hazeslope / 2e0)
+                + 0.00027 * (wgrid[::-1]) ** (hazeslope)
             )
         )
-        if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
-            frh = hzlib['PROFILE'][0][hzp][0]
-            rh = frh(p)
+        if hazeprof in ['MAX', 'MEDIAN', 'AVERAGE']:
+            frh = hzlib['PROFILE'][0][hazeprof][0]
+            rh = frh(pressure)
             rh[rh < 0] = 0.0
-            refhzp = float(p[rh == np.max(rh)])
-            if hztop is None:
-                hzshift = 0e0
+            haze_ref_pressure = float(pressure[rh == np.max(rh)])
+            if hazeloc is None:
+                hazeshift = 0e0
             else:
-                hzshift = hztop - np.log10(refhzp)
-            splp = np.log10(p[::-1])
+                hazeshift = hazeloc - np.log10(haze_ref_pressure)
+            splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
-            hzwdist = hztop - np.log10(p)
+            hazewdist = hazeloc - np.log10(pressure)
 
-            if hzwscale > 0:
-                preval = hztop - hzwdist / hzwscale - hzshift
+            if hazethick > 0:
+                preval = hazeloc - hazewdist / hazethick - hazeshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
-                rh = thisfrh(np.log10(p)) * 0
+                rh = thisfrh(np.log10(pressure)) * 0
             if debug:
-                jptprofile = 'J' + hzp
+                jptprofile = 'J' + hazeprof
                 jdata = np.array(hzlib['PROFILE'][0][jptprofile])
                 jpres = np.array(hzlib['PROFILE'][0]['PRESSURE'])
                 myfig = plt.figure(figsize=(12, 6))
                 plt.plot(
                     1e6 * jdata, jpres, color='blue', label='Lavvas et al. 2017'
                 )
-                plt.axhline(refhzp, linestyle='--', color='blue')
-                plt.plot(1e6 * rh, p, 'r', label='Parametrized density profile')
-                plt.plot(1e6 * thisfrh(np.log10(p) - hzshift), p, 'g^')
-                if hztop is not None:
-                    plt.axhline(10**hztop, linestyle='--', color='red')
+                plt.axhline(haze_ref_pressure, linestyle='--', color='blue')
+                plt.plot(
+                    1e6 * rh,
+                    pressure,
+                    'r',
+                    label='Parametrized density profile',
+                )
+                plt.plot(
+                    1e6 * thisfrh(np.log10(pressure) - hazeshift),
+                    pressure,
+                    'g^',
+                )
+                if hazeloc is not None:
+                    plt.axhline(10**hazeloc, linestyle='--', color='red')
                     pass
                 plt.semilogy()
                 plt.semilogx()
@@ -479,10 +516,7 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        # print('lower haze',rayleigh)
-        # print('lower haze',sigma)
-        # print('lower haze', rh)
-        hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
+        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
@@ -502,7 +536,12 @@ def gettau(
             np.log10(tau),
             aspect='auto',
             origin='lower',
-            extent=[max(wgrid), min(wgrid), np.log10(max(p)), np.log10(min(p))],
+            extent=[
+                max(wgrid),
+                min(wgrid),
+                np.log10(max(pressure)),
+                np.log10(min(pressure)),
+            ],
         )
         plt.ylabel('log10(Pressure)', fontsize=24)
         plt.xlabel('Wavelength [$\\mu m$]', fontsize=24)
@@ -528,7 +567,7 @@ def absorb(
     xsecs,
     qtgrid,
     T,
-    p,
+    pressure,
     mmr,
     lbroadening,
     lshifting,
@@ -540,6 +579,8 @@ def absorb(
     '''
     G. ROUDIER: HITRAN HITEMP database parser
     '''
+
+    select = np.array(xsecs['I']) == (iso + 1)
     select = np.array(xsecs['I']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
@@ -548,7 +589,9 @@ def absorb(
     delta = np.array(xsecs['delta'])[select]
     eta = np.array(xsecs['eta'])[select]
     gair = np.array(xsecs['g_air'])[select]
+
     Qref = float(qtgrid['SPL'][iso](Tref))
+
     try:
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:
@@ -560,19 +603,19 @@ def absorb(
     if np.all(~np.isfinite(tips)):
         tips = 0
     sigma = S * tips
-    ps = mmr * p
+    ps = mmr * pressure
     gamma = np.array(
-        np.asmatrix(p - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+        np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
         + np.asmatrix(ps).T * np.asmatrix(gself)
     )
     if lbroadening:
         if lshifting:
             matnu = np.array(
-                np.asmatrix(np.ones(p.size)).T * np.asmatrix(nu)
-                + np.asmatrix(p).T * np.asmatrix(delta)
+                np.asmatrix(np.ones(pressure.size)).T * np.asmatrix(nu)
+                + np.asmatrix(pressure).T * np.asmatrix(delta)
             )
         else:
-            matnu = np.array(nu) * np.array([np.ones(len(p))]).T
+            matnu = np.array(nu) * np.array([np.ones(len(pressure))]).T
         pass
     else:
         matnu = np.array(nu)
@@ -612,7 +655,7 @@ def absorb(
     return absgrid, nugrid
 
 
-# --------- ----------------------------------------------------------
+# --------- ------`<----------------------------------------------------
 # -- EXOMOL -- -------------------------------------------------------
 def getxmolxs(temp, xsecs):
     '''
@@ -664,13 +707,13 @@ def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
-    ctp, hza, hzloc, hzthick, tpr, mdp = crbinputs
+    ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
     # print(
     #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
     #    ctp,
-    #    hza,
-    #    hzloc,
-    #    hzthick,
+    #    hazescale,
+    #    hazeloc,
+    #    hazethick,
     #    tpr,
     #    mdp
     # )
@@ -698,23 +741,12 @@ def cloudyfmcerberus(*crbinputs):
         # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
         fmc = crbmodel(
-            None,
-            hza,
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=hazescale,
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
     else:
         mixratio = {}
@@ -722,23 +754,12 @@ def cloudyfmcerberus(*crbinputs):
             mixratio[key] = mdp[index]
 
         fmc = crbmodel(
-            mixratio,
-            hza,
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=hazescale,
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
 
     fmc = fmc[ctxt.cleanup]
@@ -758,12 +779,12 @@ def clearfmcerberus(*crbinputs):
     Wrapper around Cerberus forward model - NO CLOUDS!
     (Note that this is not actually a cloud-free model; it is a fixed-cloud model!!)
     '''
-    # these fixed values are probably set in ariel/core, e.g. -10 for HScale
+    # these fixed values are probably set in ariel/core, e.g. -10 for hazescale
     ctp = ctxt.fixedParams['CTP']
-    hza = ctxt.fixedParams['HScale']
-    hzloc = ctxt.fixedParams['HLoc']
-    hzthick = ctxt.fixedParams['HThick']
-    # print(' fixed cloud parameters (clear):',ctp,hza,hzloc,hzthick)
+    hazescale = ctxt.fixedParams['HScale']
+    hazeloc = ctxt.fixedParams['HLoc']
+    hazethick = ctxt.fixedParams['HThick']
+    # print(' fixed cloud parameters (clear):',ctp,hazescale,hazeloc,hazethick)
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
@@ -795,23 +816,12 @@ def clearfmcerberus(*crbinputs):
         # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
         fmc = crbmodel(
-            None,
-            float(hza),
-            float(ctp),
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
+            float(ctp),
+            hazescale=float(hazescale),
+            hazeloc=float(hazeloc),
+            hazethick=float(hazethick),
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
         pass
     else:
@@ -820,23 +830,12 @@ def clearfmcerberus(*crbinputs):
             mixratio[key] = mdp[index]
             pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            float(ctp),
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             tpr,
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=float(hzloc),
-            hzwscale=float(hzthick),
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            float(ctp),
+            hazescale=float(hazescale),
+            hazeloc=float(hazeloc),
+            hazethick=float(hazethick),
+            mixratio=mixratio,
         )
         pass
 
@@ -856,17 +855,15 @@ def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, off1, off2, hzloc, hzthick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, off2, hazeloc, hazethick, tpr, mdp = crbinputs
     #     off0, off1, off2 = crbinputs
     #     ctp = -2.5744083
-    #     hza = -1.425234
-    #     hzloc = -0.406851
-    #     hzthick = 5.58950953
+    #     hazescale = -1.425234
+    #     hazeloc = -0.406851
+    #     hazethick = 5.58950953
     #     tpr = 1551.41137
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
-    #  cond_wav = (wbb < 0.56) | (wbb > 1.02)
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -874,50 +871,25 @@ def offcerberus(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
     cond_G141 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G141-SCAN'
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
@@ -925,8 +897,6 @@ def offcerberus(*crbinputs):
     fmc = fmc + np.nanmean(tspectrum_clean[cond_G141])
     #     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G750L-STARE'
     cond_G102 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G102-SCAN'
     fmc[cond_G430] = fmc[cond_G430] - 1e-2 * float(off0)
@@ -939,8 +909,7 @@ def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -948,55 +917,28 @@ def offcerberus1(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430L-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750L-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -1008,8 +950,7 @@ def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -1017,55 +958,28 @@ def offcerberus2(*crbinputs):
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -1077,64 +991,36 @@ def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
@@ -1146,64 +1032,36 @@ def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
     fmc[cond_G430] = fmc[cond_G430] + 1e-2 * float(off0)
     return fmc
@@ -1213,64 +1071,36 @@ def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, off1, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
@@ -1282,64 +1112,36 @@ def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
     return fmc
@@ -1349,64 +1151,36 @@ def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
-    ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
     fmc[cond_G750] = fmc[cond_G750] + 1e-2 * float(off0)
     return fmc
@@ -1416,64 +1190,36 @@ def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
-    ctp, hza, off0, hzloc, hzthick, tpr, mdp = crbinputs
-    wbb = np.array(ctxt.spc['data'][ctxt.p]['WB'])
+    ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    flt = np.array(ctxt.spc['data'][ctxt.p]['Fltrs'])
+    flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
         fmc = crbmodel(
-            None,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            wbb,
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
             cheq=tceqdict,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-            pass
         fmc = crbmodel(
-            mixratio,
-            float(hza),
-            ctp,
-            ctxt.solidr,
-            ctxt.orbp,
-            ctxt.xsl['data'][ctxt.p]['XSECS'],
-            ctxt.xsl['data'][ctxt.p]['QTGRID'],
             float(tpr),
-            np.array(ctxt.spc['data'][ctxt.p]['WB']),
-            hzlib=ctxt.hzlib,
-            hzp='AVERAGE',
-            hztop=hzloc,
-            hzwscale=hzthick,
-            cheq=None,
-            pnet=ctxt.p,
-            verbose=False,
-            debug=False,
+            ctp,
+            hazescale=float(hazescale),
+            hazeloc=hazeloc,
+            hazethick=hazethick,
+            mixratio=mixratio,
         )
-        pass
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    ww = wbb
-    ww = ww[ctxt.cleanup]
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
     fmc[cond_G102] = fmc[cond_G102] + 1e-2 * float(off0)
     return fmc
