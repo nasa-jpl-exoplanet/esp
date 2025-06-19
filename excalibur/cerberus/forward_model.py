@@ -29,8 +29,8 @@ def crbmodel(
     cloudtp,
     cheq=None,
     mixratio=None,
-    rayleigh=0.0,
-    hzwscale=1e0,
+    HScale=0.0,
+    hzwscale=1.0,
     hzslope=-4.0,
     hztop=None,
     hzp='AVERAGE',
@@ -153,7 +153,7 @@ def crbmodel(
         fH2,
         fHe,
         xmollist,
-        rayleigh,
+        HScale,
         hzlib,
         hzp,
         hzslope,
@@ -310,7 +310,7 @@ def gettau(
     fH2,
     fHe,
     xmollist,
-    rayleigh,
+    HScale,
     hzlib,
     hzp,
     hzslope,
@@ -433,9 +433,9 @@ def gettau(
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hzslope)
         hazedensity = np.ones(len(z))
-        tau = tau + 10.0**rayleigh * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0**HScale * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            10.0**rayleigh * sigma * np.array([hazedensity]).T
+            10.0**HScale * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
@@ -517,10 +517,7 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        # print('lower haze',rayleigh)
-        # print('lower haze',sigma)
-        # print('lower haze', rh)
-        hazecontribution = 10.0**rayleigh * sigma * np.array([rh]).T
+        hazecontribution = 10.0**HScale * sigma * np.array([rh]).T
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
@@ -747,7 +744,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             ctp,
-            rayleigh=hza,
+            HScale=hza,
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -760,7 +757,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             ctp,
-            rayleigh=hza,
+            HScale=hza,
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -822,7 +819,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             float(ctp),
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=float(hzloc),
             hzwscale=float(hzthick),
             cheq=tceqdict,
@@ -836,7 +833,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             float(ctp),
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=float(hzloc),
             hzwscale=float(hzthick),
             mixratio=mixratio,
@@ -877,7 +874,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -889,7 +886,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -923,7 +920,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -935,7 +932,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -964,7 +961,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -976,7 +973,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1006,7 +1003,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1018,7 +1015,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1047,7 +1044,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1059,7 +1056,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1086,7 +1083,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1098,7 +1095,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1127,7 +1124,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1139,7 +1136,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1166,7 +1163,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1178,7 +1175,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,
@@ -1205,7 +1202,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             cheq=tceqdict,
@@ -1217,7 +1214,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            rayleigh=float(hza),
+            HScale=float(hza),
             hztop=hzloc,
             hzwscale=hzthick,
             mixratio=mixratio,

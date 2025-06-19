@@ -65,7 +65,7 @@ def make_cerberus_atmos(
     fmc, fmc_by_molecule = crbmodel(
         float(Teq),
         float(ctp),
-        rayleigh=float(hza),
+        HScale=float(hza),
         hztop=float(hzloc),
         hzwscale=float(hzthick),
         hzlib=crbhzlib,

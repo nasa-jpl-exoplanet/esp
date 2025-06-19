@@ -2070,7 +2070,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc = crbmodel(
                     float(tpr),
                     float(ctp),
-                    rayleigh=float(hza),
+                    HScale=float(hza),
                     hztop=float(hloc),
                     hzwscale=float(hthc),
                     mixratio=mixratio,
@@ -2101,7 +2101,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc_profiled = crbmodel(
                     float(tpr_profiled),
                     float(ctp_profiled),
-                    rayleigh=float(hza_profiled),
+                    HScale=float(hza_profiled),
                     hztop=float(hloc_profiled),
                     hzwscale=float(hthc_profiled),
                     mixratio=mixratio_profiled,
@@ -2212,7 +2212,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     fmcrand = crbmodel(
                         float(tpr),
                         float(ctp),
-                        rayleigh=float(hza),
+                        HScale=float(hza),
                         hztop=float(hloc),
                         hzwscale=float(hthc),
                         mixratio=mixratio,
