@@ -32,7 +32,7 @@ def crbmodel(
     hazescale=0.0,
     HThick=1.0,
     HSlope=-4.0,
-    HLoc=None,
+    hazeloc=None,
     hzp='AVERAGE',
     hzlib=ctxt.hzlib,
     planet=ctxt.planet,
@@ -157,7 +157,7 @@ def crbmodel(
         hzlib,
         hzp,
         HSlope,
-        HLoc,
+        hazeloc,
         isothermal,
         HThick=HThick,
         debug=debug,
@@ -314,7 +314,7 @@ def gettau(
     hzlib,
     hzp,
     HSlope,
-    HLoc,
+    hazeloc,
     isothermal,
     HThick=1.0,
     debug=False,
@@ -453,19 +453,19 @@ def gettau(
             rh = frh(pressure)
             rh[rh < 0] = 0.0
             refhzp = float(pressure[rh == np.max(rh)])
-            if HLoc is None:
+            if hazeloc is None:
                 hzshift = 0e0
             else:
-                hzshift = HLoc - np.log10(refhzp)
+                hzshift = hazeloc - np.log10(refhzp)
             splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
-            hzwdist = HLoc - np.log10(pressure)
+            hzwdist = hazeloc - np.log10(pressure)
 
             if HThick > 0:
-                preval = HLoc - hzwdist / HThick - hzshift
+                preval = hazeloc - hzwdist / HThick - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
@@ -488,8 +488,8 @@ def gettau(
                 plt.plot(
                     1e6 * thisfrh(np.log10(pressure) - hzshift), pressure, 'g^'
                 )
-                if HLoc is not None:
-                    plt.axhline(10**HLoc, linestyle='--', color='red')
+                if hazeloc is not None:
+                    plt.axhline(10**hazeloc, linestyle='--', color='red')
                     pass
                 plt.semilogy()
                 plt.semilogx()
@@ -708,12 +708,12 @@ def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
-    ctp, hazescale, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, hazeloc, HThick, tpr, mdp = crbinputs
     # print(
     #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
     #    ctp,
     #    hazescale,
-    #    HLoc,
+    #    hazeloc,
     #    HThick,
     #    tpr,
     #    mdp
@@ -745,7 +745,7 @@ def cloudyfmcerberus(*crbinputs):
             tpr,
             ctp,
             hazescale=hazescale,
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -758,7 +758,7 @@ def cloudyfmcerberus(*crbinputs):
             tpr,
             ctp,
             hazescale=hazescale,
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -783,9 +783,9 @@ def clearfmcerberus(*crbinputs):
     # these fixed values are probably set in ariel/core, e.g. -10 for hazescale
     ctp = ctxt.fixedParams['CTP']
     hazescale = ctxt.fixedParams['HScale']
-    HLoc = ctxt.fixedParams['HLoc']
+    hazeloc = ctxt.fixedParams['HLoc']
     HThick = ctxt.fixedParams['HThick']
-    # print(' fixed cloud parameters (clear):',ctp,hazescale,HLoc,HThick)
+    # print(' fixed cloud parameters (clear):',ctp,hazescale,hazeloc,HThick)
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
@@ -820,7 +820,7 @@ def clearfmcerberus(*crbinputs):
             tpr,
             float(ctp),
             hazescale=float(hazescale),
-            HLoc=float(HLoc),
+            hazeloc=float(hazeloc),
             HThick=float(HThick),
             cheq=tceqdict,
         )
@@ -834,7 +834,7 @@ def clearfmcerberus(*crbinputs):
             tpr,
             float(ctp),
             hazescale=float(hazescale),
-            HLoc=float(HLoc),
+            hazeloc=float(hazeloc),
             HThick=float(HThick),
             mixratio=mixratio,
         )
@@ -856,11 +856,11 @@ def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, off1, off2, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, off2, hazeloc, HThick, tpr, mdp = crbinputs
     #     off0, off1, off2 = crbinputs
     #     ctp = -2.5744083
     #     hazescale = -1.425234
-    #     HLoc = -0.406851
+    #     hazeloc = -0.406851
     #     HThick = 5.58950953
     #     tpr = 1551.41137
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
@@ -875,7 +875,7 @@ def offcerberus(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -887,7 +887,7 @@ def offcerberus(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -910,7 +910,7 @@ def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -921,7 +921,7 @@ def offcerberus1(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -933,7 +933,7 @@ def offcerberus1(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -951,7 +951,7 @@ def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -962,7 +962,7 @@ def offcerberus2(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -974,7 +974,7 @@ def offcerberus2(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -992,7 +992,7 @@ def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1004,7 +1004,7 @@ def offcerberus3(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1016,7 +1016,7 @@ def offcerberus3(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -1033,7 +1033,7 @@ def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1045,7 +1045,7 @@ def offcerberus4(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1057,7 +1057,7 @@ def offcerberus4(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -1072,7 +1072,7 @@ def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1084,7 +1084,7 @@ def offcerberus5(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1096,7 +1096,7 @@ def offcerberus5(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -1113,7 +1113,7 @@ def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1125,7 +1125,7 @@ def offcerberus6(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1137,7 +1137,7 @@ def offcerberus6(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -1152,7 +1152,7 @@ def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
-    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1164,7 +1164,7 @@ def offcerberus7(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1176,7 +1176,7 @@ def offcerberus7(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
@@ -1191,7 +1191,7 @@ def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
-    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, hazeloc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1203,7 +1203,7 @@ def offcerberus8(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             cheq=tceqdict,
         )
@@ -1215,7 +1215,7 @@ def offcerberus8(*crbinputs):
             float(tpr),
             ctp,
             hazescale=float(hazescale),
-            HLoc=HLoc,
+            hazeloc=hazeloc,
             HThick=HThick,
             mixratio=mixratio,
         )
