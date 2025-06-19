@@ -21,7 +21,6 @@
             cerberus.crbmodel.isothermal="true"
             cerberus.results.nrandomwalkers="1000"
             cerberus.results.randomseed="1"
-            ariel.simspectrum.SNRfactor="1"
             ariel.simspectrum.tier="1"
             ariel.simspectrum.randomseed="123"
             ariel.simspectrum.SNRadjustment="1"

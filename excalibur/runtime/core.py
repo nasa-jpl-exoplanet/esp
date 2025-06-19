@@ -68,7 +68,6 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_bounds_HThick',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
-        'ariel_simspectrum_SNRfactor',
         'ariel_simspectrum_tier',
         'ariel_simspectrum_randomseed',
         'ariel_simspectrum_SNRadjustment',

@@ -85,8 +85,6 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="system.validate.maximizeSelfConsistency"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="ariel.simspectrum.SNRfactor"
-                  type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.includeMetallicityDispersion"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.randomCloudProperties"

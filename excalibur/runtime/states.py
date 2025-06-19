@@ -69,7 +69,6 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
-        self['ariel_simspectrum_SNRfactor'] = excalibur.ValueScalar()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
         self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
@@ -244,7 +243,6 @@ class StatusSV(dawgie.StateVector):
         '''init the state vector with empty values'''
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
-        self['ariel_simspectrum_SNRfactor'] = excalibur.ValueScalar()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
@@ -344,7 +342,6 @@ class StatusSV(dawgie.StateVector):
             'isValidTarget',
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
-            'ariel_simspectrum_SNRfactor',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
