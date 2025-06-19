@@ -34,19 +34,19 @@ def crbmodel(
     hazeslope=-4.0,
     hazeloc=None,
     hazeprof='AVERAGE',
-    hzlib=ctxt.hzlib,
-    planet=ctxt.planet,
-    rp0=ctxt.solidr,
-    orbp=ctxt.orbp,
-    wgrid=None,  # np.array(ctxt.spc['data'][ctxt.planet]['WB']),
-    xsecs=None,  # ctxt.xsl['data'][ctxt.planet]['XSECS'],
-    qtgrid=None,  # ctxt.xsl['data'][ctxt.planet]['QTGRID'],
-    isothermal=ctxt.isothermal,
-    lbroadening=ctxt.lbroadening,
-    lshifting=ctxt.lshifting,
-    nlevels=ctxt.nlevels,
-    Hsmax=ctxt.Hsmax,
-    solrad=ctxt.solrad,
+    hzlib=None,
+    planet=None,
+    rp0=None,
+    orbp=None,
+    wgrid=None,
+    xsecs=None,
+    qtgrid=None,
+    isothermal=None,
+    lbroadening=None,
+    lshifting=None,
+    nlevels=None,
+    Hsmax=None,
+    solrad=None,
     break_down_by_molecule=False,
     logx=False,
     verbose=False,
@@ -57,8 +57,6 @@ def crbmodel(
     radius solrad evenly log divided amongst nlevels steps
     '''
 
-    # asdf: replace with a passed in context equivalent?
-    #  that would be cleaner here, but a bit more work in the notebook calls
     if planet is None:
         planet = ctxt.planet
     if orbp is None:
@@ -75,7 +73,6 @@ def crbmodel(
         lbroadening = ctxt.lbroadening
     if not bool(isothermal):
         isothermal = ctxt.isothermal
-
     if rp0 is None:
         rp0 = ctxt.solidr
     if xsecs is None:
