@@ -30,7 +30,7 @@ def crbmodel(
     cheq=None,
     mixratio=None,
     HScale=0.0,
-    hzwscale=1.0,
+    HThick=1.0,
     hzslope=-4.0,
     HLoc=None,
     hzp='AVERAGE',
@@ -159,7 +159,7 @@ def crbmodel(
         hzslope,
         HLoc,
         isothermal,
-        hzwscale=hzwscale,
+        HThick=HThick,
         debug=debug,
     )
 
@@ -316,7 +316,7 @@ def gettau(
     hzslope,
     HLoc,
     isothermal,
-    hzwscale=1e0,
+    HThick=1.0,
     debug=False,
 ):
     '''
@@ -464,8 +464,8 @@ def gettau(
             )
             hzwdist = HLoc - np.log10(pressure)
 
-            if hzwscale > 0:
-                preval = HLoc - hzwdist / hzwscale - hzshift
+            if HThick > 0:
+                preval = HLoc - hzwdist / HThick - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
@@ -746,7 +746,7 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             HScale=HScale,
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -759,7 +759,7 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             HScale=HScale,
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
 
@@ -821,7 +821,7 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             HScale=float(HScale),
             HLoc=float(HLoc),
-            hzwscale=float(HThick),
+            HThick=float(HThick),
             cheq=tceqdict,
         )
         pass
@@ -835,7 +835,7 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             HScale=float(HScale),
             HLoc=float(HLoc),
-            hzwscale=float(HThick),
+            HThick=float(HThick),
             mixratio=mixratio,
         )
         pass
@@ -876,7 +876,7 @@ def offcerberus(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -888,7 +888,7 @@ def offcerberus(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
@@ -922,7 +922,7 @@ def offcerberus1(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -934,7 +934,7 @@ def offcerberus1(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -963,7 +963,7 @@ def offcerberus2(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -975,7 +975,7 @@ def offcerberus2(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1005,7 +1005,7 @@ def offcerberus3(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1017,7 +1017,7 @@ def offcerberus3(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1046,7 +1046,7 @@ def offcerberus4(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1058,7 +1058,7 @@ def offcerberus4(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1085,7 +1085,7 @@ def offcerberus5(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1097,7 +1097,7 @@ def offcerberus5(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1126,7 +1126,7 @@ def offcerberus6(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1138,7 +1138,7 @@ def offcerberus6(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1165,7 +1165,7 @@ def offcerberus7(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1177,7 +1177,7 @@ def offcerberus7(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1204,7 +1204,7 @@ def offcerberus8(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1216,7 +1216,7 @@ def offcerberus8(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=HThick,
+            HThick=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])

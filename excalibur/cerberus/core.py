@@ -1382,7 +1382,7 @@ def atmos(
                 #    ctp,
                 #    HScale,
                 #    HLoc,
-                #    hthc,
+                #    HThick,
                 #    tceqdict,
                 #    mixratio,
                 # )
@@ -1937,15 +1937,15 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
                     HScaletrace = atm[p][model_name]['MCTRACE']['HScale']
                     HLoctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    hthicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    HThicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
                     HScale = np.median(HScaletrace)
                     HLoc = np.median(HLoctrace)
-                    hthc = np.median(hthicktrace)
+                    HThick = np.median(HThicktrace)
                     # print('fit results; CTP:',ctp)
                     # print('fit results; HScale:',HScale)
                     # print('fit results; HLoc:',HLoc)
-                    # print('fit results; HThick:',hthc)
+                    # print('fit results; HThick:',HThick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
@@ -1955,22 +1955,22 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     HLoctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
                         keepers
                     ]
-                    hthicktrace_profiled = atm[p][model_name]['MCTRACE'][
+                    HThicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
                     ctp_profiled = np.median(ctptrace_profiled)
                     HScale_profiled = np.median(HScaletrace_profiled)
                     HLoc_profiled = np.median(HLoctrace_profiled)
-                    hthc_profiled = np.median(hthicktrace_profiled)
+                    HThick_profiled = np.median(HThicktrace_profiled)
                 else:
                     ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
                     HScale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     HLoc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
-                    hthc = atm[p]['TRUTH_MODELPARAMS']['HThick']
+                    HThick = atm[p]['TRUTH_MODELPARAMS']['HThick']
                     ctp_profiled = ctp
                     HScale_profiled = HScale
                     HLoc_profiled = HLoc
-                    hthc_profiled = hthc
+                    HThick_profiled = HThick
                 mdp = np.median(np.array(mdptrace), axis=1)
                 mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
@@ -2050,7 +2050,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctp,
                     HScale,
                     HLoc,
-                    hthc,
+                    HThick,
                     tceqdict,
                     mixratio,
                 )
@@ -2059,7 +2059,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctp_profiled,
                     HScale_profiled,
                     HLoc_profiled,
-                    hthc_profiled,
+                    HThick_profiled,
                     tceqdict_profiled,
                     mixratio_profiled,
                 )
@@ -2071,7 +2071,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(ctp),
                     HScale=float(HScale),
                     HLoc=float(HLoc),
-                    hzwscale=float(hthc),
+                    HThick=float(HThick),
                     mixratio=mixratio,
                     cheq=tceqdict,
                     rp0=solidr,
@@ -2102,7 +2102,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     float(ctp_profiled),
                     HScale=float(HScale_profiled),
                     HLoc=float(HLoc_profiled),
-                    hzwscale=float(hthc_profiled),
+                    HThick=float(HThick_profiled),
                     mixratio=mixratio_profiled,
                     rp0=solidr,
                     xsecs=xsl[p]['XSECS'],
@@ -2162,7 +2162,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         ctp = ctptrace[iwalker]
                         HScale = HScaletrace[iwalker]
                         HLoc = HLoctrace[iwalker]
-                        hthc = hthicktrace[iwalker]
+                        HThick = HThicktrace[iwalker]
                     if fit_t:
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
@@ -2171,7 +2171,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', HScale)
                     #    print('fit results; HLoc:', HLoc)
-                    #    print('fit results; HThick:', hthc)
+                    #    print('fit results; HThick:', HThick)
                     # print('fit results; T:', tpr)
                     # print('fit results; mdplist:', mdp)
 
@@ -2213,7 +2213,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         float(ctp),
                         HScale=float(HScale),
                         HLoc=float(HLoc),
-                        hzwscale=float(hthc),
+                        HThick=float(HThick),
                         mixratio=mixratio,
                         rp0=solidr,
                         xsecs=xsl[p]['XSECS'],
@@ -2259,7 +2259,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             ctp,
                             HScale,
                             HLoc,
-                            hthc,
+                            HThick,
                             tceqdict,
                             mixratio,
                         )
