@@ -33,7 +33,7 @@ def crbmodel(
     hazethick=1.0,
     hazeslope=-4.0,
     hazeloc=None,
-    hzp='AVERAGE',
+    hazeprof='AVERAGE',
     hzlib=ctxt.hzlib,
     planet=ctxt.planet,
     rp0=ctxt.solidr,
@@ -155,7 +155,7 @@ def crbmodel(
         xmollist,
         hazescale,
         hzlib,
-        hzp,
+        hazeprof,
         hazeslope,
         hazeloc,
         isothermal,
@@ -312,7 +312,7 @@ def gettau(
     xmollist,
     hazescale,
     hzlib,
-    hzp,
+    hazeprof,
     hazeslope,
     hazeloc,
     isothermal,
@@ -448,15 +448,15 @@ def gettau(
                 + 0.00027 * (wgrid[::-1]) ** (hazeslope)
             )
         )
-        if hzp in ['MAX', 'MEDIAN', 'AVERAGE']:
-            frh = hzlib['PROFILE'][0][hzp][0]
+        if hazeprof in ['MAX', 'MEDIAN', 'AVERAGE']:
+            frh = hzlib['PROFILE'][0][hazeprof][0]
             rh = frh(pressure)
             rh[rh < 0] = 0.0
-            refhzp = float(pressure[rh == np.max(rh)])
+            haze_ref_pressure = float(pressure[rh == np.max(rh)])
             if hazeloc is None:
                 hzshift = 0e0
             else:
-                hzshift = hazeloc - np.log10(refhzp)
+                hzshift = hazeloc - np.log10(haze_ref_pressure)
             splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
@@ -471,14 +471,14 @@ def gettau(
             else:
                 rh = thisfrh(np.log10(pressure)) * 0
             if debug:
-                jptprofile = 'J' + hzp
+                jptprofile = 'J' + hazeprof
                 jdata = np.array(hzlib['PROFILE'][0][jptprofile])
                 jpres = np.array(hzlib['PROFILE'][0]['PRESSURE'])
                 myfig = plt.figure(figsize=(12, 6))
                 plt.plot(
                     1e6 * jdata, jpres, color='blue', label='Lavvas et al. 2017'
                 )
-                plt.axhline(refhzp, linestyle='--', color='blue')
+                plt.axhline(haze_ref_pressure, linestyle='--', color='blue')
                 plt.plot(
                     1e6 * rh,
                     pressure,
