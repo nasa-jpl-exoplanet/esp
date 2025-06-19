@@ -32,7 +32,7 @@ def crbmodel(
     HScale=0.0,
     hzwscale=1.0,
     hzslope=-4.0,
-    hztop=None,
+    HLoc=None,
     hzp='AVERAGE',
     hzlib=ctxt.hzlib,
     planet=ctxt.planet,
@@ -157,7 +157,7 @@ def crbmodel(
         hzlib,
         hzp,
         hzslope,
-        hztop,
+        HLoc,
         isothermal,
         hzwscale=hzwscale,
         debug=debug,
@@ -314,7 +314,7 @@ def gettau(
     hzlib,
     hzp,
     hzslope,
-    hztop,
+    HLoc,
     isothermal,
     hzwscale=1e0,
     debug=False,
@@ -453,19 +453,19 @@ def gettau(
             rh = frh(pressure)
             rh[rh < 0] = 0.0
             refhzp = float(pressure[rh == np.max(rh)])
-            if hztop is None:
+            if HLoc is None:
                 hzshift = 0e0
             else:
-                hzshift = hztop - np.log10(refhzp)
+                hzshift = HLoc - np.log10(refhzp)
             splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
-            hzwdist = hztop - np.log10(pressure)
+            hzwdist = HLoc - np.log10(pressure)
 
             if hzwscale > 0:
-                preval = hztop - hzwdist / hzwscale - hzshift
+                preval = HLoc - hzwdist / hzwscale - hzshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
@@ -488,8 +488,8 @@ def gettau(
                 plt.plot(
                     1e6 * thisfrh(np.log10(pressure) - hzshift), pressure, 'g^'
                 )
-                if hztop is not None:
-                    plt.axhline(10**hztop, linestyle='--', color='red')
+                if HLoc is not None:
+                    plt.axhline(10**HLoc, linestyle='--', color='red')
                     pass
                 plt.semilogy()
                 plt.semilogx()
@@ -745,7 +745,7 @@ def cloudyfmcerberus(*crbinputs):
             tpr,
             ctp,
             HScale=HScale,
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -758,7 +758,7 @@ def cloudyfmcerberus(*crbinputs):
             tpr,
             ctp,
             HScale=HScale,
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -820,7 +820,7 @@ def clearfmcerberus(*crbinputs):
             tpr,
             float(ctp),
             HScale=float(HScale),
-            hztop=float(HLoc),
+            HLoc=float(HLoc),
             hzwscale=float(hzthick),
             cheq=tceqdict,
         )
@@ -834,7 +834,7 @@ def clearfmcerberus(*crbinputs):
             tpr,
             float(ctp),
             HScale=float(HScale),
-            hztop=float(HLoc),
+            HLoc=float(HLoc),
             hzwscale=float(hzthick),
             mixratio=mixratio,
         )
@@ -875,7 +875,7 @@ def offcerberus(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -887,7 +887,7 @@ def offcerberus(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -921,7 +921,7 @@ def offcerberus1(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -933,7 +933,7 @@ def offcerberus1(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -962,7 +962,7 @@ def offcerberus2(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -974,7 +974,7 @@ def offcerberus2(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1004,7 +1004,7 @@ def offcerberus3(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1016,7 +1016,7 @@ def offcerberus3(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1045,7 +1045,7 @@ def offcerberus4(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1057,7 +1057,7 @@ def offcerberus4(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1084,7 +1084,7 @@ def offcerberus5(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1096,7 +1096,7 @@ def offcerberus5(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1125,7 +1125,7 @@ def offcerberus6(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1137,7 +1137,7 @@ def offcerberus6(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1164,7 +1164,7 @@ def offcerberus7(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1176,7 +1176,7 @@ def offcerberus7(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )
@@ -1203,7 +1203,7 @@ def offcerberus8(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             cheq=tceqdict,
         )
@@ -1215,7 +1215,7 @@ def offcerberus8(*crbinputs):
             float(tpr),
             ctp,
             HScale=float(HScale),
-            hztop=HLoc,
+            HLoc=HLoc,
             hzwscale=hzthick,
             mixratio=mixratio,
         )

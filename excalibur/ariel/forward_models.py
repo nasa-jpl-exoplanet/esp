@@ -66,7 +66,7 @@ def make_cerberus_atmos(
         float(Teq),
         float(ctp),
         HScale=float(HScale),
-        hztop=float(HLoc),
+        HLoc=float(HLoc),
         hzwscale=float(hzthick),
         hzlib=crbhzlib,
         cheq=tceqdict,
