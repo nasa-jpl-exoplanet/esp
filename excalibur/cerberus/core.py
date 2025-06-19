@@ -1949,7 +1949,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
-                    hazescale_profiled = atm[p][model_name]['MCTRACE'][
+                    hazescaletrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HScale'
                     ][keepers]
                     hazeloctrace_profiled = atm[p][model_name]['MCTRACE'][
