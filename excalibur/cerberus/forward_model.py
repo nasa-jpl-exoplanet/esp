@@ -156,7 +156,7 @@ def crbmodel(
         hazeslope,
         hazeloc,
         isothermal,
-        hazethick=hazethick,
+        hazethick,
         debug=debug,
     )
 
@@ -313,7 +313,7 @@ def gettau(
     hazeslope,
     hazeloc,
     isothermal,
-    hazethick=1.0,
+    hazethick,
     debug=False,
 ):
     '''
