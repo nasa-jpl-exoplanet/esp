@@ -708,13 +708,13 @@ def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
-    ctp, HScale, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, HLoc, HThick, tpr, mdp = crbinputs
     # print(
     #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
     #    ctp,
     #    HScale,
     #    HLoc,
-    #    hzthick,
+    #    HThick,
     #    tpr,
     #    mdp
     # )
@@ -746,7 +746,7 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             HScale=HScale,
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -759,7 +759,7 @@ def cloudyfmcerberus(*crbinputs):
             ctp,
             HScale=HScale,
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
 
@@ -784,8 +784,8 @@ def clearfmcerberus(*crbinputs):
     ctp = ctxt.fixedParams['CTP']
     HScale = ctxt.fixedParams['HScale']
     HLoc = ctxt.fixedParams['HLoc']
-    hzthick = ctxt.fixedParams['HThick']
-    # print(' fixed cloud parameters (clear):',ctp,HScale,HLoc,hzthick)
+    HThick = ctxt.fixedParams['HThick']
+    # print(' fixed cloud parameters (clear):',ctp,HScale,HLoc,HThick)
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
@@ -821,7 +821,7 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             HScale=float(HScale),
             HLoc=float(HLoc),
-            hzwscale=float(hzthick),
+            hzwscale=float(HThick),
             cheq=tceqdict,
         )
         pass
@@ -835,7 +835,7 @@ def clearfmcerberus(*crbinputs):
             float(ctp),
             HScale=float(HScale),
             HLoc=float(HLoc),
-            hzwscale=float(hzthick),
+            hzwscale=float(HThick),
             mixratio=mixratio,
         )
         pass
@@ -856,12 +856,12 @@ def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, off2, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, off1, off2, HLoc, HThick, tpr, mdp = crbinputs
     #     off0, off1, off2 = crbinputs
     #     ctp = -2.5744083
     #     HScale = -1.425234
     #     HLoc = -0.406851
-    #     hzthick = 5.58950953
+    #     HThick = 5.58950953
     #     tpr = 1551.41137
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -876,7 +876,7 @@ def offcerberus(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -888,7 +888,7 @@ def offcerberus(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
@@ -910,7 +910,7 @@ def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -922,7 +922,7 @@ def offcerberus1(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -934,7 +934,7 @@ def offcerberus1(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -951,7 +951,7 @@ def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -963,7 +963,7 @@ def offcerberus2(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -975,7 +975,7 @@ def offcerberus2(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -992,7 +992,7 @@ def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1005,7 +1005,7 @@ def offcerberus3(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1017,7 +1017,7 @@ def offcerberus3(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1033,7 +1033,7 @@ def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1046,7 +1046,7 @@ def offcerberus4(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1058,7 +1058,7 @@ def offcerberus4(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1072,7 +1072,7 @@ def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1085,7 +1085,7 @@ def offcerberus5(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1097,7 +1097,7 @@ def offcerberus5(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1113,7 +1113,7 @@ def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1126,7 +1126,7 @@ def offcerberus6(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1138,7 +1138,7 @@ def offcerberus6(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1152,7 +1152,7 @@ def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1165,7 +1165,7 @@ def offcerberus7(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1177,7 +1177,7 @@ def offcerberus7(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
@@ -1191,7 +1191,7 @@ def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, hzthick, tpr, mdp = crbinputs
+    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1204,7 +1204,7 @@ def offcerberus8(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             cheq=tceqdict,
         )
     else:
@@ -1216,7 +1216,7 @@ def offcerberus8(*crbinputs):
             ctp,
             HScale=float(HScale),
             HLoc=HLoc,
-            hzwscale=hzthick,
+            hzwscale=HThick,
             mixratio=mixratio,
         )
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
