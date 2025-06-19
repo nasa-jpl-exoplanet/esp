@@ -457,7 +457,7 @@ def plot_corner(
     truthcolor = 'darkgreen'
     fitcolor = 'firebrick'
 
-    tpr, ctp, hza, hloc, hthc, tceqdict, mixratio = modelParams_bestFit
+    tpr, ctp, HScale, hloc, hthc, tceqdict, mixratio = modelParams_bestFit
     # print('model param in corner plot',modelParams_bestFit)
 
     paramValues_bestFit = []
@@ -467,7 +467,7 @@ def plot_corner(
         elif param == 'CTP':
             paramValues_bestFit.append(ctp)
         elif param == 'HScale':
-            paramValues_bestFit.append(hza)
+            paramValues_bestFit.append(HScale)
         elif param == 'HLoc':
             paramValues_bestFit.append(hloc)
         elif param == 'HThick':
