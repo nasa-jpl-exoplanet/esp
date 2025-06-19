@@ -74,7 +74,7 @@ def crbmodel(
     if not bool(isothermal):
         isothermal = ctxt.isothermal
     if rp0 is None:
-        rp0 = ctxt.solidr
+        rp0 = ctxt.rp0
     if xsecs is None:
         xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
     if qtgrid is None:
@@ -483,7 +483,9 @@ def gettau(
                     label='Parametrized density profile',
                 )
                 plt.plot(
-                    1e6 * thisfrh(np.log10(pressure) - hazeshift), pressure, 'g^'
+                    1e6 * thisfrh(np.log10(pressure) - hazeshift),
+                    pressure,
+                    'g^',
                 )
                 if hazeloc is not None:
                     plt.axhline(10**hazeloc, linestyle='--', color='red')

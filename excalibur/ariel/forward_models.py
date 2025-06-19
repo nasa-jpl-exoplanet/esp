@@ -46,7 +46,7 @@ def make_cerberus_atmos(
         # print('cloudfree forward model input chem =', tceqdict)
 
     ssc = syscore.ssconstants(mks=True)
-    solidr = model_params['Rp'] * ssc['Rjup']  # MK
+    rp0 = model_params['Rp'] * ssc['Rjup']  # MK
     # orbp = {
     #    'R*': model_params['R*'],
     #    planet_letter: {'logg': model_params['logg']},
@@ -71,7 +71,7 @@ def make_cerberus_atmos(
         hzlib=crbhzlib,
         cheq=tceqdict,
         mixratio=mixratios,
-        rp0=solidr,
+        rp0=rp0,
         xsecs=xslib['data'][planet_letter]['XSECS'],
         qtgrid=xslib['data'][planet_letter]['QTGRID'],
         wgrid=wavelength_um,

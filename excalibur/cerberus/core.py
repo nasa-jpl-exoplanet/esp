@@ -804,7 +804,7 @@ def atmos(
             twav[cleanup2] = np.nan
             # cleanup = np.isfinite(tspectrum) & (tspecerr < 1e0)
             cleanup = np.isfinite(tspectrum)
-            solidr = orbp[p]['rp'] * ssc['Rjup']  # MK
+            rp0 = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
                 out['data'][p][model] = {}
@@ -1109,7 +1109,7 @@ def atmos(
                             cleanup=cleanup,
                             model=model,
                             planet=p,
-                            solidr=solidr,
+                            rp0=rp0,
                             orbp=orbp,
                             tspectrum=tspectrum,
                             xsl=xsl,
@@ -1241,7 +1241,7 @@ def atmos(
                                 cleanup=cleanup,
                                 model=model,
                                 planet=p,
-                                solidr=solidr,
+                                rp0=rp0,
                                 orbp=orbp,
                                 tspectrum=tspectrum,
                                 xsl=xsl,
@@ -1949,12 +1949,12 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
-                    hazescale_profiled = atm[p][model_name]['MCTRACE']['HScale'][
-                        keepers
-                    ]
-                    hazeloctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
-                        keepers
-                    ]
+                    hazescale_profiled = atm[p][model_name]['MCTRACE'][
+                        'HScale'
+                    ][keepers]
+                    hazeloctrace_profiled = atm[p][model_name]['MCTRACE'][
+                        'HLoc'
+                    ][keepers]
                     hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
@@ -1976,7 +1976,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 # print('fit results; T:',tpr)
                 # print('fit results; mdplist:',mdp)
 
-                solidr = fin['priors'][p]['rp'] * ssc['Rjup']
+                rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
 
                 if model_name == 'TEC':
                     # if len(mdp)!=3: log.warning('--< Expecting 3 molecules for TEQ model! >--')
@@ -2074,7 +2074,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hazethick=float(hazethick),
                     mixratio=mixratio,
                     cheq=tceqdict,
-                    rp0=solidr,
+                    rp0=rp0,
                     xsecs=xsl[p]['XSECS'],
                     qtgrid=xsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
@@ -2104,7 +2104,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hazeloc=float(hazeloc_profiled),
                     hazethick=float(hazethick_profiled),
                     mixratio=mixratio_profiled,
-                    rp0=solidr,
+                    rp0=rp0,
                     xsecs=xsl[p]['XSECS'],
                     qtgrid=xsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
@@ -2215,7 +2215,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         hazeloc=float(hazeloc),
                         hazethick=float(hazethick),
                         mixratio=mixratio,
-                        rp0=solidr,
+                        rp0=rp0,
                         xsecs=xsl[p]['XSECS'],
                         qtgrid=xsl[p]['QTGRID'],
                         wgrid=transitdata['wavelength'],
