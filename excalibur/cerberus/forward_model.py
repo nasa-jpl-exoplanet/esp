@@ -454,18 +454,18 @@ def gettau(
             rh[rh < 0] = 0.0
             haze_ref_pressure = float(pressure[rh == np.max(rh)])
             if hazeloc is None:
-                hzshift = 0e0
+                hazeshift = 0e0
             else:
-                hzshift = hazeloc - np.log10(haze_ref_pressure)
+                hazeshift = hazeloc - np.log10(haze_ref_pressure)
             splp = np.log10(pressure[::-1])
             splrh = rh[::-1]
             thisfrh = itp(
                 splp, splrh, kind='linear', bounds_error=False, fill_value=0e0
             )
-            hzwdist = hazeloc - np.log10(pressure)
+            hazewdist = hazeloc - np.log10(pressure)
 
             if hazethick > 0:
-                preval = hazeloc - hzwdist / hazethick - hzshift
+                preval = hazeloc - hazewdist / hazethick - hazeshift
                 rh = thisfrh(preval)
                 rh[rh < 0] = 0e0
             else:
@@ -486,7 +486,7 @@ def gettau(
                     label='Parametrized density profile',
                 )
                 plt.plot(
-                    1e6 * thisfrh(np.log10(pressure) - hzshift), pressure, 'g^'
+                    1e6 * thisfrh(np.log10(pressure) - hazeshift), pressure, 'g^'
                 )
                 if hazeloc is not None:
                     plt.axhline(10**hazeloc, linestyle='--', color='red')
