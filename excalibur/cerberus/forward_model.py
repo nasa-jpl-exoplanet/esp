@@ -29,7 +29,7 @@ def crbmodel(
     cloudtp,
     cheq=None,
     mixratio=None,
-    HScale=0.0,
+    hazescale=0.0,
     HThick=1.0,
     HSlope=-4.0,
     HLoc=None,
@@ -153,7 +153,7 @@ def crbmodel(
         fH2,
         fHe,
         xmollist,
-        HScale,
+        hazescale,
         hzlib,
         hzp,
         HSlope,
@@ -310,7 +310,7 @@ def gettau(
     fH2,
     fHe,
     xmollist,
-    HScale,
+    hazescale,
     hzlib,
     hzp,
     HSlope,
@@ -433,9 +433,9 @@ def gettau(
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (HSlope)
         hazedensity = np.ones(len(z))
-        tau = tau + 10.0**HScale * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0**hazescale * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            10.0**HScale * sigma * np.array([hazedensity]).T
+            10.0**hazescale * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
@@ -517,7 +517,7 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        hazecontribution = 10.0**HScale * sigma * np.array([rh]).T
+        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
@@ -708,11 +708,11 @@ def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
-    ctp, HScale, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, HLoc, HThick, tpr, mdp = crbinputs
     # print(
     #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
     #    ctp,
-    #    HScale,
+    #    hazescale,
     #    HLoc,
     #    HThick,
     #    tpr,
@@ -744,7 +744,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             ctp,
-            HScale=HScale,
+            hazescale=hazescale,
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -757,7 +757,7 @@ def cloudyfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             ctp,
-            HScale=HScale,
+            hazescale=hazescale,
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -780,12 +780,12 @@ def clearfmcerberus(*crbinputs):
     Wrapper around Cerberus forward model - NO CLOUDS!
     (Note that this is not actually a cloud-free model; it is a fixed-cloud model!!)
     '''
-    # these fixed values are probably set in ariel/core, e.g. -10 for HScale
+    # these fixed values are probably set in ariel/core, e.g. -10 for hazescale
     ctp = ctxt.fixedParams['CTP']
-    HScale = ctxt.fixedParams['HScale']
+    hazescale = ctxt.fixedParams['HScale']
     HLoc = ctxt.fixedParams['HLoc']
     HThick = ctxt.fixedParams['HThick']
-    # print(' fixed cloud parameters (clear):',ctp,HScale,HLoc,HThick)
+    # print(' fixed cloud parameters (clear):',ctp,hazescale,HLoc,HThick)
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
@@ -819,7 +819,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             float(ctp),
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=float(HLoc),
             HThick=float(HThick),
             cheq=tceqdict,
@@ -833,7 +833,7 @@ def clearfmcerberus(*crbinputs):
         fmc = crbmodel(
             tpr,
             float(ctp),
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=float(HLoc),
             HThick=float(HThick),
             mixratio=mixratio,
@@ -856,10 +856,10 @@ def offcerberus(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, off2, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, off2, HLoc, HThick, tpr, mdp = crbinputs
     #     off0, off1, off2 = crbinputs
     #     ctp = -2.5744083
-    #     HScale = -1.425234
+    #     hazescale = -1.425234
     #     HLoc = -0.406851
     #     HThick = 5.58950953
     #     tpr = 1551.41137
@@ -874,7 +874,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -886,7 +886,7 @@ def offcerberus(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -910,7 +910,7 @@ def offcerberus1(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -920,7 +920,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -932,7 +932,7 @@ def offcerberus1(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -951,7 +951,7 @@ def offcerberus2(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
@@ -961,7 +961,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -973,7 +973,7 @@ def offcerberus2(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -992,7 +992,7 @@ def offcerberus3(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1003,7 +1003,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1015,7 +1015,7 @@ def offcerberus3(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -1033,7 +1033,7 @@ def offcerberus4(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1044,7 +1044,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1056,7 +1056,7 @@ def offcerberus4(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -1072,7 +1072,7 @@ def offcerberus5(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, off1, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1083,7 +1083,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1095,7 +1095,7 @@ def offcerberus5(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -1113,7 +1113,7 @@ def offcerberus6(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and STIS and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1124,7 +1124,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1136,7 +1136,7 @@ def offcerberus6(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -1152,7 +1152,7 @@ def offcerberus7(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between STIS filters and WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1163,7 +1163,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1175,7 +1175,7 @@ def offcerberus7(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,
@@ -1191,7 +1191,7 @@ def offcerberus8(*crbinputs):
     '''
     R.ESTRELA: ADD offsets between WFC3 filters
     '''
-    ctp, HScale, off0, HLoc, HThick, tpr, mdp = crbinputs
+    ctp, hazescale, off0, HLoc, HThick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     if ctxt.model == 'TEC':
@@ -1202,7 +1202,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             cheq=tceqdict,
@@ -1214,7 +1214,7 @@ def offcerberus8(*crbinputs):
         fmc = crbmodel(
             float(tpr),
             ctp,
-            HScale=float(HScale),
+            hazescale=float(hazescale),
             HLoc=HLoc,
             HThick=HThick,
             mixratio=mixratio,

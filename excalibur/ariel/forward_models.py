@@ -29,7 +29,7 @@ def make_cerberus_atmos(
 
     # CLOUD/HAZE PARAMETERS
     ctp = model_params['CTP']
-    HScale = model_params['HScale']
+    hazescale = model_params['HScale']
     HLoc = model_params['HLoc']
     HThick = model_params['HThick']
 
@@ -65,7 +65,7 @@ def make_cerberus_atmos(
     fmc, fmc_by_molecule = crbmodel(
         float(Teq),
         float(ctp),
-        HScale=float(HScale),
+        hazescale=float(hazescale),
         HLoc=float(HLoc),
         HThick=float(HThick),
         hzlib=crbhzlib,

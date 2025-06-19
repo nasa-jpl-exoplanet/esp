@@ -1380,7 +1380,7 @@ def atmos(
                 # param_values_median = (
                 #    tpr,
                 #    ctp,
-                #    HScale,
+                #    hazescale,
                 #    HLoc,
                 #    HThick,
                 #    tceqdict,
@@ -1935,21 +1935,21 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     )
                 if fit_cloud_parameters:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    HScaletrace = atm[p][model_name]['MCTRACE']['HScale']
+                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
                     HLoctrace = atm[p][model_name]['MCTRACE']['HLoc']
                     HThicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    HScale = np.median(HScaletrace)
+                    hazescale = np.median(hazescaletrace)
                     HLoc = np.median(HLoctrace)
                     HThick = np.median(HThicktrace)
                     # print('fit results; CTP:',ctp)
-                    # print('fit results; HScale:',HScale)
+                    # print('fit results; HScale:',hazescale)
                     # print('fit results; HLoc:',HLoc)
                     # print('fit results; HThick:',HThick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
-                    HScale_profiled = atm[p][model_name]['MCTRACE']['HScale'][
+                    hazescale_profiled = atm[p][model_name]['MCTRACE']['HScale'][
                         keepers
                     ]
                     HLoctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
@@ -1959,16 +1959,16 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         'HThick'
                     ][keepers]
                     ctp_profiled = np.median(ctptrace_profiled)
-                    HScale_profiled = np.median(HScaletrace_profiled)
+                    hazescale_profiled = np.median(hazescaletrace_profiled)
                     HLoc_profiled = np.median(HLoctrace_profiled)
                     HThick_profiled = np.median(HThicktrace_profiled)
                 else:
                     ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
-                    HScale = atm[p]['TRUTH_MODELPARAMS']['HScale']
+                    hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     HLoc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
                     HThick = atm[p]['TRUTH_MODELPARAMS']['HThick']
                     ctp_profiled = ctp
-                    HScale_profiled = HScale
+                    hazescale_profiled = hazescale
                     HLoc_profiled = HLoc
                     HThick_profiled = HThick
                 mdp = np.median(np.array(mdptrace), axis=1)
@@ -2048,7 +2048,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 param_values_median = (
                     tpr,
                     ctp,
-                    HScale,
+                    hazescale,
                     HLoc,
                     HThick,
                     tceqdict,
@@ -2057,7 +2057,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 param_values_profiled = (
                     tpr_profiled,
                     ctp_profiled,
-                    HScale_profiled,
+                    hazescale_profiled,
                     HLoc_profiled,
                     HThick_profiled,
                     tceqdict_profiled,
@@ -2069,7 +2069,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc = crbmodel(
                     float(tpr),
                     float(ctp),
-                    HScale=float(HScale),
+                    hazescale=float(hazescale),
                     HLoc=float(HLoc),
                     HThick=float(HThick),
                     mixratio=mixratio,
@@ -2100,7 +2100,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc_profiled = crbmodel(
                     float(tpr_profiled),
                     float(ctp_profiled),
-                    HScale=float(HScale_profiled),
+                    hazescale=float(hazescale_profiled),
                     HLoc=float(HLoc_profiled),
                     HThick=float(HThick_profiled),
                     mixratio=mixratio_profiled,
@@ -2160,7 +2160,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                     if fit_cloud_parameters:
                         ctp = ctptrace[iwalker]
-                        HScale = HScaletrace[iwalker]
+                        hazescale = hazescaletrace[iwalker]
                         HLoc = HLoctrace[iwalker]
                         HThick = HThicktrace[iwalker]
                     if fit_t:
@@ -2169,7 +2169,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('shape mdp',mdp.shape)
                     # if runtime_params.fitCloudParameters:
                     #    print('fit results; CTP:', ctp)
-                    #    print('fit results; HScale:', HScale)
+                    #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', HLoc)
                     #    print('fit results; HThick:', HThick)
                     # print('fit results; T:', tpr)
@@ -2211,7 +2211,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     fmcrand = crbmodel(
                         float(tpr),
                         float(ctp),
-                        HScale=float(HScale),
+                        hazescale=float(hazescale),
                         HLoc=float(HLoc),
                         HThick=float(HThick),
                         mixratio=mixratio,
@@ -2257,7 +2257,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         param_values_best_fit = (
                             tpr,
                             ctp,
-                            HScale,
+                            hazescale,
                             HLoc,
                             HThick,
                             tceqdict,
