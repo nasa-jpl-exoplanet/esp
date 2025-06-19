@@ -30,7 +30,7 @@ def make_cerberus_atmos(
     # CLOUD/HAZE PARAMETERS
     ctp = model_params['CTP']
     HScale = model_params['HScale']
-    hzloc = model_params['HLoc']
+    HLoc = model_params['HLoc']
     hzthick = model_params['HThick']
 
     # ABUNDANCES
@@ -66,7 +66,7 @@ def make_cerberus_atmos(
         float(Teq),
         float(ctp),
         HScale=float(HScale),
-        hztop=float(hzloc),
+        hztop=float(HLoc),
         hzwscale=float(hzthick),
         hzlib=crbhzlib,
         cheq=tceqdict,
