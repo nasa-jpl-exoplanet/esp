@@ -175,7 +175,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
 
 
 def add_priors(
-    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
+    nodes, nodeshape, prior_range_table, runtime_params, ext, model, modparlbls
 ):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
@@ -183,7 +183,7 @@ def add_priors(
 
     prior_ranges = {}
 
-    if runtime_params.fitCloudParameters:
+    if runtime_params.fitCloudParameters and 'sim' in ext:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
