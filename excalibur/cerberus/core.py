@@ -1380,7 +1380,7 @@ def atmos(
                 # param_values_median = (
                 #    tpr,
                 #    ctp,
-                #    hza,
+                #    HScale,
                 #    hloc,
                 #    hthc,
                 #    tceqdict,
@@ -1935,21 +1935,21 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     )
                 if fit_cloud_parameters:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    hzatrace = atm[p][model_name]['MCTRACE']['HScale']
+                    HScaletrace = atm[p][model_name]['MCTRACE']['HScale']
                     hloctrace = atm[p][model_name]['MCTRACE']['HLoc']
                     hthicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    hza = np.median(hzatrace)
+                    HScale = np.median(HScaletrace)
                     hloc = np.median(hloctrace)
                     hthc = np.median(hthicktrace)
                     # print('fit results; CTP:',ctp)
-                    # print('fit results; HScale:',hza)
+                    # print('fit results; HScale:',HScale)
                     # print('fit results; HLoc:',hloc)
                     # print('fit results; HThick:',hthc)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
-                    hzatrace_profiled = atm[p][model_name]['MCTRACE']['HScale'][
+                    HScale_profiled = atm[p][model_name]['MCTRACE']['HScale'][
                         keepers
                     ]
                     hloctrace_profiled = atm[p][model_name]['MCTRACE']['HLoc'][
@@ -1959,19 +1959,18 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         'HThick'
                     ][keepers]
                     ctp_profiled = np.median(ctptrace_profiled)
-                    hza_profiled = np.median(hzatrace_profiled)
+                    HScale_profiled = np.median(HScaletrace_profiled)
                     hloc_profiled = np.median(hloctrace_profiled)
                     hthc_profiled = np.median(hthicktrace_profiled)
                 else:
                     ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
-                    hza = atm[p]['TRUTH_MODELPARAMS']['HScale']
+                    HScale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     hloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
                     hthc = atm[p]['TRUTH_MODELPARAMS']['HThick']
                     ctp_profiled = ctp
-                    hza_profiled = hza
+                    HScale_profiled = HScale
                     hloc_profiled = hloc
                     hthc_profiled = hthc
-                    # print(' ctp hza hloc hthc',ctp,hza,hloc,hthc)
                 mdp = np.median(np.array(mdptrace), axis=1)
                 mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
@@ -2049,7 +2048,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 param_values_median = (
                     tpr,
                     ctp,
-                    hza,
+                    HScale,
                     hloc,
                     hthc,
                     tceqdict,
@@ -2058,7 +2057,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 param_values_profiled = (
                     tpr_profiled,
                     ctp_profiled,
-                    hza_profiled,
+                    HScale_profiled,
                     hloc_profiled,
                     hthc_profiled,
                     tceqdict_profiled,
@@ -2070,7 +2069,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc = crbmodel(
                     float(tpr),
                     float(ctp),
-                    HScale=float(hza),
+                    HScale=float(HScale),
                     hztop=float(hloc),
                     hzwscale=float(hthc),
                     mixratio=mixratio,
@@ -2101,7 +2100,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 fmc_profiled = crbmodel(
                     float(tpr_profiled),
                     float(ctp_profiled),
-                    HScale=float(hza_profiled),
+                    HScale=float(HScale_profiled),
                     hztop=float(hloc_profiled),
                     hzwscale=float(hthc_profiled),
                     mixratio=mixratio_profiled,
@@ -2161,7 +2160,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                     if fit_cloud_parameters:
                         ctp = ctptrace[iwalker]
-                        hza = hzatrace[iwalker]
+                        HScale = HScaletrace[iwalker]
                         hloc = hloctrace[iwalker]
                         hthc = hthicktrace[iwalker]
                     if fit_t:
@@ -2170,7 +2169,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('shape mdp',mdp.shape)
                     # if runtime_params.fitCloudParameters:
                     #    print('fit results; CTP:', ctp)
-                    #    print('fit results; HScale:', hza)
+                    #    print('fit results; HScale:', HScale)
                     #    print('fit results; HLoc:', hloc)
                     #    print('fit results; HThick:', hthc)
                     # print('fit results; T:', tpr)
@@ -2212,7 +2211,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     fmcrand = crbmodel(
                         float(tpr),
                         float(ctp),
-                        HScale=float(hza),
+                        HScale=float(HScale),
                         hztop=float(hloc),
                         hzwscale=float(hthc),
                         mixratio=mixratio,
@@ -2258,7 +2257,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         param_values_best_fit = (
                             tpr,
                             ctp,
-                            hza,
+                            HScale,
                             hloc,
                             hthc,
                             tceqdict,
