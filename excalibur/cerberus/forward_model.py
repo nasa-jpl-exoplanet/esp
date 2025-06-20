@@ -84,6 +84,10 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
+    solrad = 10
+    Hsmax = 20
+    nlevels = 100
+
     # these used to be default parameters above, but are dangerous-default-values
     # note that these are also defined in cerberus/core/myxsecs()
     #  maybe put them inside runtime/ops.xml to ensure consistency?
@@ -788,7 +792,7 @@ def clearfmcerberus(*crbinputs):
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
-        mdp = crbinputs[0]
+        mdp = [crbinputs[0]]
     else:
         tpr, mdp = crbinputs
     # print(' param values inside of forward model', tpr, mdp)

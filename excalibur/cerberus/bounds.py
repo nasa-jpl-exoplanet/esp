@@ -232,18 +232,23 @@ def add_priors(
             prior_ranges[param] = prior_range_table['dexRange']
 
     num_abundance_params = len(modparlbls)
-    # make sure that there's at least two parameters here, or the decorator crashes  (old pymc3 comment; maybe doesn't matter anymore)
-    num_abundance_params = max(num_abundance_params, 2)
-    # print('numAbundanceParams',num_abundance_params)
-
-    nodes.extend(
-        pymc.Uniform(
-            model,
-            lower=prior_range_table['dexRange'][0],
-            upper=prior_range_table['dexRange'][1],
-            shape=num_abundance_params,
+    if num_abundance_params==1:
+        nodes.append(
+            # pymc.Uniform(modparlbls[0],
+            pymc.Uniform(model,
+                         prior_range_table['dexRange'][0],
+                         prior_range_table['dexRange'][1])
         )
-    )
-    nodeshape.append(num_abundance_params)
+        nodeshape.append(1)
+    else:
+        nodes.extend(
+            pymc.Uniform(
+                model,
+                lower=prior_range_table['dexRange'][0],
+                upper=prior_range_table['dexRange'][1],
+                shape=num_abundance_params,
+            )
+        )
+        nodeshape.append(num_abundance_params)
 
     return nodes, nodeshape, prior_ranges
