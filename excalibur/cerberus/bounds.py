@@ -232,7 +232,7 @@ def add_priors(
             prior_ranges[param] = prior_range_table['dexRange']
 
     num_abundance_params = len(modparlbls)
-    if num_abundance_params==1:
+    if num_abundance_params == 1:
         nodes.append(
             # pymc.Uniform(modparlbls[0],
             pymc.Uniform(model,
