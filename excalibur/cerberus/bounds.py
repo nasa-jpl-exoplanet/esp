@@ -235,9 +235,10 @@ def add_priors(
     if num_abundance_params == 1:
         nodes.append(
             # pymc.Uniform(modparlbls[0],
-            pymc.Uniform(model,
-                         prior_range_table['dexRange'][0],
-                         prior_range_table['dexRange'][1])
+            pymc.Uniform(
+                model,
+                prior_range_table['dexRange'][0],
+                prior_range_table['dexRange'][1])
         )
         nodeshape.append(1)
     else:
