@@ -238,7 +238,8 @@ def add_priors(
             pymc.Uniform(
                 model,
                 prior_range_table['dexRange'][0],
-                prior_range_table['dexRange'][1])
+                prior_range_table['dexRange'][1],
+            )
         )
         nodeshape.append(1)
     else:
