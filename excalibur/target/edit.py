@@ -1455,6 +1455,7 @@ def targetlist():
     TOI-2120 :
     TOI-782 :
     TOI-260 :
+    testJup :
     BD+05 4868 : BD+05 4868 A
     HD 12572 : HIP 9618
     LP 890-9 :
