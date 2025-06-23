@@ -111,25 +111,36 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     for target in targets:
         parsedstr = target.split(':')
         parsedstr = [t.strip() for t in parsedstr]
-        out['starID'][parsedstr[0]] = {
-            'planets': [],
-            'PID': [],
-            'aliases': [],
-            'observatory': [],
-            'datatable': [],
-        }
-        if parsedstr[1]:
-            aliaslist = parsedstr[1].split(',')
-            aliaslist = [a.strip() for a in aliaslist if a.strip()]
-            out['starID'][parsedstr[0]]['aliases'].extend(aliaslist)
-            pass
-        if gen_ids:
-            # pylint: disable=protected-access # because dawgie requires it
-            dawgie.db.connect(
-                fetch('excalibur.target').algorithms.Create(),
-                ds._bot(),
-                parsedstr[0],
-            ).load()
+        if target.startswith('test'):
+            # create 25 names for this target
+            Nreruns = 25
+            namerepeats = []
+            for i in range(Nreruns):
+                namerepeats.append(f'{parsedstr[0]}{i+1:03d}')
+        else:
+            # for normal targets, there's no repeating; just 1 name
+            namerepeats = [parsedstr[0]]
+        for namerepeat in namerepeats:
+            out['starID'][namerepeat] = {
+                'planets': [],
+                'PID': [],
+                'aliases': [],
+                'observatory': [],
+                'datatable': [],
+            }
+            if parsedstr[1]:
+                aliaslist = parsedstr[1].split(',')
+                aliaslist = [a.strip() for a in aliaslist if a.strip()]
+                out['starID'][namerepeat]['aliases'].extend(aliaslist)
+                pass
+            if gen_ids:
+                # pylint: disable=protected-access # because dawgie requires it
+                dawgie.db.connect(
+                    fetch('excalibur.target').algorithms.Create(),
+                    ds._bot(),
+                    namerepeat,
+                ).load()
+                pass
             pass
         pass
     # new additions 6/5/24:
@@ -757,6 +768,14 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
     # print('final out',out['starID'][thistarget])
     # print('final out',out['starID'][thistarget].keys())
 
+    # for test stars, it's ok if it didn't find anything in the Exoplanet Archive
+    if thistarget.startswith('test'):
+        merged = True
+        skeys = []  # star keys isn't really used anymore; blank should work fine
+        pkeys = []  # star keys isn't really used anymore; blank should work fine
+        # actually blanks for these are necessary;
+        #  otherwise system crashes filling them e.g. fixZeroUncertainties()
+
     # FINALIZE OUTPUT ------------------------------------------------
     if merged:
         candidates = [
@@ -799,6 +818,7 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
         out['exts'].extend(['_uperr', '_lowerr', '_units', '_ref'])
         out['STATUS'].append(True)
         pass
+
     # GMR: Some targets cannot be solved but we still need them for sims.
     # Changing this condition to OR
     status = solved or merged
@@ -1355,7 +1375,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
 # ---------- ---------------------------------------------------------
 # -- DISK -- ---------------------------------------------------------
 def disk(selfstart, out, diskloc, dbs):
-    '''Query on disk data'''
+    '''Query on disk data (/proj/sdp/data/sci/)'''
     merge = False
     target_id = list(selfstart['starID'].keys())
 
