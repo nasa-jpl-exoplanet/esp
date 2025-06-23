@@ -65,10 +65,6 @@ class PriorsSV(ExcaliburSV):
                 allstar.append(listkeys)
                 pass
             pkeys = self['planetmdt']
-            # why remove mass?  It's a nice parameter to see in the final table, no?
-            # pkeys.pop(pkeys.index('mass'))
-            # logg is now in the mandatory param list in core.py; don't add again here
-            # pkeys.append('logg')
             allplanet = []
             for key in pkeys:
                 listkeys = [key]
@@ -88,9 +84,9 @@ class PriorsSV(ExcaliburSV):
                     ).add_primitive(self['priors'][starlabel])
                     pass
                 pass
-            for c in self['priors']['planets']:
+            for planet_letter in self['priors']['planets']:
                 labels = [
-                    'PLANET ' + c,
+                    'PLANET ' + planet_letter,
                     'UPPER ERR',
                     'LOWER ERR',
                     'UNITS',
