@@ -161,8 +161,14 @@ class Finalize(dawgie.Algorithm):
                 overwrite = sysoverwriter.ppar()
                 for key in val:
                     self.__out[key] = val.copy()[key]
-                if target in overwrite:
-                    update = self._priority(overwrite[target], self.__out)
+                if target.startswith('test'):
+                    overwritetargetname = target[:-3]
+                else:
+                    overwritetargetname = target
+                if overwritetargetname in overwrite:
+                    update = self._priority(overwritetargetname,
+                                            overwrite[overwritetargetname],
+                                            self.__out)
                     if not update:
                         log.warning('>-- STILL MISSING DICT INFO')
                         log.warning('>-- ADD MORE KEYS TO SYSTEM/OVERWRITER')
@@ -225,9 +231,9 @@ class Finalize(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _priority(overwrite, out):
+    def _priority(target, overwrite, out):
         '''Core code call'''
-        ffill = syscore.forcepar(overwrite, out)
+        ffill = syscore.forcepar(target, overwrite, out)
         return ffill
 
     @staticmethod
