@@ -13,7 +13,16 @@ import excalibur.testcerb.bot
 
 rid, tn = main_start()
 
-excalibur.testcerb.bot.Actor('testcerb', 4, rid, tn).do()
+if tn in ['', '__all__']:
+    NAME = 'analysis'
+    subtasks = excalibur.testcerb.bot.Agent('testcerb', 4, rid)
+else:
+    NAME = ['simspectrum', 'xslib', 'atmos', 'results', None][
+        -1
+    ]  # -1 to run them all
+    subtasks = excalibur.testcerb.bot.Actor('testcerb', 4, rid, tn)
+    pass
 
+subtasks.do(NAME)
 dawgie.db.close()
 dawgie.security.finalize()
