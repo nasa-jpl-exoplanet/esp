@@ -6,6 +6,8 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 
+import numpy as np
+
 from collections import defaultdict
 
 from excalibur.ariel.core import simulate_spectra as ariel_simulate_spectra
@@ -39,6 +41,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
 
     return status
 
+
 # --------------------------------------------------------------------
 def analysis(aspects, filt, out, verbose=False):
     '''
@@ -66,7 +69,7 @@ def analysis(aspects, filt, out, verbose=False):
     targetlist = []
     for i in range(5):  # asdf
         targetlist.append(f'{target}{i+1:03d}')
-    print('targetlist',targetlist)
+    print('targetlist', targetlist)
 
     # set prior_ranges to avoid possible used-before-assignment problem
     # (ideally it is read in, but possibly not if there's mistake/old formatting)
@@ -102,7 +105,7 @@ def analysis(aspects, filt, out, verbose=False):
     analysisplanetlist = []
 
     for targetlist in analysistargetlists:
-        print('  running targetlist=',targetlist['targetlistname'])
+        print('  running targetlist=', targetlist['targetlistname'])
         param_names = []
         masses = []
         stellar_fehs = []
@@ -112,7 +115,7 @@ def analysis(aspects, filt, out, verbose=False):
         fit_errors2sided = defaultdict(list)
 
         for trgt in targetlist['targets']:
-            print('        cycling through targets',trgt)
+            print('        cycling through targets', trgt)
             if trgt not in aspecttargets:
                 log.warning(
                     '--< TESTCERB ANALYSIS: TARGET NOT IN ASPECT %s %s >--',
@@ -130,7 +133,9 @@ def analysis(aspects, filt, out, verbose=False):
                     trgt,
                 )
             else:
-                print('target with valid data format for this filter:',filt,trgt)
+                print(
+                    'target with valid data format for this filter:', filt, trgt
+                )
                 atmos_fit = aspects[trgt][svname + '.' + filt]
 
                 # if 'stellar_params' in atmosFit['data']:  # strange. this doesn't work
@@ -411,5 +416,6 @@ def analysis(aspects, filt, out, verbose=False):
 
     out['STATUS'].append(True)
     return out['STATUS'][-1]
+
 
 # ---------------------------------- ---------------------------------
