@@ -13,14 +13,13 @@ import excalibur.system.algorithms as sysalg
 import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
 
-# import excalibur.ariel.algorithms as arielalg
 import excalibur.ariel.core as arielcore
 import excalibur.ariel.states as arielstates
 import excalibur.cerberus.core as crbcore
 import excalibur.cerberus.states as crbstates
 
-# import excalibur.testcerb.core as testcerbcore
-# import excalibur.testcerb.states as testcerbstates
+import excalibur.testcerb.core as testcerbcore
+
 import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
@@ -312,8 +311,8 @@ class Atmos(dawgie.Algorithm):
 
         svupdate = []
         # just one filter, while debugging:
-        for fltr in ['HST-WFC3-IR-G141-SCAN']:
-            # for fltr in ['Ariel-sim']:
+        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
+        for fltr in ['Ariel-sim']:
             # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -339,10 +338,9 @@ class Atmos(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
-                    # MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    MCMC_chain_length=33,
+                    MCMC_chain_length=runtime['cerberus_steps'].value(),
+                    # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
-                    # MCMC_chains=1,
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
@@ -467,6 +465,9 @@ class Results(dawgie.Algorithm):
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         vanc, sanc = checksv(self.__anc.sv_as_dict()['parameters'])
 
+        print('vfin,sfin',vfin,sfin)
+        print('vanc,sanc',vanc,sanc)
+
         update = False
         if vfin and vanc:
             # available_filters = self.__xsl.sv_as_dict().keys()
@@ -477,15 +478,18 @@ class Results(dawgie.Algorithm):
 
             # just one filter, while debugging:
             # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-            # for fltr in ['Ariel-sim']:
-            for fltr in self.__rt.sv_as_dict()['status'][
-                'allowed_filter_names'
-            ]:
-                # stop here if it is not a runtime target
-                self.__rt.proceed(fltr)
+            for fltr in ['Ariel-sim']:
+            #for fltr in self.__rt.sv_as_dict()['status'][
+            #    'allowed_filter_names'
+            #]:
+            #    # stop here if it is not a runtime target
+            #    self.__rt.proceed(fltr)
 
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
+                print('vxsl,sxsl',vxsl,sxsl)
+                print('vatm,satm',vatm,satm)
+
                 if vxsl and vatm:
                     log.warning('--< TESTCERB RESULTS: %s >--', fltr)
 
@@ -573,7 +577,6 @@ class Analysis(dawgie.Analyzer):
         # self.__fin = sysalg.finalize()
         # self.__xsl = xslib()
         # self.__atm = atmos()
-        # self.__out = crbstates.AnalysisSv('retrievalCheck')
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
@@ -592,12 +595,12 @@ class Analysis(dawgie.Analyzer):
     def traits(self) -> [dawgie.SV_REF, dawgie.V_REF]:
         '''traits ds'''
         return [
-            dawgie.SV_REF(fetch('excalibur.cerberus').task, Atmos(), sv)
+            dawgie.SV_REF(fetch('excalibur.testcerb').task, Atmos(), sv)
             for sv in Atmos().state_vectors()
         ]
 
     def state_vectors(self):
-        '''Output State Vectors: cerberus.analysis'''
+        '''Output State Vectors: testcerb.analysis'''
         return self.__out
 
     def run(self, aspects: dawgie.Aspect):
@@ -613,7 +616,7 @@ class Analysis(dawgie.Analyzer):
             for trgt in aspects:
                 for fltr in fltrs:
                     if (fltr not in fwr) and (
-                        'cerberus.atmos.' + fltr in aspects[trgt]
+                        'testcerb.atmos.' + fltr in aspects[trgt]
                     ):
                         # print('This filter exists in the cerb.atmos aspect:',fltr,trgt)
                         fwr.append(fltr)
@@ -627,7 +630,7 @@ class Analysis(dawgie.Analyzer):
 
             # only consider filters that have cerb.atmos results loaded in as an aspect
             for fltr in fwr:
-                # if 'cerberus.atmos.'+fltr not in aspects[trgt]:
+                # if 'testcerb.atmos.'+fltr not in aspects[trgt]:
                 #    log.warning('--< TESTCERB ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)
                 # else:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
@@ -645,7 +648,7 @@ class Analysis(dawgie.Analyzer):
 
     def _analysis(self, aspects, fltr, index):
         '''Core code call'''
-        analysisout = crbcore.analysis(
+        analysisout = testcerbcore.analysis(
             aspects, fltr, self.__out[index], verbose=False
         )
         return analysisout
