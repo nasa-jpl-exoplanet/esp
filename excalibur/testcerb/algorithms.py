@@ -1,5 +1,9 @@
 '''testcerb algorithms ds'''
 
+# Heritage code shame:
+# pylint: disable=invalid-name
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,
+
 # -- IMPORTS -- ------------------------------------------------------
 import numexpr
 
