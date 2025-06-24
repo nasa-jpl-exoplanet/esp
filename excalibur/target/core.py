@@ -113,9 +113,9 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
         parsedstr = [t.strip() for t in parsedstr]
         if target.startswith('test'):
             # create 25 names for this target
-            Nreruns = 25
+            num_reruns = 25
             namerepeats = []
-            for i in range(Nreruns):
+            for i in range(num_reruns):
                 namerepeats.append(f'{parsedstr[0]}{i+1:03d}')
         else:
             # for normal targets, there's no repeating; just 1 name
