@@ -75,8 +75,10 @@ class SimSpectrum(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        target = repr(self).split('.')[1]
+
         # stop here if it is not a runtime target
-        if not self.__rt.is_valid():
+        if not self.__rt.is_valid() or not target.startswith('test'):
             log.warning(
                 '--< TESTCERB.%s: not a valid target >--', self.name().upper()
             )
@@ -120,7 +122,7 @@ class SimSpectrum(dawgie.Algorithm):
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
-                    repr(self).split('.')[1],  # this is the target name
+                    target,
                     system_dict,
                     runtime_params,
                     self.__out,
@@ -182,9 +184,9 @@ class XSLib(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-        for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
+        # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
+        for fltr in ['Ariel-sim']:
+
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
             update = False
@@ -310,10 +312,9 @@ class Atmos(dawgie.Algorithm):
             sfin = 'Missing system params!'
 
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
+        # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
         for fltr in ['Ariel-sim']:
-            # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
+
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
 
@@ -465,30 +466,17 @@ class Results(dawgie.Algorithm):
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         vanc, sanc = checksv(self.__anc.sv_as_dict()['parameters'])
 
-        print('vfin,sfin',vfin,sfin)
-        print('vanc,sanc',vanc,sanc)
-
         update = False
         if vfin and vanc:
-            # available_filters = self.__xsl.sv_as_dict().keys()
-            # available_filters = self.__atm.sv_as_dict().keys()
-            # print('available_filters',available_filters)
-            # allowed_filters = self.__rt.sv_as_dict()['status']['allowed_filter_names']
-            # print('allowed filters in cerb.results',allowed_filters)
-
-            # just one filter, while debugging:
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-            for fltr in ['Ariel-sim']:
-            #for fltr in self.__rt.sv_as_dict()['status'][
+            # for fltr in self.__rt.sv_as_dict()['status'][
             #    'allowed_filter_names'
-            #]:
-            #    # stop here if it is not a runtime target
-            #    self.__rt.proceed(fltr)
+            # ]:
+            for fltr in ['Ariel-sim']:
+                # stop here if it is not a runtime target
+                self.__rt.proceed(fltr)
 
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
-                print('vxsl,sxsl',vxsl,sxsl)
-                print('vatm,satm',vatm,satm)
 
                 if vxsl and vatm:
                     log.warning('--< TESTCERB RESULTS: %s >--', fltr)
