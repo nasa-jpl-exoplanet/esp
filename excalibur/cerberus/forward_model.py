@@ -788,7 +788,7 @@ def clearfmcerberus(*crbinputs):
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
-        mdp = [crbinputs[0]]
+        mdp = crbinputs
     else:
         tpr, mdp = crbinputs
     # print(' param values inside of forward model', tpr, mdp)
