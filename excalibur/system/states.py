@@ -101,7 +101,9 @@ class PriorsSV(ExcaliburSV):
                         ).add_primitive(starlabel)
                         table.get_cell(
                             i, starlabels.index(starlabel)
-                        ).add_primitive(self['priors'][planet_letter][starlabel])
+                        ).add_primitive(
+                            self['priors'][planet_letter][starlabel]
+                        )
 
         return
 
