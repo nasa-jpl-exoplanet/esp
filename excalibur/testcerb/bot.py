@@ -18,7 +18,23 @@ class Actor(dawgie.Task):
         '''Subtasks top level ordered call'''
         return [
             testcerbalg.SimSpectrum(),
+            testcerbalg.XSLib(),
+            testcerbalg.Atmos(),
+            testcerbalg.Results(),
         ]
 
+    pass
 
-# --------- ----------------------------------------------------------
+
+# -------------------------------------------------------------------
+class Agent(dawgie.Analysis):
+    '''Agent ds'''
+
+    def list(self) -> [dawgie.Analyzer]:
+        '''list ds'''
+        return [testcerbalg.Analysis()]
+
+    pass
+
+
+# -------------------------------------------------------------------
