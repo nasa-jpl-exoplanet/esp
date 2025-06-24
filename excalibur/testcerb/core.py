@@ -6,10 +6,12 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 
+import os
 import numpy as np
 
 from collections import defaultdict
 
+import excalibur
 from excalibur.ariel.core import simulate_spectra as ariel_simulate_spectra
 from excalibur.target.targetlists import get_target_lists
 
