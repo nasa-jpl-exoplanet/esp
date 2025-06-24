@@ -116,7 +116,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     ]
     if testTarget:
         atmosModels = ['cerberus', 'cerberusNoclouds']
- 
+
     out['data']['models'] = atmosModels
     # save target,planet names, for plotting (in states.py)
     out['data']['target'] = target
@@ -525,7 +525,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         'model_params'
                     ] = model_params.copy()
                     if testTarget:
-                        print('model_params in ariel:',model_params)
+                        print('model_params in ariel:', model_params)
 
                     # convert to percentage depth (just for plotting, not for the saved results)
                     fluxDepth = 100 * fluxDepth

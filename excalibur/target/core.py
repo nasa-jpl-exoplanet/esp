@@ -771,10 +771,10 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
     # for test stars, it's ok if it didn't find anything in the Exoplanet Archive
     if thistarget.startswith('test'):
         merged = True
-        skeys = []  # star keys isn't really used anymore; blank should work fine
-        pkeys = []  # star keys isn't really used anymore; blank should work fine
-        # actually blanks for these are necessary;
+        # blanks are probably necessary for these;
         #  otherwise system crashes filling them e.g. fixZeroUncertainties()
+        skeys = []
+        pkeys = []
 
     # FINALIZE OUTPUT ------------------------------------------------
     if merged:

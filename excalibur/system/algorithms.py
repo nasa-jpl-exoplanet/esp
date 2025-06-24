@@ -166,8 +166,9 @@ class Finalize(dawgie.Algorithm):
                 else:
                     overwritetargetname = target
                 if overwritetargetname in overwrite:
-                    update = self._priority(overwrite[overwritetargetname],
-                                            self.__out)
+                    update = self._priority(
+                        overwrite[overwritetargetname], self.__out
+                    )
                     if not update:
                         log.warning('>-- STILL MISSING DICT INFO')
                         log.warning('>-- ADD MORE KEYS TO SYSTEM/OVERWRITER')

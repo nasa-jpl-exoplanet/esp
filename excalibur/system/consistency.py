@@ -47,7 +47,9 @@ def consistency_checks(priors, ignoredPlanets):
                 planet_letter,
             )
         else:
-            ok = consistency_check_sma_P_Mstar(priors, planet_letter, verbose=verbose)
+            ok = consistency_check_sma_P_Mstar(
+                priors, planet_letter, verbose=verbose
+            )
             if not ok:
                 inconsistencies.append(planet_letter + ':semi-major axis')
 
@@ -55,11 +57,15 @@ def consistency_checks(priors, ignoredPlanets):
             # ok = consistency_check_M_R_RHO_planet(priors, planet_letter)
             # if not ok: inconsistencies.append(planet_letter+':rho')
 
-            ok = consistency_check_M_R_LOGG_planet(priors, planet_letter, verbose=verbose)
+            ok = consistency_check_M_R_LOGG_planet(
+                priors, planet_letter, verbose=verbose
+            )
             if not ok:
                 inconsistencies.append(planet_letter + ':logg')
 
-            ok = consistency_check_Teq_sma_Lstar(priors, planet_letter, verbose=verbose)
+            ok = consistency_check_Teq_sma_Lstar(
+                priors, planet_letter, verbose=verbose
+            )
             if not ok:
                 inconsistencies.append(planet_letter + ':Teq')
 
@@ -115,7 +121,7 @@ def consistency_check_M_R_RHO_star(starInfo, verbose=False):
         if not close_to(float(RHO), RHOcheck):
             consistent = False
             if verbose:
-                print('density value vs should be',RHO, RHOcheck)
+                print('density value vs should be', RHO, RHOcheck)
 
     return consistent
 
@@ -147,8 +153,8 @@ def consistency_check_M_R_RHO_planet(starInfo, planet_letter, verbose=False):
         if not close_to(float(RHO), RHOcheck):
             consistent = False
             if verbose:
-                print('density value vs should be',RHO, RHOcheck)
-                
+                print('density value vs should be', RHO, RHOcheck)
+
     return consistent
 
 
@@ -176,7 +182,7 @@ def consistency_check_M_R_LOGG_star(starInfo, verbose=False):
         if not close_to(float(LOGG), LOGGcheck):
             consistent = False
             if verbose:
-                print('LOGG* vs check',LOGG, LOGGcheck)
+                print('LOGG* vs check', LOGG, LOGGcheck)
 
     return consistent
 
@@ -203,9 +209,9 @@ def consistency_check_M_R_LOGG_planet(starInfo, planet_letter, verbose=False):
         # print('ccheck  LOGGcheck',LOGGcheck)
         if not close_to(float(LOGG), LOGGcheck):
             consistent = False
-        
+
     if verbose:
-        print('logg vs check',LOGG, LOGGcheck)
+        print('logg vs check', LOGG, LOGGcheck)
 
     return consistent
 
@@ -236,7 +242,7 @@ def consistency_check_sma_P_Mstar(starInfo, planet_letter, verbose=False):
         if not close_to(float(sma), smaCheck):
             consistent = False
             if verbose:
-                print('ccheck  smaCheck',smaCheck)
+                print('ccheck  smaCheck', smaCheck)
 
     return consistent
 
@@ -264,7 +270,7 @@ def consistency_check_R_T_Lstar(starInfo, verbose=False):
         if not close_to(float(L), Lcheck):
             consistent = False
             if verbose:
-                print('ccheck  L,Lcheck',float(L),Lcheck)
+                print('ccheck  L,Lcheck', float(L), Lcheck)
 
     return consistent
 
@@ -289,6 +295,6 @@ def consistency_check_Teq_sma_Lstar(starInfo, planet_letter, verbose=False):
         if not close_to(float(Teq), TeqCheck):
             consistent = False
             if verbose:
-                print('ccheck  Teq',Teq,TeqCheck)
+                print('ccheck  Teq', Teq, TeqCheck)
 
     return consistent

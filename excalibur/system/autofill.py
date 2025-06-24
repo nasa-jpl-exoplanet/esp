@@ -678,9 +678,9 @@ def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
             # P = 365.25
             # giving these Earth parameters results in 0.9999874 AU
             GM = sscmks['G'] * float(M) * sscmks['Msun']
-            newsma = (
-                GM * (float(P) * sscmks['day'] / 2.0 / np.pi) ** 2
-            ) ** (1.0 / 3.0)
+            newsma = (GM * (float(P) * sscmks['day'] / 2.0 / np.pi) ** 2) ** (
+                1.0 / 3.0
+            )
             newsma /= sscmks['AU']
             # sma_derived.append(str('%6.4f' %newsma))
             sma_derived.append(f'{newsma:6.4f}')
@@ -1534,9 +1534,9 @@ def checkValidData(starInfo, starParam, planetParam):
     if missingParams:
         print()
         for planet in starInfo['planets']:
-            print(' target param check',starInfo[planet].keys())
+            print(' target param check', starInfo[planet].keys())
         print()
-        print('missing parameters in the target state vector:',missingParams)
+        print('missing parameters in the target state vector:', missingParams)
         return False
     return True
 

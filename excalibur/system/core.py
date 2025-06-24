@@ -118,9 +118,13 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         autofill['starID'][target][added_planet_letter] = {}
         for planetparam in out['planetmdt']:
             autofill['starID'][target][added_planet_letter][planetparam] = ['']
-            autofill['starID'][target][added_planet_letter][planetparam + '_lim'] = ['0']
+            autofill['starID'][target][added_planet_letter][
+                planetparam + '_lim'
+            ] = ['0']
             for extension in out['exts']:
-                autofill['starID'][target][added_planet_letter][planetparam + extension] = ['']
+                autofill['starID'][target][added_planet_letter][
+                    planetparam + extension
+                ] = ['']
         # (and also update out, as normally done above)
         for p in autofill['starID'][target]['planets']:
             out['priors'][p] = {}
@@ -182,9 +186,12 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     #  (make sure this comes before sma is derived from period,M*)
     for p in autofill['starID'][target]['planets']:
         if 'ars' in autofill['starID'][target][p]:
-            sma_derived, sma_lowerr_derived, sma_uperr_derived, sma_ref_derived = (
-                derive_sma_from_ars(autofill['starID'][target], p)
-            )
+            (
+                sma_derived,
+                sma_lowerr_derived,
+                sma_uperr_derived,
+                sma_ref_derived,
+            ) = derive_sma_from_ars(autofill['starID'][target], p)
             # if autofill['starID'][target][p]['sma'] != sma_derived:
             #    print('sma before ',autofill['starID'][target][p]['sma'])
             #    print('sma derived',sma_derived)
@@ -194,7 +201,9 @@ def buildsp(autofill, runtime_params, out, verbose=False):
             autofill['starID'][target][p]['sma_lowerr'] = sma_lowerr_derived
             autofill['starID'][target][p]['sma_uperr'] = sma_uperr_derived
             autofill['starID'][target][p]['sma_ref'] = sma_ref_derived
-            autofill['starID'][target][p]['sma_units'] = ['[AU]'] * len(sma_derived)
+            autofill['starID'][target][p]['sma_units'] = ['[AU]'] * len(
+                sma_derived
+            )
 
     # use orbital period, stellar mass to fill in blank semi-major axis
     for p in autofill['starID'][target]['planets']:
@@ -888,7 +897,7 @@ def forcepar(overwrite, out, verbose=False):
     for p in out['needed']:
         if ':' not in p:
             starneed = True
-               
+
     if starneed or (len(out['priors']['planets']) < 1):
         success = False
         log.warning('>-- PARAMETER STILL MISSING; ADD TO SYSTEM/OVERWRITER')
