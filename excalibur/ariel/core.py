@@ -91,10 +91,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     # print(runtime_params)
     # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
 
-    if target.startswith('test'):
-        testTarget = True
-    else:
-        testTarget = False
+    testTarget = bool(target.startswith('test'))
 
     # select Tier-1 or Tier-2 for spectra SNR
     tier = runtime_params.tier

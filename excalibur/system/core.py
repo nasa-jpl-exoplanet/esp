@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements,too-many-lines
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
@@ -51,10 +51,9 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     '''
     target = list(autofill['starID'].keys())
     target = target[0]
-    if target.startswith('test'):
-        testTarget = True
-    else:
-        testTarget = False
+
+    testTarget = bool(target.startswith('test'))
+
     for p in autofill['starID'][target]['planets']:
         out['priors'][p] = {}
     out['priors']['planets'] = autofill['starID'][target]['planets'].copy()
