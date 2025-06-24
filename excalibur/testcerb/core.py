@@ -1,13 +1,28 @@
 '''testcerb core ds'''
 
 # Heritage code shame:
-# asdfpylint: disable=invalid-name
-# asdfpylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements
+# pylint: disable=invalid-name
+# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
-# import logging
+
+from collections import defaultdict
 
 from excalibur.ariel.core import simulate_spectra as ariel_simulate_spectra
+from excalibur.target.targetlists import get_target_lists
+
+from excalibur.cerberus.plotters import (
+    plot_fits_vs_truths,
+    plot_fit_uncertainties,
+    plot_mass_vs_metals,
+)
+
+import logging
+
+
+log = logging.getLogger(__name__)
+# pymclog = logging.getLogger('pymc')
+# pymclog.setLevel(logging.ERROR)
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
