@@ -20,16 +20,29 @@ from excalibur.cerberus.plotters import (
     plot_fits_vs_truths,
     plot_fit_uncertainties,
 )
-from plotters import plot_massFits
+from excalibur.testcerb.plotters import plot_massFits
 
-
+from collections import namedtuple
 import logging
 
 
 log = logging.getLogger(__name__)
 
+TestcerbAnalysisParams = namedtuple(
+    'cerberus_analysis_params_from_runtime',
+    [
+        'tier',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
+    ],
+)
+
 # --------------------------------------------------------------------
-def analysis(aspects, filt, out, verbose=False):
+def analysis(aspects, runtime_params, filt, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
@@ -56,7 +69,8 @@ def analysis(aspects, filt, out, verbose=False):
     print('targetlist', targetlist)
 
     # set prior_ranges to avoid possible used-before-assignment problem
-    eqtemp = 1000
+    eqtemp = 800  # asdf
+    print('runtime', runtime_params)
     prior_ranges = set_prior_bound(eqtemp, runtime_params)
     print('use this prior range?', prior_ranges)
     prior_ranges = None

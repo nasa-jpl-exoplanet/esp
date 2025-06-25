@@ -563,12 +563,8 @@ class Analysis(dawgie.Analyzer):
 
     def __init__(self):
         '''__init__ ds'''
-        self._version_ = (
-            crbcore.resultsversion()
-        )  # same version number as results
-        # self.__fin = sysalg.finalize()
-        # self.__xsl = xslib()
-        # self.__atm = atmos()
+        self._version_ = crbcore.resultsversion()
+        self.__rt = rtalg.Autofill()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
@@ -626,7 +622,19 @@ class Analysis(dawgie.Analyzer):
                 #    log.warning('--< TESTCERB ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)
                 # else:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
-                update = self._analysis(aspects, fltr, fltrs.index(fltr))
+
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = testcerbcore.TestcerbAnalysisParams(
+                    tier=runtime['ariel.simspectrum.tier'].value(),
+                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
+                )
+
+                update = self._analysis(aspects, runtime_params, fltr, fltrs.index(fltr))
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
