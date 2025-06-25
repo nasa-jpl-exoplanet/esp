@@ -527,7 +527,7 @@ class Analysis(dawgie.Analyzer):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAnalysisParams(
-                    tier=runtime['ariel.simspectrum.tier'].value(),
+                    tier=runtime['ariel_simspectrum_tier'].value(),
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
@@ -537,7 +537,9 @@ class Analysis(dawgie.Analyzer):
                 )
 
                 log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
-                update = self._analysis(aspects, runtime_params, fltr, fltrs.index(fltr))
+                update = self._analysis(
+                    aspects, runtime_params, fltr, fltrs.index(fltr)
+                )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
