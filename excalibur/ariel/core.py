@@ -258,7 +258,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 if verbose:
                     print('SNR adjustment factor:', runtime_params.SNRfactor)
                 if runtime_params.SNRfactor:
-                    uncertainties *= runtime_params.SNRfactor
+                    uncertainties /= runtime_params.SNRfactor
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
                 for atmosModel in atmosModels:
