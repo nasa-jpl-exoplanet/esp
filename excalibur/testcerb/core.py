@@ -14,42 +14,24 @@ import numpy as np
 from collections import defaultdict
 
 import excalibur
-from excalibur.ariel.core import simulate_spectra as ariel_simulate_spectra
-from excalibur.target.targetlists import get_target_lists
+from excalibur.cerberus.bounds import set_prior_bound
 
 from excalibur.cerberus.plotters import (
     plot_fits_vs_truths,
     plot_fit_uncertainties,
-    plot_mass_vs_metals,
 )
+from plotters import plot_massFits
+
 
 import logging
 
 
 log = logging.getLogger(__name__)
-# pymclog = logging.getLogger('pymc')
-# pymclog.setLevel(logging.ERROR)
-
-# ----------------- --------------------------------------------------
-# -- SIMULATE ARIEL SPECTRA ------------------------------------------
-
-
-def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
-    '''
-    Simulate Ariel spectra, adding noise based on the Ariel instrument model
-    '''
-
-    status = ariel_simulate_spectra(
-        target, system_dict, runtime_params, out, verbose=verbose
-    )
-
-    return status
-
 
 # --------------------------------------------------------------------
 def analysis(aspects, filt, out, verbose=False):
     '''
-    Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
+    Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
     out [INPUT/OUTPUT]
     verbose [OPTIONAL]: verbosity
@@ -67,38 +49,17 @@ def analysis(aspects, filt, out, verbose=False):
 
     svname = 'testcerb.atmos'
 
-    alltargetlists = get_target_lists()
-
     target = 'testJup'
     targetlist = []
-    for i in range(5):  # asdf
+    for i in range(3):  # asdf
         targetlist.append(f'{target}{i+1:03d}')
     print('targetlist', targetlist)
 
     # set prior_ranges to avoid possible used-before-assignment problem
-    # (ideally it is read in, but possibly not if there's mistake/old formatting)
-    # the normal call doesn't work well here actually. and it creates nodes
-    # darn.  have to just set something arbitrary
-    # _, prior_ranges = addPriors(priorRangeTable, runtime_params, model, modparlbl[model])
+    eqtemp = 1000
+    prior_ranges = set_prior_bound(eqtemp, runtime_params)
+    print('use this prior range?', prior_ranges)
     prior_ranges = None
-
-    # allow for analysis of multiple target lists
-    analysistargetlists = []
-    # optionally specify the specific planets within multi-planet systems
-    analysisplanetlist = []
-
-    analysistargetlists.append(
-        {
-            'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
-            'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
-        }
-    )
-    analysisplanetlist = {
-        'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
-        'planets': alltargetlists[
-            'ariel_Nov2024_2yearsTier1_withPlanetletters'
-        ],
-    }
 
     analysistargetlists = [
         {
@@ -106,7 +67,6 @@ def analysis(aspects, filt, out, verbose=False):
             'targets': targetlist,
         }
     ]
-    analysisplanetlist = []
 
     for targetlist in analysistargetlists:
         print('  running targetlist=', targetlist['targetlistname'])
@@ -167,14 +127,6 @@ def analysis(aspects, filt, out, verbose=False):
                         if (
                             planet_letter == 'stellar_params'
                         ):  # this is not a planet letter
-                            pass
-
-                        elif (
-                            analysisplanetlist
-                            and trgt + ' ' + planet_letter
-                            not in analysisplanetlist['planets']
-                        ):
-                            # print(' DROP: Ariel doesnt observe this planet',trgt+' '+planet_letter)
                             pass
 
                         elif (
@@ -385,7 +337,7 @@ def analysis(aspects, filt, out, verbose=False):
             if len(plotarray) > 3:
                 fit_no_plot = plotarray[3]
 
-        mass_metals_plot, _ = plot_mass_vs_metals(
+        mass_metals_plot, _ = plot_metalFits(
             truth_values['Mp'],
             stellar_fehs,
             truth_values,
@@ -395,11 +347,6 @@ def analysis(aspects, filt, out, verbose=False):
             filt,
             save_dir,
         )
-
-        # save the analysis as .csv file? (in /proj/data/spreadsheets/)
-        # savesv(aspects, targetlist)
-
-        # targetlistname = targetlist['targetlistname']
 
         # Add to SV
         out['data']['truths'] = dict(truth_values)
