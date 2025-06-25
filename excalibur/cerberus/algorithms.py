@@ -234,7 +234,9 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
+                    # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
+                    # MCMC_chains=1,
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
@@ -466,6 +468,7 @@ class Analysis(dawgie.Analyzer):
         # self.__xsl = xslib()
         # self.__atm = atmos()
         # self.__out = crbstates.AnalysisSv('retrievalCheck')
+        self.__rt = rtalg.Autofill()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
@@ -521,9 +524,20 @@ class Analysis(dawgie.Analyzer):
             for fltr in fwr:
                 # if 'cerberus.atmos.'+fltr not in aspects[trgt]:
                 #    log.warning('--< CERBERUS ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)
-                # else:
+
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = crbcore.CerbAnalysisParams(
+                    tier=runtime['ariel.simspectrum.tier'].value(),
+                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
+                )
+
                 log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
-                update = self._analysis(aspects, fltr, fltrs.index(fltr))
+                update = self._analysis(aspects, runtime_params, fltr, fltrs.index(fltr))
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
