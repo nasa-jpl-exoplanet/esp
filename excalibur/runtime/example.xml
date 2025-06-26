@@ -7,12 +7,6 @@
             cerberus.atmos.fitCtoO="true"
             cerberus.atmos.fitNtoO="false"
             cerberus.atmos.sliceSampler="false"
-            cerberus.atmos.bounds.Teq="[0.75,1.5]"
-            cerberus.atmos.bounds.abundances="[-6,6]"
-            cerberus.atmos.bounds.CTP="[-6,1]"
-            cerberus.atmos.bounds.HLoc="[-6,1]"
-            cerberus.atmos.bounds.HScale="[-6,6]"
-            cerberus.atmos.bounds.HThick="[1,20]"
             cerberus.crbmodel.nlevels="100"
             cerberus.crbmodel.solrad="10"
             cerberus.crbmodel.Hsmax="20"
@@ -29,7 +23,14 @@
             ariel.simspectrum.includeMetallicityDispersion="true"
             ariel.simspectrum.metallicityDispersion="0.3"
             ariel.simspectrum.CtoOaverage="-0.26"
-            ariel.simspectrum.CtoOdispersion="0.3"/>
+            ariel.simspectrum.CtoOdispersion="0.3">
+    <cerberus.atmos.bounds.Teq lo="0.75" hi="1.5"/>
+    <cerberus.atmos.bounds.abundances lo="-6" hi="6"/>
+    <cerberus.atmos.bounds.CTP lo="-6" hi="1"/>
+    <cerberus.atmos.bounds.HLoc lo="-6" hi="1"/>
+    <cerberus.atmos.bounds.HScale lo="-6" hi="6"/>
+    <cerberus.atmos.bounds.HThick lo="1" hi="20"/>
+  </controls>
   <filters>
     <exclude>HST-STIS-CCD-G750L-STARE</exclude>
     <include>HST-WFC3-IR-G141-SCAN</include>
