@@ -84,11 +84,8 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             sv[key] = table['controls'][key].new()
         else:
             # these are excalibur.ValueScalar objects. value() converts to float/int/string
+            # actually careful - now they are sometimes HiLoValues
             sv[key] = table['controls'][key]
-            # print(key,table['controls'][key].value(),type(table['controls'][key].value()))
-            # converting with value() ends up creating a later error
-            # dawgie.NotValidImplementationError: StateVector contains data that does not extend dawgie.Value correctly
-            # sv[key] = table['controls'][key].value()
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
