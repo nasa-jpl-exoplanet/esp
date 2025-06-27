@@ -47,15 +47,22 @@ class HiLoValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        return str(self.__state)
+        # fails. HiLoValue object has no attribute '_HiLoValue__state'
+        # return str(self.__state)
+        return str(self.__getstate__())
+        #    it now prints this:
+        # "{'hi': 1.5, 'lo': 0.75, '_version_seal_': VERSION(design=1, impl=0, bugfix=0)}"
 
     def features(self):
         '''contains no features'''
         return []
 
-    def new(self, hilo=None):
+    # def new(self, hilo=None):
+    #    '''hide explicit requirement for dawgie'''
+    #    return HiLoValue(*((float(hilo.hi), float(hilo.lo)) if hilo else (-1, 0)))
+    def new(self):
         '''hide explicit requirement for dawgie'''
-        return HiLoValue(*((float(hilo.hi), float(hilo.lo)) if hilo else (-1, 0)))
+        return HiLoValue(*((float(self.hi), float(self.lo)) if hilo else (-1, 0)))
 
     def hi(self):
         return self._hi
