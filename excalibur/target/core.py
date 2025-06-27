@@ -93,21 +93,6 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     targets = trgedit.targetlist.__doc__
     targets = targets.split('\n')
     targets = [t.strip() for t in targets if t.replace(' ', '')]
-    # this routine is called by Create()
-    #  it is run once for all targets; the input target is always __all__
-    #  drop this target parsing stuff
-    # tn = os.environ.get('TARGET_NAME', None)
-    # if tn is not None and tn != '' and tn != '__all__':
-    #    found_target_list = None
-    #    for target in targets:
-    #        print('  targ check',target,target.split(':')[0].strip())
-    #        if tn == target.split(':')[0].strip():
-    #            found_target_list = target
-    #    if found_target_list is None:
-    #        # this is an ERROR.  the selected target should be in the target list
-    #        mssg = f'Obsolete target / Error in target name: {tn}'
-    #        raise dawgie.NoValidOutputDataError(mssg)
-    #    targets = [found_target_list]
     for target in targets:
         parsedstr = target.split(':')
         parsedstr = [t.strip() for t in parsedstr]
@@ -586,6 +571,7 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
                     out['starID'][thistarget]['spTyp_lowerr'] = []
                     out['starID'][thistarget]['spTyp_units'] = []
                     out['starID'][thistarget]['spTyp_ref'] = []
+                    pass
                 ref_pl = elem[header.index('pl_refname')]
                 ref_pl = ref_pl.split('</a>')[0]
                 ref_pl = ref_pl.split('target=ref>')[-1]
@@ -1151,10 +1137,8 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
     allsci = []
     allurl = []
     allmiss = []
-    # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
-    # allraw = []
+    allraw = []
     for o in obsids:
-        donmast = False
         request = {
             'service': 'Mast.Caom.Products',
             'params': {'obsid': o},
@@ -1163,16 +1147,31 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         data = json.loads(datastr)
         # ines mertz : adding an if statement to test the length of data['data']
+        donmast = False
         if data and 'data' in data:
             if not data['data']:
-                log.warning(
-                    '>>> data[data] is an empty list for target %s observation %s',
-                    target,
-                    o,
-                )
+                errmastq = f'target {target}, observation {o}'
                 pass
             else:
-                donmast = True
+                if 'HST' in data['data'][0].get("obs_collection", None):
+                    # GMR: Downsize data to ima files
+                    # Think of something if we ever redo STIS someday
+                    # Because they are FLT
+                    obsprods = [d['dataURI'] for d in data['data']]
+                    data['data'] = [
+                        d
+                        for d, i in zip(
+                            data['data'], ['ima' in d for d in obsprods]
+                        )
+                        if i
+                    ]
+                    pass
+                if data['data']:
+                    donmast = True
+                    pass
+                else:
+                    errmastq = f'target {target}, observation {o}'
+                    pass
                 pass
             pass
         dtlvl = None
@@ -1186,124 +1185,65 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 dtlvl = 'SEE WITH KYLE'
                 clblvl = 666
                 thisurl = 'https:do.not.dl.for.now'
+                ptype = ['YO']
                 pass
             if 'JWST' in data['data'][0].get("obs_collection", None):
                 obscol = 'JWST'
                 dtlvl = 'CALINTS'
                 clblvl = 2
                 thisurl = download_url
+                ptype = ['SCIENCE']
                 pass
             if 'HST' in data['data'][0].get("obs_collection", None):
                 obscol = 'HST'
-                # No comment on mast api missing ima files. See HST hack below.
-                dtlvl = 'FLT'
+                dtlvl = 'IMA'
                 clblvl = 2
                 thisurl = hst_url
+                ptype = ['AUXILIARY']
                 pass
             scidata = [
                 x
                 for x in data['data']
-                if (x.get("productType", None) == 'SCIENCE')
+                if (x.get("productType", None) in ptype)
                 and (x.get("dataRights", None) == 'PUBLIC')
                 and (x.get("calib_level", None) == clblvl)
                 and (x.get("productSubGroupDescription", None) == dtlvl)
             ]
-            # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
             # Associated L1b JWST data (UNCAL)
-            # if 'JWST' in obscol and scidata:
-            # sciids = [x.get('obsID', None) for x in scidata]
-            # rawdata = [
-            # x
-            # for x in data['data']
-            # if (x.get("productType", None) == 'SCIENCE')
-            # and (x.get("dataRights", None) == 'PUBLIC')
-            # and (x.get("calib_level", None) == 1)
-            # and (x.get("productSubGroupDescription", None) == 'UNCAL')
-            # and (x.get('obsID') in sciids)
-            # ]
-            # allraw.extend(rawdata)
-            # --<
-            # Downloads JWST data only
-            # allsci.extend(scidata)
-            # allmiss.extend([obscol] * len(scidata))
-            # allurl.extend([thisurl] * len(scidata))
-            # pass
-            # Downloads all missions
+            if 'JWST' in obscol and scidata:
+                sciids = [x.get('obsID', None) for x in scidata]
+                rawdata = [
+                    x
+                    for x in data['data']
+                    if (x.get("productType", None) == 'SCIENCE')
+                    and (x.get("dataRights", None) == 'PUBLIC')
+                    and (x.get("calib_level", None) == 1)
+                    and (x.get("productSubGroupDescription", None) == 'UNCAL')
+                    and (x.get('obsID') in sciids)
+                ]
+                allraw.extend(rawdata)
+                pass
             allsci.extend(scidata)
             allmiss.extend([obscol] * len(scidata))
             allurl.extend([thisurl] * len(scidata))
-            # >--
             if verbose:
                 log.warning('%s: %s: %s', obscol, o, len(scidata))
+                pass
             pass
         else:
             log.warning('>-- No data in MAST query %s', errmastq)
+            pass
         pass
     tempdir = tempfile.mkdtemp(
         dir=dawgie.context.data_stg, prefix=target.replace(' ', '') + '_'
     )
-    thisobsids = [row['productFilename'].split('_')[-2] for row in allsci]
 
     for irow, row in enumerate(allsci):
-        # HST: mast api hack
-        if allmiss[irow] in ['HST']:
-            thisobsid = row['productFilename'].split('_')[-2]
-            # 6/13/24 note that GJ 1132 STIS is sometimes having trouble here
-            # the MAST downloaded file is ldlm01m0q_flt.fits but
-            # it's coming up as a ima.fits maybe?
+        # HST, JWST
+        if allmiss[irow] in ['HST', 'JWST']:
             if row['project'] in ['CALSTIS']:
-                thisobsid = thisobsid.upper() + '%2F' + thisobsid + '_flt.fits'
+                # GMR: Fill that when we get STIS back in
                 pass
-            else:
-                # want ida504e9 --> IDA504E9Q%2Fida504e9q_ima.fits
-                # and ida504e9q --> IDA504E9QQ%2Fida504e9q_ima.fits
-                # (currently the second one gets a double 'qq' toward the end,
-                # which fails)
-                # special case for K2-3 and others with a couple weird 's' files
-                if len(thisobsid) == 9 and thisobsid.endswith('s'):
-                    thisobsid = (
-                        thisobsid[:-1].upper()
-                        + 'QQ%2F'
-                        + thisobsid
-                        + '_ima.fits'
-                    )
-                    pass
-                # remove the second double-q (the lower-case one)
-                elif (
-                    len(thisobsid) == 9
-                    and thisobsid.endswith('q')
-                    and not thisobsid.startswith('ldl')
-                ):
-                    thisobsid = (
-                        thisobsid.upper() + 'Q%2F' + thisobsid + '_ima.fits'
-                    )
-                    # thisobsid = thisobsid.replace('qq_ima','q_ima')
-                    pass
-                # special case for K2-3 and others with a couple weird 's' files
-                elif thisobsid + 's' in thisobsids:
-                    thisobsid = (
-                        thisobsid.upper() + 'Q%2F' + thisobsid + 's_ima.fits'
-                    )
-                    pass
-                else:
-                    thisobsid = (
-                        thisobsid.upper() + 'Q%2F' + thisobsid + 'q_ima.fits'
-                    )
-                    pass
-            fileout = os.path.join(tempdir, os.path.basename(thisobsid))
-            shellcom = "'".join(
-                [
-                    "curl -s -L -X GET ",
-                    allurl[irow] + "product_name=" + thisobsid,
-                    " --output ",
-                    fileout,
-                    "",
-                ]
-            )
-            subprocess.run(shellcom, shell=True, check=False)
-            pass
-        # JWST
-        elif allmiss[irow] in ['JWST']:
             payload = {"uri": row['dataURI']}
             resp = requests.get(allurl[irow], params=payload, timeout=42)
             fileout = os.path.join(
@@ -1313,42 +1253,43 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 flt.write(resp.content)
                 pass
             pass
-        # SPITZER DO NOTHING FOR NOW DL IS TOO LONG
+        # SPITZER
         else:
+            # Data from disk
             pass
+        # VERBOSE
         if verbose:
             log.warning('>-- %s %s', os.path.getsize(fileout), fileout)
             pass
         pass
-    # INES MERTZ : temporary fix for JWST uncalibrated files, don't forget to put them back
-    # if allraw:
-    # for irow, row in enumerate(allraw):
-    # print('  downloading',irow,len(allraw))
-    # payload = {"uri": row['dataURI']}
-    # try:
-    # resp = requests.get(allurl[irow], params=payload, timeout=42)
-    # fileout = os.path.join(
-    #     tempdir, os.path.basename(row['productFilename'])
-    # )
-    # with open(fileout, 'wb') as flt:
-    # flt.write(resp.content)
-    # except requests.exceptions.ReadTimeout:
-    # log.warning(
-    # '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
-    # target,
-    # irow,
-    # len(allraw),
-    # )
-    # pass
-    # pass
+
+    # JWST RAW FILES
+    if allraw:
+        for irow, row in enumerate(allraw):
+            payload = {"uri": row['dataURI']}
+            try:
+                resp = requests.get(allurl[irow], params=payload, timeout=42)
+                fileout = os.path.join(
+                    tempdir, os.path.basename(row['productFilename'])
+                )
+                with open(fileout, 'wb') as flt:
+                    flt.write(resp.content)
+            except requests.exceptions.ReadTimeout:
+                log.warning(
+                    '--< TIMEDOUT on the allraw request loop for %s (%s/%s) >--',
+                    target,
+                    irow,
+                    len(allraw),
+                )
+                pass
+            pass
+        pass
+
+    # COPY OVER DB AND CLEAN UP STG AREA
     locations = [tempdir]
     new = dbscp(target, locations, dbs, out)
-    # Delete local copy /proj/sdp/data/stg
-    # Disabling for now I wanna know what s happening there
-    # --<
     # os.chmod(tempdir, int('0777', 8))
     shutil.rmtree(tempdir, True)
-    # >--
     return new
 
 
@@ -1434,8 +1375,10 @@ def dbscp(target, locations, dbs, out, verbose=False):
     n_fails = 0
     for fitsfile in imalist:
         try:
-            pyfits.open(fitsfile)
-            okfiles.append(True)
+            # GMR: We need to free memory when doing that sort of thing
+            with pyfits.open(fitsfile):
+                okfiles.append(True)
+                pass
             pass
         except OSError:
             log.warning('--< !!! Failed to read: %s ', fitsfile)
