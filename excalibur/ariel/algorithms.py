@@ -30,7 +30,7 @@ class SimSpectrum(dawgie.Algorithm):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self.__rt = rtalg.Autofill()
         self.__system_finalize = sysalg.Finalize()
-        self.__out = arielstates.PriorsSV('parameters')
+        self.__out = arielstates.SimSpectrumSV('parameters')
         return
 
     def name(self):

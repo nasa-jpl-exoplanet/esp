@@ -1459,6 +1459,12 @@ def targetlist_active():
         'TOI-2120',
         'TOI-782',
         'TOI-260',
+        'BD+05 4868',
+        'HD 12572',
+        'LP 890-9',
+        'TOI-6255',
+        'TOI-6894',
+        'GJ 341',
     ]
     return targets
 
@@ -1663,7 +1669,7 @@ def targetlist_JWST():
     '''
 
     targets = [
-        # '55 Cnc',     # no data!
+        '55 Cnc',  # no data?  planet e is in Mark's cycle 4 list
         'GJ 1132',  # added Dec.2024
         'GJ 1214',  # no data!  ok wait it's working apr.2025
         'GJ 3053',  # added oct.2024
@@ -1677,9 +1683,11 @@ def targetlist_JWST():
         'GJ 9827',  # added oct.2024
         'HAT-P-1',  # added oct.2024
         'HAT-P-12',  # added apr.2025
+        'HAT-P-13',  # added from Mark's cycle-4 list
         'HAT-P-14',
         'HAT-P-26',  # added oct.2024
         'HAT-P-30',  # added apr.2025
+        'HAT-P-32',  # added from Mark's cycle-4 list
         'HATS-6',  # added oct.2024
         'HATS-72',  # added apr.2025
         'HATS-75',  # added Dec.2024
@@ -1734,6 +1742,12 @@ def targetlist_JWST():
         'WASP-94',  # added oct.2024
         'WASP-96',
         'WD 1856+534',  # added Dec.2024
+        'BD+05 4868',  # added from Mark's cycle-4 cross-check
+        'HD 12572',  # added from Mark's cycle-4 cross-check
+        'LP 890-9',  # added from Mark's cycle-4 cross-check
+        'TOI-6255',  # added from Mark's cycle-4 cross-check
+        'TOI-6894',  # added from Mark's cycle-4 cross-check
+        'GJ 341',  # added as previous candidate now in Archive
     ]
 
     return targets

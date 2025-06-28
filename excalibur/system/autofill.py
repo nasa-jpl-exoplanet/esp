@@ -5,7 +5,7 @@
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
-import numpy
+import numpy as np
 import copy
 import excalibur.system.constants as syscons
 from excalibur.util.logg import calculate_logg
@@ -50,7 +50,7 @@ def fillUncertainty(param, param_value, param_uncertainty, error_type):
             # if param_value + fillvalue > 90: fillvalue = 90 - param_value
         elif param == 'ecc':
             # for eccentricity, set uncertainty to 20%, with a minimum of 0.1
-            fillvalue = numpy.max([float(param_value) * 2.0e-1, 0.1])
+            fillvalue = np.max([float(param_value) * 2.0e-1, 0.1])
             fillvalue = 0.145  # 90-percentile; 95-percentile is 0.185
         elif param == 'omega':
             # for argument of periastron, set a large uncertainty (120 degrees)
@@ -208,7 +208,7 @@ def bestValue(
                 print('Oof! the best publication index is undefined!')
             pass
 
-    if values[0] != '' and not selectMostRecent:
+    if len(values) > 0 and values[0] != '' and not selectMostRecent:
         # step 1: if there is a default value at the start of the list, use that
         # -- exception: for the emphemeris (period and t_0) always use the most recent value --
         bestvalue = values[0]
@@ -369,10 +369,14 @@ def calculate_selfConsistency_metric(data, setRefByHand=False, verbose=False):
     # if verbose:
     #    for count in counts: print('counts',count)
 
-    totalcounts = numpy.array([count['totalcount'] for count in counts])
-    bestscore = numpy.max(totalcounts)
-    refs = numpy.array([count['totalref'] for count in counts])
-    refs_with_max_score = refs[numpy.where(totalcounts == bestscore)]
+    totalcounts = np.array([count['totalcount'] for count in counts])
+    # for test targets, there are no references and totalcounts is empty
+    if len(totalcounts) == 0:
+        bestscore = None
+    else:
+        bestscore = np.max(totalcounts)
+    refs = np.array([count['totalref'] for count in counts])
+    refs_with_max_score = refs[np.where(totalcounts == bestscore)]
     if verbose:
         print('refs_with_max_score', refs_with_max_score)
     bestyear = 0
@@ -421,10 +425,14 @@ def calculate_selfConsistency_metric(data, setRefByHand=False, verbose=False):
                 counts[ipub]['totalcount'] += additionalCounts
     if verbose:
         print('total counts after', [count['totalcount'] for count in counts])
-    totalcounts = numpy.array([count['totalcount'] for count in counts])
-    bestscore = numpy.max(totalcounts)
-    refs = numpy.array([count['totalref'] for count in counts])
-    refs_with_max_score = refs[numpy.where(totalcounts == bestscore)]
+    totalcounts = np.array([count['totalcount'] for count in counts])
+    # for test targets, there are no references and totalcounts is empty
+    if len(totalcounts) == 0:
+        bestscore = None
+    else:
+        bestscore = np.max(totalcounts)
+    refs = np.array([count['totalref'] for count in counts])
+    refs_with_max_score = refs[np.where(totalcounts == bestscore)]
     if verbose:
         print('refs_with_max_score', refs_with_max_score)
     bestyear = 0
@@ -570,7 +578,7 @@ def derive_RHOstar_from_M_and_R(starInfo):
             newRHO = (
                 float(M)
                 * sscmks['Msun']
-                / (4.0 * numpy.pi / 3.0 * (float(R) * sscmks['Rsun']) ** 3)
+                / (4.0 * np.pi / 3.0 * (float(R) * sscmks['Rsun']) ** 3)
             )
             # RHO_derived.append(str('%6.4f' %newRHO))
             RHO_derived.append(f'{newRHO:6.4f}')
@@ -580,7 +588,7 @@ def derive_RHOstar_from_M_and_R(starInfo):
             if Rerr1 == '' or Merr1 == '':
                 RHO_lowerr_derived.append('')
             else:
-                newRHOfractionalError1 = -numpy.sqrt(
+                newRHOfractionalError1 = -np.sqrt(
                     (3.0 * float(Rerr1) / float(R)) ** 2
                     + (float(Merr1) / float(M)) ** 2
                 )
@@ -591,7 +599,7 @@ def derive_RHOstar_from_M_and_R(starInfo):
             if Rerr2 == '' or Merr2 == '':
                 RHO_uperr_derived.append('')
             else:
-                newRHOfractionalError2 = numpy.sqrt(
+                newRHOfractionalError2 = np.sqrt(
                     (3.0 * float(Rerr2) / float(R)) ** 2
                     + (float(Merr2) / float(M)) ** 2
                 )
@@ -670,9 +678,9 @@ def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
             # P = 365.25
             # giving these Earth parameters results in 0.9999874 AU
             GM = sscmks['G'] * float(M) * sscmks['Msun']
-            newsma = (
-                GM * (float(P) * sscmks['day'] / 2.0 / numpy.pi) ** 2
-            ) ** (1.0 / 3.0)
+            newsma = (GM * (float(P) * sscmks['day'] / 2.0 / np.pi) ** 2) ** (
+                1.0 / 3.0
+            )
             newsma /= sscmks['AU']
             # sma_derived.append(str('%6.4f' %newsma))
             sma_derived.append(f'{newsma:6.4f}')
@@ -682,7 +690,7 @@ def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
             if Perr1 == '' or Merr1 == '':
                 sma_lowerr_derived.append('')
             else:
-                newsma_fractionalError1 = -numpy.sqrt(
+                newsma_fractionalError1 = -np.sqrt(
                     (2.0 / 3.0 * float(Perr1) / float(P)) ** 2
                     + (1.0 / 3.0 * float(Merr1) / float(M)) ** 2
                 )
@@ -693,7 +701,7 @@ def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
             if Perr2 == '' or Merr2 == '':
                 sma_uperr_derived.append('')
             else:
-                newsma_fractionalError2 = numpy.sqrt(
+                newsma_fractionalError2 = np.sqrt(
                     (2.0 / 3.0 * float(Perr2) / float(P)) ** 2
                     + (1.0 / 3.0 * float(Merr2) / float(M)) ** 2
                 )
@@ -760,24 +768,24 @@ def derive_LOGGstar_from_R_and_M(starInfo):
             if Rerr1 == '' or Merr1 == '':
                 LOGG_lowerr_derived.append('')
             else:
-                newLOGGfractionalError1 = -numpy.sqrt(
+                newLOGGfractionalError1 = -np.sqrt(
                     (2.0 * float(Rerr1) / float(R)) ** 2
                     + (float(Merr1) / float(M)) ** 2
                 )
-                # LOGG_lowerr_derived.append(str('%6.4f' %numpy.log10
+                # LOGG_lowerr_derived.append(str('%6.4f' %np.log10
                 LOGG_lowerr_derived.append(
-                    f'{numpy.log10(1 + newLOGGfractionalError1):6.4f}'
+                    f'{np.log10(1 + newLOGGfractionalError1):6.4f}'
                 )
             if Rerr2 == '' or Merr2 == '':
                 LOGG_uperr_derived.append('')
             else:
-                newLOGGfractionalError2 = numpy.sqrt(
+                newLOGGfractionalError2 = np.sqrt(
                     (2.0 * float(Rerr2) / float(R)) ** 2
                     + (float(Merr2) / float(M)) ** 2
                 )
-                # LOGG_uperr_derived.append(str('%6.4f' %numpy.log10
+                # LOGG_uperr_derived.append(str('%6.4f' %np.log10
                 LOGG_uperr_derived.append(
-                    f'{numpy.log10(1 + newLOGGfractionalError2):6.4f}'
+                    f'{np.log10(1 + newLOGGfractionalError2):6.4f}'
                 )
         else:
             LOGG_derived.append(LOGG)
@@ -862,7 +870,7 @@ def derive_LOGGplanet_from_R_and_M(starInfo, planet_letter, verbose=False):
             if Rerr1 == '' or Merr1 == '':
                 logg_lowerr_derived.append('')
             else:
-                loggfractionalError1 = -numpy.sqrt(
+                loggfractionalError1 = -np.sqrt(
                     (2.0 * float(Rerr1) / float(R)) ** 2
                     + (float(Merr1) / float(M)) ** 2
                 )
@@ -873,12 +881,12 @@ def derive_LOGGplanet_from_R_and_M(starInfo, planet_letter, verbose=False):
                 # print('Mp fractional error',float(Merr1)/float(M))
                 # print('logg fractional error',-loggfractionalError1)
                 # if loggfractionalError1
-                # logg_lowerr_derived.append(str('%6.4f' %numpy.log10
+                # logg_lowerr_derived.append(str('%6.4f' %np.log10
 
                 # this conditional avoids log(negative) error
                 if loggfractionalError1 > -1:
                     logg_lowerr_derived.append(
-                        f'{numpy.log10(1 + loggfractionalError1):6.4f}'
+                        f'{np.log10(1 + loggfractionalError1):6.4f}'
                     )
                 else:
                     # HD 23472 Trifonov2019 has large R,M error bars, probably a typo
@@ -887,14 +895,14 @@ def derive_LOGGplanet_from_R_and_M(starInfo, planet_letter, verbose=False):
             if Rerr2 == '' or Merr2 == '':
                 logg_uperr_derived.append('')
             else:
-                loggfractionalError2 = numpy.sqrt(
+                loggfractionalError2 = np.sqrt(
                     (2.0 * float(Rerr2) / float(R)) ** 2
                     + (float(Merr2) / float(M)) ** 2
                 )
-                # logg_uperr_derived.append(str('%6.4f' %numpy.log10
+                # logg_uperr_derived.append(str('%6.4f' %np.log10
                 #                              (1 + loggfractionalError2)))
                 logg_uperr_derived.append(
-                    f'{numpy.log10(1 + loggfractionalError2):6.4f}'
+                    f'{np.log10(1 + loggfractionalError2):6.4f}'
                 )
         else:
             logg_derived.append('')
@@ -969,7 +977,7 @@ def derive_Lstar_from_R_and_T(starInfo):
             if Rerr1 == '' or Terr1 == '':
                 Lstar_lowerr_derived.append('')
             else:
-                newLstarfractionalError1 = -numpy.sqrt(
+                newLstarfractionalError1 = -np.sqrt(
                     (2.0 * float(Rerr1) / float(R)) ** 2
                     + (4.0 * float(Terr1) / float(T)) ** 2
                 )
@@ -979,7 +987,7 @@ def derive_Lstar_from_R_and_T(starInfo):
             if Rerr2 == '' or Terr2 == '':
                 Lstar_uperr_derived.append('')
             else:
-                newLstarfractionalError2 = numpy.sqrt(
+                newLstarfractionalError2 = np.sqrt(
                     (2.0 * float(Rerr2) / float(R)) ** 2
                     + (4.0 * float(Terr2) / float(T)) ** 2
                 )
@@ -1024,7 +1032,7 @@ def derive_Teqplanet_from_Lstar_and_sma(starInfo, planet_letter, verbose=False):
 
     # get Lsun definition.  (not needed if we scale to solar)
     # sscmks = syscons.ssconstants(cgs=True)
-    # F_1AU = sscmks['Lsun'] / 4./numpy.pi / sscmks['AU']**2
+    # F_1AU = sscmks['Lsun'] / 4./np.pi / sscmks['AU']**2
     # sigrad = 5.6704e-5  # cgs
     # T_1AU = (F_1AU / 4. / sigrad)**0.25
     # print('T_eq for Earth',T_1AU)
@@ -1093,7 +1101,7 @@ def derive_Teqplanet_from_Lstar_and_sma(starInfo, planet_letter, verbose=False):
             if Lstarerr1 == '' or smaerr1 == '':
                 Teq_lowerr_derived.append('')
             else:
-                newTeqfractionalError1 = -numpy.sqrt(
+                newTeqfractionalError1 = -np.sqrt(
                     (0.25 * float(Lstarerr1) / float(Lstar)) ** 2
                     + (0.5 * float(smaerr1) / float(sma)) ** 2
                 )
@@ -1103,7 +1111,7 @@ def derive_Teqplanet_from_Lstar_and_sma(starInfo, planet_letter, verbose=False):
             if Lstarerr2 == '' or smaerr2 == '':
                 Teq_uperr_derived.append('')
             else:
-                newTeqfractionalError2 = numpy.sqrt(
+                newTeqfractionalError2 = np.sqrt(
                     (0.25 * float(Lstarerr2) / float(Lstar)) ** 2
                     + (0.5 * float(smaerr2) / float(sma)) ** 2
                 )
@@ -1175,7 +1183,7 @@ def derive_inclination_from_impactParam(starInfo, planet_letter):
             # print('R* (RSun)',out['priors']['R*'])
             # print('R* (AU)',out['priors']['R*']*sscmks['Rsun/AU'])
             # print('ap (AU)',out['priors'][p]['sma'])
-            newinc = numpy.arccos(cosinc) * 180 / numpy.pi
+            newinc = np.arccos(cosinc) * 180 / np.pi
             # print('inclination derived from impact parameter:',newinc)
 
             inc_derived.append(f'{newinc:6.4f}')
@@ -1193,13 +1201,13 @@ def derive_inclination_from_impactParam(starInfo, planet_letter):
             ):
                 inc_lowerr_derived.append('')
             else:
-                cosincfractionalError1 = -numpy.sqrt(
+                cosincfractionalError1 = -np.sqrt(
                     (float(Rstarerr1) / float(Rstar)) ** 2
                     + (float(impacterr1) / float(impact)) ** 2
                     + (float(smaerr1) / float(sma)) ** 2
                 )
                 inc_lowerr_derived.append(
-                    f'{(cosincfractionalError1 * 180 / numpy.pi):6.4f}'
+                    f'{(cosincfractionalError1 * 180 / np.pi):6.4f}'
                 )
             # ines mertz : same thing for upper error
             if (
@@ -1210,13 +1218,13 @@ def derive_inclination_from_impactParam(starInfo, planet_letter):
             ):
                 inc_uperr_derived.append('')
             else:
-                cosincfractionalError2 = numpy.sqrt(
+                cosincfractionalError2 = np.sqrt(
                     (float(Rstarerr2) / float(Rstar)) ** 2
                     + (float(impacterr2) / float(impact)) ** 2
                     + (float(smaerr2) / float(sma)) ** 2
                 )
                 inc_uperr_derived.append(
-                    f'{(cosincfractionalError2 * 180 / numpy.pi):6.4f}'
+                    f'{(cosincfractionalError2 * 180 / np.pi):6.4f}'
                 )
         else:
             inc_derived.append(inc)
@@ -1275,13 +1283,13 @@ def derive_impactParam_from_inclination(starInfo, planet_letter):
         #  (but only update it if inclination, R*, and sma are all defined)
         if imp == '' and Rstar != '' and sma != '' and inc != '':
 
-            cosinc = numpy.cos(float(inc) / 180.0 * numpy.pi)
+            cosinc = np.cos(float(inc) / 180.0 * np.pi)
             newimp = cosinc * float(sma) / float(Rstar) / sscmks['Rsun/AU']
             # print()
             # print(' cosinc',cosinc)
             # print(' sma/R*',float(sma) / float(Rstar)/sscmks['Rsun/AU'])
             # print('impact derived from inclination:',newimp)
-            newimp = numpy.abs(newimp)
+            newimp = np.abs(newimp)
             # if newimp > 1: print('STRANGE impact parameter',newimp)
             # if newimp > 1: newimp = 1
             newimp = min(newimp, 1)
@@ -1293,9 +1301,9 @@ def derive_impactParam_from_inclination(starInfo, planet_letter):
             if Rstarerr1 == '' or smaerr1 == '' or incerr1 == '':
                 imp_lowerr_derived.append('')
             else:
-                impfractionalError1 = -numpy.sqrt(
+                impfractionalError1 = -np.sqrt(
                     (float(Rstarerr1) / float(Rstar)) ** 2
-                    + (float(incerr1) * numpy.pi / 180.0 / cosinc) ** 2
+                    + (float(incerr1) * np.pi / 180.0 / cosinc) ** 2
                     + (float(smaerr1) / float(sma)) ** 2
                 )
                 imp_lowerr_derived.append(
@@ -1304,9 +1312,9 @@ def derive_impactParam_from_inclination(starInfo, planet_letter):
             if Rstarerr2 == '' or smaerr2 == '' or incerr2 == '':
                 imp_uperr_derived.append('')
             else:
-                impfractionalError2 = numpy.sqrt(
+                impfractionalError2 = np.sqrt(
                     (float(Rstarerr2) / float(Rstar)) ** 2
-                    + (float(incerr2) * numpy.pi / 180.0 / cosinc) ** 2
+                    + (float(incerr2) * np.pi / 180.0 / cosinc) ** 2
                     + (float(smaerr2) / float(sma)) ** 2
                 )
                 imp_uperr_derived.append(
@@ -1375,22 +1383,22 @@ def derive_sma_from_ars(starInfo, planet_letter):
             if Rstarerr1 == '' or arserr1 == '':
                 sma_lowerr_derived.append('')
             else:
-                smafractionalError1 = -numpy.sqrt(
+                smafractionalError1 = -np.sqrt(
                     (float(Rstarerr1) / float(Rstar)) ** 2
                     + (float(arserr1) / float(ars)) ** 2
                 )
-                # smafractionalError1 = -numpy.sqrt((float(arserr1)/float(ars))**2)
+                # smafractionalError1 = -np.sqrt((float(arserr1)/float(ars))**2)
                 sma_lowerr_derived.append(
                     f'{(newsma * smafractionalError1):6.4f}'
                 )
             if Rstarerr2 == '' or arserr2 == '':
                 sma_uperr_derived.append('')
             else:
-                smafractionalError2 = numpy.sqrt(
+                smafractionalError2 = np.sqrt(
                     (float(Rstarerr2) / float(Rstar)) ** 2
                     + (float(arserr2) / float(ars)) ** 2
                 )
-                # smafractionalError2 = numpy.sqrt((float(arserr2)/float(ars))**2)
+                # smafractionalError2 = np.sqrt((float(arserr2)/float(ars))**2)
                 sma_uperr_derived.append(
                     f'{(newsma * smafractionalError2):6.4f}'
                 )
@@ -1524,11 +1532,11 @@ def checkValidData(starInfo, starParam, planetParam):
                     missingParams.append(planet + ':' + param + '_lowerr')
 
     if missingParams:
-        # print()
-        # for planet in starInfo['planets']:
-        #     print(' target param check',starInfo[planet].keys())
-        # print()
-        # print('missing parameters in the target state vector:',missingParams)
+        print()
+        for planet in starInfo['planets']:
+            print(' target param check', starInfo[planet].keys())
+        print()
+        print('missing parameters in the target state vector:', missingParams)
         return False
     return True
 

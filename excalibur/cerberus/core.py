@@ -112,6 +112,19 @@ CerbResultsParams = namedtuple(
     ],
 )
 
+CerbAnalysisParams = namedtuple(
+    'cerberus_analysis_params_from_runtime',
+    [
+        'tier',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
+    ],
+)
+
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
@@ -2356,7 +2369,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
 
 # --------------------------------------------------------------------
-def analysis(aspects, filt, out, verbose=False):
+def analysis(aspects, filt, runtime_params, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -2391,45 +2404,30 @@ def analysis(aspects, filt, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        # analysistargetlists.append({
-        #    'targetlistname':'Roudier+ 2022',
-        #    'targets':alltargetlists['roudier62']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Nov.2023 Transit-list',
-        #    'targets':alltargetlists['arielMCS_Nov2023_transit']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Nov.2023 max-visits=25',
-        #    'targets':alltargetlists['arielMCS_Nov2023_maxVisits25']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Feb.2024 Transit-list',
-        #    'targets':alltargetlists['arielMCS_Feb2024_transit']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Feb.2024 max-visits=25',
-        #    'targets':alltargetlists['arielMCS_Feb2024_maxVisits25']})
-        # analysistargetlists.append({
-        #    'targetlistname':'2-year science time; Thorngren mmw (Aug.2024)',
-        #    'targets':alltargetlists['ariel_Aug2024_2years']})
-        #
-        #  *** Tier-2 (259 planets) ***
-        # analysistargetlists.append({
-        #   'targetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-        #   'targets':alltargetlists['ariel_Nov2024_2years']})
-        # analysisplanetlist = {
-        #    'planetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-        #    'planets':alltargetlists['ariel_Nov2024_2years_withPlanetletters']}
-        #  *** Tier-1 (626 planets) ***
-        analysistargetlists.append(
-            {
-                'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
-                'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+        if runtime_params.tier == 2:
+            #  *** Tier-2 (259 planets) ***
+            analysistargetlists.append({
+                'targetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                'targets':alltargetlists['ariel_Nov2024_2years']})
+            analysisplanetlist = {
+                'planetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                'planets':alltargetlists['ariel_Nov2024_2years_withPlanetletters']}
+        elif runtime_params.tier == 1:
+            #  *** Tier-1 (626 planets) ***
+            analysistargetlists.append(
+                {
+                    'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
+                    'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+                }
+            )
+            analysisplanetlist = {
+                'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
+                'planets': alltargetlists[
+                    'ariel_Nov2024_2yearsTier1_withPlanetletters'
+                ],
             }
-        )
-        analysisplanetlist = {
-            'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
-            'planets': alltargetlists[
-                'ariel_Nov2024_2yearsTier1_withPlanetletters'
-            ],
-        }
+        else:
+            print('ERROR: unknown tier level for mass-metal plot', runtime_params.tier)
     else:
         analysistargetlists.append(
             {

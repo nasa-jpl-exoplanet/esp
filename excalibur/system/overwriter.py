@@ -1813,6 +1813,30 @@ def ppar():
         'dist_ref': 'Gaia EDR3',
     }
 
+    overwrite['testJup'] = {
+        'R*': 1,
+        'M*': 1,
+        'RHO*': 1.41,
+        'LOGG*': 4.438,
+        'L*': 1,
+        'T*': 5888,
+        'FEH*': 0,
+        'Jmag': 5,
+        'Hmag': 5,
+        'Kmag': 5,
+        'x': {  # must match added_planet_letter in core.py
+            'teq': 880.0,
+            'inc': 90,
+            't0': 0,
+            'sma': 0.1,
+            'period': 10,
+            'ecc': 0,
+            'rp': 1,
+            'mass': 1,
+            'logg': 3.394,
+        },
+    }
+
     return overwrite
 
 

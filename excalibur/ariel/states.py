@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 # ------------- ------------------------------------------------------
 # -- SV -- -----------------------------------------------------------
-class PriorsSV(ExcaliburSV):
+class SimSpectrumSV(ExcaliburSV):
     '''General format for ariel State Vector view'''
 
     def __init__(self, name):
