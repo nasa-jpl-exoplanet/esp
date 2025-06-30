@@ -71,6 +71,7 @@ class XSLib(dawgie.Algorithm):
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
+        # for fltr in ['Ariel-sim']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -201,6 +202,8 @@ class Atmos(dawgie.Algorithm):
         if sfin:
             sfin = 'Missing system params!'
 
+        # print('  ALLOWED FILTERS',self.__rt.sv_as_dict()['status']['allowed_filter_names'])
+
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
@@ -257,7 +260,17 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                # print('runtime params',runtime_params)
+                #print()
+                #print('runtime',runtime)
+                #print()
+                #print('runtime params1',runtime_params)
+                # fails print('runtime params2',runtime_params.keys())
+                # import pdb; pdb.set_trace()
+
+                #print('runtime fitT',runtime_params.fitT)
+                #print('runtime lbroad',runtime_params.lbroadening)
+                #print('runtime params3',runtime_params.boundTeq)
+
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
@@ -397,6 +410,7 @@ class Results(dawgie.Algorithm):
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                        cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     )
 
                     update = self._results(
@@ -469,6 +483,7 @@ class Analysis(dawgie.Analyzer):
         # self.__atm = atmos()
         # self.__out = crbstates.AnalysisSv('retrievalCheck')
         self.__rt = rtalg.Autofill()
+        self.__rtc = rtalg.Create()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
@@ -525,7 +540,12 @@ class Analysis(dawgie.Analyzer):
                 # if 'cerberus.atmos.'+fltr not in aspects[trgt]:
                 #    log.warning('--< CERBERUS ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)
 
+                # (asdf: this is still not working)
                 runtime = self.__rt.sv_as_dict()['status']
+                # print('runtime old way',runtime)
+                # runtime2 = self.__rtc.sv_as_dict()['status']
+                # print('runtime old2 way',runtime2)
+
                 runtime_params = crbcore.CerbAnalysisParams(
                     tier=runtime['ariel_simspectrum_tier'].value(),
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
@@ -538,7 +558,7 @@ class Analysis(dawgie.Analyzer):
 
                 log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
-                    aspects, runtime_params, fltr, fltrs.index(fltr)
+                    aspects, fltr, runtime_params, fltrs.index(fltr)
                 )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
@@ -551,10 +571,10 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    def _analysis(self, aspects, fltr, index):
+    def _analysis(self, aspects, fltr, runtime_params, index):
         '''Core code call'''
         analysisout = crbcore.analysis(
-            aspects, fltr, self.__out[index], verbose=False
+            aspects, fltr, runtime_params, self.__out[index], verbose=False
         )
         return analysisout
 
