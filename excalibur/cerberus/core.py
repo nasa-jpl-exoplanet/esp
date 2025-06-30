@@ -109,6 +109,7 @@ CerbResultsParams = namedtuple(
         'nlevels',
         'Hsmax',
         'solrad',
+        'cornerBins',
     ],
 )
 
@@ -1421,7 +1422,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    './',
+                    bins=runtime_params.cornerBins,
                     verbose=True,
                     # verbose=False,
                 )
@@ -1436,7 +1437,6 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    './',
                     Nchains=Nchains,
                     verbose=True,
                 )
@@ -2302,7 +2302,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         model_name,
                         trgt,
                         p,
-                        save_dir,
+                        saveDir=save_dir,
                     )
                 )
 
@@ -2323,7 +2323,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     model_name,
                     trgt,
                     p,
-                    save_dir,
+                    bins=runtime_params.cornerBins,
+                    saveDir=save_dir,
                 )
 
                 # _______________WALKER-EVOLUTION PLOT________________
@@ -2339,7 +2340,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         model_name,
                         trgt,
                         p,
-                        save_dir,
+                        saveDir=save_dir,
                     )
                 )
 
@@ -2355,7 +2356,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     model_name,
                     trgt,
                     p,
-                    save_dir,
+                    saveDir=save_dir,
                 )
 
             out['target'].append(trgt)
@@ -2696,7 +2697,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 fit_errors,
                 prior_ranges,
                 filt,
-                save_dir,
+                saveDir=save_dir,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
             fit_t_plot = plotarray[0]
@@ -2709,7 +2710,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             # for real data, make a histogram of the retrieved uncertainties
             #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
             plotarray = plot_fit_uncertainties(
-                fit_values, fit_errors, prior_ranges, filt, save_dir
+                fit_values, fit_errors, prior_ranges, filt,
+                saveDir=save_dir,
             )
             fit_t_plot = plotarray[0]
             fit_metalplot = plotarray[1]
@@ -2726,7 +2728,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
-            save_dir,
+            saveDir=save_dir,
         )
 
         # save the analysis as .csv file? (in /proj/data/spreadsheets/)
