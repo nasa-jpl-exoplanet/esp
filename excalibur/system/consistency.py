@@ -22,7 +22,7 @@ def consistency_checks(priors, ignoredPlanets):
     '''
 
     verbose = False
-    # verbose = True
+    # verbose = True  # useful option for checking consistency in test target values
 
     inconsistencies = []
 

@@ -9,17 +9,14 @@ import re
 import json
 import time
 import shutil
-
 import requests
 import tempfile
 import subprocess
-import logging
 
 import dawgie
 import dawgie.db
 
 import excalibur.runtime.binding as rtbind
-
 import excalibur.target.edit as trgedit
 import excalibur.target.mast_api_utils as masttool
 
@@ -27,10 +24,21 @@ import numpy as np
 import astropy.io.fits as pyfits
 import urllib.request as urlrequest
 
+from collections import namedtuple
+
 from importlib import import_module as fetch  # avoid cicular dependencies
+
+import logging
+
 
 log = logging.getLogger(__name__)
 
+TargetCreateParams = namedtuple(
+    'target_create_params_from_runtime',
+    [
+        'num_reruns',
+    ],
+)
 
 # ------------- ------------------------------------------------------
 # -- URLTRICK -- -----------------------------------------------------
@@ -81,7 +89,7 @@ def tap_query(base_url, query):
 
 # ----------------- --------------------------------------------------
 # -- SCRAPE IDS -- ---------------------------------------------------
-def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
+def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
     '''
     - Creates a state vector for each target
     - Optionally adds on an alias, for cases where archive uses a diff name
@@ -112,10 +120,12 @@ def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
         parsedstr = target.split(':')
         parsedstr = [t.strip() for t in parsedstr]
         if target.startswith('test'):
-            # create 25 names for this target
-            num_reruns = 25
+            # create several names for this target (nominally 25)
             namerepeats = []
-            for i in range(num_reruns):
+            # asdf: still need to get runtime to work with aspects!!
+            # for i in range(runtime_params.num_reruns):
+            # print('runtime num_reruns', runtime_params.num_reruns)
+            for i in range(25):
                 namerepeats.append(f'{parsedstr[0]}{i+1:03d}')
         else:
             # for normal targets, there's no repeating; just 1 name
