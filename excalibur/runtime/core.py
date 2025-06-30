@@ -66,6 +66,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_bounds_HLoc',
         'cerberus_atmos_bounds_HScale',
         'cerberus_atmos_bounds_HThick',
+        'cerberus_plotters_cornerBins',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
         'ariel_simspectrum_tier',
@@ -77,6 +78,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_metallicityDispersion',
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
+        'testcerb_Nrepeats',
     ]:
         if isinstance(
             table['controls'][key], excalibur.runtime.states.BoolValue
