@@ -84,7 +84,7 @@ def plot_spectrumfit(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''plot the best fit to the data'''
@@ -182,6 +182,12 @@ def plot_spectrumfit(
     # the 'average' function (which allows for weights) doesn't have a NaN version,
     #  so mask out any NaN regions by hand
     okPart = np.where(np.isfinite(transitdata['depth']))
+
+    #  DOES nanaverage fix the problem?
+    #    flatlineFit = np.nanmean(
+    #        transitdata['depth'][okPart],
+    #        weights=1 / transitdata['error'][okPart] ** 2,
+    #    )
     flatlineFit = np.average(
         transitdata['depth'][okPart],
         weights=1 / transitdata['error'][okPart] ** 2,
@@ -448,7 +454,8 @@ def plot_corner(
     modelName,
     trgt,
     p,
-    saveDir,
+    bins=10,
+    saveDir='./',
     savetodisk=False,
     verbose=False,
 ):
@@ -550,16 +557,9 @@ def plot_corner(
                     '--< PROBLEM: no truth value for this key: %s >--', thiskey
                 )
         # print('truths in corner plot',truths)
-    # figure = corner.corner(np.vstack(np.array(alltraces)).T,
-    #                       # bins=int(np.sqrt(np.sqrt(nsamples))),
-    #                       bins=10,
-    #                       labels=allkeys, range=trange,
-    #                       truths=truths, truth_color=truthcolor,
-    #                       show_titles=True,
-    #                       quantiles=[0.16, 0.50, 0.84])
     figure = corner.corner(
         np.vstack(np.array(profiletraces)).T,
-        bins=10,
+        bins=bins,
         labels=allkeys,
         range=trange,
         truths=truths,
@@ -646,7 +646,7 @@ def plot_vs_prior(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''compare the fit results against the original prior information'''
@@ -804,7 +804,7 @@ def plot_walker_evolution(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
     Nchains=4,
     verbose=False,
@@ -945,7 +945,7 @@ def plot_fits_vs_truths(
     fit_errors,
     prior_ranges,
     filt,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''
@@ -1168,7 +1168,7 @@ def plot_fits_vs_truths(
 
 # --------------------------------------------------------------------
 def plot_fit_uncertainties(
-    fit_values, fit_errors, prior_ranges, filt, saveDir, savetodisk=False
+    fit_values, fit_errors, prior_ranges, filt, saveDir='./', savetodisk=False
 ):
     '''
     Plot uncertainty as a function of the fit value
@@ -1343,7 +1343,7 @@ def plot_mass_vs_metals(
     fit_errors,
     prior_ranges,
     filt,
-    saveDir,
+    saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
 ):
@@ -1486,7 +1486,6 @@ def plot_mass_vs_metals(
     massesThorngren = np.logspace(-5, 3, 100)
     metalsThorngren = massMetalRelation(0, massesThorngren, thorngren=True)
     if 'sim' in filt:
-        # ax.plot(massesThorngren,metalsThorngren, 'k:', lw=1, zorder=1, label='true relationship')
         ax.plot(
             massesThorngren,
             metalsThorngren,
@@ -1494,6 +1493,7 @@ def plot_mass_vs_metals(
             lw=1,
             zorder=1,
             label='Thorngren+ 2016',
+            # label='true relationship')
         )
     else:
         ax.plot(
