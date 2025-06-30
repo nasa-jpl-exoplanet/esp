@@ -67,6 +67,12 @@ class SimSpectrum(dawgie.Algorithm):
 
             system_dict = self.__system_finalize.sv_as_dict()['parameters']
             valid, errstring = checksv(system_dict)
+
+            target = repr(self).split('.')[1]
+            if target.startswith('test'):
+                valid = False
+                errstring = 'Do not run ariel-sim for test targets'
+
             if valid:
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
@@ -101,7 +107,7 @@ class SimSpectrum(dawgie.Algorithm):
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
-                    repr(self).split('.')[1],  # this is the target name
+                    target,
                     system_dict,
                     runtime_params,
                     self.__out,
