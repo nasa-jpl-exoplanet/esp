@@ -82,7 +82,7 @@ def make_cerberus_atmos(
         isothermal=runtime_params.isothermal,
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
-        solrad=runtime_params.solrad),
+        solrad=runtime_params.solrad,
         break_down_by_molecule=True,
     )
 
