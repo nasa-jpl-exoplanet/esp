@@ -9,8 +9,6 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-# import excalibur
-from excalibur.ariel.metallicity import massMetalRelation
 from excalibur.system.core import ssconstants
 from excalibur.util.plotters import save_plot_tosv
 
@@ -109,8 +107,6 @@ def plot_fits_vs_truth(
         #    c='black',
         #    fontsize=12,
         # )
-
-        overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
 
         # plot C/O=1 as a dotted line
         if param == '[C/O]':

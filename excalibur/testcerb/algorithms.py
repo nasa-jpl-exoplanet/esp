@@ -367,7 +367,7 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                # print('runtime params',runtime_params)
+                print('runtime params in testcerb.alg',runtime_params)
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
@@ -604,29 +604,31 @@ class Analysis(dawgie.Analyzer):
             for fltr in filtersWithResults:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
 
-                runtime = self.__rt.sv_as_dict()['composite']['controls']
-                # these two lines should be the same thing I think
-                runtime = self.__rt.sv_as_dict()['controls']
-                # print('runtime new way',runtime)
 
+                # runtime is not actually needed in analysis.
+                #  prior range is loaded in from previous state vector
+
+                # runtime = self.__rt.sv_as_dict()['composite']['controls']
+                # these two lines should be the same thing I think
+                # runtime = self.__rt.sv_as_dict()['controls']
+                # print('runtime new way',runtime)
                 # import pdb; pdb.set_trace()
 
-                runtime_params = testcerbcore.TestcerbAnalysisParams(
-                    tier=runtime['ariel_simspectrum_tier'].value(),
-                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                )
-                print()
-                print('runtimeparams in testcerb.alg', runtime_params)
-                print()
+                # runtime_params = testcerbcore.TestcerbAnalysisParams(
+                #    tier=runtime['ariel_simspectrum_tier'].value(),
+                #    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+                #    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                #    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+                #    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+                #    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+                #    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
+                # )
+                # print()
+                # print('runtimeparams in testcerb.alg',runtime_params)
+                # print()
 
-                update = self._analysis(
-                    aspects, fltr, runtime_params, fltrs.index(fltr)
-                )
+                # update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
+                update = self._analysis(aspects, fltr, fltrs.index(fltr))
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
@@ -638,10 +640,12 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    def _analysis(self, aspects, fltr, runtime_params, index):
+    # def _analysis(self, aspects, fltr, runtime_params, index):
+    def _analysis(self, aspects, fltr, index):
         '''Core code call'''
         analysisout = testcerbcore.analysis(
-            aspects, fltr, runtime_params, self.__out[index], verbose=False
+            # aspects, fltr, runtime_params, self.__out[index], verbose=False
+            aspects, fltr, self.__out[index], verbose=False
         )
         return analysisout
 

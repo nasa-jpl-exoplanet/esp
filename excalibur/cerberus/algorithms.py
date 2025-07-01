@@ -486,7 +486,7 @@ class Analysis(dawgie.Analyzer):
         # self.__atm = atmos()
         # self.__out = crbstates.AnalysisSv('retrievalCheck')
         self.__rt = rtalg.Autofill()
-        self.__rtc = rtalg.Create()
+        # self.__rtc = rtalg.Create()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
