@@ -127,7 +127,8 @@ def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
             # for i in range(runtime_params.num_reruns):
             # print('runtime num_reruns', runtime_params.num_reruns)
             x = runtime_params.num_reruns
-            if x == 10: print('pylint can be fooled')
+            if x == 10:
+                print('pylint can be fooled')
             for i in range(25):
                 namerepeats.append(f'{parsedstr[0]}{i+1:03d}')
         else:

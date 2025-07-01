@@ -367,7 +367,7 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                print('runtime params in testcerb.alg',runtime_params)
+                print('runtime params in testcerb.alg', runtime_params)
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
@@ -643,8 +643,8 @@ class Analysis(dawgie.Analyzer):
     # def _analysis(self, aspects, fltr, runtime_params, index):
     def _analysis(self, aspects, fltr, index):
         '''Core code call'''
+        # aspects, fltr, runtime_params, self.__out[index], verbose=False
         analysisout = testcerbcore.analysis(
-            # aspects, fltr, runtime_params, self.__out[index], verbose=False
             aspects, fltr, self.__out[index], verbose=False
         )
         return analysisout
