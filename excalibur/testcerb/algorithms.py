@@ -368,7 +368,7 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                print('runtime params in testcerb.alg', runtime_params)
+                # print('runtime params in testcerb.alg', runtime_params)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
@@ -502,6 +502,7 @@ class Results(dawgie.Algorithm):
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                        cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     )
 
                     update = self._results(
