@@ -351,6 +351,7 @@ class Atmos(dawgie.Algorithm):
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],
+                    cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
@@ -368,6 +369,7 @@ class Atmos(dawgie.Algorithm):
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
                 print('runtime params in testcerb.alg', runtime_params)
+
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
