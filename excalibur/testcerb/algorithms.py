@@ -125,6 +125,7 @@ class SimSpectrum(dawgie.Algorithm):
                     lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
+                print('runtime in testcerb.alg.simspectrum',runtime_params)
                 update = self._sim_spectrum(
                     target,
                     system_dict,
@@ -564,7 +565,7 @@ class Analysis(dawgie.Analyzer):
     def __init__(self):
         '''__init__ ds'''
         self._version_ = crbcore.resultsversion()
-        self.__rt = rtalg.Autofill()
+        self.__rt = rtalg.Create()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 
@@ -598,34 +599,20 @@ class Analysis(dawgie.Analyzer):
         if len(aspects) == 0:
             log.warning('--< TESTCERB ANALYSIS: contains no targets >--')
         else:
-            # determine which filters have results from cerb.atmos (in aspects)
-            #  (you have to loop through all targets, since filters vary by target)
-            fwr = []
-            for trgt in aspects:
-                for fltr in fltrs:
-                    if (fltr not in fwr) and (
-                        'testcerb.atmos.' + fltr in aspects[trgt]
-                    ):
-                        # print('This filter exists in the cerb.atmos aspect:',fltr,trgt)
-                        fwr.append(fltr)
-            if not fwr:
-                log.warning(
-                    '--< TESTCERB ANALYSIS: NO FILTERS WITH ATMOS DATA!!!>--'
-                )
+            filtersWithResults=['Ariel-sim']  # just consider Ariel-sim
 
-            # filtersWithResults=['Ariel-sim']  # just one filter, while debugging
-            # filtersWithResults=['HST-WFC3-IR-G141-SCAN']  # just one filter, while debugging
-
-            # only consider filters that have cerb.atmos results loaded in as an aspect
-            for fltr in fwr:
-                # if 'testcerb.atmos.'+fltr not in aspects[trgt]:
-                #    log.warning('--< TESTCERB ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)
-                # else:
+            for fltr in filtersWithResults:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
 
-                runtime = self.__rt.sv_as_dict()['status']
+                runtime = self.__rt.sv_as_dict()['composite']['controls']
+                # these two lines should be the same thing I think
+                runtime = self.__rt.sv_as_dict()['controls']
+                # print('runtime new way',runtime)
+
+                # import pdb; pdb.set_trace()
+
                 runtime_params = testcerbcore.TestcerbAnalysisParams(
-                    tier=runtime['ariel.simspectrum.tier'].value(),
+                    tier=runtime['ariel_simspectrum_tier'].value(),
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
@@ -633,8 +620,11 @@ class Analysis(dawgie.Analyzer):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
+                print()
+                print('runtimeparams in testcerb.alg',runtime_params)
+                print()
 
-                update = self._analysis(aspects, runtime_params, fltr, fltrs.index(fltr))
+                update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
@@ -646,10 +636,10 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    def _analysis(self, aspects, fltr, index):
+    def _analysis(self, aspects, fltr, runtime_params, index):
         '''Core code call'''
         analysisout = testcerbcore.analysis(
-            aspects, fltr, self.__out[index], verbose=False
+            aspects, fltr, runtime_params, self.__out[index], verbose=False
         )
         return analysisout
 
