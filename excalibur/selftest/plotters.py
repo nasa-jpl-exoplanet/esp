@@ -1,7 +1,8 @@
 '''cerberus plotting ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+#  no-member is for scipy.special.erfinv
+# pylint: disable=invalid-name,no-member
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
