@@ -25,7 +25,7 @@
             ariel.simspectrum.metallicityDispersion="0.3"
             ariel.simspectrum.CtoOaverage="-0.26"
             ariel.simspectrum.CtoOdispersion="0.3"
-	    testcerb.Nrepeats="25">
+	    selftest.Nrepeats="25">
     <cerberus.atmos.bounds.Teq lo="0.75" hi="1.5"/>
     <cerberus.atmos.bounds.abundances lo="-6" hi="6"/>
     <cerberus.atmos.bounds.CTP lo="-6" hi="1"/>

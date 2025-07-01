@@ -136,7 +136,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
-        self['testcerb_Nrepeats'] = excalibur.ValueScalar()
+        self['selftest_Nrepeats'] = excalibur.ValueScalar()
         return
 
     def features(self):
@@ -323,7 +323,7 @@ class StatusSV(dawgie.StateVector):
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
-        self['testcerb_Nrepeats'] = excalibur.ValueScalar()
+        self['selftest_Nrepeats'] = excalibur.ValueScalar()
 
     def name(self):
         '''database name'''
@@ -414,7 +414,7 @@ class StatusSV(dawgie.StateVector):
             'cerberus_plotters_cornerBins',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
-            'testcerb_Nrepeats',
+            'selftest_Nrepeats',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):

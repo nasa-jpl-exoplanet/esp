@@ -1,7 +1,7 @@
 # ./excalibur/runtime/binding.py
 # -*- coding: utf-8 -*-
 # PyXB bindings for NM:e92452c8d3e28a9e27abfc9994d2007779e7f4c9
-# Generated 2025-06-30 21:47:13.337161 by PyXB version 1.3.3 using Python 3.12.3.final.0
+# Generated 2025-07-01 15:11:59.748107 by PyXB version 1.3.3 using Python 3.12.3.final.0
 # Namespace AbsentNamespace0
 
 from __future__ import unicode_literals
@@ -14,7 +14,7 @@ import pyxb.utils.domutils
 import sys
 import pyxb.utils.sal as _six
 # Unique identifier for bindings created at the same time
-_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:749af876-5636-11f0-809a-0cc47aaa0c06')
+_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:689e44ea-56c8-11f0-a67d-0cc47aaa0c06')
 
 # Version of PyXB used to generate the bindings
 _PyXBVersion = '1.3.3'
@@ -408,12 +408,12 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     ariel_simspectrum_CtoOdispersion = property(__ariel_simspectrum_CtoOdispersion.value, __ariel_simspectrum_CtoOdispersion.set, None, None)
 
     
-    # Attribute testcerb.Nrepeats uses Python identifier testcerb_Nrepeats
-    __testcerb_Nrepeats = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'testcerb.Nrepeats'), 'testcerb_Nrepeats', '__AbsentNamespace0_control_type_testcerb_Nrepeats', pyxb.binding.datatypes.integer, required=True)
-    __testcerb_Nrepeats._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 110, 4)
-    __testcerb_Nrepeats._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 110, 4)
+    # Attribute selftest.Nrepeats uses Python identifier selftest_Nrepeats
+    __selftest_Nrepeats = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'selftest.Nrepeats'), 'selftest_Nrepeats', '__AbsentNamespace0_control_type_selftest_Nrepeats', pyxb.binding.datatypes.integer, required=True)
+    __selftest_Nrepeats._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 110, 4)
+    __selftest_Nrepeats._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 110, 4)
     
-    testcerb_Nrepeats = property(__testcerb_Nrepeats.value, __testcerb_Nrepeats.set, None, None)
+    selftest_Nrepeats = property(__selftest_Nrepeats.value, __selftest_Nrepeats.set, None, None)
 
     _ElementMap.update({
         __cerberus_atmos_bounds_Teq.name() : __cerberus_atmos_bounds_Teq,
@@ -449,7 +449,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __ariel_simspectrum_metallicityDispersion.name() : __ariel_simspectrum_metallicityDispersion,
         __ariel_simspectrum_CtoOaverage.name() : __ariel_simspectrum_CtoOaverage,
         __ariel_simspectrum_CtoOdispersion.name() : __ariel_simspectrum_CtoOdispersion,
-        __testcerb_Nrepeats.name() : __testcerb_Nrepeats
+        __selftest_Nrepeats.name() : __selftest_Nrepeats
     })
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)

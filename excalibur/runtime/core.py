@@ -78,7 +78,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_metallicityDispersion',
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
-        'testcerb_Nrepeats',
+        'selftest_Nrepeats',
     ]:
         if isinstance(
             table['controls'][key], excalibur.runtime.states.BoolValue

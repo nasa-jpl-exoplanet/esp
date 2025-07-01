@@ -107,7 +107,7 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
                   type="xs:float" use="required"/>
-    <xs:attribute name="testcerb.Nrepeats"
+    <xs:attribute name="selftest.Nrepeats"
                   type="xs:integer" use="required"/>
   </xs:complexType>
 
