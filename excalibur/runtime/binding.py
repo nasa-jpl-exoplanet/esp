@@ -1,7 +1,7 @@
 # ./excalibur/runtime/binding.py
 # -*- coding: utf-8 -*-
 # PyXB bindings for NM:e92452c8d3e28a9e27abfc9994d2007779e7f4c9
-# Generated 2025-06-30 09:54:56.866663 by PyXB version 1.3.3 using Python 3.12.3.final.0
+# Generated 2025-06-30 19:06:42.959866 by PyXB version 1.3.3 using Python 3.12.3.final.0
 # Namespace AbsentNamespace0
 
 from __future__ import unicode_literals
@@ -14,7 +14,7 @@ import pyxb.utils.domutils
 import sys
 import pyxb.utils.sal as _six
 # Unique identifier for bindings created at the same time
-_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:f3af4841-55d2-11f0-8662-0cc47aaa0c06')
+_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:0874a18f-5620-11f0-85b1-0cc47aaa0c06')
 
 # Version of PyXB used to generate the bindings
 _PyXBVersion = '1.3.3'
@@ -281,7 +281,7 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
 
     
     # Attribute cerberus.crbmodel.solrad uses Python identifier cerberus_crbmodel_solrad
-    __cerberus_crbmodel_solrad = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.crbmodel.solrad'), 'cerberus_crbmodel_solrad', '__AbsentNamespace0_control_type_cerberus_crbmodel_solrad', pyxb.binding.datatypes.decimal, required=True)
+    __cerberus_crbmodel_solrad = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'cerberus.crbmodel.solrad'), 'cerberus_crbmodel_solrad', '__AbsentNamespace0_control_type_cerberus_crbmodel_solrad', pyxb.binding.datatypes.float, required=True)
     __cerberus_crbmodel_solrad._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 78, 4)
     __cerberus_crbmodel_solrad._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 78, 4)
     

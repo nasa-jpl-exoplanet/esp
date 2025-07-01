@@ -76,7 +76,7 @@
     <xs:attribute name="cerberus.crbmodel.nlevels"
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.crbmodel.solrad"
-                  type="xs:decimal" use="required"/>
+                  type="xs:float" use="required"/>
     <xs:attribute name="cerberus.crbmodel.Hsmax"
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.plotters.cornerBins"
