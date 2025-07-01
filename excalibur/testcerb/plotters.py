@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 #  no-member is for scipy.special.erfinv
-# pylint: disable=invalid-name,no-member
+# pylint: disable=invalid-name,no-member,duplicate-code,
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
