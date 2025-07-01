@@ -115,7 +115,7 @@ def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
             if x == 10:
                 print('pylint can be fooled')
             for i in range(25):
-                namerepeats.append(f'{parsedstr[0]}{i+1:03d}')
+                namerepeats.append(f'{parsedstr[0]}{i + 1:03d}')
         else:
             # for normal targets, there's no repeating; just 1 name
             namerepeats = [parsedstr[0]]
