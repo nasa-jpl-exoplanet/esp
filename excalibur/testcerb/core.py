@@ -37,6 +37,7 @@ TestcerbAnalysisParams = namedtuple(
     ],
 )
 
+
 # --------------------------------------------------------------------
 def analysis(aspects, filt, runtime_params, out, verbose=False):
     '''

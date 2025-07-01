@@ -244,6 +244,7 @@ class Atmos(dawgie.Algorithm):
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
                     ],
+                    cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
@@ -260,16 +261,16 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                #print()
-                #print('runtime',runtime)
-                #print()
-                #print('runtime params1',runtime_params)
+                # print()
+                # print('runtime',runtime)
+                # print()
+                # print('runtime params1',runtime_params)
                 # fails print('runtime params2',runtime_params.keys())
                 # import pdb; pdb.set_trace()
 
-                #print('runtime fitT',runtime_params.fitT)
-                #print('runtime lbroad',runtime_params.lbroadening)
-                #print('runtime params3',runtime_params.boundTeq)
+                # print('runtime fitT',runtime_params.fitT)
+                # print('runtime lbroad',runtime_params.lbroadening)
+                # print('runtime params3',runtime_params.boundTeq)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
@@ -410,7 +411,9 @@ class Results(dawgie.Algorithm):
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                        cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
+                        cornerBins=runtime[
+                            'cerberus_plotters_cornerBins'
+                        ].value(),
                     )
 
                     update = self._results(

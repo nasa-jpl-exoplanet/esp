@@ -125,7 +125,7 @@ class SimSpectrum(dawgie.Algorithm):
                     lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
-                print('runtime in testcerb.alg.simspectrum',runtime_params)
+                print('runtime in testcerb.alg.simspectrum', runtime_params)
                 update = self._sim_spectrum(
                     target,
                     system_dict,
@@ -599,7 +599,7 @@ class Analysis(dawgie.Analyzer):
         if len(aspects) == 0:
             log.warning('--< TESTCERB ANALYSIS: contains no targets >--')
         else:
-            filtersWithResults=['Ariel-sim']  # just consider Ariel-sim
+            filtersWithResults = ['Ariel-sim']  # just consider Ariel-sim
 
             for fltr in filtersWithResults:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
@@ -621,10 +621,12 @@ class Analysis(dawgie.Analyzer):
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
                 print()
-                print('runtimeparams in testcerb.alg',runtime_params)
+                print('runtimeparams in testcerb.alg', runtime_params)
                 print()
 
-                update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
+                update = self._analysis(
+                    aspects, fltr, runtime_params, fltrs.index(fltr)
+                )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate

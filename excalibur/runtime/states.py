@@ -38,7 +38,7 @@ class BoolValue(dawgie.Value):
 class HiLoValue(dawgie.Value):
     '''helper value for hi-lo type'''
 
-    def __init__(self, hi:float=1, lo:float=0):
+    def __init__(self, hi: float = 1, lo: float = 0):
         '''init the hi-lo'''
         self.hi = hi
         self.lo = lo
@@ -59,7 +59,10 @@ class HiLoValue(dawgie.Value):
 
     def new(self, hilo=None):
         '''hide explicit requirement for dawgie'''
-        return HiLoValue(*((float(hilo.hi), float(hilo.lo)) if hilo else (1, 0)))
+        return HiLoValue(
+            *((float(hilo.hi), float(hilo.lo)) if hilo else (1, 0))
+        )
+
     # def new(self):
     #    '''hide explicit requirement for dawgie'''
     #    return HiLoValue(*((float(self.hi), float(self.lo)) if hilo else (1, 0)))

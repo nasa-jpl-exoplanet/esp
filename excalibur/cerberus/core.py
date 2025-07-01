@@ -79,6 +79,7 @@ CerbAtmosParams = namedtuple(
         'MCMC_chains',
         'MCMC_chain_length',
         'MCMC_sliceSampler',
+        'cornerBins',
         'fitCloudParameters',
         'fitT',
         'fitCtoO',
@@ -2407,12 +2408,18 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     if filt == 'Ariel-sim':
         if runtime_params.tier == 2:
             #  *** Tier-2 (259 planets) ***
-            analysistargetlists.append({
-                'targetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                'targets':alltargetlists['ariel_Nov2024_2years']})
+            analysistargetlists.append(
+                {
+                    'targetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                    'targets': alltargetlists['ariel_Nov2024_2years'],
+                }
+            )
             analysisplanetlist = {
-                'planetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                'planets':alltargetlists['ariel_Nov2024_2years_withPlanetletters']}
+                'planetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                'planets': alltargetlists[
+                    'ariel_Nov2024_2years_withPlanetletters'
+                ],
+            }
         elif runtime_params.tier == 1:
             #  *** Tier-1 (626 planets) ***
             analysistargetlists.append(
@@ -2428,7 +2435,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 ],
             }
         else:
-            print('ERROR: unknown tier level for mass-metal plot', runtime_params.tier)
+            print(
+                'ERROR: unknown tier level for mass-metal plot',
+                runtime_params.tier,
+            )
     else:
         analysistargetlists.append(
             {
@@ -2710,7 +2720,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             # for real data, make a histogram of the retrieved uncertainties
             #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
             plotarray = plot_fit_uncertainties(
-                fit_values, fit_errors, prior_ranges, filt,
+                fit_values,
+                fit_errors,
+                prior_ranges,
+                filt,
                 saveDir=save_dir,
             )
             fit_t_plot = plotarray[0]

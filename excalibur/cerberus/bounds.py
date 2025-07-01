@@ -26,41 +26,56 @@ def set_prior_bound(eqtemp, runtime_params):
     # print('          boundsTeq',runtime_params.boundTeq.hi)
     # print('          boundsTeq',runtime_params.boundTeq.lo)
     #
-    if runtime_params.boundTeq.lo != 0.75 or \
-       runtime_params.boundTeq.hi != 1.5:
+    if runtime_params.boundTeq.lo != 0.75 or runtime_params.boundTeq.hi != 1.5:
         log.warning('--< Non-standard prior range for Teq >--')
-    if runtime_params.boundAbundances.lo!=-6 or \
-       runtime_params.boundAbundances.hi!=6:
+    if (
+        runtime_params.boundAbundances.lo != -6
+        or runtime_params.boundAbundances.hi != 6
+    ):
         log.warning('--< Non-standard prior range for abundances >--')
-    if runtime_params.boundCTP.lo!=-6 or \
-       runtime_params.boundCTP.hi!=1:
+    if runtime_params.boundCTP.lo != -6 or runtime_params.boundCTP.hi != 1:
         log.warning('--< Non-standard prior range for CTP >--')
-    if runtime_params.boundHLoc.lo!=-6 or \
-       runtime_params.boundHLoc.hi!=1:
+    if runtime_params.boundHLoc.lo != -6 or runtime_params.boundHLoc.hi != 1:
         log.warning('--< Non-standard prior range for HLoc >--')
-    if runtime_params.boundHScale.lo!=-6 or \
-       runtime_params.boundHScale.hi!=6:
+    if (
+        runtime_params.boundHScale.lo != -6
+        or runtime_params.boundHScale.hi != 6
+    ):
         log.warning('--< Non-standard prior range for HScale >--')
-    if runtime_params.boundHThick.lo!=1 or \
-       runtime_params.boundHThick.hi!=20:
+    if (
+        runtime_params.boundHThick.lo != 1
+        or runtime_params.boundHThick.hi != 20
+    ):
         log.warning('--< Non-standard prior range for HThick >--')
 
     prior_ranges = {}
 
-    prior_ranges['T'] = (runtime_params.boundTeq.lo * eqtemp,
-                         runtime_params.boundTeq.hi * eqtemp)
-    prior_ranges['dexRange'] = (runtime_params.boundAbundances.lo,
-                                runtime_params.boundAbundances.hi)
-    prior_ranges['CTP'] = (runtime_params.boundCTP.lo,
-                           runtime_params.boundCTP.hi)
-    prior_ranges['HScale'] = (runtime_params.boundHScale.lo,
-                            runtime_params.boundHScale.hi)
-    prior_ranges['HLoc'] = (runtime_params.boundHLoc.lo,
-                              runtime_params.boundHLoc.hi)
-    prior_ranges['HThick'] = (runtime_params.boundHThick.lo,
-                              runtime_params.boundHThick.hi)
+    prior_ranges['T'] = (
+        runtime_params.boundTeq.lo * eqtemp,
+        runtime_params.boundTeq.hi * eqtemp,
+    )
+    prior_ranges['dexRange'] = (
+        runtime_params.boundAbundances.lo,
+        runtime_params.boundAbundances.hi,
+    )
+    prior_ranges['CTP'] = (
+        runtime_params.boundCTP.lo,
+        runtime_params.boundCTP.hi,
+    )
+    prior_ranges['HScale'] = (
+        runtime_params.boundHScale.lo,
+        runtime_params.boundHScale.hi,
+    )
+    prior_ranges['HLoc'] = (
+        runtime_params.boundHLoc.lo,
+        runtime_params.boundHLoc.hi,
+    )
+    prior_ranges['HThick'] = (
+        runtime_params.boundHThick.lo,
+        runtime_params.boundHThick.hi,
+    )
 
-    if prior_ranges['dexRange'] == (0,1):
+    if prior_ranges['dexRange'] == (0, 1):
         log.warning('--< PROBLEM WITH PRIOR BOUNDS >--')
         prior_ranges['T'] = (0.75 * eqtemp, 1.5 * eqtemp)
         prior_ranges['dexRange'] = (-6, 6)  # use this for [X/H],[C/O],[N/O]

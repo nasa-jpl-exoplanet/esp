@@ -133,11 +133,13 @@ class Create(dawgie.Analyzer):
         runtime = self.__rt.sv_as_dict()['controls']
         # print('runtime', runtime)
         runtime_params = trgcore.TargetCreateParams(
-                    num_reruns=runtime['testcerb_Nrepeats'].value(),
-                )
+            num_reruns=runtime['testcerb_Nrepeats'].value(),
+        )
         # print('runtime_params in target.create alg', runtime_params)
 
-        trgcore.scrapeids(aspects.ds(), runtime_params, self.__out[0], WEB, gen_ids=GEN_IDS)
+        trgcore.scrapeids(
+            aspects.ds(), runtime_params, self.__out[0], WEB, gen_ids=GEN_IDS
+        )
         update = trgcore.createfltrs(self.__out[1])
         if update:
             excalibur.lagger()
