@@ -40,7 +40,7 @@ MIRROR_1 = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/data/pub/HSTCA/'
 MIRROR_2 = 'http://archives.esac.esa.int/ehst-sl-server/servlet/data-action?ARTIFACT_ID='
 # MAST API
 DURL = 'https://mast.stsci.edu/api/v0.1/Download/file?'
-HSTURL = 'https://mast.stsci.edu/search/hst/api/v0.1/retrieve_product?'
+# HSTURL = 'https://mast.stsci.edu/search/hst/api/v0.1/retrieve_product?'
 
 
 # ---------------------- ---------------------------------------------
@@ -205,16 +205,17 @@ class Autofill(dawgie.Algorithm):
             if valid and (target in crt['starIDs']['starID']):
                 log.warning('--< TARGET AUTOFILL: %s >--', target)
                 update = self._autofill(crt, target)
+                pass
             else:
                 self._failure(errstring)
-
+                pass
             if update:
                 _ = excalibur.lagger()
                 ds.update()
                 pass
             else:
                 raise dawgie.NoValidOutputDataError(
-                    f'No output created for TARGET.{self.name()}'
+                    f'!!! No SV created for TARGET.{self.name()} !!!'
                 )
             pass
         return
@@ -230,6 +231,7 @@ class Autofill(dawgie.Algorithm):
         '''Failure log'''
         if errstr is None:
             errstr = 'TARGET NOT EXPECTED'
+            pass
         log.warning('--< TARGET AUTOFILL: %s >--', errstr)
         return
 
@@ -306,7 +308,7 @@ class Scrape(dawgie.Algorithm):
             out,
             dbs,
             download_url=DURL,
-            hst_url=HSTURL,
+            hst_url=DURL,
             verbose=False,
         )
         # Data on DISK
