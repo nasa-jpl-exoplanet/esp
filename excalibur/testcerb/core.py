@@ -16,11 +16,7 @@ from collections import defaultdict
 import excalibur
 from excalibur.cerberus.bounds import set_prior_bound
 
-from excalibur.cerberus.plotters import (
-    plot_fits_vs_truths,
-    plot_fit_uncertainties,
-)
-from excalibur.testcerb.plotters import plot_massFits
+from excalibur.testcerb.plotters import plot_fits_vs_truth
 
 from collections import namedtuple
 import logging
@@ -42,7 +38,7 @@ TestcerbAnalysisParams = namedtuple(
 )
 
 # --------------------------------------------------------------------
-def analysis(aspects, runtime_params, filt, out, verbose=False):
+def analysis(aspects, filt, runtime_params, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
@@ -55,6 +51,9 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
     aspecttargets = []
     for a in aspects:
         aspecttargets.append(a)
+    # print('asptargs',aspecttargets)
+    # aspecttargets = ['testJup001','testJup002','testJup003']
+    # print('asptargs',aspecttargets)
     log.warning(
         '--< TESTCERB ANALYSIS: NUMBER OF TARGETS IN ASPECT %s >--',
         len(aspecttargets),
@@ -62,18 +61,18 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
 
     svname = 'testcerb.atmos'
 
-    target = 'testJup'
+    targetbase = 'testJup'
     targetlist = []
-    for i in range(3):  # asdf
-        targetlist.append(f'{target}{i+1:03d}')
+    for a in aspects:
+        # targetlist.append(f'{target}{i+1:03d}')
+        if a.startswith(targetbase):
+            targetlist.append(a)
     print('targetlist', targetlist)
 
-    # set prior_ranges to avoid possible used-before-assignment problem
-    eqtemp = 800  # asdf
-    print('runtime', runtime_params)
-    prior_ranges = set_prior_bound(eqtemp, runtime_params)
-    print('use this prior range?', prior_ranges)
-    prior_ranges = None
+    # print('runtime', runtime_params)
+    # prior_ranges = set_prior_bound(eqtemp, runtime_params)
+    # print('using this prior range:', prior_ranges)
+    # prior_ranges = None
 
     analysistargetlists = [
         {
@@ -91,9 +90,11 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
         fit_values = defaultdict(list)
         fit_errors = defaultdict(list)
         fit_errors2sided = defaultdict(list)
+        fit_errors2sided2sigma = defaultdict(list)
 
+        all_traces = []
         for trgt in targetlist['targets']:
-            print('        cycling through targets', trgt)
+            # print('        cycling through targets', trgt)
             if trgt not in aspecttargets:
                 log.warning(
                     '--< TESTCERB ANALYSIS: TARGET NOT IN ASPECT %s %s >--',
@@ -182,13 +183,14 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
                             prior_ranges = atmos_fit['data'][planet_letter][
                                 'TEC'
                             ]['prior_ranges']
+                            # print('prior range is passed in, not calculated:', prior_ranges)
 
-                            all_traces = []
+                            traces = []
                             all_keys = []
                             for key in atmos_fit['data'][planet_letter]['TEC'][
                                 'MCTRACE'
                             ]:
-                                all_traces.append(
+                                traces.append(
                                     atmos_fit['data'][planet_letter]['TEC'][
                                         'MCTRACE'
                                     ][key]
@@ -203,16 +205,26 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
                                 else:
                                     all_keys.append(key)
 
-                            for key, trace in zip(all_keys, all_traces):
+                            # careful
+                            # all_traces is a list of each target iteration
+                            # traces is a list of each parameter (matching all_keys)
+                            all_traces.append(traces)
+
+                            for key, trace in zip(all_keys, traces):
                                 if key not in param_names:
                                     param_names.append(key)
                                 med = np.median(trace)
                                 fit_values[key].append(med)
-                                lo = np.percentile(np.array(trace), 16)
-                                hi = np.percentile(np.array(trace), 84)
+                                lo = np.percentile(np.array(trace), 15.9)
+                                hi = np.percentile(np.array(trace), 84.1)
                                 fit_errors[key].append((hi - lo) / 2)
                                 fit_errors2sided[key].append(
                                     [med - lo, hi - med]
+                                )
+                                lo2 = np.percentile(np.array(trace), 2.3)
+                                hi2 = np.percentile(np.array(trace), 97.7)
+                                fit_errors2sided2sigma[key].append(
+                                    [med - lo2, hi2 - med]
                                 )
                                 if verbose:
                                     if key == '[N/O]' and (hi - lo) / 2 < 2:
@@ -248,13 +260,6 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
                                     true_value = atmos_fit['data'][
                                         planet_letter
                                     ]['TRUTH_MODELPARAMS'][trueparam]
-                                    # (metallicity and C/O do not have to be converted to log-solar)
-                                    # if trueparam=='metallicity':
-                                    #    true_value = np.log10(true_value)
-                                    # elif trueparam=='C/O':
-                                    #    true_value = np.log10(true_value/0.54951)  # solar is C/O=0.55
-                                    # elif trueparam=='N/O':
-                                    #     true_value = true_value
                                     if (
                                         fitparam == '[N/O]'
                                         and true_value == 666
@@ -315,71 +320,51 @@ def analysis(aspects, runtime_params, filt, out, verbose=False):
                                 else:
                                     truth_values[fitparam].append(666)
 
-        # plot analysis of the results.  save as png and as state vector for states/view
-        save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
-        fit_co_plot = False
-        fit_no_plot = False
-        if 'sim' in filt:
-            # for simulated data, compare retrieval against the truth
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
-            # jenkins doesn't like to have a triple-packed return here because it's fussy
-            plotarray = plot_fits_vs_truths(
-                truth_values,
-                fit_values,
-                fit_errors,
-                prior_ranges,
-                filt,
-                save_dir,
-            )
-            # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
-            if len(plotarray) > 2:
-                fit_co_plot = plotarray[2]
-            if len(plotarray) > 3:
-                fit_no_plot = plotarray[3]
-        else:
-            # for real data, make a histogram of the retrieved uncertainties
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
-            plotarray = plot_fit_uncertainties(
-                fit_values, fit_errors, prior_ranges, filt, save_dir
-            )
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
-            if len(plotarray) > 2:
-                fit_co_plot = plotarray[2]
-            if len(plotarray) > 3:
-                fit_no_plot = plotarray[3]
-
-        mass_metals_plot, _ = plot_metalFits(
-            truth_values['Mp'],
-            stellar_fehs,
+        # compare retrieval against the truth
+        plotparams, plotarray = plot_fits_vs_truth(
+            all_keys,
+            all_traces,
             truth_values,
             fit_values,
+            # fit_errors,
             fit_errors2sided,
+            fit_errors2sided2sigma,
             prior_ranges,
             filt,
-            save_dir,
         )
+        # print('all_keys',all_keys)
+        # print('fitvalues keys',fit_values.keys(),'len check',len(plotarray))
+
+        # out['data']['plot_fitT'] = plotarray[0]
+        # out['data']['plot_fitMetal'] = plotarray[1]
+        # if len(plotarray) > 2:
+        #    out['data']['plot_fitCO'] = plotarray[2]
+        # if len(plotarray) > 3:
+        #    out['data']['plot_fitNO'] = plotarray[3]
+
+        for param, plot in zip(plotparams, plotarray):
+            if param == 'T':
+                out['data']['plot_fitT'] = plot
+            elif param == '[X/H]':
+                out['data']['plot_fitMetal'] = plot
+            elif param == '[C/O]':
+                out['data']['plot_fitCO'] = plot
+            elif param == '[N/O]':
+                out['data']['plot_fitNO'] = plot
+            else:
+                print('PROBLEM: unknown parameter has been plotted', param)
 
         # Add to SV
         out['data']['truths'] = dict(truth_values)
         out['data']['values'] = dict(fit_values)
         out['data']['errors'] = dict(fit_errors)
-        out['data']['plot_mass_v_metals'] = mass_metals_plot
-        out['data']['plot_fitT'] = fit_t_plot
-        out['data']['plot_fitMetal'] = fit_metalplot
-        if fit_co_plot:
-            out['data']['plot_fitCO'] = fit_co_plot
-        if fit_no_plot:
-            out['data']['plot_fitNO'] = fit_no_plot
+        out['data']['params'] = param_names
+        out['data']['targetlistnames'] = [
+            targetlist['targetlistname'] for targetlist in analysistargetlists
+        ]
 
-    out['data']['params'] = param_names
-    out['data']['targetlistnames'] = [
-        targetlist['targetlistname'] for targetlist in analysistargetlists
-    ]
+        out['STATUS'].append(True)
 
-    out['STATUS'].append(True)
     return out['STATUS'][-1]
 
 
