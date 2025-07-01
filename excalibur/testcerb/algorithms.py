@@ -604,7 +604,6 @@ class Analysis(dawgie.Analyzer):
             for fltr in filtersWithResults:
                 log.warning('--< TESTCERB ANALYSIS: %s  >--', fltr)
 
-
                 # runtime is not actually needed in analysis.
                 #  prior range is loaded in from previous state vector
 
