@@ -1,7 +1,7 @@
 '''testcerb algorithms ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,duplicate-code,
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -502,7 +502,9 @@ class Results(dawgie.Algorithm):
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                        cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
+                        cornerBins=runtime[
+                            'cerberus_plotters_cornerBins'
+                        ].value(),
                     )
 
                     update = self._results(
@@ -568,7 +570,7 @@ class Analysis(dawgie.Analyzer):
     def __init__(self):
         '''__init__ ds'''
         self._version_ = crbcore.resultsversion()
-        self.__rt = rtalg.Create()
+        # self.__rt = rtalg.Create()
         self.__out = [crbstates.AnalysisSv(fltr) for fltr in fltrs]
         return
 

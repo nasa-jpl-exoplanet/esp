@@ -133,7 +133,7 @@ class Create(dawgie.Analyzer):
         runtime = self.__rt.sv_as_dict()['controls']
         # print('runtime', runtime)
         runtime_params = trgcore.TargetCreateParams(
-            num_reruns=runtime['testcerb_Nrepeats'].value(),
+            num_reruns=runtime['selftest_Nrepeats'].value(),
         )
         # print('runtime_params in target.create alg', runtime_params)
 

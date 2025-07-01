@@ -1,5 +1,9 @@
 '''Runtime configuration products'''
 
+# Heritage code shame:
+#  no-member is for "Instance of HiLoValue has no _hi"
+# pylint: disable=no-member,method-hidden,
+
 import dawgie
 import excalibur
 import logging
