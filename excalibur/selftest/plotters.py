@@ -66,7 +66,10 @@ def plot_fits_vs_truth(
                 fit_errors2sigma[param],
             )
         ):
-            ax.plot([0, 1000], [truth, truth], 'k--')
+            if testIndex == 0:
+                # the truth value should be the same for all indices
+                ax.plot([0, 1000], [truth, truth], 'k--', label='truth')
+
             ax.scatter(
                 testIndex + 1,
                 fit,
@@ -74,6 +77,7 @@ def plot_fits_vs_truth(
                 edgecolor='k',
                 s=30,
                 zorder=5,
+                # label='retrieved',
             )
             # switch to 2-sided (asymmetric) error bars
             ax.errorbar(
@@ -97,7 +101,7 @@ def plot_fits_vs_truth(
             )
         ax.set_xlim(0, Niter + 1)
 
-        # ax.set_xlabel('test index', fontsize=14)
+        ax.set_xlabel('test iteration', fontsize=14)
         ax.set_xlabel('', fontsize=14)
         ax.set_xticklabels([])
         ax.set_ylabel(param + ' fit', fontsize=14)
@@ -112,7 +116,14 @@ def plot_fits_vs_truth(
         # plot C/O=1 as a dotted line
         if param == '[C/O]':
             solarCO = np.log10(0.55)
-            ax.plot([-100, 100], [-solarCO, -solarCO], 'k:', lw=1, zorder=3)
+            ax.plot(
+                [-100, 100],
+                [-solarCO, -solarCO],
+                'k:',
+                lw=1,
+                zorder=3,
+                label='C/O=1',
+            )
             # plt.text(
             #    Niter - 3,
             #    -solarCO + 0.03,
@@ -142,38 +153,30 @@ def plot_fits_vs_truth(
             plt.title('C/O retrieval for ' + str(Niter) + ' planets')
         else:
             plt.title(param + ' retrieval for ' + str(Niter) + ' planets')
+        plt.legend()
 
         # CHI-OFFSET HISTOGRAMS IN SECOND PANEL
         ax2 = figure.add_subplot(1, 3, 1)
 
         # old method - simple gaussian-assuming sigma definition
-        offsets = np.array(fit_values[param]) - np.array(truth_values[param])
-        errors = np.median(np.array(fit_errors[param]), axis=1)
-        chis = offsets / errors
-        print('old chis', chis)
+        # offsets = np.array(fit_values[param]) - np.array(truth_values[param])
+        # errors = np.median(np.array(fit_errors[param]), axis=1)
+        # chis = offsets / errors
+        #
         # middle method - use two-sided uncertainty, rather than average uncertainty
-        offsets = np.array(fit_values[param]) - np.array(truth_values[param])
-        errorslo = np.array([errtuple[0] for errtuple in fit_errors[param]])
-        errorshi = np.array([errtuple[1] for errtuple in fit_errors[param]])
-        print(' lo', errorslo)
-        print(' hi', errorshi)
-        lowside = np.where(offsets <= 0)  # case where fit is below truth
-        highside = np.where(offsets > 0)  # case where fit is above truth
-        print(' low', lowside)
-        print(' hi', highside)
-        # print( offsets[lowside])
-        # print(errorshi[lowside])
-        chis[lowside] = offsets[lowside] / errorshi[lowside]
-        chis[highside] = offsets[highside] / errorslo[highside]
-        print('mid chis', chis)
-        # print()
+        # offsets = np.array(fit_values[param]) - np.array(truth_values[param])
+        # errorslo = np.array([errtuple[0] for errtuple in fit_errors[param]])
+        # errorshi = np.array([errtuple[1] for errtuple in fit_errors[param]])
+        # lowside = np.where(offsets <= 0)  # case where fit is below truth
+        # highside = np.where(offsets > 0)  # case where fit is above truth
+        # chis[lowside] = offsets[lowside] / errorshi[lowside]
+        # chis[highside] = offsets[highside] / errorslo[highside]
+        #
         # correct method - calulcate percentile and convert to equivalent sigma
         # print('trace shape',len(all_traces))
         chis = []
         # print('number of targets in all_traces',len(all_traces))
-        for truth, traces in zip(
-            truth_values[param], all_traces
-        ):  # loop over each target
+        for truth, traces in zip(truth_values[param], all_traces):
             # print(' number of parameters in this trace',len(traces))
             # print('   index',all_keys.index(param),len(all_keys))
             trace = traces[all_keys.index(param)]  # select the parameter index
@@ -185,16 +188,16 @@ def plot_fits_vs_truth(
             elif percentile >= 1:
                 chis.append(123)  # truth is below the bottom edge of posterior
             else:
-                chis.append(scipy.special.erfinv(2 * percentile - 1))
-        # error function is defined strangely.  have to multiply by sqrt(2)
-        # (it's doesn't have the 2 in the exp, like a normal gaussian)
-        chis = np.array(chis) * np.sqrt(2)
-        print('new chis', chis)
+                # error function is defined strangely.  have to multiply by sqrt(2)
+                # (it's doesn't have the 2 in the exp, like a normal gaussian)
+                chis.append(
+                    np.sqrt(2) * scipy.special.erfinv(2 * percentile - 1)
+                )
+        chis = np.array(chis)
 
-        ax2.set_xlabel(param + ' vs truth (sigma)', fontsize=14)
         lower = -5
         upper = 5
-        if len(errors) > 0:
+        if len(chis) > 0:
             plt.hist(
                 chis,
                 range=(lower, upper),
@@ -207,10 +210,9 @@ def plot_fits_vs_truth(
                 zorder=2,
                 label='retrieved',
             )
-            plt.title(
-                'cumulative histogram of ' + str(len(errors)) + ' planets'
-            )
             ax2.set_xlim(lower, upper)
+        ax2.set_xlabel(param + ' vs truth (sigma)', fontsize=14)
+        plt.title('cumulative histogram of ' + str(len(chis)) + ' planets')
         #  add a normal dist, for comparison
         # xdist = np.linspace(-10,10,1000)
         # normaldist = np.exp(xdist**2 / 2)
