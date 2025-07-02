@@ -192,20 +192,20 @@ def plot_fits_vs_truth(
         print('new chis', chis)
 
         ax2.set_xlabel(param + ' vs truth (sigma)', fontsize=14)
+        lower = -5
+        upper = 5
         if len(errors) > 0:
-            lower = -5
-            upper = 5
             plt.hist(
                 chis,
                 range=(lower, upper),
-                bins=10,
+                bins=int(2 * (upper - lower)),
                 cumulative=False,
                 density=True,
                 histtype='step',
                 color='black',
                 lw=2,
                 zorder=2,
-                label='',
+                label='retrieved',
             )
             plt.title(
                 'cumulative histogram of ' + str(len(errors)) + ' planets'
@@ -221,15 +221,15 @@ def plot_fits_vs_truth(
         plt.hist(
             normaldist,
             range=(lower, upper),
-            bins=10,
+            bins=int(2 * (upper - lower)),
             cumulative=False,
             density=True,
             histtype='stepfilled',
-            color='grey',
+            color='lightgrey',
             zorder=1,
             label='ideal',
         )
-
+        plt.legend()
         # ax2.set_ylim(0, 1)
         ax2.set_ylabel('fraction of runs', fontsize=14)
 
