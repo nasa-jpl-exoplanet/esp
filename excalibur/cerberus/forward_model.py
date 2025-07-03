@@ -788,7 +788,10 @@ def clearfmcerberus(*crbinputs):
 
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
-        mdp = crbinputs
+        mdp = crbinputs[0]
+        # this extra list[] is needed for the single param case (only metallicity)
+        if not isinstance(mdp, list):
+            mdp = [mdp]
     else:
         tpr, mdp = crbinputs
     # print(' param values inside of forward model', tpr, mdp)
