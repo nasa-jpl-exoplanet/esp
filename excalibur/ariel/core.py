@@ -34,7 +34,6 @@ import scipy.constants as cst
 
 log = logging.getLogger(__name__)
 
-# does this really go here? CIcheck needs it back in algorithms
 ArielParams = namedtuple(
     'ariel_params_from_runtime',
     [
@@ -92,6 +91,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     # print(runtime_params)
     # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
 
+    testTarget = bool(target.startswith('test'))
+
     # select Tier-1 or Tier-2 for spectra SNR
     tier = runtime_params.tier
 
@@ -110,6 +111,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
         'cerberuslowmmw',
         'cerberuslowmmwNoclouds',
     ]
+    if testTarget:
+        atmosModels = ['cerberus', 'cerberusNoclouds']
 
     out['data']['models'] = atmosModels
     # save target,planet names, for plotting (in states.py)
@@ -128,6 +131,9 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
         #  (otherwise all spectra have identical noise realizations!)
         #  (also they would have the same C/O and metallicity offset!)
         intFromTarget = 1  # arbitrary initialization for the random seed
+        # for the test targets, use a new set of noise for each target
+        if testTarget:
+            intFromTarget += int(target[-3:])
         for char in target + ' ' + planet_letter:
             intFromTarget = (
                 runtime_params.randomSeed * intFromTarget + ord(char)
@@ -145,9 +151,13 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
 
         # load in the wavelength bins and the noise model
         # there is a separate SNR file for each planet
-        ariel_instrument = load_ariel_instrument(
-            target + ' ' + planet_letter, tier
-        )
+        if testTarget:
+            # for now, use HD 209458 SNR for test cases.  RECONSIDER THIS CHOICE LATER
+            ariel_instrument = load_ariel_instrument('HD 209458 b', tier)
+        else:
+            ariel_instrument = load_ariel_instrument(
+                target + ' ' + planet_letter, tier
+            )
 
         if ariel_instrument:
             # asdf : LATER : add in uncertainty scatter to these model parameters
@@ -248,7 +258,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 if verbose:
                     print('SNR adjustment factor:', runtime_params.SNRfactor)
                 if runtime_params.SNRfactor:
-                    uncertainties *= runtime_params.SNRfactor
+                    uncertainties /= runtime_params.SNRfactor
 
                 # ________LOOP OVER ALL SELECTED MODELS_______
                 for atmosModel in atmosModels:
@@ -511,14 +521,15 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     out['data'][planet_letter][atmosModel][
                         'model_params'
                     ] = model_params.copy()
-                    # print('model_params in ariel:',model_params)  # asdf
+                    # if testTarget:
+                    #    print('model_params in ariel:', model_params)
 
                     # convert to percentage depth (just for plotting, not for the saved results)
                     fluxDepth = 100 * fluxDepth
                     fluxDepth_rebin = 100 * fluxDepth_rebin
                     fluxDepth_observed = 100 * fluxDepth_observed
                     # careful - uncertainties are reused, so don't change them permanently
-                    # uncertainties_percent = 100 * uncertainties
+                    uncertainties_percent = 100 * uncertainties
                     molecules = fluxDepth_by_molecule_rebin.keys()
                     for molecule in molecules:
                         fluxDepth_by_molecule_rebin[molecule] = (
@@ -597,25 +608,25 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         )
                     yrange = plt.ylim()
                     # plot the simulated data points
-                    # plt.scatter(
-                    #    wavelength_um_rebin,
-                    #    fluxDepth_observed,
-                    #    marker='o',
-                    #    s=20,
-                    #    color='None',
-                    #    edgecolor='k',
-                    #    zorder=4,
-                    #    label='simulated data',
-                    # )
-                    # plt.errorbar(
-                    #    wavelength_um_rebin,
-                    #    fluxDepth_observed,
-                    #    yerr=uncertainties_percent,
-                    #    linestyle='None',
-                    #    lw=0.2,
-                    #    color='grey',
-                    #    zorder=2,
-                    # )
+                    plt.scatter(
+                        wavelength_um_rebin,
+                        fluxDepth_observed,
+                        marker='o',
+                        s=20,
+                        color='None',
+                        edgecolor='k',
+                        zorder=4,
+                        label='simulated data',
+                    )
+                    plt.errorbar(
+                        wavelength_um_rebin,
+                        fluxDepth_observed,
+                        yerr=uncertainties_percent,
+                        linestyle='None',
+                        lw=0.2,
+                        color='grey',
+                        zorder=2,
+                    )
                     plt.ylim(yrange)
                     plt.xlim(0.0, 8.0)
                     plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.48))

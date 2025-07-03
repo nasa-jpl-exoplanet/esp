@@ -84,7 +84,7 @@ def plot_spectrumfit(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''plot the best fit to the data'''
@@ -182,6 +182,12 @@ def plot_spectrumfit(
     # the 'average' function (which allows for weights) doesn't have a NaN version,
     #  so mask out any NaN regions by hand
     okPart = np.where(np.isfinite(transitdata['depth']))
+
+    #  DOES nanaverage fix the problem?
+    #    flatlineFit = np.nanmean(
+    #        transitdata['depth'][okPart],
+    #        weights=1 / transitdata['error'][okPart] ** 2,
+    #    )
     flatlineFit = np.average(
         transitdata['depth'][okPart],
         weights=1 / transitdata['error'][okPart] ** 2,
@@ -448,7 +454,8 @@ def plot_corner(
     modelName,
     trgt,
     p,
-    saveDir,
+    bins=10,
+    saveDir='./',
     savetodisk=False,
     verbose=False,
 ):
@@ -480,7 +487,7 @@ def plot_corner(
             paramValues_bestFit.append(tceqdict['CtoO'])
         elif param == '[N/O]':
             paramValues_bestFit.append(tceqdict['NtoO'])
-        elif param in mixratio:
+        elif mixratio and param in mixratio:
             paramValues_bestFit.append(mixratio[param])
         else:
             log.warning('--< ERROR: param not in list: %s >--', param)
@@ -550,69 +557,96 @@ def plot_corner(
                     '--< PROBLEM: no truth value for this key: %s >--', thiskey
                 )
         # print('truths in corner plot',truths)
-    # figure = corner.corner(np.vstack(np.array(alltraces)).T,
-    #                       # bins=int(np.sqrt(np.sqrt(nsamples))),
-    #                       bins=10,
-    #                       labels=allkeys, range=trange,
-    #                       truths=truths, truth_color=truthcolor,
-    #                       show_titles=True,
-    #                       quantiles=[0.16, 0.50, 0.84])
-    figure = corner.corner(
-        np.vstack(np.array(profiletraces)).T,
-        bins=10,
-        labels=allkeys,
-        range=trange,
-        truths=truths,
-        truth_color=truthcolor,
-        show_titles=True,
-        quantiles=[0.16, 0.50, 0.84],
-    )
-    # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
-    # figure.set_size_inches(16,16)  # this actually makes it smaller
+    if len(allkeys) <= 1:
+        # print('corner plot needs at least 2 parameters; doing histogram instead')
 
-    ndim = len(alltraces)
-    axes = np.array(figure.axes).reshape((ndim, ndim))
-    # use larger font size for the axis labels
-    for i in range(ndim):
-        ax = axes[ndim - 1, i]
-        ax.set_xlabel(allkeys[i], fontsize=14)
-    for i in range(ndim - 1):
-        # skipping the first one on the y side (it's a histo, not a 2-D plot)
-        ax = axes[i + 1, 0]
-        ax.set_ylabel(allkeys[i + 1], fontsize=14)
-    #  draw a point and crosshair for the medians in each subpanel
-    for yi in range(ndim):
-        for xi in range(yi):
-            ax = axes[yi, xi]
-            # ax.axvline(mcmcMedian[xi], color=fitcolor)
-            # ax.axhline(mcmcMedian[yi], color=fitcolor)
-            # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
-            ax.axvline(paramValues_bestFit[xi], color=fitcolor)
-            ax.axhline(paramValues_bestFit[yi], color=fitcolor)
-            ax.plot(
-                paramValues_bestFit[xi],
-                paramValues_bestFit[yi],
-                marker='s',
-                c=fitcolor,
-            )
-    for i in range(ndim):
-        ax = axes[i, i]
-        # draw light-colored vertical lines in each hisogram for the prior
-        #  drop this. adds clutter and is redundant with the vsPrior plot following
-        # ax.axvline(priorlo[i] + 0.5*priorspan[i], color='grey', zorder=1)
-        # ax.axvline(priorlo[i] + 0.16*priorspan[i], color='grey', zorder=1, ls='--')
-        # ax.axvline(priorlo[i] + 0.84*priorspan[i], color='grey', zorder=1, ls='--')
+        figure = plt.figure(figsize=(5, 4))
+        ax = figure.add_subplot(1, 1, 1)
 
-        # darken the lines for the fit results
-        # ax.axvline(mcmcMedian[i], color='k', lw=2, zorder=2)
-        # ax.axvline(lo[i], color='k', lw=2, zorder=2, ls='--')
-        # ax.axvline(hi[i], color='k', lw=2, zorder=2, ls='--')
-        # actually the fit result lines are o.k. as is, except all three are dashed
-        #  make the median fit a solid line
-        #  and maybe change the color to match the central panels
-        #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
-        # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
-        ax.axvline(paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12)
+        plt.hist(
+            np.vstack(np.array(profiletraces)).T,
+            range=trange[0],
+            bins=bins,
+            cumulative=False,
+            density=True,
+            histtype='step',
+            color='black',
+            lw=2,
+            zorder=2,
+            label='retrieved',
+        )
+        ylim = ax.get_ylim()
+        plt.plot(
+            [truths[0], truths[0]],
+            [0, 100],
+            c='k',
+            ls='--',
+            lw=1,
+            label='truth',
+        )
+        ax.set_ylim(ylim)
+
+        ax.set_xlim(trange[0])
+        ax.set_xlabel(allkeys[0])
+        ax.set_ylabel('posterior probability')
+
+    else:
+        figure = corner.corner(
+            np.vstack(np.array(profiletraces)).T,
+            bins=bins,
+            labels=allkeys,
+            range=trange,
+            truths=truths,
+            truth_color=truthcolor,
+            show_titles=True,
+            quantiles=[0.16, 0.50, 0.84],
+        )
+        # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
+        # figure.set_size_inches(16,16)  # this actually makes it smaller
+
+        ndim = len(alltraces)
+        axes = np.array(figure.axes).reshape((ndim, ndim))
+        # use larger font size for the axis labels
+        for i in range(ndim):
+            ax = axes[ndim - 1, i]
+            ax.set_xlabel(allkeys[i], fontsize=14)
+        for i in range(ndim - 1):
+            # skipping the first one on the y side (it's a histo, not a 2-D plot)
+            ax = axes[i + 1, 0]
+            ax.set_ylabel(allkeys[i + 1], fontsize=14)
+        #  draw a point and crosshair for the medians in each subpanel
+        for yi in range(ndim):
+            for xi in range(yi):
+                ax = axes[yi, xi]
+                # ax.axvline(mcmcMedian[xi], color=fitcolor)
+                # ax.axhline(mcmcMedian[yi], color=fitcolor)
+                # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
+                ax.axvline(paramValues_bestFit[xi], color=fitcolor)
+                ax.axhline(paramValues_bestFit[yi], color=fitcolor)
+                ax.plot(
+                    paramValues_bestFit[xi],
+                    paramValues_bestFit[yi],
+                    marker='s',
+                    c=fitcolor,
+                )
+        for i in range(ndim):
+            ax = axes[i, i]
+            # draw light-colored vertical lines in each hisogram for the prior
+            #  drop this. adds clutter and is redundant with the vsPrior plot following
+            # ax.axvline(priorlo[i] + 0.5*priorspan[i], color='grey', zorder=1)
+            # ax.axvline(priorlo[i] + 0.16*priorspan[i], color='grey', zorder=1, ls='--')
+            # ax.axvline(priorlo[i] + 0.84*priorspan[i], color='grey', zorder=1, ls='--')
+
+            # darken the lines for the fit results
+            # ax.axvline(mcmcMedian[i], color='k', lw=2, zorder=2)
+            # ax.axvline(lo[i], color='k', lw=2, zorder=2, ls='--')
+            # ax.axvline(hi[i], color='k', lw=2, zorder=2, ls='--')
+            # actually the fit result lines are o.k. as is, except all three are dashed
+            #  make the median fit a solid line
+            #  and maybe change the color to match the central panels
+            #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
+            # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
+            ax.axvline(paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12)
 
     if savetodisk:
         plt.savefig(
@@ -646,7 +680,7 @@ def plot_vs_prior(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''compare the fit results against the original prior information'''
@@ -804,7 +838,7 @@ def plot_walker_evolution(
     modelName,
     trgt,
     p,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
     Nchains=4,
     verbose=False,
@@ -945,7 +979,7 @@ def plot_fits_vs_truths(
     fit_errors,
     prior_ranges,
     filt,
-    saveDir,
+    saveDir='./',
     savetodisk=False,
 ):
     '''
@@ -1168,7 +1202,7 @@ def plot_fits_vs_truths(
 
 # --------------------------------------------------------------------
 def plot_fit_uncertainties(
-    fit_values, fit_errors, prior_ranges, filt, saveDir, savetodisk=False
+    fit_values, fit_errors, prior_ranges, filt, saveDir='./', savetodisk=False
 ):
     '''
     Plot uncertainty as a function of the fit value
@@ -1343,7 +1377,7 @@ def plot_mass_vs_metals(
     fit_errors,
     prior_ranges,
     filt,
-    saveDir,
+    saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
 ):
@@ -1486,7 +1520,6 @@ def plot_mass_vs_metals(
     massesThorngren = np.logspace(-5, 3, 100)
     metalsThorngren = massMetalRelation(0, massesThorngren, thorngren=True)
     if 'sim' in filt:
-        # ax.plot(massesThorngren,metalsThorngren, 'k:', lw=1, zorder=1, label='true relationship')
         ax.plot(
             massesThorngren,
             metalsThorngren,
@@ -1494,6 +1527,7 @@ def plot_mass_vs_metals(
             lw=1,
             zorder=1,
             label='Thorngren+ 2016',
+            # label='true relationship')
         )
     else:
         ax.plot(
@@ -1807,3 +1841,6 @@ def plot_mass_vs_metals(
     if savetodisk:
         plt.savefig(saveDir + 'massVSmetals_' + filt + '.png')
     return save_plot_tosv(figure), figure
+
+
+# --------------------------------------------------------------------

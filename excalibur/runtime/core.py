@@ -66,6 +66,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_atmos_bounds_HLoc',
         'cerberus_atmos_bounds_HScale',
         'cerberus_atmos_bounds_HThick',
+        'cerberus_plotters_cornerBins',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
         'ariel_simspectrum_tier',
@@ -77,6 +78,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_metallicityDispersion',
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
+        'selftest_Nrepeats',
     ]:
         if isinstance(
             table['controls'][key], excalibur.runtime.states.BoolValue
@@ -84,11 +86,8 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             sv[key] = table['controls'][key].new()
         else:
             # these are excalibur.ValueScalar objects. value() converts to float/int/string
+            # actually careful - now they are sometimes HiLoValues
             sv[key] = table['controls'][key]
-            # print(key,table['controls'][key].value(),type(table['controls'][key].value()))
-            # converting with value() ends up creating a later error
-            # dawgie.NotValidImplementationError: StateVector contains data that does not extend dawgie.Value correctly
-            # sv[key] = table['controls'][key].value()
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(

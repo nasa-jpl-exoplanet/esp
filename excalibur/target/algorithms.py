@@ -108,6 +108,7 @@ class Create(dawgie.Analyzer):
     def __init__(self):
         '''__init__ ds'''
         self._version_ = trgedit.createversion()
+        self.__rt = rtalg.Create()
         self.__out = [
             trgstates.TargetSV('starIDs'),
             trgstates.FilterSV('filters'),
@@ -128,7 +129,17 @@ class Create(dawgie.Analyzer):
 
     def run(self, aspects: dawgie.Aspect):
         '''Top level algorithm call'''
-        trgcore.scrapeids(aspects.ds(), self.__out[0], WEB, gen_ids=GEN_IDS)
+
+        runtime = self.__rt.sv_as_dict()['controls']
+        # print('runtime', runtime)
+        runtime_params = trgcore.TargetCreateParams(
+            num_reruns=runtime['selftest_Nrepeats'].value(),
+        )
+        # print('runtime_params in target.create alg', runtime_params)
+
+        trgcore.scrapeids(
+            aspects.ds(), runtime_params, self.__out[0], WEB, gen_ids=GEN_IDS
+        )
         update = trgcore.createfltrs(self.__out[1])
         if update:
             excalibur.lagger()

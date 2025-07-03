@@ -1,5 +1,9 @@
 '''Runtime configuration products'''
 
+# Heritage code shame:
+#  no-member is for "Instance of HiLoValue has no _hi"
+# pylint: disable=no-member,method-hidden,
+
 import dawgie
 import excalibur
 import logging
@@ -33,6 +37,45 @@ class BoolValue(dawgie.Value):
         return BoolValue(state if state is not None else self.__state)
 
     pass
+
+
+class HiLoValue(dawgie.Value):
+    '''helper value for hi-lo type'''
+
+    def __init__(self, hi: float = 1, lo: float = 0):
+        '''init the hi-lo'''
+        self.hi = hi
+        self.lo = lo
+        self._version_ = dawgie.VERSION(1, 0, 0)
+        return
+
+    def __str__(self):
+        '''define the string format of this class'''
+        # fails. HiLoValue object has no attribute '_HiLoValue__state'
+        # return str(self.__state)
+        return str(self.__getstate__())
+        #    it now prints this:
+        # "{'hi': 1.5, 'lo': 0.75, '_version_seal_': VERSION(design=1, impl=0, bugfix=0)}"
+
+    def features(self):
+        '''contains no features'''
+        return []
+
+    def new(self, hilo=None):
+        '''hide explicit requirement for dawgie'''
+        return HiLoValue(
+            *((float(hilo.hi), float(hilo.lo)) if hilo else (1, 0))
+        )
+
+    # def new(self):
+    #    '''hide explicit requirement for dawgie'''
+    #    return HiLoValue(*((float(self.hi), float(self.lo)) if hilo else (1, 0)))
+
+    def hi(self):
+        return self._hi
+
+    def lo(self):
+        return self._lo
 
 
 class CompositeSV(dawgie.StateVector):
@@ -88,14 +131,16 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = HiLoValue()
+        self['cerberus_atmos_bounds_abundances'] = HiLoValue()
+        self['cerberus_atmos_bounds_CTP'] = HiLoValue()
+        self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
+        self['cerberus_atmos_bounds_HScale'] = HiLoValue()
+        self['cerberus_atmos_bounds_HThick'] = HiLoValue()
+        self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
+        self['selftest_Nrepeats'] = excalibur.ValueScalar()
         return
 
     def features(self):
@@ -264,12 +309,13 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_Teq'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_abundances'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_CTP'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HLoc'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HScale'] = excalibur.ValueScalar()
-        self['cerberus_atmos_bounds_HThick'] = excalibur.ValueScalar()
+        self['cerberus_atmos_bounds_Teq'] = HiLoValue()
+        self['cerberus_atmos_bounds_abundances'] = HiLoValue()
+        self['cerberus_atmos_bounds_CTP'] = HiLoValue()
+        self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
+        self['cerberus_atmos_bounds_HScale'] = HiLoValue()
+        self['cerberus_atmos_bounds_HThick'] = HiLoValue()
+        self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
@@ -281,6 +327,7 @@ class StatusSV(dawgie.StateVector):
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
+        self['selftest_Nrepeats'] = excalibur.ValueScalar()
 
     def name(self):
         '''database name'''
@@ -368,8 +415,10 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_bounds_HLoc',
             'cerberus_atmos_bounds_HScale',
             'cerberus_atmos_bounds_HThick',
+            'cerberus_plotters_cornerBins',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
+            'selftest_Nrepeats',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):

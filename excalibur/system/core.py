@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements,too-many-lines
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
@@ -51,6 +51,9 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     '''
     target = list(autofill['starID'].keys())
     target = target[0]
+
+    testTarget = bool(target.startswith('test'))
+
     for p in autofill['starID'][target]['planets']:
         out['priors'][p] = {}
     out['priors']['planets'] = autofill['starID'][target]['planets'].copy()
@@ -98,6 +101,33 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     )
     out['planetnonmdt'].extend(['trandur', 'trandepth'])
     out['planetmdt'].extend(out['planetnonmdt'])
+
+    # for test targets, create placeholders for the star/planet parameters
+    if testTarget:
+        for starparam in out['starmdt']:
+            autofill['starID'][target][starparam] = ['']
+            autofill['starID'][target][starparam + '_lim'] = ['0']
+            for extension in out['exts']:
+                autofill['starID'][target][starparam + extension] = ['']
+
+        # choose some random letter as the planet letter
+        #  note that this letter is used in overwriter.py; must match
+        added_planet_letter = 'x'
+        autofill['starID'][target]['planets'].append(added_planet_letter)
+        autofill['starID'][target][added_planet_letter] = {}
+        for planetparam in out['planetmdt']:
+            autofill['starID'][target][added_planet_letter][planetparam] = ['']
+            autofill['starID'][target][added_planet_letter][
+                planetparam + '_lim'
+            ] = ['0']
+            for extension in out['exts']:
+                autofill['starID'][target][added_planet_letter][
+                    planetparam + extension
+                ] = ['']
+        # (and also update out, as normally done above)
+        for p in autofill['starID'][target]['planets']:
+            out['priors'][p] = {}
+        out['priors']['planets'] = autofill['starID'][target]['planets'].copy()
 
     # verify that all needed fields exist in the incoming target state vector
     # (some older crap targets don't have everything, e.g. SWEEPS-11 missing Hmag_uperr)
@@ -154,19 +184,25 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     # use a/Rp to fill in semi-major axis
     #  (make sure this comes before sma is derived from period,M*)
     for p in autofill['starID'][target]['planets']:
-        sma_derived, sma_lowerr_derived, sma_uperr_derived, sma_ref_derived = (
-            derive_sma_from_ars(autofill['starID'][target], p)
-        )
-        # if autofill['starID'][target][p]['sma'] != sma_derived:
-        #    print('sma before ',autofill['starID'][target][p]['sma'])
-        #    print('sma derived',sma_derived)
-        #    print('sma_ref derived',sma_ref_derived)
-        #    print('sma_ref before ',autofill['starID'][target][p]['sma_ref'])
-        autofill['starID'][target][p]['sma'] = sma_derived
-        autofill['starID'][target][p]['sma_lowerr'] = sma_lowerr_derived
-        autofill['starID'][target][p]['sma_uperr'] = sma_uperr_derived
-        autofill['starID'][target][p]['sma_ref'] = sma_ref_derived
-        autofill['starID'][target][p]['sma_units'] = ['[AU]'] * len(sma_derived)
+        if 'ars' in autofill['starID'][target][p]:
+            (
+                sma_derived,
+                sma_lowerr_derived,
+                sma_uperr_derived,
+                sma_ref_derived,
+            ) = derive_sma_from_ars(autofill['starID'][target], p)
+            # if autofill['starID'][target][p]['sma'] != sma_derived:
+            #    print('sma before ',autofill['starID'][target][p]['sma'])
+            #    print('sma derived',sma_derived)
+            #    print('sma_ref derived',sma_ref_derived)
+            #    print('sma_ref before ',autofill['starID'][target][p]['sma_ref'])
+            autofill['starID'][target][p]['sma'] = sma_derived
+            autofill['starID'][target][p]['sma_lowerr'] = sma_lowerr_derived
+            autofill['starID'][target][p]['sma_uperr'] = sma_uperr_derived
+            autofill['starID'][target][p]['sma_ref'] = sma_ref_derived
+            autofill['starID'][target][p]['sma_units'] = ['[AU]'] * len(
+                sma_derived
+            )
 
     # use orbital period, stellar mass to fill in blank semi-major axis
     for p in autofill['starID'][target]['planets']:
@@ -244,7 +280,7 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         ) = derive_LOGGplanet_from_R_and_M(autofill['starID'][target], p)
         # this one is different from the previous,
         #  in that the 'logg' field doesn't exist yet
-        if 'logg' in autofill['starID'][target][p].keys():
+        if 'logg' in autofill['starID'][target][p].keys() and not testTarget:
             print('ERROR: logg field shouldnt exist yet')
         if 'mass' not in autofill['starID'][target][p].keys():
             print('ERROR: mass field should exist already')
@@ -384,6 +420,8 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                         )
         elif lbl in ['Jmag', 'Hmag', 'Kmag', 'TESSmag', 'dist', 'spTyp']:
             pass  # these parameters don't have limit flags
+        elif testTarget:
+            pass  # limits are blank for test targets
         else:
             print('  ERROR: no limit flag for ', lbl)
 
@@ -404,7 +442,8 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                 maximizeSelfConsistency=runtime_params.maximizeSelfConsistency,
                 selectMostRecent=runtime_params.selectMostRecent,
             )
-        except KeyError:
+            # test targets with '' fields fail on .copy(), with AttributeError
+        except (KeyError, AttributeError):
             value = ''
             uperr = ''
             lowerr = ''
@@ -525,6 +564,8 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                         #    print('  val,lim',p,lbl,val,lim,ref)
             elif lbl == 'logg':
                 pass  # these parameters don't have limit flags
+            elif testTarget:
+                pass  # limits are blank for test targets
             else:
                 print('  ERROR: no limit flag for ', lbl)
 
@@ -697,7 +738,7 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     for key in out['needed']:
         if ':' in key:
             p = key.split(':')[0]
-            if p not in out['ignore']:
+            if p not in out['ignore'] and not testTarget:
                 out['ignore'].append(p)
                 out['pignore'][p] = out['priors'][p].copy()
                 out['priors'].pop(p, None)
@@ -722,16 +763,13 @@ def buildsp(autofill, runtime_params, out, verbose=False):
             for index in dropIndices:
                 out['needed'].pop(index)
         pass
+
     # starneed = False
     # for p in out['needed']:
     #    if ':' not in p: starneed = True
     #    pass
     # if starneed or (len(out['priors']['planets']) < 1): out['PP'].append(True)
-    # log.warning('>-- FORCE PARAMETER: %s', str(out['PP'][-1]))
-    # log.warning('>-- MISSING MANDATORY PARAMETERS: %s', str(out['needed']))
-    # log.warning('>-- MISSING PLANET PARAMETERS: %s', str(out['pneeded']))
-    # log.warning('>-- PLANETS IGNORED: %s', str(out['ignore']))
-    # log.warning('>-- AUTOFILL: %s', str(out['autofill']))
+
     out['STATUS'].append(True)
 
     return True
@@ -745,17 +783,14 @@ def forcepar(overwrite, out, verbose=False):
     '''
 
     forced = False  # check if any parameters are overwritten
-    # print('starting to force')
-    # print('edit.py stuff for this guy:',overwrite)
-    # print('out.keys',out.keys())
     for key in overwrite.keys():
         mainkey = key.split(':')[0]
-        # print(' key',key)
         if (mainkey not in out.keys()) and (len(mainkey) < 2):
             if mainkey in out['pignore'].keys():
                 # print('its in pignore',out['pignore'])
                 out['priors'][mainkey] = out['pignore'][mainkey].copy()
                 pass
+
             for pkey in overwrite[key].keys():
                 if (
                     pkey in out['priors'][mainkey].keys()
@@ -862,21 +897,11 @@ def forcepar(overwrite, out, verbose=False):
         if ':' not in p:
             starneed = True
 
-    # these 5 print statements moved from above, so they're after overwriting
-    # actually move it out to after call; this print only done if params are forced
-    # log.warning('>-- FORCE PARAMETER: %s', str(out['PP'][-1]))
-    # log.warning('>-- MISSING MANDATORY PARAMETERS: %s', str(out['needed']))
-    # log.warning('>-- MISSING PLANET PARAMETERS: %s', str(out['pneeded']))
-    # log.warning('>-- PLANETS IGNORED: %s', str(out['ignore']))
-    # log.warning('>-- AUTOFILL: %s', str(out['autofill']))
     if starneed or (len(out['priors']['planets']) < 1):
         success = False
-        # log.warning('>-- MISSING MANDATORY PARAMETERS')
-        # log.warning('>-- ADD THEM TO SYSTEM/OVERWRITER')
         log.warning('>-- PARAMETER STILL MISSING; ADD TO SYSTEM/OVERWRITER')
     else:
         success = True
-        # log.warning('>-- PRIORITY PARAMETERS SUCCESSFUL')
         log.warning('>-- PARAMETER FORCING SUCCESSFUL')
     return success
 

@@ -79,6 +79,7 @@ CerbAtmosParams = namedtuple(
         'MCMC_chains',
         'MCMC_chain_length',
         'MCMC_sliceSampler',
+        'cornerBins',
         'fitCloudParameters',
         'fitT',
         'fitCtoO',
@@ -109,6 +110,20 @@ CerbResultsParams = namedtuple(
         'nlevels',
         'Hsmax',
         'solrad',
+        'cornerBins',
+    ],
+)
+
+CerbAnalysisParams = namedtuple(
+    'cerberus_analysis_params_from_runtime',
+    [
+        'tier',
+        'boundTeq',
+        'boundAbundances',
+        'boundCTP',
+        'boundHLoc',
+        'boundHScale',
+        'boundHThick',
     ],
 )
 
@@ -857,10 +872,10 @@ def atmos(
 
                     if not runtime_params.fitT:
                         fixed_params['T'] = input_data['model_params']['Teq']
-                    if not runtime_params.fitNtoO:
-                        fixed_params['NtoO'] = 0.0
                     if not runtime_params.fitCtoO:
                         fixed_params['CtoO'] = input_data['model_params']['C/O']
+                    if not runtime_params.fitNtoO:
+                        fixed_params['NtoO'] = 0.0
                     # print('fixedparams',fixedParams)
 
                     # OFFSET BETWEEN STIS AND WFC3 filters
@@ -1354,7 +1369,7 @@ def atmos(
                     # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if model == 'TEC':
-                        if key == 'TEC[0]':
+                        if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
@@ -1408,7 +1423,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    './',
+                    bins=runtime_params.cornerBins,
                     verbose=True,
                     # verbose=False,
                 )
@@ -1423,7 +1438,6 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    './',
                     Nchains=Nchains,
                     verbose=True,
                 )
@@ -1831,7 +1845,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(atm[p][model_name]['MCTRACE'][key])
                     if model_name == 'TEC':
-                        if key == 'TEC[0]':
+                        if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
@@ -1854,7 +1868,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                # print('allKeys',allKeys)
+                # print('all_keys',all_keys)
 
                 # remove the traced phase space that is excluded by profiling
                 profile_trace, applied_limits = apply_profiling(
@@ -2000,7 +2014,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                 'CtoO'
                             ]
                         else:
-                            # default is C/O=1.  Maybe the default should actually be Solar?
+                            # default is Solar
                             tceqdict['CtoO'] = 0.0
                         tceqdict_profiled['CtoO'] = tceqdict['CtoO']
 
@@ -2016,6 +2030,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                 'NtoO'
                             ]
                         else:
+                            # default is Solar
                             tceqdict['NtoO'] = 0.0
                         tceqdict_profiled['NtoO'] = tceqdict['NtoO']
                 elif model_name == 'PHOTOCHEM':
@@ -2185,7 +2200,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             tceqdict['CtoO'] = float(mdp[1])
                         else:
                             tceqdict['CtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                'CtoO'
+                                'C/O'
                             ]
                         if fit_n_to_o:
                             tceqdict['NtoO'] = float(mdp[2])
@@ -2289,7 +2304,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         model_name,
                         trgt,
                         p,
-                        save_dir,
+                        saveDir=save_dir,
                     )
                 )
 
@@ -2310,7 +2325,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     model_name,
                     trgt,
                     p,
-                    save_dir,
+                    bins=runtime_params.cornerBins,
+                    saveDir=save_dir,
                 )
 
                 # _______________WALKER-EVOLUTION PLOT________________
@@ -2326,7 +2342,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         model_name,
                         trgt,
                         p,
-                        save_dir,
+                        saveDir=save_dir,
                     )
                 )
 
@@ -2342,7 +2358,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     model_name,
                     trgt,
                     p,
-                    save_dir,
+                    saveDir=save_dir,
                 )
 
             out['target'].append(trgt)
@@ -2356,7 +2372,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
 
 # --------------------------------------------------------------------
-def analysis(aspects, filt, out, verbose=False):
+def analysis(aspects, filt, runtime_params, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -2391,45 +2407,39 @@ def analysis(aspects, filt, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        # analysistargetlists.append({
-        #    'targetlistname':'Roudier+ 2022',
-        #    'targets':alltargetlists['roudier62']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Nov.2023 Transit-list',
-        #    'targets':alltargetlists['arielMCS_Nov2023_transit']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Nov.2023 max-visits=25',
-        #    'targets':alltargetlists['arielMCS_Nov2023_maxVisits25']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Feb.2024 Transit-list',
-        #    'targets':alltargetlists['arielMCS_Feb2024_transit']})
-        # analysistargetlists.append({
-        #    'targetlistname':'MCS Feb.2024 max-visits=25',
-        #    'targets':alltargetlists['arielMCS_Feb2024_maxVisits25']})
-        # analysistargetlists.append({
-        #    'targetlistname':'2-year science time; Thorngren mmw (Aug.2024)',
-        #    'targets':alltargetlists['ariel_Aug2024_2years']})
-        #
-        #  *** Tier-2 (259 planets) ***
-        # analysistargetlists.append({
-        #   'targetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-        #   'targets':alltargetlists['ariel_Nov2024_2years']})
-        # analysisplanetlist = {
-        #    'planetlistname':'2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-        #    'planets':alltargetlists['ariel_Nov2024_2years_withPlanetletters']}
-        #  *** Tier-1 (626 planets) ***
-        analysistargetlists.append(
-            {
-                'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
-                'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+        if runtime_params.tier == 2:
+            #  *** Tier-2 (259 planets) ***
+            analysistargetlists.append(
+                {
+                    'targetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                    'targets': alltargetlists['ariel_Nov2024_2years'],
+                }
+            )
+            analysisplanetlist = {
+                'planetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
+                'planets': alltargetlists[
+                    'ariel_Nov2024_2years_withPlanetletters'
+                ],
             }
-        )
-        analysisplanetlist = {
-            'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
-            'planets': alltargetlists[
-                'ariel_Nov2024_2yearsTier1_withPlanetletters'
-            ],
-        }
+        elif runtime_params.tier == 1:
+            #  *** Tier-1 (626 planets) ***
+            analysistargetlists.append(
+                {
+                    'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
+                    'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+                }
+            )
+            analysisplanetlist = {
+                'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
+                'planets': alltargetlists[
+                    'ariel_Nov2024_2yearsTier1_withPlanetletters'
+                ],
+            }
+        else:
+            print(
+                'ERROR: unknown tier level for mass-metal plot',
+                runtime_params.tier,
+            )
     else:
         analysistargetlists.append(
             {
@@ -2563,7 +2573,7 @@ def analysis(aspects, filt, out, verbose=False):
                                     ][key]
                                 )
 
-                                if key == 'TEC[0]':
+                                if key in ('TEC[0]', 'TEC'):
                                     all_keys.append('[X/H]')
                                 elif key == 'TEC[1]':
                                     all_keys.append('[C/O]')
@@ -2698,7 +2708,7 @@ def analysis(aspects, filt, out, verbose=False):
                 fit_errors,
                 prior_ranges,
                 filt,
-                save_dir,
+                saveDir=save_dir,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
             fit_t_plot = plotarray[0]
@@ -2711,7 +2721,11 @@ def analysis(aspects, filt, out, verbose=False):
             # for real data, make a histogram of the retrieved uncertainties
             #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
             plotarray = plot_fit_uncertainties(
-                fit_values, fit_errors, prior_ranges, filt, save_dir
+                fit_values,
+                fit_errors,
+                prior_ranges,
+                filt,
+                saveDir=save_dir,
             )
             fit_t_plot = plotarray[0]
             fit_metalplot = plotarray[1]
@@ -2728,7 +2742,7 @@ def analysis(aspects, filt, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
-            save_dir,
+            saveDir=save_dir,
         )
 
         # save the analysis as .csv file? (in /proj/data/spreadsheets/)

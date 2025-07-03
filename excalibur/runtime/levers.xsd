@@ -43,18 +43,20 @@
         be exercised while false means it will not.
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute name="cerberus.atmos.bounds.Teq"
-		  type="xs:string" use="required"/>
-    <xs:attribute name="cerberus.atmos.bounds.abundances"
-		  type="xs:string" use="required"/>
-    <xs:attribute name="cerberus.atmos.bounds.CTP"
-		  type="xs:string" use="required"/>
-    <xs:attribute name="cerberus.atmos.bounds.HLoc"
-		  type="xs:string" use="required"/>
-    <xs:attribute name="cerberus.atmos.bounds.HScale"
-		  type="xs:string" use="required"/>
-    <xs:attribute name="cerberus.atmos.bounds.HThick"
-		  type="xs:string" use="required"/>
+    <xs:sequence>
+      <xs:element name="cerberus.atmos.bounds.Teq"
+		  type="hilo"/>
+      <xs:element name="cerberus.atmos.bounds.abundances"
+		  type="hilo"/>
+      <xs:element name="cerberus.atmos.bounds.CTP"
+		  type="hilo"/>
+      <xs:element name="cerberus.atmos.bounds.HLoc"
+		  type="hilo"/>
+      <xs:element name="cerberus.atmos.bounds.HScale"
+		  type="hilo"/>
+      <xs:element name="cerberus.atmos.bounds.HThick"
+		  type="hilo"/>
+    </xs:sequence>
     <xs:attribute name="cerberus.atmos.fitCloudParameters"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitNtoO"
@@ -76,6 +78,8 @@
     <xs:attribute name="cerberus.crbmodel.solrad"
                   type="xs:float" use="required"/>
     <xs:attribute name="cerberus.crbmodel.Hsmax"
+                  type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.plotters.cornerBins"
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.results.nrandomwalkers"
                   type="xs:integer" use="required"/>
@@ -103,6 +107,8 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
                   type="xs:float" use="required"/>
+    <xs:attribute name="selftest.Nrepeats"
+                  type="xs:integer" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="filter_type">
