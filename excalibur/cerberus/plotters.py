@@ -558,7 +558,7 @@ def plot_corner(
                 )
         # print('truths in corner plot',truths)
     if len(allkeys) <= 1:
-        print('corner plot needs at least 2 parameters; doing histogram instead')
+        # print('corner plot needs at least 2 parameters; doing histogram instead')
 
         figure = plt.figure(figsize=(5, 4))
         ax = figure.add_subplot(1, 1, 1)
@@ -1841,5 +1841,5 @@ def plot_mass_vs_metals(
     if savetodisk:
         plt.savefig(saveDir + 'massVSmetals_' + filt + '.png')
     return save_plot_tosv(figure), figure
-# --------------------------------------------------------------------
 
+# --------------------------------------------------------------------
