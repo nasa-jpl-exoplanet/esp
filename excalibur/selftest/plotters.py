@@ -272,6 +272,7 @@ def plot_fits_vs_truth(
             color='black',
             lw=2,
             zorder=2,
+            label='overall sum',
         )
         # vertical line for the truth
         ylim = ax3.get_ylim()
@@ -281,10 +282,12 @@ def plot_fits_vs_truth(
             c='k',
             ls=':',
             lw=1,
+            label='truth',
         )
         ax3.set_ylim(ylim)
         ax3.set_xlim(prior_ranges[param][0], prior_ranges[param][1])
 
+        plt.legend()
         ax3.set_ylabel('posterior probability', fontsize=14)
 
         figure.tight_layout()
