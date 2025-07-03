@@ -67,7 +67,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r .github/workflows/requirements.txt
       - name: pyroma
-        run: pyroma --min 9 .
+        run: pyroma --min 10 .
   Compliance:
     name: DAWGIE Compliance
     runs-on: ubuntu-24.04
