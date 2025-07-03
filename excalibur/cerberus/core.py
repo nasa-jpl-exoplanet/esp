@@ -1845,7 +1845,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(atm[p][model_name]['MCTRACE'][key])
                     if model_name == 'TEC':
-                        if key == 'TEC[0]' or key == 'TEC':
+                        if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
