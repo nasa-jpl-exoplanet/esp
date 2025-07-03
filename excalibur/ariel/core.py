@@ -521,8 +521,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     out['data'][planet_letter][atmosModel][
                         'model_params'
                     ] = model_params.copy()
-                    if testTarget:
-                        print('model_params in ariel:', model_params)
+                    # if testTarget:
+                    #    print('model_params in ariel:', model_params)
 
                     # convert to percentage depth (just for plotting, not for the saved results)
                     fluxDepth = 100 * fluxDepth
