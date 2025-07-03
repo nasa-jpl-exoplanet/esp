@@ -2015,7 +2015,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             ]
                         else:
                             # default is Solar
-                            tceqdict['CtoO'] = 0.
+                            tceqdict['CtoO'] = 0.0
                         tceqdict_profiled['CtoO'] = tceqdict['CtoO']
 
                     if fit_n_to_o:
