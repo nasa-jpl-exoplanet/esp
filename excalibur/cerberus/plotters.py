@@ -487,7 +487,7 @@ def plot_corner(
             paramValues_bestFit.append(tceqdict['CtoO'])
         elif param == '[N/O]':
             paramValues_bestFit.append(tceqdict['NtoO'])
-        elif param in mixratio:
+        elif mixratio and param in mixratio:
             paramValues_bestFit.append(mixratio[param])
         else:
             log.warning('--< ERROR: param not in list: %s >--', param)

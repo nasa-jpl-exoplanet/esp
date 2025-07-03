@@ -872,10 +872,10 @@ def atmos(
 
                     if not runtime_params.fitT:
                         fixed_params['T'] = input_data['model_params']['Teq']
-                    if not runtime_params.fitNtoO:
-                        fixed_params['NtoO'] = 0.0
                     if not runtime_params.fitCtoO:
                         fixed_params['CtoO'] = input_data['model_params']['C/O']
+                    if not runtime_params.fitNtoO:
+                        fixed_params['NtoO'] = 0.0
                     # print('fixedparams',fixedParams)
 
                     # OFFSET BETWEEN STIS AND WFC3 filters
@@ -1845,7 +1845,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(atm[p][model_name]['MCTRACE'][key])
                     if model_name == 'TEC':
-                        if key == 'TEC[0]':
+                        if key == 'TEC[0]' or key == 'TEC':
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
@@ -1868,7 +1868,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                # print('allKeys',allKeys)
+                # print('all_keys',all_keys)
 
                 # remove the traced phase space that is excluded by profiling
                 profile_trace, applied_limits = apply_profiling(
@@ -2014,8 +2014,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                 'CtoO'
                             ]
                         else:
-                            # default is C/O=1.  Maybe the default should actually be Solar?
-                            tceqdict['CtoO'] = 0.0
+                            # default is Solar
+                            tceqdict['CtoO'] = 0.
                         tceqdict_profiled['CtoO'] = tceqdict['CtoO']
 
                     if fit_n_to_o:
@@ -2030,6 +2030,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                 'NtoO'
                             ]
                         else:
+                            # default is Solar
                             tceqdict['NtoO'] = 0.0
                         tceqdict_profiled['NtoO'] = tceqdict['NtoO']
                 elif model_name == 'PHOTOCHEM':
@@ -2199,7 +2200,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                             tceqdict['CtoO'] = float(mdp[1])
                         else:
                             tceqdict['CtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                'CtoO'
+                                'C/O'
                             ]
                         if fit_n_to_o:
                             tceqdict['NtoO'] = float(mdp[2])
