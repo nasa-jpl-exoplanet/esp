@@ -1369,7 +1369,7 @@ def atmos(
                     # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if model == 'TEC':
-                        if key == 'TEC[0]':
+                        if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
@@ -2573,7 +2573,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                     ][key]
                                 )
 
-                                if key == 'TEC[0]':
+                                if key in ('TEC[0]', 'TEC'):
                                     all_keys.append('[X/H]')
                                 elif key == 'TEC[1]':
                                     all_keys.append('[C/O]')
