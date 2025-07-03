@@ -1,0 +1,7 @@
+export DAWGIE_FE_PORT=19250 \
+       DAWGIE_SFE_PORT=19255 \
+       EXCALIBUR_LOG_LEVEL="logging.INFO" \
+       EXCALIBUR_PORT=${DAWGIE_FE_PORT:-9990} \
+       EXCALIBUR_SOURCE_PATH=/home/hirota/code/esp \
+       EXCALIBUR_UID=${UID} \
+       EXCALIBUR_USER=hirota

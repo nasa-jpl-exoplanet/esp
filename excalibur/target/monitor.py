@@ -9,6 +9,7 @@ import smtplib
 import math
 
 log = logging.getLogger(__name__)
+from collections import defaultdict
 
 # ------------- ------------------------------------------------------
 
@@ -123,7 +124,6 @@ def regress(
     for i, rid in enumerate(tl):
         if rid in rids:
             break
-
         rids.insert(i, rid)
         svv = list(tl[rid]['target.autofill.parameters']['starID'].values())
         svv = svv[0]
@@ -144,3 +144,66 @@ def regress(
     # outliers = dict([(pp, _outlier (vl)) for pp,vl in planet.items()])
     outliers = {pp: _outlier(vl) for pp, vl in planet.items()}
     return last, outliers
+
+
+def regress_for_frame_counts(
+    data: {int: {str: int, str: int}}, tl: {str: {str: {str: object}}}
+) -> ({str: float}, {str: []}, []):
+    '''
+    this functions regresses through the runids for target.scrape.databases.
+    data currently contains:
+
+    observatory-instrument-detector-filter-mode: # of occurences
+
+    timeline iterates through descending order of runID. Therefore
+    the newest runIDs go first, then code breaks once it hits a runID
+    that has already been computed.
+    #'''
+    # print('in monitor.regress_through_runid')
+
+    for rid, val in tl.items():
+        # print(rid)
+        # i think i need to loop through all rids because if there is a new thing
+        # in the most recent runid, I actually need to go back and
+        if rid in data:
+            break
+        data[rid] = defaultdict(int)
+        # only one product so loops only once
+        for _, d in val.items():
+            frames_d = dict(d)['name']
+            for _, frame_d in frames_d.items():
+                if frame_d['observatory'] in ['HST', 'JWST']:
+                    identifier = (
+                        frame_d['observatory']
+                        + '-'
+                        + frame_d['instrument']
+                        + '-'
+                        + frame_d['detector']
+                        + '-'
+                        + frame_d['filter']
+                        + '-'
+                    )
+                    if frame_d['mode'] is None:
+                        identifier += 'STARE'
+                    else:
+                        identifier += frame_d['mode']
+                    # print(identifier)
+                    data[rid][identifier] += 1
+    # print(data)
+
+    # getting the most current frame counts and previous frames counts to compare
+    sorted_keys = sorted(data.keys(), reverse=True)
+    cur_frames = data[sorted_keys[0]]
+    prev_frames = data[sorted_keys[1]]
+
+    # print(f'current: {cur_frames}')
+    # print(f'previous: {prev_frames}')
+
+    status = 1
+    for identifier in prev_frames:
+        if identifier not in cur_frames:
+            # checking if previously this key existed (ie, had some frames) but in current doesn't?
+            status = -1
+            break
+
+    return data, status
