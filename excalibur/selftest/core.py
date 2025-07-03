@@ -197,7 +197,7 @@ def analysis(aspects, filt, out, verbose=False):
                                     ][key]
                                 )
 
-                                if key == 'TEC[0]':
+                                if key in ('TEC[0]', 'TEC'):
                                     all_keys.append('[X/H]')
                                 elif key == 'TEC[1]':
                                     all_keys.append('[C/O]')
