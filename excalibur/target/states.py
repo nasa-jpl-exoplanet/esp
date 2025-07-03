@@ -8,6 +8,9 @@ import bokeh.embed
 import bokeh.plotting  # the awesome plotting engine
 import dawgie
 import numpy
+import pandas as pd
+import matplotlib.pyplot as plt
+from excalibur.util.plotters import save_plot_toscreen
 
 import excalibur
 
@@ -226,6 +229,10 @@ class MonitorSV(dawgie.StateVector):
         self['planet'] = excalibur.ValuesDict()
         self['runid'] = excalibur.ValuesList()
         self['outlier'] = excalibur.ValuesList()
+        self['data'] = excalibur.ValuesDict()
+        # data's structure
+        # {runID: {'jwst': int, 'hst': int}}
+        self['STATUS'] = excalibur.ValuesList()
         return
 
     def name(self):
@@ -266,6 +273,68 @@ class MonitorSV(dawgie.StateVector):
                 # fig.circle (self['runid'], values)
                 js, div = bokeh.embed.components(fig)
                 visitor.add_declaration(None, div=div, js=js)
+        return
+
+
+class ScrapeValidationSV(dawgie.StateVector):
+    '''SoCustomSV ds'''
+
+    def __init__(self, name):
+        '''__init__ ds'''
+        self._version_ = dawgie.VERSION(1, 1, 1)
+        self['data'] = excalibur.ValuesDict()
+        # -1 = bad, 0 = iffy, 1 = good. only -1 and 1 used so far
+        self['quality'] = excalibur.ValueScalar()
+        # data's structure
+        # {runID: {'jwst': int, 'hst': int}}
+        self['STATUS'] = excalibur.ValuesList()
+        self['STATUS'].append(False)
+        self.__name = name
+        return
+
+    def name(self):
+        '''name ds'''
+        return self.__name
+
+    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
+        '''view ds'''
+        df = pd.DataFrame(self['data'])
+        df = df.fillna(value=0)
+
+        my_fig = plt.figure()
+        for col in df:
+            plt.plot(df.index, df[col], label=col, marker='.')
+        plt.legend(
+            loc='center left',  # place legend to the left of the bbox anchor
+            bbox_to_anchor=(
+                1.0,
+                0.5,
+            ),  # x=1.0 means just outside the right edge
+            ncol=1,  # or >1 if you want multi-column legend
+        )
+        plt.xlabel('RunIDs')
+        save_plot_toscreen(my_fig, visitor)
+
+        # p = bokeh.figure(title="RunIDs", x_axis_label="RunIDs", width=800, height=400)
+        # colors = bokeh.palettes.Category20  # adjust if >10 lines
+        # legend_items = []
+
+        # for i, col in enumerate(df.columns):
+        #     color = colors[i % len(colors)]
+        #     line = p.line(df.index, df[col], line_width=2, color=color)
+        #     dots = p.scatter(df.index, df[col], size=5, color=color)
+        #     legend_items.append(bokeh.models.LegendItem(label=col, renderers=[line, dots]))
+
+        # # External legend
+        # legend = bokeh.palettes.Legend(items=legend_items, location="center")
+        # p.add_layout(legend, 'right')  # place legend outside to the right
+
+        # p.legend.label_text_font_size = '10pt'
+        # p.legend.spacing = 2
+        # p.legend.label_standoff = 5
+
+        # js, div = bokeh.embed.components(p)
+        # visitor.add_declaration(None, div=div, js=js)
         return
 
 
