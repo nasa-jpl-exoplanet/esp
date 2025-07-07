@@ -300,30 +300,42 @@ class ScrapeValidationSV(dawgie.StateVector):
         df = pd.DataFrame(self['data'][0]).T
         df = df.fillna(value=0)
 
-        p = bokeh.plotting.figure(title="RunIDs", x_axis_label="RunIDs", width=800, height=400)
+        p = bokeh.plotting.figure(
+            title="RunIDs", x_axis_label="RunIDs", width=800, height=400
+        )
         colors = bokeh.palettes.magma(len(df.columns))
         legend_items = []
-
 
         for i, col in enumerate(df.columns):
             color = colors[i]
 
-            source = bokeh.models.ColumnDataSource(data={
-                'runid': df.index,
-                'count': df[col],
-                'colname': [col] * len(df)
-            })
+            source = bokeh.models.ColumnDataSource(
+                data={
+                    'runid': df.index,
+                    'count': df[col],
+                    'colname': [col] * len(df),
+                }
+            )
 
-            line = p.line('runid', 'count', source=source, line_width=2, color=color)
-            dots = p.scatter('runid', 'count', source=source, size=5, color=color)
+            line = p.line(
+                'runid', 'count', source=source, line_width=2, color=color
+            )
+            dots = p.scatter(
+                'runid', 'count', source=source, size=5, color=color
+            )
 
-            hover = bokeh.models.HoverTool(renderers=[dots], tooltips=[
-                ('Instrument', '@colname'),
-                ('RunID', '@runid'),
-                ('Count', '@count')
-            ])
+            hover = bokeh.models.HoverTool(
+                renderers=[dots],
+                tooltips=[
+                    ('Instrument', '@colname'),
+                    ('RunID', '@runid'),
+                    ('Count', '@count'),
+                ],
+            )
             p.add_tools(hover)
-            legend_items.append(bokeh.models.LegendItem(label=col, renderers=[line, dots]))
+            legend_items.append(
+                bokeh.models.LegendItem(label=col, renderers=[line, dots])
+            )
 
         legend = bokeh.models.Legend(items=legend_items, location="center")
         p.add_layout(legend, 'right')
