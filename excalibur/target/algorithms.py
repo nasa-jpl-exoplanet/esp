@@ -353,7 +353,6 @@ class Regress(dawgie.Regression):
 
     def run(self, ps: int, timeline: dawgie.Timeline):
         '''Top level algorithm call'''
-        # print('in taget.algorithms.Regress.run')
         last, outlier = trgmonitor.regress(
             self.__out['planet'], self.__out['runid'], timeline
         )
@@ -371,7 +370,6 @@ class Regress(dawgie.Regression):
 
     def variables(self) -> [dawgie.SV_REF, dawgie.V_REF]:
         '''variables ds'''
-        # print('in target.algorithms.Regress.variables')
         return [
             dawgie.SV_REF(
                 fetch('excalibur.target').task,
@@ -384,7 +382,7 @@ class Regress(dawgie.Regression):
 
 
 class TargetScrapeRegression(dawgie.Regression):
-    '''targetscraperegression ds'''
+    '''TargetScrapeRegression ds'''
 
     def __init__(self):
         '''__init__ ds'''
@@ -396,25 +394,22 @@ class TargetScrapeRegression(dawgie.Regression):
         '''Database name for subtask extension'''
         return 'scrape'
 
-    def run(self, timeline: dawgie.Timeline):
+    def run(self, ps: int, timeline: dawgie.Timeline):
         '''Top level algorithm call'''
-        print('in target.algorithms.run')
 
         data, quality_flag = trgmonitor.regress_for_frame_counts(
-            self.__out['data'], timeline
+            self.__out['data'][0], timeline
         )
-        # print(data)
 
-        # self.__out['data'].clear()
-        # self.__out['data'].update(data)
-        self.__out['data'] = data
-        # ask Al if there's a different way to do this
-        self.__out['quality'] = quality_flag
+        self.__out['data'].clear()
+        self.__out['data'].append(data)
+
+        self.__out['quality'] = self.__out['quality'].new(quality_flag)
         self.__out['STATUS'].append(True)
-        timeline.ds.update()
+        timeline.ds().update()
         return
 
-    def state_vectors(self):  # this thing is actually called
+    def state_vectors(self):
         '''Output State Vectors: target.variations_of'''
         # this returns the state vector from run
         # then make a view function
@@ -422,7 +417,6 @@ class TargetScrapeRegression(dawgie.Regression):
 
     def variables(self) -> [dawgie.SV_REF, dawgie.V_REF]:
         '''variables ds'''
-        # print('in target.algorithms.TargetScrapeRegression.variables')
         return [
             dawgie.SV_REF(
                 fetch('excalibur.target').task,

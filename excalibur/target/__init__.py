@@ -22,8 +22,3 @@ def task(
 ):
     '''task ds'''
     return trgbot.Actor(prefix, ps_hint, runid, target)
-
-
-# def regress_through_scrape_database(prefix: str, ps_hint: int = 0, target: str = '__none__'):
-#     '''regression ds'''
-#     return trgbot.RegressThroughScrape(prefix, ps_hint, target)

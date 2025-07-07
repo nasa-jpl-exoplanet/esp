@@ -22,7 +22,6 @@ if tn in ['', '__all__']:
 elif rid == 0:
     NAME = ['databases_validation', 'scrape', None][-1]  # -1 to run them all
     subtasks = excalibur.target.bot.Regress('target', 4, tn)
-
 else:
     NAME = ['autofill', 'scrape', None][-1]  # -1 to run them all
     subtasks = excalibur.target.bot.Actor('target', 4, rid, tn)

@@ -8,8 +8,8 @@ import numpy
 import smtplib
 import math
 
-log = logging.getLogger(__name__)
 from collections import defaultdict
+log = logging.getLogger(__name__)
 
 # ------------- ------------------------------------------------------
 
@@ -159,19 +159,15 @@ def regress_for_frame_counts(
     the newest runIDs go first, then code breaks once it hits a runID
     that has already been computed.
     #'''
-    # print('in monitor.regress_through_runid')
 
-    for rid, val in tl.items():
-        # print(rid)
-        # i think i need to loop through all rids because if there is a new thing
-        # in the most recent runid, I actually need to go back and
+    for rid in tl:
         if rid in data:
-            break
+            continue
         data[rid] = defaultdict(int)
         # only one product so loops only once
-        for _, d in val.items():
-            frames_d = dict(d)['name']
-            for _, frame_d in frames_d.items():
+        for d in tl[rid].values():
+            frames_d = d['name']
+            for frame_d in frames_d.values():
                 if frame_d['observatory'] in ['HST', 'JWST']:
                     identifier = (
                         frame_d['observatory']
@@ -187,23 +183,20 @@ def regress_for_frame_counts(
                         identifier += 'STARE'
                     else:
                         identifier += frame_d['mode']
-                    # print(identifier)
                     data[rid][identifier] += 1
-    # print(data)
 
     # getting the most current frame counts and previous frames counts to compare
-    sorted_keys = sorted(data.keys(), reverse=True)
-    cur_frames = data[sorted_keys[0]]
-    prev_frames = data[sorted_keys[1]]
-
-    # print(f'current: {cur_frames}')
-    # print(f'previous: {prev_frames}')
-
     status = 1
-    for identifier in prev_frames:
-        if identifier not in cur_frames:
-            # checking if previously this key existed (ie, had some frames) but in current doesn't?
-            status = -1
-            break
+
+    sorted_keys = sorted(data.keys(), reverse=True)
+    if len(sorted_keys) > 1:
+        cur_frames = data[sorted_keys[0]]
+        prev_frames = data[sorted_keys[1]]
+
+        for identifier in prev_frames:
+            if identifier not in cur_frames:
+                # checking if previously this key existed (ie, had some frames) but in current doesn't?
+                status = -1
+                break
 
     return data, status
