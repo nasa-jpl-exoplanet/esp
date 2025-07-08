@@ -148,7 +148,9 @@ def regress(
 
 
 def regress_for_frame_counts(
-    data: {int: {str: int, str: int}}, tl: {str: {str: {str: object}}}
+    data: {int: {str: int, str: int}},
+    quality_dict: {int: int},
+    tl: {str: {str: {str: object}}}
 ) -> ({str: float}, {str: []}, []):
     '''
     this functions regresses through the runids for target.scrape.databases.
@@ -187,17 +189,26 @@ def regress_for_frame_counts(
                     data[rid][identifier] += 1
 
     # getting the most current frame counts and previous frames counts to compare
-    status = 1
-
-    sorted_keys = sorted(data.keys(), reverse=True)
+    sorted_keys = sorted(data.keys())
+    # this if is redundant, will remove later
     if len(sorted_keys) > 1:
-        cur_frames = data[sorted_keys[0]]
-        prev_frames = data[sorted_keys[1]]
+        # i know im traversing the rids again, i feel like there's a good reason
+        # to do this but if i find out there isn't ill try to conslidate the loops
+        for i, rid in enumerate(sorted_keys[1:], start=1):
 
-        for identifier in prev_frames:
-            if identifier not in cur_frames:
-                # checking if previously this key existed (ie, had some frames) but in current doesn't?
-                status = -1
-                break
+            # if this rid already exists in quality_dict, skip
+            if rid in quality_dict:
+                print('key alr exists, continuing')
+                continue
+            # add quality flag entry for rid
+            quality_dict[rid] = 1
+            cur_frames = data[rid]
+            prev_frames = data[sorted_keys[i-1]]
 
-    return data, status
+            for identifier in prev_frames:
+                if identifier not in cur_frames:
+                    # checking if previously this key existed (ie, had some frames) but in current doesn't?
+                    quality_dict[rid] = -1
+                    break
+
+    return data, quality_dict

@@ -280,12 +280,18 @@ class ScrapeValidationSV(dawgie.StateVector):
     def __init__(self, name):
         '''__init__ ds'''
         self._version_ = dawgie.VERSION(1, 1, 1)
-        self['data'] = excalibur.ValuesList()
-        self['data'].append({})
-        # -1 = bad, 0 = iffy, 1 = good. only -1 and 1 used so far
-        self['quality'] = excalibur.ValueScalar()
+
         # data's structure
         # {runID: {'jwst': int, 'hst': int}}
+        self['data'] = excalibur.ValuesList()
+        self['data'].append({})
+
+        # quality's structure
+        # {rid: }
+        # -1 = bad, 0 = iffy, 1 = good. only -1 and 1 used so far
+        self['quality'] = excalibur.ValuesList()
+        self['quality'].append({})
+
         self['STATUS'] = excalibur.ValuesList()
         self['STATUS'].append(False)
         self.__name = name
@@ -301,7 +307,7 @@ class ScrapeValidationSV(dawgie.StateVector):
         df = df.fillna(value=0)
 
         p = bokeh.plotting.figure(
-            title="RunIDs", x_axis_label="RunIDs", width=800, height=400
+            title="# of Frames vs RunID", x_axis_label="RunIDs", width=800, height=400
         )
         colors = bokeh.palettes.magma(len(df.columns))
         legend_items = []
@@ -344,6 +350,28 @@ class ScrapeValidationSV(dawgie.StateVector):
         p.legend.spacing = 2
         p.legend.label_standoff = 5
 
+        js, div = bokeh.embed.components(p)
+        visitor.add_declaration(None, div=div, js=js)
+
+        raw = self['quality'][0]
+
+        # show just the last 15 statuses
+        x = list(raw.keys())[-15:]
+        y = list(raw.values())[-15:]
+        source = bokeh.models.ColumnDataSource(data={'runid': x, 'status': y})
+
+        p = bokeh.plotting.figure(
+            title="Status vs RunID (1: Good, -1: Bad)", x_axis_label="RunIDs", y_axis_label="Status",
+                width=800, height=400
+        )
+
+        line = p.line('runid', 'status', source=source, line_width=2, color="orange")
+        dots = p.circle('runid', 'status', source=source, size=5, color="orange")
+
+        legend = bokeh.models.Legend(
+            items=[bokeh.models.LegendItem(label="Status", renderers=[line, dots])]
+        )
+        p.add_layout(legend, 'above')
         js, div = bokeh.embed.components(p)
         visitor.add_declaration(None, div=div, js=js)
         return
