@@ -7,7 +7,6 @@
 import bokeh.embed
 import bokeh.plotting  # the awesome plotting engine
 import dawgie
-import numpy
 import pandas as pd
 
 import excalibur
@@ -215,65 +214,6 @@ class DatabaseSV(dawgie.StateVector):
         return
 
 
-# -------------- -----------------------------------------------------
-# -- MONITOR -- -------------------------------------------------------
-class MonitorSV(dawgie.StateVector):
-    '''MonitorSV ds'''
-
-    def __init__(self):
-        '''__init__ ds'''
-        self._version_ = dawgie.VERSION(1, 1, 1)
-        self['last'] = excalibur.ValuesDict()
-        self['planet'] = excalibur.ValuesDict()
-        self['runid'] = excalibur.ValuesList()
-        self['outlier'] = excalibur.ValuesList()
-        self['data'] = excalibur.ValuesDict()
-        # data's structure
-        # {runID: {'jwst': int, 'hst': int}}
-        self['STATUS'] = excalibur.ValuesList()
-        return
-
-    def name(self):
-        '''name ds'''
-        return 'parameters'
-
-    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
-        '''view ds'''
-        for k in sorted(self['last']):
-            outlier = self['outlier']
-            ks = k.split('_')
-            p = ks[0]
-            value = self['last'][k]
-            visitor.add_primitive(
-                'Planet '
-                + p
-                + ' parameter '
-                + '_'.join(ks[1:])
-                + ' last change: '
-                + str(value)
-                + '; Outlier: '
-                + str(outlier)
-            )
-            if not numpy.isnan(value):
-                values = []
-                for v in self['planet'][k]:
-                    try:
-                        values.append(float(v))
-                    except ValueError:
-                        values.append(numpy.nan)
-                    pass
-                fig = bokeh.plotting.figure(
-                    title=('Change of ' + '_'.join(ks[1:]) + ' over RunIDs'),
-                    x_axis_label='Run ID',
-                    y_axis_label='Value',
-                )
-                # GMR: Pass pylint, to be solved
-                # fig.circle (self['runid'], values)
-                js, div = bokeh.embed.components(fig)
-                visitor.add_declaration(None, div=div, js=js)
-        return
-
-
 class ScrapeValidationSV(dawgie.StateVector):
     '''SoCustomSV ds'''
 
@@ -390,55 +330,3 @@ class ScrapeValidationSV(dawgie.StateVector):
 
 
 # -------------- -----------------------------------------------------
-# -- ALERT --- -------------------------------------------------------
-class AlertSV(dawgie.StateVector):
-    '''AlertSV ds'''
-
-    def __init__(self):
-        '''__init__ ds'''
-        self._version_ = dawgie.VERSION(1, 1, 1)
-        self['changes'] = excalibur.ValuesList()
-        self['known'] = excalibur.ValuesList()
-        self['table'] = excalibur.ValuesList()
-        return
-
-    def name(self):
-        '''name ds'''
-        return 'parameters'
-
-    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
-        '''view ds'''
-        visitor.add_declaration('Last deltas', tag='h4')
-
-        if self['changes']:
-            visitor.add_declaration('', list=True)
-            for c in self['changes']:
-                visitor.add_declaration(c, tag='li')
-            visitor.add_declaration('', list=False)
-        else:
-            visitor.add_primitive('No change since last run')
-
-        params = set()
-        for te in self['table']:
-            # params.update (set (['_'.join(k.split ('_')[1:]) for k in te.keys()]))
-            params.update({'_'.join(k.split('_')[1:]) for k in te.keys()})
-            pass
-        params = list(sorted(params))
-        row = -1
-        table = visitor.add_table(clabels=['target', 'planet'] + params, rows=1)
-        for trg, pp in zip(self['known'], self['table']):
-            planets = list(sorted({k.split('_')[0] for k in pp.keys()}))
-            for planet in planets:
-                row += 1
-                table.get_cell(row, 0).add_primitive(trg)
-                table.get_cell(row, 1).add_primitive(planet)
-                for i, param in enumerate(params):
-                    k = '_'.join([planet, param])
-                    table.get_cell(row, i + 2).add_primitive(
-                        str(pp[k]) if k in pp else '-'
-                    )
-
-        return
-
-
-# ------------ -------------------------------------------------------
