@@ -150,7 +150,7 @@ def regress(
 def regress_for_frame_counts(
     data: {int: {str: int, str: int}},
     quality_dict: {int: int},
-    tl: {str: {str: {str: object}}}
+    tl: {str: {str: {str: object}}},
 ) -> ({str: float}, {str: []}, []):
     '''
     this functions regresses through the runids for target.scrape.databases.
@@ -203,7 +203,7 @@ def regress_for_frame_counts(
             # add quality flag entry for rid
             quality_dict[rid] = 1
             cur_frames = data[rid]
-            prev_frames = data[sorted_keys[i-1]]
+            prev_frames = data[sorted_keys[i - 1]]
 
             for identifier in prev_frames:
                 if identifier not in cur_frames:

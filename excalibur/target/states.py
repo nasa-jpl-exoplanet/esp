@@ -307,7 +307,10 @@ class ScrapeValidationSV(dawgie.StateVector):
         df = df.fillna(value=0)
 
         p = bokeh.plotting.figure(
-            title="# of Frames vs RunID", x_axis_label="RunIDs", width=800, height=400
+            title="# of Frames vs RunID",
+            x_axis_label="RunIDs",
+            width=800,
+            height=400,
         )
         colors = bokeh.palettes.magma(len(df.columns))
         legend_items = []
@@ -361,15 +364,24 @@ class ScrapeValidationSV(dawgie.StateVector):
         source = bokeh.models.ColumnDataSource(data={'runid': x, 'status': y})
 
         p = bokeh.plotting.figure(
-            title="Status vs RunID (1: Good, -1: Bad)", x_axis_label="RunIDs", y_axis_label="Status",
-                width=800, height=400
+            title="Status vs RunID (1: Good, -1: Bad)",
+            x_axis_label="RunIDs",
+            y_axis_label="Status",
+            width=800,
+            height=400,
         )
 
-        line = p.line('runid', 'status', source=source, line_width=2, color="orange")
-        dots = p.circle('runid', 'status', source=source, size=5, color="orange")
+        line = p.line(
+            'runid', 'status', source=source, line_width=2, color="orange"
+        )
+        dots = p.circle(
+            'runid', 'status', source=source, size=5, color="orange"
+        )
 
         legend = bokeh.models.Legend(
-            items=[bokeh.models.LegendItem(label="Status", renderers=[line, dots])]
+            items=[
+                bokeh.models.LegendItem(label="Status", renderers=[line, dots])
+            ]
         )
         p.add_layout(legend, 'above')
         js, div = bokeh.embed.components(p)
