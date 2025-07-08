@@ -8,7 +8,6 @@ import dawgie
 import excalibur
 import excalibur.ariel.core as arielcore
 import excalibur.ariel.states as arielstates
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
