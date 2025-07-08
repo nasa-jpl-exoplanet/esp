@@ -13,7 +13,7 @@ class Agent(dawgie.Analysis):
 
     def list(self) -> [dawgie.Analyzer]:
         '''list ds'''
-        return [trgalg.Alert(), trgalg.Create()]
+        return [trgalg.Create()]
 
     pass
 
