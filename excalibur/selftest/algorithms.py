@@ -68,7 +68,6 @@ class SimSpectrum(dawgie.Algorithm):
                 rtime.task,
                 self.__rt,
                 self.__rt.sv_as_dict()['status'],
-                'includeMetallicityDispersion',
             ),
         ] + self.__rt.refs_for_validity()
 
