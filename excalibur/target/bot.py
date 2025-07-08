@@ -13,7 +13,7 @@ class Agent(dawgie.Analysis):
 
     def list(self) -> [dawgie.Analyzer]:
         '''list ds'''
-        return [trgalg.Alert(), trgalg.Create()]
+        return [trgalg.Create()]
 
     pass
 
@@ -33,9 +33,9 @@ class Regress(dawgie.Regress):
 
     def list(self) -> [dawgie.Regression]:
         '''list ds'''
-        return [trgalg.Regress()]
+        return [trgalg.TargetScrapeRegression()]
 
     pass
 
 
-# --------- ----------------------------------------------------------
+# --------------------------------------------------------------------

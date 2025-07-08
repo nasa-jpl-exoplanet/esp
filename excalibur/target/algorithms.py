@@ -40,68 +40,10 @@ MIRROR_1 = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/data/pub/HSTCA/'
 MIRROR_2 = 'http://archives.esac.esa.int/ehst-sl-server/servlet/data-action?ARTIFACT_ID='
 # MAST API
 DURL = 'https://mast.stsci.edu/api/v0.1/Download/file?'
-# HSTURL = 'https://mast.stsci.edu/search/hst/api/v0.1/retrieve_product?'
 
 
 # ---------------------- ---------------------------------------------
 # -- ALGORITHMS -- ---------------------------------------------------
-class Alert(dawgie.Analyzer):
-    '''alert ds'''
-
-    def __init__(self):
-        '''version 1.2.0 has new 'web' url for Exoplanet Archive queries'''
-        self._version_ = dawgie.VERSION(1, 2, 0)
-        self.__out = trgstates.AlertSV()
-        return
-
-    def feedback(self):
-        '''feedback ds'''
-        return [
-            dawgie.V_REF(
-                fetch('excalibur.target').analysis, self, self.__out, 'known'
-            ),
-            dawgie.V_REF(
-                fetch('excalibur.target').analysis, self, self.__out, 'table'
-            ),
-        ]
-
-    def name(self):
-        '''Database name for subtask extension'''
-        return 'alert_from_variations_of'
-
-    def traits(self) -> [dawgie.SV_REF, dawgie.V_REF]:
-        '''traits ds'''
-        return [
-            dawgie.V_REF(
-                fetch('excalibur.target').regress,
-                Regress(),
-                Regress().state_vectors()[0],
-                'last',
-            )
-        ]
-
-    def state_vectors(self):
-        '''Output State Vectors: target.alert_from_variations_of'''
-        return [self.__out]
-
-    def run(self, aspects: dawgie.Aspect):
-        '''Top level algorithm call'''
-        c, k, t = trgmonitor.alert(
-            aspects, self.__out['known'], self.__out['table']
-        )
-        self.__out['changes'].clear()
-        self.__out['known'].clear()
-        self.__out['table'].clear()
-        self.__out['changes'].extend(c)
-        self.__out['known'].extend(k)
-        self.__out['table'].extend(t)
-        excalibur.lagger()
-        aspects.ds().update()
-        return
-
-    pass
-
-
 class Create(dawgie.Analyzer):
     '''Creates a list of targets from edit.py'''
 
@@ -327,44 +269,41 @@ class Scrape(dawgie.Algorithm):
     pass
 
 
-class Regress(dawgie.Regression):
-    '''regress ds'''
+class TargetScrapeRegression(dawgie.Regression):
+    '''TargetScrapeRegression ds'''
 
     def __init__(self):
         '''__init__ ds'''
         self._version_ = dawgie.VERSION(1, 0, 2)
-        self.__out = trgstates.MonitorSV()
+        self.__out = trgstates.ScrapeValidationSV(name='databases_validation')
         return
-
-    def feedback(self):
-        '''feedback ds'''
-        return [
-            dawgie.V_REF(
-                fetch('excalibur.target').regress, self, self.__out, 'planet'
-            ),
-            dawgie.V_REF(
-                fetch('excalibur.target').regress, self, self.__out, 'runid'
-            ),
-        ]
 
     def name(self):
         '''Database name for subtask extension'''
-        return 'variations_of'
+        return 'scrape_regression'
 
     def run(self, ps: int, timeline: dawgie.Timeline):
         '''Top level algorithm call'''
-        last, outlier = trgmonitor.regress(
-            self.__out['planet'], self.__out['runid'], timeline
+
+        data, quality_dict = trgmonitor.regress_for_frame_counts(
+            self.__out['data'][0], self.__out['quality'][0], timeline
         )
-        self.__out['last'].clear()
-        self.__out['last'].update(last)
-        self.__out['outlier'].clear()
-        self.__out['outlier'].extend(outlier)
+
+        self.__out['data'].clear()
+        self.__out['data'].append(data)
+
+        # self.__out['quality'] = self.__out['quality'].new(quality_flag)
+        self.__out['quality'].clear()
+        self.__out['quality'].append(quality_dict)
+
+        self.__out['STATUS'].append(True)
         timeline.ds().update()
         return
 
     def state_vectors(self):
         '''Output State Vectors: target.variations_of'''
+        # this returns the state vector from run
+        # then make a view function
         return [self.__out]
 
     def variables(self) -> [dawgie.SV_REF, dawgie.V_REF]:
@@ -372,8 +311,8 @@ class Regress(dawgie.Regression):
         return [
             dawgie.SV_REF(
                 fetch('excalibur.target').task,
-                Autofill(),
-                Autofill().state_vectors()[0],
+                Scrape(),
+                Scrape().state_vectors()[0],
             )
         ]
 
