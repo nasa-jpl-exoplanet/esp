@@ -360,6 +360,7 @@ class Regress(dawgie.Regression):
         self.__out['last'].update(last)
         self.__out['outlier'].clear()
         self.__out['outlier'].extend(outlier)
+
         timeline.ds().update()
         return
 
@@ -374,6 +375,56 @@ class Regress(dawgie.Regression):
                 fetch('excalibur.target').task,
                 Autofill(),
                 Autofill().state_vectors()[0],
+            )
+        ]
+
+    pass
+
+
+class TargetScrapeRegression(dawgie.Regression):
+    '''TargetScrapeRegression ds'''
+
+    def __init__(self):
+        '''__init__ ds'''
+        self._version_ = dawgie.VERSION(1, 0, 2)
+        self.__out = trgstates.ScrapeValidationSV(name='databases_validation')
+        return
+
+    def name(self):
+        '''Database name for subtask extension'''
+        return 'scrape'
+
+    def run(self, ps: int, timeline: dawgie.Timeline):
+        '''Top level algorithm call'''
+
+        data, quality_dict = trgmonitor.regress_for_frame_counts(
+            self.__out['data'][0], self.__out['quality'][0], timeline
+        )
+
+        self.__out['data'].clear()
+        self.__out['data'].append(data)
+
+        # self.__out['quality'] = self.__out['quality'].new(quality_flag)
+        self.__out['quality'].clear()
+        self.__out['quality'].append(quality_dict)
+
+        self.__out['STATUS'].append(True)
+        timeline.ds().update()
+        return
+
+    def state_vectors(self):
+        '''Output State Vectors: target.variations_of'''
+        # this returns the state vector from run
+        # then make a view function
+        return [self.__out]
+
+    def variables(self) -> [dawgie.SV_REF, dawgie.V_REF]:
+        '''variables ds'''
+        return [
+            dawgie.SV_REF(
+                fetch('excalibur.target').task,
+                Scrape(),
+                Scrape().state_vectors()[0],
             )
         ]
 

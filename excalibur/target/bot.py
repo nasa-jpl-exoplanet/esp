@@ -33,9 +33,9 @@ class Regress(dawgie.Regress):
 
     def list(self) -> [dawgie.Regression]:
         '''list ds'''
-        return [trgalg.Regress()]
+        return [trgalg.TargetScrapeRegression()]
 
     pass
 
 
-# --------- ----------------------------------------------------------
+# --------------------------------------------------------------------
