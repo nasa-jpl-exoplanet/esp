@@ -7,7 +7,6 @@
 import bokeh.embed
 import bokeh.plotting  # the awesome plotting engine
 import dawgie
-import numpy
 import pandas as pd
 
 import excalibur
