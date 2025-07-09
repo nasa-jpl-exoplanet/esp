@@ -6,6 +6,18 @@ services:
     image: esp/base:${ESP_VERSION}
     networks:
       - pipeline_domain
+
+  hec:
+    image: ${SPLUNK_IMAGE:-splunk/splunk:latest}
+    container_name: splunk_hec
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_HEC_TOKEN=$EXCALIBUR_SPLUNK_TOKEN
+      - SPLUNK_PASSWORD=$EXCALIBUR_SPLUNK_PWD
+    ports:
+      - 1080:8000
+      - 1088:8088
+
   pipeline:
     build:
       args:
@@ -109,6 +121,11 @@ services:
       - USERNAME=${EXCALIBUR_USER}
     image: esp/worker:latest
     init: true
+    logging:
+      driver: splunk
+      options:
+        splunk-token: $EXCALIBUR_SPLUNK_TOKEN
+        splunk-url: "https://excalibur.jpl.nasa.gov:1088"
     networks:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
