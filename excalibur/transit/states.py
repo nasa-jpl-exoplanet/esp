@@ -1,7 +1,7 @@
 '''Transit Database Products View'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,duplicate-code
 # pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
