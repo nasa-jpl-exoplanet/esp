@@ -40,6 +40,7 @@ services:
       - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
       - USERNAME=${EXCALIBUR_USER}
     image: esp/server:${ESP_VERSION}
+    logging:
     networks:
       - pipeline_domain
     ports:
