@@ -64,12 +64,6 @@ class SimSpectrum(dawgie.Algorithm):
         '''Input State Vectors: system.finalize'''
         return [
             dawgie.ALG_REF(sys.task, self.__system_finalize),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'includeMetallicityDispersion',
-            ),
         ] + self.__rt.refs_for_validity()
 
     def state_vectors(self):
