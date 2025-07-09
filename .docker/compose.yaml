@@ -40,7 +40,6 @@ services:
       - PYTHONPATH=${EXCALIBUR_SOURCE_PATH}
       - USERNAME=${EXCALIBUR_USER}
     image: esp/server:${ESP_VERSION}
-    logging:
     networks:
       - pipeline_domain
     ports:
@@ -110,6 +109,11 @@ services:
       - USERNAME=${EXCALIBUR_USER}
     image: esp/worker:latest
     init: true
+    logging:
+      driver: splunk
+      options:
+        - splunk_token
+        - splunk_url
     networks:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
