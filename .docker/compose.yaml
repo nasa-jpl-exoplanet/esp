@@ -135,6 +135,7 @@ services:
       options:
         splunk-token: $EXCALIBUR_SPLUNK_TOKEN
         splunk-url: "https://excalibur.jpl.nasa.gov:1088"
+        splunk-insecureskipverify: "true"                                       
     networks:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
