@@ -8,7 +8,6 @@ import dawgie
 import excalibur
 import excalibur.ariel.core as arielcore
 import excalibur.ariel.states as arielstates
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
@@ -41,12 +40,6 @@ class SimSpectrum(dawgie.Algorithm):
         '''Input State Vectors: system.finalize'''
         return [
             dawgie.ALG_REF(sys.task, self.__system_finalize),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'includeMetallicityDispersion',
-            ),
         ] + self.__rt.refs_for_validity()
 
     def state_vectors(self):
