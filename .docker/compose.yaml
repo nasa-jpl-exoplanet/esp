@@ -112,8 +112,8 @@ services:
     logging:
       driver: splunk
       options:
-        - splunk_token
-        - splunk_url
+        - splunk-token: $EXCALIBUR_SPLUNK_TOKEN
+        - splunk-url: "https://excalibur.jpl.nasa.gov:1080"
     networks:
       - pipeline_domain
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
