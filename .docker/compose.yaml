@@ -14,9 +14,17 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=$EXCALIBUR_SPLUNK_TOKEN
       - SPLUNK_PASSWORD=$EXCALIBUR_SPLUNK_PWD
+      - SPLUNK_HTTP_ENABLESSL=true
+      - SPLUNK_HTTP_ENABLESSL_CERT=${DAWGIE_SSL_PEM_FILE}
     ports:
       - 1080:8000
       - 1088:8088
+    volumes:
+      - /proj/sdp/ops/splunk/etc:/opt/splunk/etc
+      - /proj/sdp/ops/splunk/var:/opt/splunk/var
+      - /etc/ssl:/etc/ssl:ro
+      - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+      - /usr/share/ca-certificates:/usr/share/ca-certificates:ro
 
   pipeline:
     build:
