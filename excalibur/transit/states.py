@@ -1,7 +1,7 @@
 '''Transit Database Products View'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,duplicate-code
 # pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -25,6 +25,7 @@ from excalibur.util.svs import ExcaliburSV
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import cauchy, norm, t
+from scipy.interpolate import interp1d
 
 
 # ------------- ------------------------------------------------------
@@ -84,7 +85,155 @@ class WhiteLightSV(ExcaliburSV):
         '''view ds'''
         if self['STATUS'][-1]:
             if 'HST' in self.name():
+                mergesv = bool(self.name() == 'HST')
                 for p in self['data'].keys():
+                    visits = self['data'][p]['visits']
+                    # phase,allwhite is the data before shifting
+                    phase = self['data'][p]['phase']
+                    allwhite = self['data'][p]['allwhite']
+                    # postphase,allwhite/postim is the data after shifting
+                    postphase = self['data'][p]['postphase']
+                    postim = self['data'][p]['postim']
+                    # phase,postlc is the model
+                    postflatphase = np.array(self['data'][p]['postflatphase'])
+                    postlc = np.array(self['data'][p]['postlc'])
+
+                    # myfig = plt.figure(figsize=(10, 6))
+                    # plt.title('Planet '+p, fontsize=14)
+                    myfig, (ax1, ax2) = plt.subplots(
+                        2,
+                        1,
+                        figsize=(9, 7),
+                        sharex=True,
+                        gridspec_kw={'height_ratios': [3, 1]},
+                    )
+                    myfig.subplots_adjust(hspace=0.03, right=0.8)
+                    ax1.set_title('Planet ' + p, fontsize=16)
+                    # ax1.set_xlabel('Orbital Phase', fontsize=14)
+                    ax1.set_ylabel(
+                        'Normalized Post-Whitelight Curve', fontsize=14
+                    )
+                    for index, v in enumerate(visits):
+                        # plot the normalized/shifted data
+                        if mergesv:
+                            vlabel = self['data'][p]['allfltrs'][index]
+                        else:
+                            vlabel = 'visit ' + str(v)
+                        ax1.plot(
+                            np.array(postphase[index]),
+                            np.array(allwhite[index]) / np.array(postim[index]),
+                            'o',
+                            zorder=3,
+                            label=vlabel,
+                        )
+
+                        # plot the pre-correction data
+                        if index == len(visits) - 1:
+                            ax1.plot(
+                                np.array(phase[index]),
+                                np.array(allwhite[index]),
+                                'k+',
+                                zorder=2,
+                                label='pre-correction',
+                            )
+                        else:
+                            ax1.plot(
+                                np.array(phase[index]),
+                                np.array(allwhite[index]),
+                                'k+',
+                                zorder=2,
+                            )
+
+                        # add a lower panel showing the data-model residuals
+                        model_interpolator = interp1d(
+                            postflatphase[np.argsort(postflatphase)],
+                            postlc[np.argsort(postflatphase)],
+                            kind='linear',
+                            fill_value='extrapolate',
+                        )
+                        model_at_observed_time = model_interpolator(
+                            np.array(postphase[index])
+                        )
+                        residuals = (
+                            np.array(allwhite[index]) / np.array(postim[index])
+                            - model_at_observed_time
+                        )
+
+                        ax2.plot(
+                            np.array(postphase[index]),
+                            residuals,
+                            'o',
+                            color='black',
+                            markerfacecolor='None',
+                        )
+                        ax2.axhline(
+                            y=0, color='black', linestyle='dashed', linewidth=1
+                        )
+                        ax2.set_xlabel('Orbital Phase', fontsize=14)
+                        ax2.set_ylabel('Residuals', fontsize=14)
+
+                    xdatarange = ax1.get_xlim()
+                    # use full model (not just at some points) if available
+                    if 'modellc' in self['data'][p].keys():
+                        modelphase = np.array(self['data'][p]['modelphase'])
+                        modellc = np.array(self['data'][p]['modellc'])
+                        # the points are ordered by time, not by phase
+                        #  so sorting is needed for multi-visit observations
+                        # otherwise you get weird wrap-around in the line plots
+                        ax1.plot(
+                            modelphase[np.argsort(modelphase)],
+                            modellc[np.argsort(modelphase)],
+                            '-',
+                            c='k',
+                            marker='None',
+                            zorder=1,
+                            label='model',
+                        )
+                        # model phases only go from -0.5 to 0.5 (not good for eclipse)
+                        # plot the model line a second time, but shifting the phases over by 1
+                        ax1.plot(
+                            modelphase[np.argsort(modelphase)] + 1,
+                            modellc[np.argsort(modelphase)],
+                            '-',
+                            c='k',
+                            marker='None',
+                            zorder=1,
+                        )
+                    else:
+                        ax1.plot(
+                            postflatphase, postlc, '^', zorder=1, label='model'
+                        )
+                        # '^', c='green', zorder=1, label='model')
+                    ax1.set_xlim(xdatarange)
+
+                    if len(visits) > 14:
+                        ncol = 2
+                    else:
+                        ncol = 1
+                    if mergesv:
+                        ax1.legend(
+                            loc='best',
+                            ncol=ncol,
+                            mode='expand',
+                            numpoints=1,
+                            borderaxespad=0.0,
+                            frameon=False,
+                        )
+                        # myfig.tight_layout()
+                    else:
+                        ax1.legend(
+                            bbox_to_anchor=(1 + 0.1 * (ncol - 0.5), 0.5),
+                            loc=5,
+                            ncol=ncol,
+                            mode='expand',
+                            numpoints=1,
+                            borderaxespad=0.0,
+                            frameon=False,
+                        )
+                        # myfig.tight_layout(rect=[0,0,(1 - 0.1*ncol),1])
+
+                    save_plot_toscreen(myfig, visitor)
+
                     # include whitelight corner plot for this planet, if available
                     #  (this actually shows all saved SVs that start with 'plot')
                     for savedresult in self['data'][p].keys():
