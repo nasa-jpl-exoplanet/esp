@@ -763,13 +763,12 @@ def cloudyfmcerberus(*crbinputs):
         )
 
     fmc = fmc[ctxt.cleanup]
-    # print('FMC in cloudyfmcerberus pre-mean',fmc)
 
-    # fmc = fmc - np.nanmean(fmc)
-    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    fmc = fmc - np.mean(fmc)
-    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
-    # print('FMC in cloudyfmcerberus final',fmc)
+    # (no need for isfinite check; that's what cleanup does already)
+    # if np.all(np.isfinite(ctxt.mcmcdat)):
+    fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
+    # else:
+    #    fmc += np.nanmean(ctxt.mcmcdat - fmc)
 
     return fmc
 
@@ -818,6 +817,8 @@ def clearfmcerberus(*crbinputs):
             tceqdict['NtoO'] = mdp[mdpindex]
         # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
 
+        # print('calculating forward model XtoH =', tceqdict['XtoH'])
+
         fmc = crbmodel(
             tpr,
             float(ctp),
@@ -826,7 +827,6 @@ def clearfmcerberus(*crbinputs):
             hazethick=float(hazethick),
             cheq=tceqdict,
         )
-        pass
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -840,16 +840,14 @@ def clearfmcerberus(*crbinputs):
             hazethick=float(hazethick),
             mixratio=mixratio,
         )
-        pass
 
     fmc = fmc[ctxt.cleanup]
-    # print('FMC in clearfmcerberus pre-mean',fmc)
 
-    # fmc = fmc - np.nanmean(fmc)
-    # fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
-    fmc = fmc - np.mean(fmc)
-    fmc = fmc + np.mean(ctxt.tspectrum[ctxt.cleanup])
-    # print('FMC in clearfmcerberus final',fmc)
+    # (no need for isfinite check; that's what cleanup does already)
+    # if np.all(np.isfinite(ctxt.mcmcdat)):
+    fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
+    # else:
+    #     fmc += np.nanmean(ctxt.mcmcdat - fmc)
 
     return fmc
 
@@ -898,8 +896,6 @@ def offcerberus(*crbinputs):
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup][cond_G141])
     fmc = fmc + np.nanmean(tspectrum_clean[cond_G141])
-    #     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
-    #     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G750L-STARE'
     cond_G102 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G102-SCAN'
     fmc[cond_G430] = fmc[cond_G430] - 1e-2 * float(off0)

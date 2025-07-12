@@ -146,21 +146,14 @@ def plot_spectrumfit(
     # print('median pmodel',np.nanmedian(patmos_model))
     if not include_fit_range_as_grey_lines:
         fmcarray = []
-    for fmcexample in fmcarray:
-        patmos_modeli = (
-            fmcexample
-            - np.nanmean(fmcexample)
-            + np.nanmean(transitdata['depth'])
+    for patmos_modeli in fmcarray:
+        plt.plot(
+            transitdata['wavelength'],
+            patmos_modeli * 100,
+            c='grey',
+            lw=0.2,
+            zorder=2,
         )
-        # print('median pmodel',np.nanmedian(patmos_model))
-        if np.sum(patmos_modeli) != 666:
-            plt.plot(
-                transitdata['wavelength'],
-                patmos_modeli * 100,
-                c='grey',
-                lw=0.2,
-                zorder=2,
-            )
     plt.ylim(ylims)  # revert to the original y-bounds, in case messed up
     # 5) plot the true spectrum, if it is a simulation
     if truth_spectrum is not None:
@@ -182,12 +175,6 @@ def plot_spectrumfit(
     # the 'average' function (which allows for weights) doesn't have a NaN version,
     #  so mask out any NaN regions by hand
     okPart = np.where(np.isfinite(transitdata['depth']))
-
-    #  DOES nanaverage fix the problem?
-    #    flatlineFit = np.nanmean(
-    #        transitdata['depth'][okPart],
-    #        weights=1 / transitdata['error'][okPart] ** 2,
-    #    )
     flatlineFit = np.average(
         transitdata['depth'][okPart],
         weights=1 / transitdata['error'][okPart] ** 2,
