@@ -85,10 +85,10 @@ class WhiteLightSV(ExcaliburSV):
         '''view ds'''
         if self['STATUS'][-1]:
             if 'HST' in self.name():
-                if 'plot_lc' not in self['data'][p]:
+                mergesv = bool(self.name() == 'HST')
+                for p in self['data'].keys():
                     # for older RUNIDs there is no saved plot; make it now
-                    mergesv = bool(self.name() == 'HST')
-                    for p in self['data'].keys():
+                    if 'plot_lc' not in self['data'][p]:
                         visits = self['data'][p]['visits']
                         # phase,allwhite is the data before shifting
                         phase = self['data'][p]['phase']
