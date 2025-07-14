@@ -359,4 +359,5 @@ class ScrapeValidationSV(dawgie.StateVector):
         visitor.add_declaration(None, div=div, js=js)
         return
 
+
 # -------------- -----------------------------------------------------
