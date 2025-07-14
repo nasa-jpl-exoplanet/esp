@@ -1,8 +1,11 @@
 '''target.monitor ds'''
 
+# pylint: disable=too-many-branches
+
 # -- IMPORTS -- ------------------------------------------------------
 from collections import defaultdict
 import logging
+
 # ------------- ------------------------------------------------------
 
 log = logging.getLogger(__name__)
@@ -49,7 +52,7 @@ def regress_for_frame_counts(
                         identifier += frame_d['mode']
                     data[rid][identifier] += 1
 
-    # filter: [list of frame counts]
+    # filter_name: [list of frame counts]
     history = defaultdict(list)
 
     # getting the most current frame counts and previous frames counts to compare
@@ -57,10 +60,9 @@ def regress_for_frame_counts(
 
     quality_dict[sorted_keys[0]] = defaultdict(int)
 
-    # unique_filter_names = set(data[sorted_keys[0]])
-    for filter in data[sorted_keys[0]]:
-        history[filter].append(data[sorted_keys[0]][filter])
-        quality_dict[sorted_keys[0]][filter] = 1
+    for filter_name in data[sorted_keys[0]]:
+        history[filter_name].append(data[sorted_keys[0]][filter_name])
+        quality_dict[sorted_keys[0]][filter_name] = 1
 
     # this if is redundant, will remove later
     if len(sorted_keys) > 1:
@@ -74,21 +76,21 @@ def regress_for_frame_counts(
 
             quality_dict[rid] = defaultdict(int)
 
-            for filter in data[rid]:
-                # if this filter has already been seen, and frames exist
+            for filter_name in data[rid]:
+                # if this filter_name has already been seen, and frames exist
                 # automatically status = 1
-                if filter in history:
-                    history[filter].append(data[rid][filter])
-                    quality_dict[rid][filter] = 1
-                # this is when a new filter is encountered
+                if filter_name in history:
+                    history[filter_name].append(data[rid][filter_name])
+                    quality_dict[rid][filter_name] = 1
+                # this is when a new filter_name is encountered
                 else:
                     # status automatically 1
-                    history[filter].append(data[rid][filter])
-                    quality_dict[rid][filter] = 1
+                    history[filter_name].append(data[rid][filter_name])
+                    quality_dict[rid][filter_name] = 1
 
             # set of filters that have been seen before but are not in this rid
             # these are dropped/not downloaded filters, so automatically -1
             dropped_filters = set(history).difference(set(data[rid]))
-            for filter in dropped_filters:
-                history[filter].append(0)
-                quality_dict[rid][filter] = -1
+            for filter_name in dropped_filters:
+                history[filter_name].append(0)
+                quality_dict[rid][filter_name] = -1

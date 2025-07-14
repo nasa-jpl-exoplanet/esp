@@ -268,11 +268,7 @@ class ScrapeValidationSV(dawgie.StateVector):
                 'runid', 'count', source=source, line_width=2, color=color
             )
             dots = p.scatter(
-                'runid',
-                'count',
-                source=source,
-                size=5,
-                color=color
+                'runid', 'count', source=source, size=5, color=color
             )
 
             hover = bokeh.models.HoverTool(
@@ -303,7 +299,9 @@ class ScrapeValidationSV(dawgie.StateVector):
 
         # Melt the DataFrame to long format
         df = df.reset_index().rename(columns={'index': 'runid'})
-        df_melted = df.melt(id_vars='runid', var_name='filter', value_name='status')
+        df_melted = df.melt(
+            id_vars='runid', var_name='filter', value_name='status'
+        )
         df_melted['runid'] = df_melted['runid'].astype(str)
 
         sorted_runids = sorted(df['runid'].unique())
@@ -315,7 +313,11 @@ class ScrapeValidationSV(dawgie.StateVector):
             x_axis_label="RunID",
             y_axis_label="Filter",
             x_range=sorted_runids_str,  # convert to str for axis labeling
-            y_range=sorted(df.columns.drop('runid') if 'runid' in df.columns else df.columns),
+            y_range=sorted(
+                df.columns.drop('runid')
+                if 'runid' in df.columns
+                else df.columns
+            ),
             width=1000,
             height=600,
             toolbar_location='above',
@@ -324,15 +326,19 @@ class ScrapeValidationSV(dawgie.StateVector):
                 ("RunID", "@runid"),
                 ("Filter", "@filter"),
                 ("Status", "@status"),
-            ]
+            ],
         )
 
         # Convert runid to string for categorical x-axis
         df_melted['runid'] = df_melted['runid'].astype(str)
 
         # Color mapper: from -1 to 1
-        mapper = bokeh.transform.linear_cmap(field_name='status', palette=["red", "gray", "green"], low=-1, high=1)
-
+        mapper = bokeh.transform.linear_cmap(
+            field_name='status',
+            palette=["red", "gray", "green"],
+            low=-1,
+            high=1,
+        )
         # Create heatmap rects
         source = bokeh.models.ColumnDataSource(df_melted)
         p.rect(
