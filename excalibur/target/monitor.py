@@ -2,25 +2,24 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 from collections import defaultdict
-
+import logging
 # ------------- ------------------------------------------------------
+
+log = logging.getLogger(__name__)
 
 
 def regress_for_frame_counts(
-    data: {int: {str: int, str: int}},
-    quality_dict: {int: int},
+    data: {int: {str: int}},
+    quality_dict: {int: {str: int, str: int}},
     tl: {str: {str: {str: object}}},
 ) -> ({str: float}, {str: []}, []):
     '''
     this functions regresses through the runids for target.scrape.databases.
-    data currently contains:
-
-    observatory-instrument-detector-filter-mode: # of occurences
-
-    timeline iterates through descending order of runID. Therefore
-    the newest runIDs go first, then code breaks once it hits a runID
-    that has already been computed.
-    #'''
+    `data` currently contains:
+    {observatory-instrument-detector-filter-mode: # of occurences}
+    `quality` currently contains:
+    {filter: {status: 1, -1}}
+    '''
 
     for rid in tl:
         if rid in data:
@@ -38,36 +37,58 @@ def regress_for_frame_counts(
                         + '-'
                         + frame_d['detector']
                         + '-'
-                        + frame_d['filter']
-                        + '-'
                     )
+                    # if filter is None: this frame was direct imaging
+                    if frame_d['filter'] is None:
+                        identifier += ''
+                    else:
+                        identifier += frame_d['filter'] + '-'
                     if frame_d['mode'] is None:
                         identifier += 'STARE'
                     else:
                         identifier += frame_d['mode']
                     data[rid][identifier] += 1
 
+    # filter: [list of frame counts]
+    history = defaultdict(list)
+
     # getting the most current frame counts and previous frames counts to compare
     sorted_keys = sorted(data.keys())
+
+    quality_dict[sorted_keys[0]] = defaultdict(int)
+
+    # unique_filter_names = set(data[sorted_keys[0]])
+    for filter in data[sorted_keys[0]]:
+        history[filter].append(data[sorted_keys[0]][filter])
+        quality_dict[sorted_keys[0]][filter] = 1
+
     # this if is redundant, will remove later
     if len(sorted_keys) > 1:
         # i know im traversing the rids again, i feel like there's a good reason
         # to do this but if i find out there isn't ill try to conslidate the loops
-        for i, rid in enumerate(sorted_keys[1:], start=1):
+        for rid in sorted_keys[1:]:
 
             # if this rid already exists in quality_dict, skip
             if rid in quality_dict:
-                print('key alr exists, continuing')
                 continue
-            # add quality flag entry for rid
-            quality_dict[rid] = 1
-            cur_frames = data[rid]
-            prev_frames = data[sorted_keys[i - 1]]
 
-            for identifier in prev_frames:
-                if identifier not in cur_frames:
-                    # checking if previously this key existed (ie, had some frames) but in current doesn't?
-                    quality_dict[rid] = -1
-                    break
+            quality_dict[rid] = defaultdict(int)
 
-    return data, quality_dict
+            for filter in data[rid]:
+                # if this filter has already been seen, and frames exist
+                # automatically status = 1
+                if filter in history:
+                    history[filter].append(data[rid][filter])
+                    quality_dict[rid][filter] = 1
+                # this is when a new filter is encountered
+                else:
+                    # status automatically 1
+                    history[filter].append(data[rid][filter])
+                    quality_dict[rid][filter] = 1
+
+            # set of filters that have been seen before but are not in this rid
+            # these are dropped/not downloaded filters, so automatically -1
+            dropped_filters = set(history).difference(set(data[rid]))
+            for filter in dropped_filters:
+                history[filter].append(0)
+                quality_dict[rid][filter] = -1
