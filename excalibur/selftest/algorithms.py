@@ -119,7 +119,6 @@ class SimSpectrum(dawgie.Algorithm):
                     lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
-                print('runtime in selftest.alg.simspectrum', runtime_params)
                 update = self._sim_spectrum(
                     target,
                     system_dict,
