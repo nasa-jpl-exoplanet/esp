@@ -792,7 +792,6 @@ def atmos(
             tspc = np.array(input_data['ES'])
             terr = np.array(input_data['ESerr'])
             twav = np.array(input_data['WB'])
-            # twav = np.array(spc['data'][p]['WB'])
 
             tspecerr = abs(tspc**2 - (tspc + terr) ** 2)
             tspectrum = tspc**2
@@ -808,17 +807,19 @@ def atmos(
                 tspecerr_g750[mask] = np.nan
                 tspectrum[cond_spec_g750] = tspec_g750
                 tspecerr[cond_spec_g750] = tspecerr_g750
-            hs = input_data['Hs']
+
             #  Clean up
-            spechs = (
-                np.sqrt(tspectrum) - np.sqrt(np.nanmedian(tspectrum))
-            ) / hs
-            cleanup2 = abs(spechs) > 3e0  # excluding everything above +-3 Hs
-            tspectrum[cleanup2] = np.nan
-            tspecerr[cleanup2] = np.nan
-            twav[cleanup2] = np.nan
-            # cleanup = np.isfinite(tspectrum) & (tspecerr < 1e0)
+            if 'sim' not in ext:
+                # excluding everything outside of +-3 Hs; only for real data
+                spechs = (
+                    np.sqrt(tspectrum) - np.sqrt(np.nanmedian(tspectrum))
+                ) / input_data['Hs']
+                cleanup2 = abs(spechs) > 3e0
+                tspectrum[cleanup2] = np.nan
+                tspecerr[cleanup2] = np.nan
+                twav[cleanup2] = np.nan
             cleanup = np.isfinite(tspectrum)
+
             rp0 = orbp[p]['rp'] * ssc['Rjup']  # MK
 
             for model in modfam:
@@ -2105,13 +2106,19 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
                 )
-                # print('median fmc',np.nanmedian(fmc))
-                # print('mean model',np.nanmean(fmc))
-                # print('mean data',np.nanmean(transitdata['depth']))
-                patmos_model = (
-                    fmc - np.nanmean(fmc) + np.nanmean(transitdata['depth'])
+
+                # add offset to match data (i.e. modify Rp)
+                okPart = np.where(np.isfinite(transitdata['depth']))
+                patmos_model = fmc[okPart] + np.average(
+                    (transitdata['depth'][okPart] - fmc[okPart]),
+                    weights=1 / transitdata['error'][okPart] ** 2,
                 )
-                # print('median pmodel',np.nanmedian(patmos_model))
+                # if np.all(np.isfinite(transitdata['depth'])):
+                #    patmos_model = fmc + np.average(
+                #        (transitdata['depth'] - fmc),
+                #        weights=1 / transitdata['error'] ** 2)
+                # else:
+                #    patmos_model = fmc + np.nanmean(transitdata['depth'] - fmc)
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
                 fmc_profiled = crbmodel(
@@ -2136,11 +2143,11 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
                 )
-                # convert tensor to numpy array
-                patmos_model_profiled = (
-                    fmc_profiled
-                    - np.nanmean(fmc_profiled)
-                    + np.nanmean(transitdata['depth'])
+                # add offset to match data (i.e. modify Rp)
+                okPart = np.where(np.isfinite(transitdata['depth']))
+                patmos_model_profiled = fmc_profiled[okPart] + np.average(
+                    (transitdata['depth'][okPart] - fmc_profiled[okPart]),
+                    weights=1 / transitdata['error'][okPart] ** 2,
                 )
 
                 # calculate chi2 values to see which is the best fit
@@ -2247,19 +2254,15 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         Hsmax=runtime_params.Hsmax,
                         solrad=runtime_params.solrad,
                     )
-
-                    # print('len',len(fmcrand))
-                    # print('median fmc', np.nanmedian(fmcrand))
-                    # print('mean model', np.nanmean(fmcrand))
-                    # print('stdev model', np.nanstd(fmcrand))
-                    fmcarray.append(fmcrand)
+                    # add offset to match data (i.e. modify Rp)
+                    okPart = np.where(np.isfinite(transitdata['depth']))
+                    patmos_modelrand = fmcrand[okPart] + np.average(
+                        (transitdata['depth'][okPart] - fmcrand[okPart]),
+                        weights=1 / transitdata['error'][okPart] ** 2,
+                    )
+                    fmcarray.append(patmos_modelrand)
 
                     # check to see if this model is the best one
-                    patmos_modelrand = (
-                        fmcrand
-                        - np.nanmean(fmcrand)
-                        + np.nanmean(transitdata['depth'])
-                    )
                     offsets_modelrand = (
                         patmos_modelrand - transitdata['depth']
                     ) / transitdata['error']
