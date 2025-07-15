@@ -1,6 +1,5 @@
 '''target.monitor ds'''
 
-
 # -- IMPORTS -- ------------------------------------------------------
 from collections import defaultdict
 import logging
@@ -9,11 +8,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def create_identifier(frame_d):
     '''
     helper function that takes in a frame dict and
     returns the identifier, if it is HST or JWST
     '''
+    identifier = None
     if frame_d['observatory'] in ['HST', 'JWST']:
         identifier = (
             frame_d['observatory']
@@ -32,7 +33,8 @@ def create_identifier(frame_d):
             identifier += 'STARE'
         else:
             identifier += frame_d['mode']
-        return identifier
+    return identifier
+
 
 def regress_for_frame_counts(
     data: {int: {str: int}},
@@ -46,8 +48,6 @@ def regress_for_frame_counts(
     `quality` currently contains:
     {filter: {status: 1, -1}}
     '''
-
-
 
     for rid in tl:
         if rid in data:
