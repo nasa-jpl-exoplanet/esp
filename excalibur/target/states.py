@@ -357,7 +357,7 @@ class ScrapeValidationSV(dawgie.StateVector):
 
         js, div = bokeh.embed.components(p)
         visitor.add_declaration(None, div=div, js=js)
-        return
+        return p
 
 
 # -------------- -----------------------------------------------------
