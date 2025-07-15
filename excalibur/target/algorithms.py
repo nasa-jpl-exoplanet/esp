@@ -285,16 +285,10 @@ class TargetScrapeRegression(dawgie.Regression):
     def run(self, ps: int, timeline: dawgie.Timeline):
         '''Top level algorithm call'''
 
-        data, quality_dict = trgmonitor.regress_for_frame_counts(
-            self.__out['data'][0], self.__out['quality'][0], timeline
+        # this function will edit 'data' and 'quality' in-place
+        trgmonitor.regress_for_frame_counts(
+            self.__out['data'], self.__out['quality'], timeline
         )
-
-        self.__out['data'].clear()
-        self.__out['data'].append(data)
-
-        # self.__out['quality'] = self.__out['quality'].new(quality_flag)
-        self.__out['quality'].clear()
-        self.__out['quality'].append(quality_dict)
 
         self.__out['STATUS'].append(True)
         timeline.ds().update()
