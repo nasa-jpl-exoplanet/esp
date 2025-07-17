@@ -49,60 +49,68 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     d1 = -5.81396e-4
     e1 = 2.346515e-8
     RcalpmolpK = 1.9872036  # cal/mol/K
+
     solCtO = solar['nC'] / solar['nO']
     solNtO = solar['nN'] / solar['nO']
+
+    # define metal as all elements except H and He
     metal = solar.copy()
     metal['nH'] = 0.0
     metal['nHe'] = 0.0
+    # sum up the metal part.  It's 10^-2.84 dex
+    nXsolar = np.sum(np.array([x[1] for x in metal.items()]))
 
-    solvec = np.array([x[1] for x in metal.items()])
-
-    if X2Hr >= np.log10(1.0 / np.sum(solvec)):
-        nH = 1e-16
-        nH2 = 1e-16
-        nHe = 1e-16
-        X2Hr = np.log10(1.0 / np.sum(solvec))  # 2.84 MAX
-        pass
-    else:
-        if X2Hr < -10.0:
-            nH = 1.0 / (1.0 + solar['nHe'] / solar['nH'])
-            nH2 = nH / 2.0
-            nHe = nH * solar['nHe'] / solar['nH']
-            X2Hr = -10.0
-            pass
-        else:
-            nH = 1.0 - (10.0**X2Hr) * np.sum(solvec)
-            nH2 = nH / 2.0
-            nHe = nH * solar['nHe'] / solar['nH']
-            pass
-        pass
+    # (C2O,N2O are limited by the prior bounds, so limits not really needed)
     C2Or = max(C2Or, -10.0)
     C2Or = min(C2Or, 10.0)
     N2Or = max(N2Or, -10.0)
     N2Or = min(N2Or, 10.0)
+
+    Xfactor = 10.0**X2Hr
+    Cfactor = 10.0**C2Or
+    Nfactor = 10.0**C2Or
+
+    # OLD linear method, with max limit at 2.84 dex
+    # if Xfactor >= 1.0 / nXsolar:
+    #    nHplusHeold = 1e-16
+    #    nXold = 1.0
+    # else:
+    #    nHplusHeold = 1.0 - Xfactor * nXsolar
+    #    nXold = Xfactor * nXsolar
+
+    # NEW method defined such that X2Hr is the X-to-H ratio
+    #  for both methods, nHplusHe + nX totals to 1
+    nHplusHe = (1.0 - nXsolar) / (1.0 - nXsolar + Xfactor * nXsolar)
+    nX = Xfactor * nXsolar / (1.0 - nXsolar + Xfactor * nXsolar)
+
+    # breakdown nHplusHe into nH and nHe
+    # nHold = nHplusHe
+    # nHeold = nHplusHe * solar['nHe'] / solar['nH']
+    nH = nHplusHe * solar['nH'] / (solar['nHe'] + solar['nH'])
+    nH2 = nHplusHe / 2.0
+    nHe = nHplusHe * solar['nHe'] / (solar['nHe'] + solar['nH'])
+
+    # print('           nHHe-old, nHHe-new', nHplusHeold, nHplusHe)
+    # print('           nH-old, nH-new', nHold, nH)
+    # print('           nHe-old, nHe-new', nHeold, nHe)
+    # print('           X-old, X-new', nXold, nX)
+
     pH2 = nH2 * p  # array
     K1 = np.exp(
         (a1 / temp + b1 + c1 * temp + d1 * temp**2 + e1 * temp**3)
         / (RcalpmolpK * temp)
     )
     AH2 = (pH2**2.0) / (2.0 * K1)
-    ACpAO = (10.0**X2Hr) / nH * solar['nO'] * (1.0 + (10.0**C2Or) * solCtO)
-    ACtAO = (
-        (10.0**C2Or) * solCtO * (solar['nO'] ** 2) * (((10.0**X2Hr) / nH) ** 2)
-    )
+    ACpAO = nX / nXsolar / nH * solar['nO'] * (1.0 + Cfactor * solCtO)
+    ACtAO = Cfactor * solCtO * (solar['nO'] ** 2) * ((nX / nXsolar / nH) ** 2)
     BCO = ACpAO + AH2 - np.sqrt((ACpAO + AH2) ** 2 - 4.0 * ACtAO)
     # <--
     # GMR: We should be prepared for T-P profile change that later
-    nCO = np.mean(BCO * pH2 / p)
     # -->
-    if nCO <= 0:
-        nCO = 1e-16
-    nCH4 = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nC'] - BCO) * (pH2 / p))
-    nH2O = np.mean((2.0 * (10.0**X2Hr) / nH * solar['nO'] - BCO) * (pH2 / p))
-    if nCH4 <= 0:
-        nCH4 = 1e-16
-    if nH2O <= 0:
-        nH2O = 1e-16
+    nCO = np.mean(BCO * pH2 / p)
+    nCH4 = np.mean((2.0 * nX / nXsolar / nH * solar['nC'] - BCO) * (pH2 / p))
+    nH2O = np.mean((2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p))
+
     a2 = 8.16413e5
     b2 = -2.9109e4
     c2 = 58.5878
@@ -112,22 +120,26 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         (a2 / temp + b2 + c2 * temp + d2 * temp**2 + e2 * temp**3)
         / (RcalpmolpK * temp)
     )
-    AN = (
-        (10.0**X2Hr) * (10.0**N2Or) * solNtO * solar['nO'] / nH
-    )  # solar['nN']/nH
+    AN = nX / nXsolar * Nfactor * solNtO * solar['nO'] / nH  # solar['nN']/nH
     AH2 = (pH2**2.0) / (8.0 * K2)
-    # another instrument precision problem arising here
-    #  (for WASP-74 ariel sims, highmmw cases)
     # take absolute value, just to be sure that there's never a negative value
-    # BN2 = AN + AH2 - np.sqrt((AN + AH2)**2. - (AN)**2.)
     BN2 = AN + AH2 - np.sqrt(np.abs((AN + AH2) ** 2.0 - (AN) ** 2.0))
     BNH3 = 2.0 * (AN - BN2)
     nN2 = np.nanmean(BN2 * pH2 / p)
-    if nN2 <= 0:
-        nN2 = 1e-16
     nNH3 = np.nanmean(BNH3 * pH2 / p)
-    if nNH3 <= 0:
-        nNH3 = 1e-16
+
+    nCO = np.max([nCO, 1e-16])
+    nCH4 = np.max([nCH4, 1e-16])
+    nH2O = np.max([nH2O, 1e-16])
+    nN2 = np.max([nN2, 1e-16])
+    nNH3 = np.max([nNH3, 1e-16])
+
+    # make sure that the sum of all mixing ratios does not exceed 1
+    #  ok actually it's working great. no problems here (molecules are 60-75%)
+    # nMolecules = nH2O + nCH4 + nNH3 + nN2 + nCO
+    # print('nSummed vs nMax',nMolecules,1 - nHplusHe)
+    # print('nSummed vs nMax',nMolecules / (1 - nHplusHe))
+
     mixratio = {
         'H2O': np.log10(nH2O) + 6.0,
         'CH4': np.log10(nCH4) + 6.0,
@@ -135,6 +147,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         'N2': np.log10(nN2) + 6.0,
         'CO': np.log10(nCO) + 6.0,
     }
+    # print('mixratio', mixratio)
     return mixratio, nH2, nHe
 
 
