@@ -399,7 +399,7 @@ class SpectrumSV(ExcaliburSV):
                         )
                         save_plot_toscreen(myfig, visitor)
                     # now display completion plot
-                    if 'Hs' in self['data'][p]:
+                    if 'Hs' in self['data'][p] and len(vspectrum) > 1:
                         Hs = self['data'][p]['Hs'][0]
                         if Hs > 1:
                             Hs = Hs / (self['data'][p]['RSTAR'][0])
