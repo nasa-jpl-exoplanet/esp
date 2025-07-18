@@ -10,6 +10,20 @@ import numpy as np
 
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
+def TEA(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
+    '''
+    TEA chemical equilibrium abundances
+    '''
+
+    mixratio, nH2, nHe = crbce(
+        p, temp, X2Hr=X2Hr * 1.1, C2Or=C2Or * 0.9, N2Or=N2Or
+    )
+
+    return mixratio, nH2, nHe
+
+
+# ------------ -------------------------------------------------------
+# -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
 def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     '''
     G. ROUDIER: BURROWS AND SHARP 1998 + ANDERS & GREVESSE 1989
