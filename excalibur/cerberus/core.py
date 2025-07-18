@@ -875,7 +875,9 @@ def atmos(
                         fixed_params['T'] = eqtemp
                     if not runtime_params.fitCtoO:
                         if 'model_params' in input_data:
-                            fixed_params['CtoO'] = input_data['model_params']['C/O']
+                            fixed_params['CtoO'] = input_data['model_params'][
+                                'C/O'
+                            ]
                         else:
                             fixed_params['CtoO'] = 0.0
                     if not runtime_params.fitNtoO:
