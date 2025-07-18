@@ -2937,6 +2937,9 @@ def spectrum(
             )
             pgrid = np.exp(pgrid)
             pressure = pgrid[::-1]
+
+            # asdf. need an option here to use TEA() instead of crbce()
+            log.warning('FUTURE: update transit.spectrum to use TEA chemistry')
             mixratio, fH2, fHe = crbutil.crbce(pressure, eqtemp)
             mmw, fH2, fHe = crbutil.getmmw(
                 mixratio, protosolar=False, fH2=fH2, fHe=fHe
