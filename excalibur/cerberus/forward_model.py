@@ -707,7 +707,11 @@ def cloudyfmcerberus(*crbinputs):
     '''
     G. ROUDIER: Wrapper around Cerberus forward model, spherical shell symmetry
     '''
-    ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
+    if 'T' in ctxt.fixedParams:
+        tpr = ctxt.fixedParams['T']
+        ctp, hazescale, hazeloc, hazethick, mdp = crbinputs
+    else:
+        ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
     # print(
     #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
     #    ctp,
@@ -718,10 +722,15 @@ def cloudyfmcerberus(*crbinputs):
     #    mdp
     # )
 
+    # this extra list[] is needed for the single param case (only metallicity)
+    if not isinstance(mdp, list):
+        mdp = [mdp]
+
     fmc = np.zeros(ctxt.tspectrum.size)
     if ctxt.model == 'TEC':
         tceqdict = {}
         mdpindex = 0
+
         if 'XtoH' in ctxt.fixedParams:
             tceqdict['XtoH'] = ctxt.fixedParams['XtoH']
         else:
@@ -739,7 +748,6 @@ def cloudyfmcerberus(*crbinputs):
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
         # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
-
         fmc = crbmodel(
             tpr,
             ctp,
@@ -764,11 +772,8 @@ def cloudyfmcerberus(*crbinputs):
 
     fmc = fmc[ctxt.cleanup]
 
-    # (no need for isfinite check; that's what cleanup does already)
-    # if np.all(np.isfinite(ctxt.mcmcdat)):
-    fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
-    # else:
-    #    fmc += np.nanmean(ctxt.mcmcdat - fmc)
+    if len(ctxt.mcmcsig) > 0:
+        fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
 
     return fmc
 

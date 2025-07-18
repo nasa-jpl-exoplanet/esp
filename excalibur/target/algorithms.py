@@ -275,8 +275,34 @@ class TargetScrapeRegression(dawgie.Regression):
     def __init__(self):
         '''__init__ ds'''
         self._version_ = dawgie.VERSION(1, 0, 2)
+        self.__rt = rtalg.Autofill()
         self.__out = trgstates.ScrapeValidationSV(name='databases_validation')
         return
+
+    # 7/18/25 feedback and previous added by Geoff
+    #  but no effect.  runtime is still empty, so is_valid is always False.
+    #  It's ok to delete this part.
+    def feedback(self):
+        '''feedback ds'''
+        return [
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'isValidTarget',
+            )
+        ]
+
+    def previous(self):
+        '''Input State Vectors'''
+        return [
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'isValidTarget',
+            ),
+        ]
 
     def name(self):
         '''Database name for subtask extension'''
@@ -285,13 +311,23 @@ class TargetScrapeRegression(dawgie.Regression):
     def run(self, ps: int, timeline: dawgie.Timeline):
         '''Top level algorithm call'''
 
-        # this function will edit 'data' and 'quality' in-place
-        trgmonitor.regress_for_frame_counts(
-            self.__out['data'], self.__out['quality'], timeline
-        )
+        print('runtime', self.__rt)
 
-        self.__out['STATUS'].append(True)
-        timeline.ds().update()
+        # stop here if it is not a runtime target
+        if not self.__rt.is_valid():
+            log.warning(
+                '--< TARGET.%s: not a valid target >--', self.name().upper()
+            )
+        else:
+            print('WORKING! YEA!')
+
+            # this function will edit 'data' and 'quality' in-place
+            trgmonitor.regress_for_frame_counts(
+                self.__out['data'], self.__out['quality'], timeline
+            )
+            self.__out['STATUS'].append(True)
+            timeline.ds().update()
+
         return
 
     def state_vectors(self):
