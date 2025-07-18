@@ -284,11 +284,15 @@ class TargetScrapeRegression(dawgie.Regression):
     #  It's ok to delete this part.
     def feedback(self):
         '''feedback ds'''
-        return[dawgie.V_REF(
-            rtime.task,
-            self.__rt,
-            self.__rt.sv_as_dict()['status'],
-            'isValidTarget')]
+        return [
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'isValidTarget',
+            )
+        ]
+
     def previous(self):
         '''Input State Vectors'''
         return [
