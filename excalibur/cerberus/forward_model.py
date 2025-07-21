@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d as itp
 import logging
 
 import excalibur.system.core as syscore
-from excalibur.util.cerberus import crbce, getmmw
+from excalibur.util.cerberus import crbce, calcTEA, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -35,6 +35,7 @@ def crbmodel(
     hazeloc=None,
     hazeprof='AVERAGE',
     hzlib=None,
+    chemistry='TEC',
     planet=None,
     rp0=None,
     orbp=None,
@@ -104,13 +105,26 @@ def crbmodel(
     if not mixratio:
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
-        mixratio, fH2, fHe = crbce(
-            pressure,
-            temp,
-            C2Or=cheq['CtoO'],
-            X2Hr=cheq['XtoH'],
-            N2Or=cheq['NtoO'],
-        )
+        if chemistry=='TEC':
+            mixratio, fH2, fHe = crbce(
+                pressure,
+                temp,
+                C2Or=cheq['CtoO'],
+                X2Hr=cheq['XtoH'],
+                N2Or=cheq['NtoO'],
+            )
+        elif chemistry=='TEA':
+            mixratio, fH2, fHe = crbce(
+                pressure,
+                temp,
+                C2Or=cheq['CtoO'],
+                X2Hr=cheq['XtoH'],
+                N2Or=cheq['NtoO'],
+            )
+        else:
+            log.warning(
+                '--< %s >--', chemistry
+            )
         # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:
