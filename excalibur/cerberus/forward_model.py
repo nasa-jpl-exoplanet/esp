@@ -111,7 +111,7 @@ def crbmodel(
     if not mixratio:
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
-        if chemistry=='TEC':
+        if chemistry == 'TEC':
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -119,7 +119,7 @@ def crbmodel(
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
-        elif chemistry=='TEA':
+        elif chemistry == 'TEA':
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -128,9 +128,7 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         else:
-            log.warning(
-                '--< %s >--', chemistry
-            )
+            log.warning('--< %s >--', chemistry)
         # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:
