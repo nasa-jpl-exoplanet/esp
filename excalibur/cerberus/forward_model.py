@@ -105,7 +105,7 @@ def crbmodel(
     if not mixratio:
         if cheq is None:
             log.warning('neither mixratio nor cheq are defined')
-        if chemistry=='TEC':
+        if chemistry == 'TEC':
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -113,7 +113,7 @@ def crbmodel(
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
-        elif chemistry=='TEA':
+        elif chemistry == 'TEA':
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -122,9 +122,7 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         else:
-            log.warning(
-                '--< %s >--', chemistry
-            )
+            log.warning('--< %s >--', chemistry)
         # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:
@@ -741,7 +739,7 @@ def cloudyfmcerberus(*crbinputs):
         mdp = [mdp]
 
     fmc = np.zeros(ctxt.tspectrum.size)
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         mdpindex = 0
 
@@ -815,7 +813,7 @@ def clearfmcerberus(*crbinputs):
     # print(' param values inside of forward model', tpr, mdp)
 
     fmc = np.zeros(ctxt.tspectrum.size)
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         mdpindex = 0
         if 'XtoH' in ctxt.fixedParams:
@@ -885,7 +883,7 @@ def offcerberus(*crbinputs):
     #     mdp = [-1.24882918, -4.08582557, -2.4664526]
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
     fmc = np.zeros(ctxt.tspectrum.size)
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -929,7 +927,7 @@ def offcerberus1(*crbinputs):
     '''
     ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -970,7 +968,7 @@ def offcerberus2(*crbinputs):
     '''
     ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1012,7 +1010,7 @@ def offcerberus3(*crbinputs):
     ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1053,7 +1051,7 @@ def offcerberus4(*crbinputs):
     ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1092,7 +1090,7 @@ def offcerberus5(*crbinputs):
     ctp, hazescale, off0, off1, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1133,7 +1131,7 @@ def offcerberus6(*crbinputs):
     ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1172,7 +1170,7 @@ def offcerberus7(*crbinputs):
     ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
@@ -1211,7 +1209,7 @@ def offcerberus8(*crbinputs):
     ctp, hazescale, off0, hazeloc, hazethick, tpr, mdp = crbinputs
     fmc = np.zeros(ctxt.tspectrum.size)
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
-    if ctxt.model == 'TEC':
+    if ctxt.model in ['TEC', 'TEA']:
         tceqdict = {}
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
