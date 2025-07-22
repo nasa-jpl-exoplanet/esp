@@ -696,7 +696,9 @@ def atmos(
         if arielmodel not in spc['data']['models']:
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
-        modfam = ['TEC', 'TEA', 'PHOTOCHEM']
+        # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
+        # asdf   don't slow down HST fitting with TEA just yet
+        modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -2798,7 +2800,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         if fit_no_plot:
             out['data']['plot_fitNO'] = fit_no_plot
 
-    out['data']['params'] = param_names
+        out['data']['params'] = param_names
     out['data']['targetlistnames'] = [
         targetlist['targetlistname'] for targetlist in analysistargetlists
     ]
