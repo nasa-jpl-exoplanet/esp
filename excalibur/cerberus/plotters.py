@@ -1592,7 +1592,7 @@ def plot_mass_vs_metals(
     # print('resultsstring',resultsstring)
     plt.text(
         xrange[0] * 1.2,
-        yrange[0] + 0.8,
+        yrange[0] + 0.2 + 0.1*(yrange[1]-yrange[0]),
         resultsstring,
         c='black',
         ha='left',
@@ -1602,8 +1602,6 @@ def plot_mass_vs_metals(
         xrange[0] * 1.2,
         yrange[0] + 0.2,
         'Z$_p$ = (9.7$\\pm$1.3) $M_p^{-0.45\\pm0.09}$ (Thorngren)',
-        # '[X/H]$_p$ = (0.97$\\pm$0.05) $M_p^{-0.45\\pm0.09}$ (Thorngren)',
-        # '[X/H]$_p$ = (9.7$\\pm$1.3) $M_p^{-0.45\\pm0.09}$ (Thorngren)',
         c='black',
         ha='left',
         fontsize=10,
