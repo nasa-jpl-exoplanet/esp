@@ -115,7 +115,9 @@ def crbmodel(
             )
         else:
             if chemistry != 'TEC':
-                log.warning('--< ERROR: unknown %s chemistry model! >--', chemistry)
+                log.warning(
+                    '--< ERROR: unknown %s chemistry model! >--', chemistry
+                )
 
             mixratio, fH2, fHe = crbce(
                 pressure,
