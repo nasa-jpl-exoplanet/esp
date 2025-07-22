@@ -667,7 +667,9 @@ def atmos(
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
-        modfam = ['TEC', 'TEA']
+        # modfam = ['TEC', 'TEA']
+        # (just TEC for now, otherwise it takes twice as much CPU)
+        modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
