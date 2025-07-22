@@ -400,6 +400,7 @@ class Atmos(dawgie.Algorithm):
             ' calling atmos from cerb-alg-atmos  chain len=%d',
             mcmc_chain_length,
         )
+        chemistrymodel = 'TEC'
         am = crbcore.atmos(
             fin,
             xsl,
@@ -409,8 +410,9 @@ class Atmos(dawgie.Algorithm):
             fltr,
             Nchains=mcmc_chains,
             chainlen=mcmc_chain_length,
+            singlemod=chemistrymodel,
             verbose=False,
-        )  # singlemod='TEC' after chainlen
+        )
         return am
 
     @staticmethod
@@ -625,7 +627,10 @@ class Analysis(dawgie.Analyzer):
                 # print()
 
                 # update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
-                update = self._analysis(aspects, fltr, fltrs.index(fltr))
+                chemistrymodel = 'TEC'
+                update = self._analysis(
+                    aspects, fltr, chemistrymodel, fltrs.index(fltr)
+                )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
@@ -638,11 +643,11 @@ class Analysis(dawgie.Analyzer):
         return
 
     # def _analysis(self, aspects, fltr, runtime_params, index):
-    def _analysis(self, aspects, fltr, index):
+    def _analysis(self, aspects, fltr, chemistrymodel, index):
         '''Core code call'''
         # aspects, fltr, runtime_params, self.__out[index], verbose=False
         analysisout = selftestcore.analysis(
-            aspects, fltr, self.__out[index], verbose=False
+            aspects, fltr, chemistrymodel, self.__out[index], verbose=False
         )
         return analysisout
 

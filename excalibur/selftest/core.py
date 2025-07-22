@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------
 # def analysis(aspects, filt, runtime_params, out, verbose=False):
-def analysis(aspects, filt, out, verbose=False):
+def analysis(aspects, filt, out, chemistrymodel, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
@@ -146,19 +146,22 @@ def analysis(aspects, filt, out, verbose=False):
                             pass
 
                         elif (
-                            'TEC'
+                            chemistrymodel
                             not in atmos_fit['data'][planet_letter][
                                 'MODELPARNAMES'
                             ]
                         ):
                             log.warning(
-                                '--< SELFTEST ANALYSIS: BIG PROBLEM theres no TEC model! %s %s >--',
+                                '--< SELFTEST ANALYSIS: BIG PROBLEM theres no %s model! %s %s >--',
+                                chemistrymodel,
                                 filt,
                                 trgt,
                             )
                         elif (
                             'prior_ranges'
-                            not in atmos_fit['data'][planet_letter]['TEC']
+                            not in atmos_fit['data'][planet_letter][
+                                chemistrymodel
+                            ]
                         ):
                             log.warning(
                                 '--< SELFTEST ANALYSIS: SKIP (no prior info) - %s %s >--',
@@ -182,26 +185,29 @@ def analysis(aspects, filt, out, verbose=False):
 
                             # (prior range should be the same for all the targets)
                             prior_ranges = atmos_fit['data'][planet_letter][
-                                'TEC'
+                                chemistrymodel
                             ]['prior_ranges']
                             # print('prior range is passed in, not calculated:', prior_ranges)
 
                             traces = []
                             all_keys = []
-                            for key in atmos_fit['data'][planet_letter]['TEC'][
-                                'MCTRACE'
-                            ]:
+                            for key in atmos_fit['data'][planet_letter][
+                                chemistrymodel
+                            ]['MCTRACE']:
                                 traces.append(
-                                    atmos_fit['data'][planet_letter]['TEC'][
-                                        'MCTRACE'
-                                    ][key]
+                                    atmos_fit['data'][planet_letter][
+                                        chemistrymodel
+                                    ]['MCTRACE'][key]
                                 )
 
-                                if key in ('TEC[0]', 'TEC'):
+                                if key in (
+                                    chemistrymodel + '[0]',
+                                    chemistrymodel,
+                                ):
                                     all_keys.append('[X/H]')
-                                elif key == 'TEC[1]':
+                                elif key == chemistrymodel + '[1]':
                                     all_keys.append('[C/O]')
-                                elif key == 'TEC[2]':
+                                elif key == chemistrymodel + '[2]':
                                     all_keys.append('[N/O]')
                                 else:
                                     all_keys.append(key)

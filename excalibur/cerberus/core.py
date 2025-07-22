@@ -666,8 +666,14 @@ def atmos(
     hazelib(crbhzlib, hazedir=hazedir, verbose=False)
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
-        modfam = ['TEC']  # Ariel sims are currently only TEC equilibrium models
-        modparlbl = {'TEC': ['XtoH', 'CtoO', 'NtoO']}
+        # Ariel sims are currently only equilibrium models (TEC and TEA)
+        # modfam = ['TEC', 'TEA']
+        # (just TEC for now, otherwise it takes twice as much CPU)
+        modfam = ['TEC']
+        modparlbl = {
+            'TEC': ['XtoH', 'CtoO', 'NtoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+        }
 
         # ** select which Ariel model to fit **
         #   previously (with taurex) there were 8 options. now 4 options:
@@ -682,25 +688,31 @@ def atmos(
 
         # option to fix N/O
         if not runtime_params.fitNtoO:
-            modparlbl = {'TEC': ['XtoH', 'CtoO']}
+            modparlbl = {'TEC': ['XtoH', 'CtoO'], 'TEA': ['XtoH', 'CtoO']}
         # option to fix C/O
         if not runtime_params.fitCtoO:
-            modparlbl = {'TEC': ['XtoH']}
+            modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
 
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
         if arielmodel not in spc['data']['models']:
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
+        # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
+        # asdf   don't slow down HST fitting with TEA just yet
         modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            # asdf: get this from runtime
             'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
         if not runtime_params.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
+            modparlbl['TEA'].remove('CtoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -750,6 +762,8 @@ def atmos(
                     )
             else:
                 input_data = spc['data'][p]
+            if 'model_params' not in input_data:
+                input_data['model_params'] = None
 
             out['data'][p] = {}
             out['data'][p]['MODELPARNAMES'] = modparlbl
@@ -1383,6 +1397,15 @@ def atmos(
                             all_keys.append('[N/O]')
                         else:
                             all_keys.append(key)
+                    elif model == 'TEA':
+                        if key in ('TEA[0]', 'TEA'):
+                            all_keys.append('[X/H]')
+                        elif key == 'TEA[1]':
+                            all_keys.append('[C/O]')
+                        elif key == 'TEA[2]':
+                            all_keys.append('[N/O]')
+                        else:
+                            all_keys.append(key)
                     elif model == 'PHOTOCHEM':
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
@@ -1815,7 +1838,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
     for p in fin['priors']['planets']:
         # print('post-analysis for planet:',p)
 
-        # TEC params - X/H, C/O, N/O
+        # TEC,TEA params - X/H, C/O, N/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
@@ -1856,6 +1879,15 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
+                            all_keys.append('[N/O]')
+                        else:
+                            all_keys.append(key)
+                    elif model_name == 'TEA':
+                        if key in ('TEA[0]', 'TEA'):
+                            all_keys.append('[X/H]')
+                        elif key == 'TEA[1]':
+                            all_keys.append('[C/O]')
+                        elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
                         else:
                             all_keys.append(key)
@@ -2000,7 +2032,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                 rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
 
-                if model_name == 'TEC':
+                if model_name in ['TEC', 'TEA']:
                     # if len(mdp)!=3: log.warning('--< Expecting 3 molecules for TEQ model! >--')
                     mixratio = None
                     mixratio_profiled = None
@@ -2204,7 +2236,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     # print('fit results; T:', tpr)
                     # print('fit results; mdplist:', mdp)
 
-                    if model_name == 'TEC':
+                    if model_name in ['TEC', 'TEA']:
                         mixratio = None
                         tceqdict = {}
                         tceqdict['XtoH'] = float(mdp[0])
@@ -2770,7 +2802,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         if fit_no_plot:
             out['data']['plot_fitNO'] = fit_no_plot
 
-    out['data']['params'] = param_names
+        out['data']['params'] = param_names
     out['data']['targetlistnames'] = [
         targetlist['targetlistname'] for targetlist in analysistargetlists
     ]

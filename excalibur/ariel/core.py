@@ -58,11 +58,19 @@ ArielParams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
-def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0):
+def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     '''
     calculate the mean molecular weight and scale height
     '''
-    mixratio, fH2, fHe = crbutil.crbce(pressureArray, temperature, X2Hr=X2Hr)
+    if useTEA:
+        mixratio, fH2, fHe = crbutil.calcTEA(
+            pressureArray, temperature, X2Hr=X2Hr
+        )
+    else:
+        mixratio, fH2, fHe = crbutil.crbce(
+            pressureArray, temperature, X2Hr=X2Hr
+        )
+
     # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
     # assume solar C/O and N/O for now
@@ -86,7 +94,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     1) only Cerberus atmosphere models now; Taurex option removed Dec.2024
     2) with or without clouds
     3) two models for metallicity/mmw (mmw=2.3 or FINESSE mass-metallicity relation)
-    4) TEC vs DISEQ models [NOT IMPLEMENTED YET!]
+    4) TEC vs TEA (DISEQ is not implemented yet)
     '''
     # print(runtime_params)
     # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
@@ -107,12 +115,19 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
         'cerberus',
-        'cerberusNoclouds',
+        'cerberusTEA',
         'cerberuslowmmw',
+        'cerberusNoclouds',
+        'cerberusTEANoclouds',
         'cerberuslowmmwNoclouds',
     ]
     if testTarget:
-        atmosModels = ['cerberus', 'cerberusNoclouds']
+        atmosModels = [
+            'cerberus',
+            'cerberusTEA',
+            'cerberusNoclouds',
+            'cerberusTEANoclouds',
+        ]
 
     out['data']['models'] = atmosModels
     # save target,planet names, for plotting (in states.py)
@@ -190,7 +205,9 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
             )
             pressure = pgrid[::-1]
             # Assume solar metallicity here but then below use each model's metallicity
-            mmwsolar, Hs = calc_mmw_Hs(pressure, eqtemp, model_params['logg'])
+            mmwsolar, Hs = calc_mmw_Hs(
+                pressure, eqtemp, model_params['logg'], useTEA=False
+            )
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
             # this is used for plot scaling
             Hssolar = Hs / (model_params['R*'] * sscmks['Rsun'])
@@ -264,6 +281,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 for atmosModel in atmosModels:
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
+                    useTEA = bool('TEA' in atmosModel)
 
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
@@ -291,6 +309,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
+                        useTEA=useTEA,
                     )
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
                     if HoverRp > 0.04:
@@ -487,6 +506,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
+                        useTEA=useTEA,
                     )
                     # print('lower mmw,Hs new method', mmwnow, Hs)
 

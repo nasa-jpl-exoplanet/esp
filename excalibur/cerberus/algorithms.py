@@ -226,6 +226,8 @@ class Atmos(dawgie.Algorithm):
                 sspc = 'Ariel-sim spectrum not found'
             elif fltr in self.__spc.sv_as_dict().keys():
                 sv = self.__spc.sv_as_dict()[fltr]
+                if 'data' in sv and 'target' not in sv['data']:
+                    sv['data']['target'] = 'HST spectrum needs target name'
                 vspc, sspc = checksv(sv)
             else:
                 vspc = False
@@ -535,8 +537,8 @@ class Analysis(dawgie.Analyzer):
                     '--< CERBERUS ANALYSIS: NO FILTERS WITH ATMOS DATA!!!>--'
                 )
 
-            # filtersWithResults=['Ariel-sim']  # just one filter, while debugging
-            # filtersWithResults=['HST-WFC3-IR-G141-SCAN']  # just one filter, while debugging
+            # fwr=['Ariel-sim']  # just one filter, while debugging
+            # fwr =['HST-WFC3-IR-G141-SCAN']  # just one filter, while debugging
 
             # only consider filters that have cerb.atmos results loaded in as an aspect
             for fltr in fwr:
@@ -550,7 +552,8 @@ class Analysis(dawgie.Analyzer):
                 # print('runtime old2 way',runtime2)
 
                 runtime_params = crbcore.CerbAnalysisParams(
-                    tier=runtime['ariel_simspectrum_tier'].value(),
+                    # tier=runtime['ariel_simspectrum_tier'].value(),
+                    tier=2,
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
@@ -558,6 +561,7 @@ class Analysis(dawgie.Analyzer):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
+                # print('runtime', runtime_params)
 
                 log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
