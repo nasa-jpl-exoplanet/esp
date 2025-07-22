@@ -696,7 +696,9 @@ def atmos(
         if arielmodel not in spc['data']['models']:
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
-        modfam = ['TEC', 'TEA', 'PHOTOCHEM']
+        # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
+        # asdf   don't slow down HST fitting with TEA just yet
+        modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
