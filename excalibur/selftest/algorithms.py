@@ -40,8 +40,6 @@ numexpr.ncores = 1  # this is actually a performance enhancer!
 
 fltrs = [str(fn) for fn in rtbind.filter_names.values()]
 
-chemistrymodel = 'TEC'
-
 
 # ------------- ------------------------------------------------------
 # -- ALGORITHMS -- ---------------------------------------------------
@@ -402,6 +400,7 @@ class Atmos(dawgie.Algorithm):
             ' calling atmos from cerb-alg-atmos  chain len=%d',
             mcmc_chain_length,
         )
+        chemistrymodel = 'TEC'
         am = crbcore.atmos(
             fin,
             xsl,
@@ -628,6 +627,7 @@ class Analysis(dawgie.Analyzer):
                 # print()
 
                 # update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
+                chemistrymodel = 'TEC'
                 update = self._analysis(
                     aspects, fltr, chemistrymodel, fltrs.index(fltr)
                 )
