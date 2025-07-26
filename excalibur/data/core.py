@@ -90,7 +90,7 @@ def collect(name, scrape, out):
             pass
         pass
     if collected:
-        log.warning(
+        log.info(
             '--< DATA COLLECT: %s in %s >--',
             str(int(np.sum(out['activefilters'][name]['TOTAL']))),
             name,
@@ -98,7 +98,7 @@ def collect(name, scrape, out):
         out['STATUS'].append(True)
         pass
     else:
-        log.warning('--< DATA COLLECT: NO DATA in %s >--', name)
+        log.info('--< DATA COLLECT: NO DATA in %s >--', name)
         out['activefilters'].pop(name, None)
         pass
     return collected
@@ -541,10 +541,10 @@ def timing(force, ext, clc, out):
                 out['data'][p]['ignore'] = ignore
                 out['STATUS'].append(True)
                 pass
-            log.warning('>-- Planet: %s', p)
-            log.warning('--< Transit: %s', str(out['data'][p]['transit']))
-            log.warning('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-            log.warning(
+            log.info('>-- Planet: %s', p)
+            log.info('--< Transit: %s', str(out['data'][p]['transit']))
+            log.info('--< Eclipse: %s', str(out['data'][p]['eclipse']))
+            log.info(
                 '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
             )
             if (
@@ -737,7 +737,7 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
                 all1d.append(this1d)
                 all1dwave.append(this1dwave)
                 if verbose:
-                    log.warning('>-- : %d/%d', it, len(alldexp))
+                    log.info('>-- : %d/%d', it, len(alldexp))
                 pass
             pass
         out['STATUS'].append(True)
@@ -1240,7 +1240,7 @@ def scancal(
         data['IGNORED'][index] = ignore
         data['EXPERR'][index] = pstamperr
         if debug:
-            log.warning('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
+            log.info('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
         # PLOTS --------------------------------------------------------------------------
         if frame2png:
             if not os.path.exists('TEST'):
@@ -1464,12 +1464,12 @@ def scancal(
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
-    log.warning(
+    log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
     for index, ignore in enumerate(allignore):
         if ignore:
-            log.warning('>-- %s: %s', str(index), str(allculprits[index]))
+            log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
     data.pop('EXPFLAG', None)
@@ -2145,7 +2145,7 @@ def starecal(
         data['TIME'][index] = np.nanmax(data['TIME'][index].copy())
         data['IGNORED'][index] = ignore
         data['EXPERR'][index] = pstamperr
-        log.warning('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
+        log.info('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
         # PLOTS ------------------------------------------------------
         if frame2png:
             if not os.path.exists('TEST'):
@@ -2266,12 +2266,12 @@ def starecal(
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
     allindex = np.arange(len(data['LOC']))
-    log.warning(
+    log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
     for index in allindex:
         if allculprits[index]:
-            log.warning('>-- %s: %s', str(index), str(allculprits[index]))
+            log.info('>-- %s: %s', str(index), str(allculprits[index]))
             pass
         pass
     data.pop('EXP', None)
@@ -2704,12 +2704,12 @@ def stiscal_G750L(_fin, clc, tim, tid, flttype, out):
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
-    log.warning(
+    log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
     for index, ignore in enumerate(allignore):
         if ignore:
-            log.warning('>-- %s: %s', str(index), str(allculprits[index]))
+            log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
     for k, v in data.items():
@@ -3128,12 +3128,12 @@ def stiscal_G430L(fin, clc, tim, tid, flttype, out):
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
-    log.warning(
+    log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
     for index, ignore in enumerate(allignore):
         if ignore:
-            log.warning('>-- %s: %s', str(index), str(allculprits[index]))
+            log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
     for k, v in data.items():
@@ -3678,12 +3678,12 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
-    log.warning(
+    log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
     for index, ignore in enumerate(allignore):
         if ignore:
-            log.warning('>-- %s: %s', str(index), str(allculprits[index]))
+            log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
     for k, v in data.items():

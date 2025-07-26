@@ -66,7 +66,7 @@ class Validate(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< SYSTEM.%s: not a valid target >--', self.name().upper()
             )
 
@@ -146,7 +146,7 @@ class Finalize(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< SYSTEM.%s: %s not a valid target >--',
                 target,
                 self.name().upper(),
@@ -190,30 +190,30 @@ class Finalize(dawgie.Algorithm):
 
                 # log warnings moved to the very end (previously were before forcepar)
                 # 6/16/24 target name added to log, otherwise can't tell which one has the error
-                log.warning(
+                log.info(
                     '>-- FORCE PARAMETER: %s %s',
                     target,
                     str(self.__out['PP'][-1]),
                 )
-                log.warning(
+                log.info(
                     '>-- MISSING MANDATORY PARAMETERS: %s %s',
                     target,
                     str(self.__out['needed']),
                 )
-                log.warning(
+                log.info(
                     '>-- MISSING PLANET PARAMETERS: %s %s',
                     target,
                     str(self.__out['pneeded']),
                 )
-                log.warning(
+                log.info(
                     '>-- PLANETS IGNORED: %s %s',
                     target,
                     str(self.__out['ignore']),
                 )
-                log.warning(
+                log.info(
                     '>-- INCONSISTENCIES: %s %s', target, str(inconsistencies)
                 )
-                log.warning(
+                log.info(
                     '>-- AUTOFILL: %s %s', target, str(self.__out['autofill'])
                 )
                 pass

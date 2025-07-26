@@ -137,7 +137,7 @@ def load_ariel_instrument(target, tier):
                             '--< ArielRad has non-finite # of visits: %s >--',
                             target,
                         )
-                    log.warning(
+                    log.info(
                         '--< ArielRad/Tier-%s requires %s visits for %s >--',
                         str(tier),
                         str(nVisits),
@@ -169,7 +169,7 @@ def load_ariel_instrument(target, tier):
                             # print('spectral channels overlap!!',iwave,
                             #       ariel_instrument['wavehigh'][iwave],
                             #       ariel_instrument['wavelow'][iwave+1])
-                            # log.warning('--< ARIELSIM adjusting wavelength grid: %s wave=%s >--',
+                            # log.info('--< ARIELSIM adjusting wavelength grid: %s wave=%s >--',
                             #             target,ariel_instrument['wavelength'][iwave])
                             ariel_instrument['wavehigh'][iwave] = (
                                 ariel_instrument['wavelow'][iwave + 1] * 0.99999

@@ -18,8 +18,8 @@ def set_prior_bound(eqtemp, runtime_params):
     Set prior constraints on the spectrum-fitting parameters
     '''
 
-    if runtime_params.boundTeq is None:
-        log.warning('--< temp junk for pylint reasons >--')
+    # if runtime_params.boundTeq is None:
+    #    log.info('--< temp junk for pylint reasons >--')
     # print('IN BOUNDS runtime_params',runtime_params)
     # print('          boundsTeq',runtime_params.boundTeq)
     # import pdb; pdb.set_trace()
@@ -27,26 +27,26 @@ def set_prior_bound(eqtemp, runtime_params):
     # print('          boundsTeq',runtime_params.boundTeq.lo)
     #
     if runtime_params.boundTeq.lo != 0.75 or runtime_params.boundTeq.hi != 1.5:
-        log.warning('--< Non-standard prior range for Teq >--')
+        log.info('--< Non-standard prior range for Teq >--')
     if (
         runtime_params.boundAbundances.lo != -6
         or runtime_params.boundAbundances.hi != 6
     ):
-        log.warning('--< Non-standard prior range for abundances >--')
+        log.info('--< Non-standard prior range for abundances >--')
     if runtime_params.boundCTP.lo != -6 or runtime_params.boundCTP.hi != 1:
-        log.warning('--< Non-standard prior range for CTP >--')
+        log.info('--< Non-standard prior range for CTP >--')
     if runtime_params.boundHLoc.lo != -6 or runtime_params.boundHLoc.hi != 1:
-        log.warning('--< Non-standard prior range for HLoc >--')
+        log.info('--< Non-standard prior range for HLoc >--')
     if (
         runtime_params.boundHScale.lo != -6
         or runtime_params.boundHScale.hi != 6
     ):
-        log.warning('--< Non-standard prior range for HScale >--')
+        log.info('--< Non-standard prior range for HScale >--')
     if (
         runtime_params.boundHThick.lo != 1
         or runtime_params.boundHThick.hi != 20
     ):
-        log.warning('--< Non-standard prior range for HThick >--')
+        log.info('--< Non-standard prior range for HThick >--')
 
     prior_ranges = {}
 
@@ -83,8 +83,8 @@ def set_prior_bound(eqtemp, runtime_params):
         prior_ranges['HScale'] = (-6, 6)
         prior_ranges['HLoc'] = (-6, 1)
         prior_ranges['HThick'] = (1, 20)
-    else:
-        log.warning('--< GOOD PRIOR BOUNDS >--')
+    # else:
+    #    log.info('--< GOOD PRIOR BOUNDS >--')
 
     return prior_ranges
 
@@ -170,7 +170,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
     if target in limits:
         for limit in limits[target]:
             if limit[0] in allkeys:
-                log.warning(
+                log.info(
                     '--< Found a profiling limit for: %s %s >--', target, limit
                 )
 
@@ -188,7 +188,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                         )
                         == 0
                     ):
-                        log.warning(
+                        log.info(
                             '--< Profiling has no effect: %s %s >--',
                             target,
                             limit,
@@ -205,7 +205,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                         )
                         == 0
                     ):
-                        log.warning(
+                        log.info(
                             '--< Profiling has no effect: %s %s >--',
                             target,
                             limit,

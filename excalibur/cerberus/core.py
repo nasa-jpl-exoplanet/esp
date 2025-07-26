@@ -172,7 +172,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
             ):  # make sure it has a spectrum (Kepler-37e bug)
                 planet_letters.append(p)
             else:
-                log.warning(
+                log.info(
                     '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
                     spc['data']['target'],
                     p,
@@ -187,7 +187,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
         nugrid = (1e4 / np.copy(wgrid))[::-1]
         dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
         for myexomol in xmollist:
-            # log.warning('>-- %s', str(myexomol))
+            # log.info('>-- %s', str(myexomol))
             library[myexomol] = {
                 'I': [],
                 'nu': [],
@@ -303,7 +303,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
                 pass
             pass
         for mycia in cialist:
-            # log.warning('>-- %s', str(mycia))
+            # log.info('>-- %s', str(mycia))
             myfile = '_'.join((os.path.join(ciadir, mycia), '2011.cia'))
             library[mycia] = {
                 'I': [],
@@ -389,7 +389,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
                 pass
             pass
         for ks in knownspecies:
-            # log.warning('>-- %s', str(ks))
+            # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
                 'I': [],
@@ -500,7 +500,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
             allwavenumbers = []
             alltemperatures = []
             for tstep in np.arange(300, 2000, 100):  # asdf put in runtime?
-                # log.warning('>---- %s K', str(Tstep))
+                # log.info('>---- %s K', str(Tstep))
                 sigma, lsig = absorb(
                     library[ks],
                     qtgrid[ks],
@@ -680,10 +680,10 @@ def atmos(
         # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
         if runtime_params.fitCloudParameters:
-            log.warning('--< CERBERUS: using CLOUDY arielsim forward model >--')
+            log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             arielmodel = 'cerberus'
         else:
-            log.warning('--< CERBERUS: using CLOUDFREE ariel forward model >--')
+            log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel = 'cerberusNoclouds'
 
         # option to fix N/O
@@ -1138,7 +1138,7 @@ def atmos(
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters and 'sim' in ext:
                         # print('TURNING OFF CLOUDS!')
-                        log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
+                        log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
@@ -1270,7 +1270,7 @@ def atmos(
                                     pass
                                 pass
                         if 'STIS-WFC3' not in ext:
-                            log.warning('--< STANDARD MCMC (WITH CLOUDS) >--')
+                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
 
                             # before calling MCMC, save the fixed-parameter info in the context
                             ctxtupdt(
@@ -1308,14 +1308,14 @@ def atmos(
                         pass
 
                     if runtime_params.MCMC_sliceSampler:
-                        log.warning('>-- SLICE SAMPLER: ON  --<')
+                        log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
-                        log.warning('>-- SLICE SAMPLER: OFF --<')
+                        log.info('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    # log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
-                    log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
+                    # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
+                    log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # asdf: careful here. #-chains and #-cores are same thing?
 
@@ -2092,7 +2092,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     mixratio_profiled['H2CO'] = float(mdp_profiled[4])
 
                 else:
-                    log.warning('--< Expecting TEQ or PHOTOCHEM model! >--')
+                    log.warning('--< Expecting TEQ, TEC, or PHOTOCHEM model! >--')
 
                 crbhzlib = {'PROFILE': []}
                 hazedir = os.path.join(
@@ -2256,7 +2256,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                     'NtoO'
                                 ]
                             else:
-                                # log.warning('--< NtoO is missing from TRUTH_MODELPARAMS >--')
+                                # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                 tceqdict['NtoO'] = 0.0
 
                     elif model_name == 'PHOTOCHEM':
@@ -2425,7 +2425,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     aspecttargets = []
     for a in aspects:
         aspecttargets.append(a)
-    log.warning(
+    log.info(
         '--< CERBERUS ANALYSIS: NUMBER OF TARGETS IN ASPECT %s >--',
         len(aspecttargets),
     )
@@ -2873,5 +2873,5 @@ def release(trgt, fin, out, verbose=False):
         pass
     rlsed = out['STATUS'][-1]
     if verbose:
-        log.warning('--< %s', out['STATUS'])
+        log.info('--< %s', out['STATUS'])
     return rlsed

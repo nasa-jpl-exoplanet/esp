@@ -666,7 +666,7 @@ def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
             # if M != Mold: print('new stellar mass',planet_letter, M,'old stellar mass',Mold)
         else:
             # print('STRANGE: this planet ref doesnt exist in star refs:',sma_ref)
-            # log.warning('STRANGE: this planet ref doesnt exist in star refs: %s',sma_ref)
+            # log.info('STRANGE: this planet ref doesnt exist in star refs: %s',sma_ref)
             M = Mold
             Merr1 = Molderr1
             Merr2 = Molderr2
