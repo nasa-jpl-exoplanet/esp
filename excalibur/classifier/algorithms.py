@@ -569,9 +569,7 @@ class Flags(dawgie.Algorithm):
 
                     # if transit.spectrum exists
                     if vsp and vfin:
-                        log.info(
-                            '--< IN-TRANSIT PERCENT REJECTED: %s >--', ext
-                        )
+                        log.info('--< IN-TRANSIT PERCENT REJECTED: %s >--', ext)
 
                         status = clscore.perc_rejected(
                             self.__state_vecs['spectrum'].sv_as_dict()[ext],
