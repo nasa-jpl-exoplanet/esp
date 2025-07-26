@@ -390,7 +390,7 @@ class Flags(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< CLASSFIER.%s: not a valid target >--', self.name().upper()
             )
 
@@ -428,7 +428,7 @@ class Flags(dawgie.Algorithm):
 
                 # if transit.whitelight exists
                 if vwl and vfin:
-                    log.warning('--< IN-TRANSIT POINT COUNT: %s >--', ext)
+                    log.info('--< IN-TRANSIT POINT COUNT: %s >--', ext)
 
                     status = clscore.cpwl(
                         self.__state_vecs['whitelight'].sv_as_dict()[ext],
@@ -449,7 +449,7 @@ class Flags(dawgie.Algorithm):
 
                 # if eclipse.whitelight exists
                 if e_vwl and vfin:
-                    log.warning('--< IN-ECLIPSE POINT COUNT: %s >--', ext)
+                    log.info('--< IN-ECLIPSE POINT COUNT: %s >--', ext)
 
                     status = clscore.cpwl(
                         self.__state_vecs['eclwhitelight'].sv_as_dict()[ext],
@@ -477,7 +477,7 @@ class Flags(dawgie.Algorithm):
 
                 # if transit.whitelight exists
                 if vwl and vfin:
-                    log.warning('--< TRANSIT LIGHT CURVE SYMMETRY: %s >--', ext)
+                    log.info('--< TRANSIT LIGHT CURVE SYMMETRY: %s >--', ext)
                     status = clscore.symwl(
                         self.__state_vecs['whitelight'].sv_as_dict()[ext],
                         self.__state_vecs['finalize'].sv_as_dict()[
@@ -497,7 +497,7 @@ class Flags(dawgie.Algorithm):
 
                 # if eclipse.whitelight exists
                 if e_vwl and vfin:
-                    log.warning('--< ECLIPSE LIGHT CURVE SYMMETRY: %s >--', ext)
+                    log.info('--< ECLIPSE LIGHT CURVE SYMMETRY: %s >--', ext)
 
                     status = clscore.symwl(
                         self.__state_vecs['eclwhitelight'].sv_as_dict()[ext],
@@ -526,7 +526,7 @@ class Flags(dawgie.Algorithm):
 
                     # if transit.spectrum exists
                     if vsp and vfin:  # Q need to check for vfin here?
-                        log.warning('--< IN-TRANSIT RSDM: %s >--', ext)
+                        log.info('--< IN-TRANSIT RSDM: %s >--', ext)
 
                         status = clscore.rsdm(
                             self.__state_vecs['spectrum'].sv_as_dict()[ext],
@@ -543,7 +543,7 @@ class Flags(dawgie.Algorithm):
 
                     # if eclipse.spectrum exists
                     if e_vsp and vfin:
-                        log.warning('--< IN-ECLIPSE RSDM: %s >--', ext)
+                        log.info('--< IN-ECLIPSE RSDM: %s >--', ext)
 
                         status = clscore.rsdm(
                             self.__state_vecs['eclspectrum'].sv_as_dict()[ext],
@@ -569,7 +569,7 @@ class Flags(dawgie.Algorithm):
 
                     # if transit.spectrum exists
                     if vsp and vfin:
-                        log.warning(
+                        log.info(
                             '--< IN-TRANSIT PERCENT REJECTED: %s >--', ext
                         )
 
@@ -588,7 +588,7 @@ class Flags(dawgie.Algorithm):
 
                     # if eclipse.spectrum exists
                     if e_vsp and vfin:
-                        log.warning(
+                        log.info(
                             '--< IN-ECLIPSE PERCENT REJECTED: %s >--', ext
                         )
 
@@ -615,7 +615,7 @@ class Flags(dawgie.Algorithm):
                     metric_name = "data.calibration Median Error"
 
                     if vdc and vfin:
-                        log.warning(
+                        log.info(
                             '--< DATA.CALIBRATION MEDIAN ERROR: %s >--', ext
                         )
 
@@ -641,7 +641,7 @@ class Flags(dawgie.Algorithm):
 
                 # if transit.whitelight exists
                 if vwl and vfin:
-                    log.warning('--< IN-TRANSIT RESIDUAL SHAPE: %s >--', ext)
+                    log.info('--< IN-TRANSIT RESIDUAL SHAPE: %s >--', ext)
 
                     status = clscore.lc_resid_classification(
                         self.__state_vecs['whitelight'].sv_as_dict()[ext],
@@ -659,7 +659,7 @@ class Flags(dawgie.Algorithm):
 
                 # if eclipse.spectrum exists
                 if e_vsp and vfin:
-                    log.warning('--< IN-ECLIPSE RESIDUAL SHAPE: %s >--', ext)
+                    log.info('--< IN-ECLIPSE RESIDUAL SHAPE: %s >--', ext)
 
                     status = clscore.lc_resid_classification(
                         self.__state_vecs['eclwhitelight'].sv_as_dict()[ext],

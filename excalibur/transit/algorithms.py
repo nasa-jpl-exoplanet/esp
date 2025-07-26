@@ -90,7 +90,7 @@ class Normalization(dawgie.Algorithm):
             vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
             vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
             if vcal and vtme and vfin:
-                log.warning(
+                log.info(
                     '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
                 )
                 update = self._norm(
@@ -215,6 +215,7 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
+
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
@@ -229,7 +230,7 @@ class WhiteLight(dawgie.Algorithm):
                         break
                     vnrm, snrm = checksv(nrm)
                     if vnrm and vfin:
-                        log.warning(
+                        log.info(
                             '--< %s MERGING: %s >--', self._type.upper(), fltr
                         )
                         allnormdata.append(nrm)
@@ -242,7 +243,7 @@ class WhiteLight(dawgie.Algorithm):
                 pass
             if allnormdata:
                 try:
-                    log.warning(
+                    log.info(
                         '--< %s WHITELIGHT: HSTCOMBO >--', self._type.upper()
                     )
                     update = self._hstwhitelight(
@@ -272,7 +273,7 @@ class WhiteLight(dawgie.Algorithm):
             nrm = self._nrm.sv_as_dict()[fltr]
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
-                log.warning(
+                log.info(
                     '--< %s WHITELIGHT: %s >--', self._type.upper(), fltr
                 )
                 update = self._whitelight(
@@ -402,7 +403,7 @@ class Spectrum(dawgie.Algorithm):
             vnrm, snrm = checksv(self._nrm.sv_as_dict()[fltr])
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             if vfin and vnrm and vwht:
-                log.warning('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
+                log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
                 update = self._spectrum(
                     self.__fin.sv_as_dict()['parameters'],
                     self._nrm.sv_as_dict()[fltr],
@@ -418,7 +419,7 @@ class Spectrum(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
 
         merg = trncore.hstspectrum(self.__out, fltrs)
-        log.warning('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
+        log.info('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
         if merg:
             svupdate.append(self.__out[-1])
 
@@ -518,7 +519,7 @@ class StarSpots(dawgie.Algorithm):
             vspc, sspc = checksv(self._spc.sv_as_dict()[fltr])
 
             if vfin and vspc:
-                # log.warning(
+                # log.info(
                 #     '--< %s STARSPOTS: %s >--', self._type.upper(), fltr
                 # )
                 update = self._starspots(

@@ -88,7 +88,7 @@ class XSLib(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vspc:
-                log.warning('--< CERBERUS XSLIB: %s >--', fltr)
+                log.info('--< CERBERUS XSLIB: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
@@ -204,7 +204,7 @@ class Atmos(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vfin and vxsl and vspc:
-                log.warning('--< CERBERUS ATMOS: %s >--', fltr)
+                log.info('--< CERBERUS ATMOS: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
@@ -355,7 +355,7 @@ class Results(dawgie.Algorithm):
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
                 if vxsl and vatm:
-                    log.warning('--< CERBERUS RESULTS: %s >--', fltr)
+                    log.info('--< CERBERUS RESULTS: %s >--', fltr)
 
                     runtime = self.__rt.sv_as_dict()['status']
                     runtime_params = crbcore.CerbResultsParams(
@@ -521,7 +521,7 @@ class Analysis(dawgie.Analyzer):
                 )
                 # print('runtime', runtime_params)
 
-                log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
+                log.info('--< CERBERUS ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
                     aspects, fltr, runtime_params, fltrs.index(fltr)
                 )
@@ -584,7 +584,7 @@ class Release(dawgie.Algorithm):
         fltr = 'HST-WFC3-IR-G141-SCAN'
         update = False
         if vfin:
-            log.warning(
+            log.info(
                 '--< CERBERUS RELEASE: %s %s >--',
                 fltr,
                 repr(self).split('.')[1],

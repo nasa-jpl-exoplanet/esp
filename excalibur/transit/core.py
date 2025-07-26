@@ -322,7 +322,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     for p in events:
-        log.warning('>-- Planet: %s', p)
+        log.info('>-- Planet: %s', p)
         out['data'][p] = {}
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
@@ -408,7 +408,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     for p in events:
-        log.warning('>-- Planet: %s', p)
+        log.info('>-- Planet: %s', p)
         out['data'][p] = {}
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
@@ -472,7 +472,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         svnkey = 'svn' + selftype
         if len(tme['data'][p][svnkey]) == 1:
             singlevisit = True
-            log.warning('--< Single Visit Observation')
+            log.info('--< Single Visit Observation')
             pass
         for v in tme['data'][p][svnkey]:  # SINGLE SCAN NUMBERING
             selv = (visits == v) & ~ignore
@@ -588,11 +588,11 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                     )
                     pass
                 pass
-            log.warning('>-- Visit %s', str(int(v)))
-            log.warning(
+            log.info('>-- Visit %s', str(int(v)))
+            log.info(
                 '>-- Orbit %s', str([int(o) for o in set(orbits[selv])])
             )
-            log.warning('>-- Trash %s', str(trash))
+            log.info('>-- Trash %s', str(trash))
             # UPDATE IGNORE FLAG WITH REJECTED ORBITS ------------------------------------
             if trash and (selftype in ['transit', 'eclipse']):
                 for o in trash:
@@ -865,7 +865,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                         pass
                     pass
                 nscale = np.round(np.percentile(wanted, 50))
-                log.warning(
+                log.info(
                     '--< Visit %s: Noise scale %s', str(int(v)), str(nscale)
                 )
                 # FLAGGING THRESHOLD
@@ -894,7 +894,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                     pass
                 check = np.array(check)
                 rejrate = check.size - np.sum(check)
-                log.warning(
+                log.info(
                     '--< Visit %s: Rejected %s/%s',
                     str(int(v)),
                     str(rejrate),
@@ -1021,7 +1021,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                 pass
             pass
         for v, m in zip(out['data'][p]['vignore'], out['data'][p]['trial']):
-            log.warning('--< Visit %s: %s', str(int(v)), str(m))
+            log.info('--< Visit %s: %s', str(int(v)), str(m))
             pass
 
         # SAVE A PLOT FOR EACH VISIT ----------------------------------------------------
@@ -1238,7 +1238,7 @@ def tplbuild(
             finiteloop += vdisp
         guess.append(finiteloop)
         if verbose:
-            log.warning(
+            log.info(
                 '>-- %s/%s', str(guess[-1]), str(max(vrange) + vdisp / 2e0)
             )
         pass
@@ -1616,7 +1616,7 @@ def hstwhitelight(
             )
             # --------------
             # --< SAMPLING >--
-            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
+            log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
@@ -2126,7 +2126,7 @@ def whitelight(
                 observed=flatwhite[selectfit],
                 logp=LogLH,
             )
-            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
+            log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
@@ -2437,9 +2437,9 @@ def createldgrid(
     feherr = np.sqrt(abs(orbp['FEH*_uperr'] * orbp['FEH*_lowerr']))
     loggstar = orbp['LOGG*']
     loggerr = np.sqrt(abs(orbp['LOGG*_uperr'] * orbp['LOGG*_lowerr']))
-    # log.warning('>-- Temperature: %s +/- %s', str(tstar), str(terr))
-    # log.warning('>-- Metallicity: %s +/- %s', str(fehstar), str(feherr))
-    # log.warning('>-- Surface Gravity: %s +/- %s', str(loggstar), str(loggerr))
+    # log.info('>-- Temperature: %s +/- %s', str(tstar), str(terr))
+    # log.info('>-- Metallicity: %s +/- %s', str(fehstar), str(feherr))
+    # log.info('>-- Surface Gravity: %s +/- %s', str(loggstar), str(loggerr))
     niter = int(len(minmu) / segmentation) + 1
     allcl = None
     allel = None
@@ -2554,7 +2554,7 @@ def createldgrid(
     out['LD'] = allcl.T
     out['ERR'] = allel.T
     # for i, _m in enumerate(allcl.T):
-    #     log.warning('>-- LD%s: %s +/- %s',
+    #     log.info('>-- LD%s: %s +/- %s',
     #                str(int(i)), str(float(allcl.T[i])), str(float(allel.T[i])))
     return out
 

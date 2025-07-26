@@ -367,7 +367,7 @@ class FlagSummarySV(ExcaliburSV):
                         b = 25
                         _, bins = np.histogram(points_to_plot, bins=b)
                         logbins = np.logspace(0, np.log10(bins[-1]), len(bins))
-                        log.warning(logbins)
+                        # log.info(logbins)
                         plt.hist(
                             points_to_plot,
                             bins=sorted(logbins),

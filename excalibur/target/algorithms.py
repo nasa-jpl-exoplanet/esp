@@ -135,7 +135,7 @@ class Autofill(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< TARGET.%s: %s not a valid target >--',
                 target,
                 self.name().upper(),
@@ -145,7 +145,7 @@ class Autofill(dawgie.Algorithm):
             crt = self.__create.sv_as_dict()
             valid, errstring = checksv(crt['starIDs'])
             if valid and (target in crt['starIDs']['starID']):
-                log.warning('--< TARGET AUTOFILL: %s >--', target)
+                log.info('--< TARGET AUTOFILL: %s >--', target)
                 update = self._autofill(crt, target)
                 pass
             else:
@@ -218,14 +218,14 @@ class Scrape(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< TARGET.%s: not a valid target >--', self.name().upper()
             )
         else:
             var_autofill = self.__autofill.sv_as_dict()['parameters']
             valid, errstring = checksv(var_autofill)
             if valid:
-                log.warning(
+                log.info(
                     '--< TARGET SCRAPE: %s >--', repr(self).split('.')[1]
                 )
                 self._scrape(var_autofill, self.__out)
@@ -315,7 +315,7 @@ class TargetScrapeRegression(dawgie.Regression):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< TARGET.%s: not a valid target >--', self.name().upper()
             )
         else:

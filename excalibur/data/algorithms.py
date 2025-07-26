@@ -71,7 +71,7 @@ class Collect(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< DATA.%s: not a valid target >--', self.name().upper()
             )
             pass
@@ -161,15 +161,15 @@ class Timing(dawgie.Algorithm):
         vcol, ecol = checksv(col)
         svupdate = []
         if vfin and vcol:
-            log.warning('>-- DATA COLLECT: \n\t%s', list(col['activefilters']))
+            log.info('>-- DATA COLLECT: \n\t%s', list(col['activefilters']))
             letmethrough = self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]
-            log.warning('>-- RUNTIME: \n\t%s', letmethrough)
+            log.info('>-- RUNTIME: \n\t%s', letmethrough)
             letmethrough = [
                 k for k in letmethrough if k in col['activefilters']
             ]
-            log.warning('>-- DATA TIMING: \n\t%s', letmethrough)
+            log.info('>-- DATA TIMING: \n\t%s', letmethrough)
             for fltr in letmethrough:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
@@ -206,7 +206,7 @@ class Timing(dawgie.Algorithm):
     @staticmethod
     def _timing(fin, fltr, colin, out):
         '''Core code call'''
-        log.warning('--< DATA TIMING: %s >--', fltr)
+        log.info('--< DATA TIMING: %s >--', fltr)
         chunked = datcore.timing(fin, fltr, colin, out)
         return chunked
 
@@ -307,7 +307,7 @@ class Calibration(dawgie.Algorithm):
     @staticmethod
     def _calib(fin, cll, tim, tid, flttype, out, ps):
         '''Core code call'''
-        log.warning('--< DATA CALIBRATION: %s >--', flttype)
+        log.info('--< DATA CALIBRATION: %s >--', flttype)
         caled = False
         if 'SCAN' in flttype:
             caled = datcore.scancal(cll, tim, tid, flttype, out)

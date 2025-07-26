@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------
 # def analysis(aspects, filt, runtime_params, out, verbose=False):
-def analysis(aspects, filt, out, chemistrymodel, verbose=False):
+def analysis(aspects, filt, chemistrymodel, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
@@ -52,9 +52,13 @@ def analysis(aspects, filt, out, chemistrymodel, verbose=False):
     for a in aspects:
         aspecttargets.append(a)
     # print('asptargs',aspecttargets)
-    # aspecttargets = ['testJup001','testJup002','testJup003']
+    # aspecttargets = ['testJup001','testJup002','testJup003'',testJup004','testJup005',
+    #                 'testJup006','testJup007','testJup008','testJup009','testJup010',
+    #                 'testJup011','testJup012','testJup013','testJup014','testJup015',
+    #                 'testJup016','testJup017','testJup018','testJup019','testJup020',
+    #                 'testJup021','testJup022','testJup023','testJup024','testJup025']
     # print('asptargs',aspecttargets)
-    log.warning(
+    log.info(
         '--< SELFTEST ANALYSIS: NUMBER OF TARGETS IN ASPECT %s >--',
         len(aspecttargets),
     )
@@ -138,7 +142,6 @@ def analysis(aspects, filt, out, chemistrymodel, verbose=False):
                     for planet_letter in atmos_fit['data'].keys():
                         # print(trgt,atmosFit['data'][planet_letter]['MODELPARNAMES'])
                         # print(trgt,atmosFit['data'][planet_letter]['planet_params'])
-
                         # print('   keys:',atmosFit['data'][planet_letter].keys())
                         if (
                             planet_letter == 'stellar_params'

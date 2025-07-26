@@ -63,7 +63,7 @@ class Estimate(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< ANCILLARY.%s: not a valid target >--', self.name().upper()
             )
 

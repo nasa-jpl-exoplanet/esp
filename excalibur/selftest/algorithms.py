@@ -77,7 +77,7 @@ class SimSpectrum(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid() or not target.startswith('test'):
-            log.warning(
+            log.info(
                 '--< SELFTEST.%s: not a valid target >--', self.name().upper()
             )
 
@@ -198,7 +198,7 @@ class XSLib(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vspc:
-                log.warning('--< SELFTEST XSLIB: %s >--', fltr)
+                log.info('--< SELFTEST XSLIB: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
@@ -333,7 +333,7 @@ class Atmos(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vfin and vxsl and vspc:
-                log.warning('--< SELFTEST ATMOS: %s >--', fltr)
+                log.info('--< SELFTEST ATMOS: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
@@ -481,7 +481,7 @@ class Results(dawgie.Algorithm):
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
 
                 if vxsl and vatm:
-                    log.warning('--< SELFTEST RESULTS: %s >--', fltr)
+                    log.info('--< SELFTEST RESULTS: %s >--', fltr)
 
                     runtime = self.__rt.sv_as_dict()['status']
                     runtime_params = crbcore.CerbResultsParams(
@@ -602,7 +602,7 @@ class Analysis(dawgie.Analyzer):
             filtersWithResults = ['Ariel-sim']  # just consider Ariel-sim
 
             for fltr in filtersWithResults:
-                log.warning('--< SELFTEST ANALYSIS: %s  >--', fltr)
+                log.info('--< SELFTEST ANALYSIS: %s  >--', fltr)
 
                 # runtime is not actually needed in analysis.
                 #  prior range is loaded in from previous state vector
