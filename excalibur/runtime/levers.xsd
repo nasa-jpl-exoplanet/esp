@@ -35,6 +35,126 @@
     <xs:attribute name="hi" type="xs:float" use="required"/>
   </xs:complexType>
 
+  <xs:simpleType name="HITEMPmolecule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="C2H2"/>
+      <xs:enumeration value="CH3OH"/>
+      <xs:enumeration value="CH4"/>
+      <xs:enumeration value="CO"/>
+      <xs:enumeration value="CO2"/>
+      <xs:enumeration value="H2O"/>
+      <xs:enumeration value="HNO3"/>
+      <xs:enumeration value="N2"/>
+      <xs:enumeration value="N2O"/>
+      <xs:enumeration value="NO"/>
+      <xs:enumeration value="NO2"/>
+      <xs:enumeration value="O2"/>
+      <xs:enumeration value="O3"/>
+      <xs:enumeration value="OH"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="HITRANmolecule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="H2-H"/>
+      <xs:enumeration value="H2-H2"/>
+      <xs:enumeration value="H2-He"/>
+      <xs:enumeration value="He-H"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EXOMOLmolecule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ALCL"/>
+      <xs:enumeration value="ALH"/>
+      <xs:enumeration value="ALO"/>
+      <xs:enumeration value="BEH"/>
+      <xs:enumeration value="C2"/>
+      <xs:enumeration value="C2H2"/>
+      <xs:enumeration value="C2H4"/>
+      <xs:enumeration value="C3"/>
+      <xs:enumeration value="CAO"/>
+      <xs:enumeration value="CAOH"/>
+      <xs:enumeration value="CH3"/>
+      <xs:enumeration value="CH3CL"/>
+      <xs:enumeration value="CH4"/>
+      <xs:enumeration value="CN"/>
+      <xs:enumeration value="CO"/>
+      <xs:enumeration value="CO2"/>
+      <xs:enumeration value="CP"/>
+      <xs:enumeration value="CS"/>
+      <xs:enumeration value="H2"/>
+      <xs:enumeration value="H2CO"/>
+      <xs:enumeration value="H2O"/>
+      <xs:enumeration value="H2S"/>
+      <xs:enumeration value="HBO"/>
+      <xs:enumeration value="HCL"/>
+      <xs:enumeration value="HCN"/>
+      <xs:enumeration value="KCL"/>
+      <xs:enumeration value="KOH"/>
+      <xs:enumeration value="LIH"/>
+      <xs:enumeration value="LIOH"/>
+      <xs:enumeration value="MGH"/>
+      <xs:enumeration value="MGO"/>
+      <xs:enumeration value="NACL"/>
+      <xs:enumeration value="NAH"/>
+      <xs:enumeration value="NAOH"/>
+      <xs:enumeration value="NH3"/>
+      <xs:enumeration value="NO"/>
+      <xs:enumeration value="NS"/>
+      <xs:enumeration value="PH3"/>
+      <xs:enumeration value="PN"/>
+      <xs:enumeration value="PO"/>
+      <xs:enumeration value="PS"/>
+      <xs:enumeration value="SIH4"/>
+      <xs:enumeration value="SIN"/>
+      <xs:enumeration value="SIO2"/>
+      <xs:enumeration value="SIS"/>
+      <xs:enumeration value="SO"/>
+      <xs:enumeration value="SO2"/>
+      <xs:enumeration value="SO3"/>
+      <xs:enumeration value="TIO"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <!--
+  <xs:simpleType name="fitMolecule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="HCN"/>
+      <xs:enumeration value="CH4"/>
+      <xs:enumeration value="C2H2"/>
+      <xs:enumeration value="CO2"/>
+      <xs:enumeration value="H2CO"/>
+    </xs:restriction>
+  </xs:simpleType>
+  The list of molecules that can be fit is large - a union of all the line lists.
+  Al recommends reversing this section -
+    start with the big list and then make EXOMOL/HITEMP/HITRAN as subsets
+    (rather than making the big list as a union of those three)
+  -->
+  <xs:simpleType name="fitMolecule">
+    <xs:union memberTypes="HITEMPmolecule HITRANmolecule EXOMOLmolecule"/>
+  </xs:simpleType>
+
+  <xs:complexType name="HITEMPmoleculeList">
+    <xs:sequence>
+      <xs:element name="molecule" type="HITEMPmolecule" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="HITRANmoleculeList">
+    <xs:sequence>
+      <xs:element name="molecule" type="HITRANmolecule" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EXOMOLmoleculeList">
+    <xs:sequence>
+      <xs:element name="molecule" type="EXOMOLmolecule" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="fitMoleculeList">
+    <xs:sequence>
+      <xs:element name="molecule" type="fitMolecule" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+
   <xs:complexType name="control_type">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -44,6 +164,14 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
+      <xs:element name="cerberus.crbmodel.fitmolecules"
+         	  type="fitMoleculeList"/>
+      <xs:element name="cerberus.crbmodel.HITEMPmolecules"
+         	  type="HITEMPmoleculeList"/>
+      <xs:element name="cerberus.crbmodel.HITRANmolecules"
+         	  type="HITRANmoleculeList"/>
+      <xs:element name="cerberus.crbmodel.EXOMOLmolecules"
+         	  type="EXOMOLmoleculeList"/>
       <xs:element name="cerberus.atmos.bounds.Teq"
 		  type="hilo"/>
       <xs:element name="cerberus.atmos.bounds.abundances"
@@ -107,6 +235,8 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
                   type="xs:float" use="required"/>
+    <xs:attribute name="transit.pymc.sliceSampler"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="selftest.Nrepeats"
                   type="xs:integer" use="required"/>
   </xs:complexType>
