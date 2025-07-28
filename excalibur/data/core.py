@@ -544,9 +544,7 @@ def timing(force, ext, clc, out):
             log.info('>-- Planet: %s', p)
             log.info('--< Transit: %s', str(out['data'][p]['transit']))
             log.info('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-            log.info(
-                '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
-            )
+            log.info('--< Phase Curve: %s', str(out['data'][p]['phasecurve']))
             if (
                 out['data'][p]['transit']
                 or out['data'][p]['eclipse']
