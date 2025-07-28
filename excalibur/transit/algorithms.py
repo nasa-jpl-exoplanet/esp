@@ -276,9 +276,7 @@ class WhiteLight(dawgie.Algorithm):
             nrm = self._nrm.sv_as_dict()[fltr]
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
-                log.info(
-                    '--< %s WHITELIGHT: %s >--', self._type.upper(), fltr
-                )
+                log.info('--< %s WHITELIGHT: %s >--', self._type.upper(), fltr)
                 update = self._whitelight(
                     nrm,
                     fin,

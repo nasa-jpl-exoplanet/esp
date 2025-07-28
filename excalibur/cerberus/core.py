@@ -2092,7 +2092,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     mixratio_profiled['H2CO'] = float(mdp_profiled[4])
 
                 else:
-                    log.warning('--< Expecting TEQ, TEC, or PHOTOCHEM model! >--')
+                    log.warning(
+                        '--< Expecting TEQ, TEC, or PHOTOCHEM model! >--'
+                    )
 
                 crbhzlib = {'PROFILE': []}
                 hazedir = os.path.join(

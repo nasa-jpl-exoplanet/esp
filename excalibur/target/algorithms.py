@@ -225,9 +225,7 @@ class Scrape(dawgie.Algorithm):
             var_autofill = self.__autofill.sv_as_dict()['parameters']
             valid, errstring = checksv(var_autofill)
             if valid:
-                log.info(
-                    '--< TARGET SCRAPE: %s >--', repr(self).split('.')[1]
-                )
+                log.info('--< TARGET SCRAPE: %s >--', repr(self).split('.')[1])
                 self._scrape(var_autofill, self.__out)
             else:
                 self._failure(errstring)

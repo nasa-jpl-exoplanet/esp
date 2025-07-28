@@ -589,9 +589,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                     pass
                 pass
             log.info('>-- Visit %s', str(int(v)))
-            log.info(
-                '>-- Orbit %s', str([int(o) for o in set(orbits[selv])])
-            )
+            log.info('>-- Orbit %s', str([int(o) for o in set(orbits[selv])]))
             log.info('>-- Trash %s', str(trash))
             # UPDATE IGNORE FLAG WITH REJECTED ORBITS ------------------------------------
             if trash and (selftype in ['transit', 'eclipse']):

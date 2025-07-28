@@ -71,9 +71,7 @@ class Collect(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.info(
-                '--< DATA.%s: not a valid target >--', self.name().upper()
-            )
+            log.info('--< DATA.%s: not a valid target >--', self.name().upper())
             pass
         # 7/2/24 we want to always collect all filters, so don't use proceed(fltr) here
         else:

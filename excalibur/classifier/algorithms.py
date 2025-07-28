@@ -586,9 +586,7 @@ class Flags(dawgie.Algorithm):
 
                     # if eclipse.spectrum exists
                     if e_vsp and vfin:
-                        log.info(
-                            '--< IN-ECLIPSE PERCENT REJECTED: %s >--', ext
-                        )
+                        log.info('--< IN-ECLIPSE PERCENT REJECTED: %s >--', ext)
 
                         status = clscore.perc_rejected(
                             self.__state_vecs['eclspectrum'].sv_as_dict()[ext],
