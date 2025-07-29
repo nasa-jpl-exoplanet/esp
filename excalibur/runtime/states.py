@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 #  no-member is for "Instance of HiLoValue has no _hi"
-# pylint: disable=no-member,method-hidden,
+# pylint: disable=no-member,method-hidden,invalid-name,
 
 import dawgie
 import excalibur
@@ -77,8 +77,11 @@ class HiLoValue(dawgie.Value):
 class MoleculeValue(dawgie.Value):
     '''helper value for molecule-list type'''
 
-    def __init__(self, molecules: list = []):
+    def __init__(self, molecules: list = None):
         '''init the molecule list'''
+        # having molecules=[] above is a dangerous-default-value; set here instead
+        if molecules is None:
+            molecules = []
         self.molecules = list(molecules)
         self._version_ = dawgie.VERSION(1, 0, 0)
         return
@@ -93,24 +96,18 @@ class MoleculeValue(dawgie.Value):
 
     def new(self, state=None):
         '''hide explicit requirement for dawgie'''
-        # print('  SHOULD RETURN THIS',state.molecule)
         moleculeVals = MoleculeValue(
-            state.molecule if state is not None else self.__state)
+            state.molecule if state is not None else self.__state
+        )
 
         if not isinstance(moleculeVals.molecules, list):
             log.error('ERROR: molecules should be a list!')
         else:
             # has to be pickleable; convert each molecule to a string
-            print('NEW() before fix',moleculeVals)
-
             cleanVals = []
             for item in moleculeVals.molecules:
-                print('  item fore',item,type(item))
                 cleanVals.append(str(item))
-                print('  item aftr',item,type(str(item)))
             moleculeVals.molecules = cleanVals
-
-            print('NEW() after fix ',moleculeVals)
 
         return moleculeVals
 
@@ -453,16 +450,16 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_fitCtoO',
             'cerberus_atmos_fitNtoO',
             'cerberus_atmos_fitCloudParameters',
+            'cerberus_crbmodel_fitmolecules',
+            'cerberus_crbmodel_HITEMPmolecules',
+            'cerberus_crbmodel_HITRANmolecules',
+            'cerberus_crbmodel_EXOMOLmolecules',
             'cerberus_crbmodel_lbroadening',
             'cerberus_crbmodel_lshifting',
             'cerberus_crbmodel_isothermal',
             'cerberus_crbmodel_nlevels',
             'cerberus_crbmodel_solrad',
             'cerberus_crbmodel_Hsmax',
-            'cerberus_crbmodel_fitmolecules',
-            'cerberus_crbmodel_HITEMPmolecules',
-            'cerberus_crbmodel_HITRANmolecules',
-            'cerberus_crbmodel_EXOMOLmolecules',
             'cerberus_atmos_bounds_Teq',
             'cerberus_atmos_bounds_abundances',
             'cerberus_atmos_bounds_CTP',
