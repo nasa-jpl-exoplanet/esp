@@ -286,8 +286,11 @@ class StatusSV(dawgie.StateVector):
 
     def __init__(self):
         '''init the state vector with empty values'''
-        self._version_ = dawgie.VERSION(1, 0, 0)
+        self._version_ = dawgie.VERSION(1, 1, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
+        self['isValidTarget'] = BoolValue()
+        self['runTarget'] = BoolValue(True)
+
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
@@ -321,13 +324,12 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
-        self['isValidTarget'] = BoolValue()
-        self['runTarget'] = BoolValue(True)
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        return
 
     def name(self):
         '''database name'''
@@ -484,6 +486,29 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
                 table.get_cell(row + 1, 0).add_primitive(tn[0])
                 table.get_cell(row + 1, 1).add_primitive(tn[1])
         visitor.add_declaration_inline('', div='</div>')
+        return
+
+    pass
+
+
+class TriggerSV(dawgie.StateVector):
+    '''
+    GMR: Composite SV used to trigger tasks with a long list of knobs
+    '''
+
+    def __init__(self, name, members: [dawgie.V_REF]):
+        '''SV init'''
+        self._version_ = dawgie.VERSION(1, 0, 0)
+        self._name = name
+        self[name] = members
+        return
+
+    def name(self):
+        '''SV name'''
+        return self._name
+
+    def view(self) -> None:
+        '''SV view'''
         return
 
     pass

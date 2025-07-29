@@ -24,6 +24,13 @@ class Autofill(dawgie.Algorithm):
         self._version_ = dawgie.VERSION(1, 0, 1)
         self.__parent = Create()
         self.__status = states.StatusSV()
+        self.__algotrigger = [
+            states.TriggerSV('spectrum', []),
+            states.TriggerSV('cerberus', []),
+            states.TriggerSV('ariel', []),
+            states.TriggerSV('selftest', []),
+        ]
+        pass
 
     def is_valid(self):
         '''convenience function'''
@@ -91,13 +98,16 @@ class Autofill(dawgie.Algorithm):
         core.isolate(
             self.__status, self.__parent.sv_as_dict()['composite'], table_index
         )
+        core.trigger(self, self.__status, self.__algotrigger)
         _ = excalibur.lagger()
         ds.update()
         return
 
     def state_vectors(self):
         '''state vectors generated from this algorithm'''
-        return [self.__status]
+        out = [self.__status]
+        _ = out.extend(self.__algotrigger)
+        return out
 
     pass
 

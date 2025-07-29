@@ -3,7 +3,10 @@
 import os
 import re
 
+import dawgie
 import excalibur
+import excalibur.runtime as rnt
+import excalibur.runtime.states as rntstt
 
 from . import binding
 
@@ -39,8 +42,10 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     '''isolate target specific state from the global table'''
     if table['filters']['includes']:
         allowed_names = table['filters']['includes']
+        pass
     else:
         allowed_names = binding.filter_names.itervalues()
+        pass
     # make a copy of unique names ditching the old types along the way
     allowed_names = set(allowed_names)
     for exclude in table['filters']['excludes']:
@@ -84,20 +89,26 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             table['controls'][key], excalibur.runtime.states.BoolValue
         ):
             sv[key] = table['controls'][key].new()
+            pass
         else:
             # these are excalibur.ValueScalar objects. value() converts to float/int/string
             # actually careful - now they are sometimes HiLoValues
             sv[key] = table['controls'][key]
+            pass
+        pass
+
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+
     pymc = table['pymc-cerberuschains']
     default = pymc['default'].value()
     sv['cerberus_chains'] = sv['cerberus_chains'].new(
         pymc['overrides'].get(tn, default)
     )
+
     sv['isValidTarget'] = sv['isValidTarget'].new(
         tn
         not in [
@@ -113,16 +124,20 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
                 for targetandreason in table['run_only']['targets']
             ]
         )
+
     pymc = table['pymc-spectrumchainlen']
     default = pymc['default'].value()
     sv['spectrum_steps'] = sv['spectrum_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+
     pymc = table['pymc-spectrumchains']
     default = pymc['default'].value()
     sv['spectrum_chains'] = sv['spectrum_chains'].new(
         pymc['overrides'].get(tn, default)
     )
+
+    return
 
 
 def load(sv_dict: {str: {}}, targets) -> None:
@@ -159,3 +174,22 @@ def load(sv_dict: {str: {}}, targets) -> None:
             sv['overrides'][override.name] = override.steps
     _sequester2sv(settings.run_only, sv_dict['run_only'], targets)
     _sequester2sv(settings.sequester, sv_dict['sequester'], targets)
+    return
+
+
+def trigger(selfroot, selfstatus, selftrigger) -> None:
+    '''
+    GMR: Populates selftrigger by combining elements of selfstatus.
+    That is convoluted because it could have be done by initiating
+    the composite SV with the right members to start with, inside algorithms.
+    Don t wanna do that, if anything, the list of members is gonna change,
+    I would like to have all changes kept here without affecting algorithms.py
+    '''
+    for it, trigger in enumerate(selftrigger):
+        keyloop = [k for k in selfstatus.keys() if k.startswith(trigger.name())]
+        members = [
+            dawgie.V_REF(rnt.task, selfroot, selfstatus, k) for k in keyloop
+        ]
+        selftrigger[it] = rntstt.TriggerSV(trigger.name(), members)
+        pass
+    return
