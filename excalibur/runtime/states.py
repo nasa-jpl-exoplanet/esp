@@ -51,10 +51,11 @@ class HiLoValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        state = self.__getstate__()
-        if isinstance(state, dict) and '_version_seal_' in state.keys():
-            del state['_version_seal_']
-        return str(state)
+        # state = self.__getstate__()
+        # if isinstance(state, dict) and '_version_seal_' in state.keys():
+        #    del state['_version_seal_']
+        # return str(state)
+        return str(self.lo) + ' to ' + str(self.hi)
 
     def features(self):
         '''contains no features'''
@@ -87,9 +88,12 @@ class MoleculeValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        state = self.__getstate__()
-        if isinstance(state, dict) and '_version_seal_' in state.keys():
-            del state['_version_seal_']
+        # state = self.__getstate__()
+        # if isinstance(state, dict) and '_version_seal_' in state.keys():
+        #    del state['_version_seal_']
+        # print('str state', str(state), type(str(state)))
+        state = self.molecules
+        # print('alt state', state, type(state))
         return str(state)
 
     def features(self):
@@ -102,14 +106,12 @@ class MoleculeValue(dawgie.Value):
             state.molecule if state is not None else self.__state
         )
 
-        if not isinstance(moleculeVals.molecules, list):
-            log.error('ERROR: molecules should be a list!')
-        else:
-            # has to be pickleable; convert each molecule to a string
-            cleanVals = []
-            for item in moleculeVals.molecules:
-                cleanVals.append(str(item))
-            moleculeVals.molecules = cleanVals
+        # if not isinstance(moleculeVals.molecules, list):
+        #    log.error('ERROR: molecules should be a list!')
+
+        # has to be pickleable; convert each molecule to a string
+        cleanVals = [str(item) for item in moleculeVals.molecules]
+        moleculeVals.molecules = cleanVals
 
         return moleculeVals
 
@@ -148,6 +150,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
+        self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
@@ -373,6 +376,7 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_sliceSampler'] = BoolValue()
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
+        self['transit_pymc_sliceSampler'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
@@ -438,6 +442,7 @@ class StatusSV(dawgie.StateVector):
             'isValidTarget',
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
+            'transit_pymc_sliceSampler',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',

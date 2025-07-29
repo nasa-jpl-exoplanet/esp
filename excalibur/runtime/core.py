@@ -51,6 +51,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     for key in [
         'system_validate_selectMostRecent',
         'system_validate_maximizeSelfConsistency',
+        'transit_pymc_sliceSampler',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
