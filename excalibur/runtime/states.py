@@ -67,15 +67,55 @@ class HiLoValue(dawgie.Value):
             *((float(hilo.hi), float(hilo.lo)) if hilo else (1, 0))
         )
 
-    # def new(self):
-    #    '''hide explicit requirement for dawgie'''
-    #    return HiLoValue(*((float(self.hi), float(self.lo)) if hilo else (1, 0)))
-
     def hi(self):
         return self._hi
 
     def lo(self):
         return self._lo
+
+
+class MoleculeValue(dawgie.Value):
+    '''helper value for molecule-list type'''
+
+    def __init__(self, molecules: list = []):
+        '''init the molecule list'''
+        self.molecules = list(molecules)
+        self._version_ = dawgie.VERSION(1, 0, 0)
+        return
+
+    def __str__(self):
+        '''define the string format of this class'''
+        return str(self.__getstate__())
+
+    def features(self):
+        '''contains no features'''
+        return []
+
+    def new(self, state=None):
+        '''hide explicit requirement for dawgie'''
+        # print('  SHOULD RETURN THIS',state.molecule)
+        moleculeVals = MoleculeValue(
+            state.molecule if state is not None else self.__state)
+
+        if not isinstance(moleculeVals.molecules, list):
+            log.error('ERROR: molecules should be a list!')
+        else:
+            # has to be pickleable; convert each molecule to a string
+            print('NEW() before fix',moleculeVals)
+
+            cleanVals = []
+            for item in moleculeVals.molecules:
+                print('  item fore',item,type(item))
+                cleanVals.append(str(item))
+                print('  item aftr',item,type(str(item)))
+            moleculeVals.molecules = cleanVals
+
+            print('NEW() after fix ',moleculeVals)
+
+        return moleculeVals
+
+    def molecules(self):
+        return self._molecules
 
 
 class CompositeSV(dawgie.StateVector):
@@ -131,6 +171,10 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_fitmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
@@ -312,6 +356,10 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_fitmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
@@ -411,6 +459,10 @@ class StatusSV(dawgie.StateVector):
             'cerberus_crbmodel_nlevels',
             'cerberus_crbmodel_solrad',
             'cerberus_crbmodel_Hsmax',
+            'cerberus_crbmodel_fitmolecules',
+            'cerberus_crbmodel_HITEMPmolecules',
+            'cerberus_crbmodel_HITRANmolecules',
+            'cerberus_crbmodel_EXOMOLmolecules',
             'cerberus_atmos_bounds_Teq',
             'cerberus_atmos_bounds_abundances',
             'cerberus_atmos_bounds_CTP',
