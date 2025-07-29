@@ -51,11 +51,10 @@ class HiLoValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        # fails. HiLoValue object has no attribute '_HiLoValue__state'
-        # return str(self.__state)
-        return str(self.__getstate__())
-        #    it now prints this:
-        # "{'hi': 1.5, 'lo': 0.75, '_version_seal_': VERSION(design=1, impl=0, bugfix=0)}"
+        state = self.__getstate__()
+        if isinstance(state, dict) and '_version_seal_' in state.keys():
+            del state['_version_seal_']
+        return str(state)
 
     def features(self):
         '''contains no features'''
@@ -88,7 +87,10 @@ class MoleculeValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        return str(self.__getstate__())
+        state = self.__getstate__()
+        if isinstance(state, dict) and '_version_seal_' in state.keys():
+            del state['_version_seal_']
+        return str(state)
 
     def features(self):
         '''contains no features'''
