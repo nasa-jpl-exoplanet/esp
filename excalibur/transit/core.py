@@ -70,6 +70,13 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
+TransitPymcParams = namedtuple(
+    'transit_pymc_params_from_runtime',
+    [
+        'sliceSampler',
+    ],
+)
+
 ctxtglobals = [
     'alt',
     'ald',
@@ -1261,7 +1268,7 @@ def wlversion():
 
 
 def hstwhitelight(
-    allnrm, fin, out, allext, selftype, chainlen=int(1e4), verbose=False
+    allnrm, fin, out, allext, selftype, runtime_params, chainlen=int(1e4), verbose=False
 ):
     '''
     G. ROUDIER: Combined orbital parameters recovery
@@ -1614,13 +1621,21 @@ def hstwhitelight(
             )
             # --------------
             # --< SAMPLING >--
+            if runtime_params.sliceSampler:
+                log.info('>-- HSTWHITELIGHT SAMPLER: Slice --<')
+                sampler = pymc.Slice()
+            else:
+                log.info('>-- HSTWHITELIGHT SAMPLER: Metropolis --<')
+                sampler = pymc.Metropolis()
+
             log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
+
             trace = pymc.sample(
                 chainlen,
                 cores=4,
                 tune=int(chainlen / 2),
                 compute_convergence_checks=False,
-                step=pymc.Metropolis(),  # GMR: TBD - Use runtime
+                step=sampler,
                 progressbar=verbose,
             )
             mcpost = pymc.stats.summary(trace)
@@ -1803,6 +1818,7 @@ def whitelight(
     ext,
     selftype,
     multiwl,
+    runtime_params,
     chainlen=int(1e4),
     verbose=False,
     parentprior=False,
@@ -2124,13 +2140,19 @@ def whitelight(
                 observed=flatwhite[selectfit],
                 logp=LogLH,
             )
+            if runtime_params.sliceSampler:
+                log.info('>-- WHITELIGHT SAMPLER: Slice --<')
+                sampler = pymc.Slice()
+            else:
+                log.info('>-- WHITELIGHT SAMPLER: Metropolis --<')
+                sampler = pymc.Metropolis()
             log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
                 tune=int(chainlen / 2),
                 compute_convergence_checks=False,
-                step=pymc.Metropolis(),
+                step=sampler,
                 progressbar=verbose,
             )
             mcpost = pymc.stats.summary(trace)
@@ -2751,6 +2773,7 @@ def spectrum(
     out,
     ext,
     selftype,
+    runtime_params,
     chainlen=int(1e4),
     verbose=False,
     lcplot=False,
@@ -3047,12 +3070,18 @@ def spectrum(
                     logp=LogLH,
                 )
                 # SAMPLING
+                if runtime_params.sliceSampler:
+                    log.info('>-- SPECTRUM SAMPLER: Slice --<')
+                    sampler = pymc.Slice()
+                else:
+                    log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
+                    sampler = pymc.Metropolis()
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
                     tune=int(chainlen / 2),
                     compute_convergence_checks=False,
-                    step=pymc.Metropolis(),
+                    step=sampler,
                     progressbar=verbose,
                 )
                 mcpost = pymc.stats.summary(trace)
