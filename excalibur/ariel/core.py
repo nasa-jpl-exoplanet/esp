@@ -46,6 +46,9 @@ ArielParams = namedtuple(
         'metallicityDispersion',
         'CtoOaverage',
         'CtoOdispersion',
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -292,7 +295,6 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         # model_params['metallicity'] = metallicity_star_dex + metallicity_planet_dex
                         # stellar metallicity has already been added (in metallicity.py)
                         model_params['metallicity'] = metallicity_planet_dex
-                        # print('model_params metallicity',model_params['metallicity'])
 
                         # planet C/O ratio is assumed to be solar
                         #  (0.54951 is the default in ACEChemistry, so it actually has no effect)

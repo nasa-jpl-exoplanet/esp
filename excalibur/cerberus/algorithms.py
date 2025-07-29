@@ -92,6 +92,9 @@ class XSLib(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
+                    knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -218,6 +221,10 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
+                    knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -365,15 +372,18 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
-                        isothermal=runtime['cerberus_crbmodel_isothermal'],
+                        knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
                         cornerBins=runtime[
                             'cerberus_plotters_cornerBins'
                         ].value(),
+                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                        lshifting=runtime['cerberus_crbmodel_lshifting'],
+                        isothermal=runtime['cerberus_crbmodel_isothermal'],
                     )
 
                     update = self._results(

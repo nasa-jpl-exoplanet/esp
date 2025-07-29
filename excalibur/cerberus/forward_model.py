@@ -45,6 +45,9 @@ def crbmodel(
     isothermal=None,
     lbroadening=None,
     lshifting=None,
+    knownspecies=None,
+    cialist=None,
+    xmollist=None,
     nlevels=None,
     Hsmax=None,
     solrad=None,
@@ -62,6 +65,12 @@ def crbmodel(
         planet = ctxt.planet
     if orbp is None:
         orbp = ctxt.orbp
+    if knownspecies is None:
+        knownspecies = ctxt.knownspecies
+    if cialist is None:
+        cialist = ctxt.cialist
+    if xmollist is None:
+        xmollist = ctxt.xmollist
     if nlevels is None:
         nlevels = ctxt.nlevels
     if Hsmax is None:
@@ -85,12 +94,17 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    # these used to be default parameters above, but are dangerous-default-values
-    # note that these are also defined in cerberus/core/myxsecs()
-    #  maybe put them inside runtime/ops.xml to ensure consistency?
+    print('   NEW IN CRBMODEL')
+    print('knownspecies', knownspecies)
+    print('cialist', cialist)
+    print('xmollist', xmollist)
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-
+    print('   OLD IN CRBMODEL')
+    print('knownspecies  NOT FOUND!!!')
+    print('cialist', cialist)
+    print('xmollist', xmollist)
+    
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
         np.log(solrad) - Hsmax,
