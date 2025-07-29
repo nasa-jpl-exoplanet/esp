@@ -1426,8 +1426,10 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
-                        print('UPDATE THIS to use runtime params!!!',
-                              runtime_params.fitmolecules)
+                        print(
+                            'UPDATE THIS to use runtime params!!!',
+                            runtime_params.fitmolecules,
+                        )
                         print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
