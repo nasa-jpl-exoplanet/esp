@@ -185,11 +185,11 @@ def trigger(selfroot, selfstatus, selftrigger) -> None:
     Don t wanna do that, if anything, the list of members is gonna change,
     I would like to have all changes kept here without affecting algorithms.py
     '''
-    for it, trigger in enumerate(selftrigger):
-        keyloop = [k for k in selfstatus.keys() if k.startswith(trigger.name())]
+    for it, trg in enumerate(selftrigger):
+        keyloop = [k for k in selfstatus.keys() if k.startswith(trg.name())]
         members = [
             dawgie.V_REF(rnt.task, selfroot, selfstatus, k) for k in keyloop
         ]
-        selftrigger[it] = rntstt.TriggerSV(trigger.name(), members)
+        selftrigger[it] = rntstt.TriggerSV(trg.name(), members)
         pass
     return

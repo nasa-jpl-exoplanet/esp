@@ -507,7 +507,7 @@ class TriggerSV(dawgie.StateVector):
         '''SV name'''
         return self._name
 
-    def view(self) -> None:
+    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''SV view'''
         return
 

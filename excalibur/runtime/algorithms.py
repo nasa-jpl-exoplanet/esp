@@ -106,7 +106,7 @@ class Autofill(dawgie.Algorithm):
     def state_vectors(self):
         '''state vectors generated from this algorithm'''
         out = [self.__status]
-        _ = out.extend(self.__algotrigger)
+        out.extend(self.__algotrigger)
         return out
 
     pass
