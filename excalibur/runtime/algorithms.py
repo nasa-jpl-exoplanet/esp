@@ -25,10 +25,10 @@ class Autofill(dawgie.Algorithm):
         self.__parent = Create()
         self.__status = states.StatusSV()
         self.__algotrigger = [
-            states.TriggerSV('spectrum', []),
-            states.TriggerSV('cerberus', []),
-            states.TriggerSV('ariel', []),
-            states.TriggerSV('selftest', []),
+            states.TriggerSV('spectrum', [dawgie.V_REF]),
+            states.TriggerSV('cerberus', [dawgie.V_REF]),
+            states.TriggerSV('ariel', [dawgie.V_REF]),
+            states.TriggerSV('selftest', [dawgie.V_REF]),
         ]
         pass
 

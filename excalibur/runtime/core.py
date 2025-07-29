@@ -189,7 +189,10 @@ def trigger(selfroot, selfstatus, selftrigger) -> None:
     for it, trg in enumerate(selftrigger):
         keyloop = [k for k in selfstatus.keys() if k.startswith(trg.name())]
         members = [
-            dawgie.V_REF(fetch('excalibur.runtime').task, selfroot, selfstatus, k) for k in keyloop
+            dawgie.V_REF(
+                fetch('excalibur.runtime').task, selfroot, selfstatus, k
+            )
+            for k in keyloop
         ]
         selftrigger[it] = states.TriggerSV(trg.name(), members)
         pass
