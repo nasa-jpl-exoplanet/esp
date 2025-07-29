@@ -286,7 +286,7 @@ class StatusSV(dawgie.StateVector):
 
     def __init__(self):
         '''init the state vector with empty values'''
-        self._version_ = dawgie.VERSION(1, 1, 0)
+        self._version_ = dawgie.VERSION(1, 0, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
         self['isValidTarget'] = BoolValue()
         self['runTarget'] = BoolValue(True)

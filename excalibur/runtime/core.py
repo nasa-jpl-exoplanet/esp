@@ -5,10 +5,11 @@ import re
 
 import dawgie
 import excalibur
-import excalibur.runtime as rnt
-import excalibur.runtime.states as rntstt
+
+from importlib import import_module as fetch  # avoid cyclic-import
 
 from . import binding
+from . import states
 
 import logging
 
@@ -188,8 +189,8 @@ def trigger(selfroot, selfstatus, selftrigger) -> None:
     for it, trg in enumerate(selftrigger):
         keyloop = [k for k in selfstatus.keys() if k.startswith(trg.name())]
         members = [
-            dawgie.V_REF(rnt.task, selfroot, selfstatus, k) for k in keyloop
+            dawgie.V_REF(fetch('excalibur.runtime').task, selfroot, selfstatus, k) for k in keyloop
         ]
-        selftrigger[it] = rntstt.TriggerSV(trg.name(), members)
+        selftrigger[it] = states.TriggerSV(trg.name(), members)
         pass
     return
