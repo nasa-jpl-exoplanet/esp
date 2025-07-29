@@ -92,9 +92,15 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
-                    knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
-                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                    knownspecies=runtime[
+                        'cerberus_crbmodel_HITEMPmolecules'
+                    ].molecules,
+                    cialist=runtime[
+                        'cerberus_crbmodel_HITRANmolecules'
+                    ].molecules,
+                    xmollist=runtime[
+                        'cerberus_crbmodel_EXOMOLmolecules'
+                    ].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
