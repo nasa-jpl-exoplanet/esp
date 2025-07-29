@@ -93,6 +93,9 @@ class XSLib(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
+                    knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -239,9 +242,7 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
-                    # MCMC_chains=1,
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
@@ -250,6 +251,10 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
+                    knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -263,16 +268,6 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                # print()
-                # print('runtime',runtime)
-                # print()
-                # print('runtime params1',runtime_params)
-                # fails print('runtime params2',runtime_params.keys())
-                # import pdb; pdb.set_trace()
-
-                # print('runtime fitT',runtime_params.fitT)
-                # print('runtime lbroad',runtime_params.lbroadening)
-                # print('runtime params3',runtime_params.boundTeq)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
@@ -407,15 +402,18 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
-                        isothermal=runtime['cerberus_crbmodel_isothermal'],
+                        knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
                         cornerBins=runtime[
                             'cerberus_plotters_cornerBins'
                         ].value(),
+                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                        lshifting=runtime['cerberus_crbmodel_lshifting'],
+                        isothermal=runtime['cerberus_crbmodel_isothermal'],
                     )
 
                     update = self._results(

@@ -65,6 +65,9 @@ pymclog.setLevel(logging.ERROR)
 CerbXSlibParams = namedtuple(
     'cerberus_xslib_params_from_runtime',
     [
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -84,6 +87,10 @@ CerbAtmosParams = namedtuple(
         'fitT',
         'fitCtoO',
         'fitNtoO',
+        'fitmolecules',
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -104,13 +111,16 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'Hsmax',
         'solrad',
         'cornerBins',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -156,10 +166,17 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     '''
     logarithmic_opacity_summing = False
 
-    # these used to be default parameters above, but are dangerous-default-values
     knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    print('  OLD in myxsecs')
+    print('knownspecies', knownspecies)
+    print('cialist', cialist)
+    print('xmollist', xmollist)
+    print('  NEW in myxsecs')
+    print('knownspecies', runtime_params.knownspecies)
+    print('cialist', runtime_params.cialist)
+    print('xmollist', runtime_params.xmollist)
 
     cs = False
     planet_letters = []
@@ -707,6 +724,8 @@ def atmos(
             # asdf: get this from runtime
             'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
         }
+        print('fitmolecules OLD:', modparlbl)
+        print('fitmolecules NEW:', runtime_params.fitmolecules)
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
             modparlbl['TEA'].remove('NtoO')
@@ -1407,6 +1426,9 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
+                        print('UPDATE THIS to use runtime params!!!',
+                              runtime_params.fitmolecules)
+                        print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
@@ -2138,6 +2160,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     orbp=fin['priors'],
                     hzlib=crbhzlib,
                     planet=p,
+                    knownspecies=runtime_params.knownspecies,
+                    cialist=runtime_params.cialist,
+                    xmollist=runtime_params.xmollist,
                     lbroadening=runtime_params.lbroadening,
                     lshifting=runtime_params.lshifting,
                     isothermal=runtime_params.isothermal,
@@ -2175,6 +2200,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hzlib=crbhzlib,
                     cheq=tceqdict_profiled,
                     planet=p,
+                    knownspecies=runtime_params.knownspecies,
+                    cialist=runtime_params.cialist,
+                    xmollist=runtime_params.xmollist,
                     lbroadening=runtime_params.lbroadening,
                     lshifting=runtime_params.lshifting,
                     isothermal=runtime_params.isothermal,
@@ -2286,6 +2314,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         hzlib=crbhzlib,
                         cheq=tceqdict,
                         planet=p,
+                        knownspecies=runtime_params.knownspecies,
+                        cialist=runtime_params.cialist,
+                        xmollist=runtime_params.xmollist,
                         lbroadening=runtime_params.lbroadening,
                         lshifting=runtime_params.lshifting,
                         isothermal=runtime_params.isothermal,
