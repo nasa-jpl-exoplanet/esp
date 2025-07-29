@@ -2,6 +2,7 @@
 <levers>
   <controls system.validate.selectMostRecent="false"  
             system.validate.maximizeSelfConsistency="true"
+            transit.pymc.sliceSampler="false"
             cerberus.atmos.fitCloudParameters="true"
             cerberus.atmos.fitT="true"
             cerberus.atmos.fitCtoO="true"
@@ -96,7 +97,7 @@
     <target because="faint V=19 Galactic center survey">SWEEPS-4</target>
     <target because="faint V=20 Galactic center survey">SWEEPS-11</target>
     <target because="old shorthand for WD 1856+534">WD 1856</target>
-    <target because="taurex-sim targets waste CPU" isRegex="true">.*\(taurex sim @TS\)$</target>
+    <target because="taurex-sim targets no longer implemented" isRegex="true">.*\(taurex sim @TS\)$</target>
     <target because="false positive (Morton et al 2016)">Kepler-470</target>
     <target because="false positive (Morton et al 2016)">Kepler-488</target>
     <target because="false positive (Morton et al 2016)">Kepler-494</target>
