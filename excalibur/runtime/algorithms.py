@@ -24,12 +24,6 @@ class Autofill(dawgie.Algorithm):
         self._version_ = dawgie.VERSION(1, 0, 1)
         self.__parent = Create()
         self.__status = states.StatusSV()
-        self.__algotrigger = [
-            states.TriggerSV('spectrum', [dawgie.V_REF]),
-            states.TriggerSV('cerberus', [dawgie.V_REF]),
-            states.TriggerSV('ariel', [dawgie.V_REF]),
-            states.TriggerSV('selftest', [dawgie.V_REF]),
-        ]
         pass
 
     def is_valid(self):
@@ -105,9 +99,7 @@ class Autofill(dawgie.Algorithm):
 
     def state_vectors(self):
         '''state vectors generated from this algorithm'''
-        out = [self.__status]
-        out.extend(self.__algotrigger)
-        return out
+        return [self.__status]
 
     pass
 
