@@ -93,7 +93,9 @@ class Autofill(dawgie.Algorithm):
         '''
         keyloop = [k for k in self.__status.keys() if k.startswith(taskname)]
         out = [
-            dawgie.V_REF(fetch('excalibur.runtime').task, self, self.__status, k)
+            dawgie.V_REF(
+                fetch('excalibur.runtime').task, self, self.__status, k
+            )
             for k in keyloop
         ]
         return out
