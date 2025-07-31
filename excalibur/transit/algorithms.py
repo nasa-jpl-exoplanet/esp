@@ -187,10 +187,14 @@ class WhiteLight(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: transit.normalization, system.finalize'''
-        return [
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
-            dawgie.ALG_REF(sys.task, self.__fin),
-        ] + self.__rt.trigger('spectrum') + self.__rt.refs_for_proceed()
+        return (
+            [
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
+                dawgie.ALG_REF(sys.task, self.__fin),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     def state_vectors(self):
         '''Output State Vectors: transit.whitelight'''
@@ -369,11 +373,15 @@ class Spectrum(dawgie.Algorithm):
     def previous(self):
         '''Input State Vectors: system.finalize, transit.normalization,
         transit.whitelight'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
-        ] + self.__rt.trigger('spectrum') + self.__rt.refs_for_proceed()
+        return (
+            [
+                dawgie.ALG_REF(sys.task, self.__fin),
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     def state_vectors(self):
         '''Output State Vectors: transit.spectrum'''
