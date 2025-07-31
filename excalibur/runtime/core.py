@@ -3,11 +3,9 @@
 import os
 import re
 
-import dawgie
 import excalibur
 
 from . import binding
-from . import states
 
 import logging
 
