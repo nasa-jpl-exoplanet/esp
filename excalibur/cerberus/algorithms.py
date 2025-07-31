@@ -16,7 +16,6 @@ import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
 import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
 import excalibur.transit as trn

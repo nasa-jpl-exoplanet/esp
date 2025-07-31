@@ -24,7 +24,6 @@ from excalibur.util.checksv import checksv
 
 import excalibur.data as dat
 import excalibur.data.algorithms as datalg
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
 import excalibur.system as sys
