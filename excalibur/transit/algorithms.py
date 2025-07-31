@@ -190,13 +190,7 @@ class WhiteLight(dawgie.Algorithm):
         return [
             dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
             dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'spectrum_steps',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        ] + self.__rt.trigger('spectrum') + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: transit.whitelight'''
@@ -379,13 +373,7 @@ class Spectrum(dawgie.Algorithm):
             dawgie.ALG_REF(sys.task, self.__fin),
             dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
             dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'spectrum_steps',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        ] + self.__rt.trigger('spectrum') + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: transit.spectrum'''

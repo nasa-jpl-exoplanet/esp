@@ -159,37 +159,7 @@ class Atmos(dawgie.Algorithm):
             dawgie.ALG_REF(sys.task, self.__fin),
             dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__xsl),
             dawgie.ALG_REF(ariel.task, self.__arielsim),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_steps',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCloudParameters',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitT',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCtoO',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitNtoO',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        ] + + self.__rt.trigger('cerberus') + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: cerberus.atmos'''
@@ -201,9 +171,6 @@ class Atmos(dawgie.Algorithm):
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         if sfin:
             sfin = 'Missing system params!'
-
-        # print('  ALLOWED FILTERS',self.__rt.sv_as_dict()['status']['allowed_filter_names'])
-
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
@@ -239,9 +206,7 @@ class Atmos(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
-                    # MCMC_chains=1,
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
@@ -263,16 +228,6 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                # print()
-                # print('runtime',runtime)
-                # print()
-                # print('runtime params1',runtime_params)
-                # fails print('runtime params2',runtime_params.keys())
-                # import pdb; pdb.set_trace()
-
-                # print('runtime fitT',runtime_params.fitT)
-                # print('runtime lbroad',runtime_params.lbroadening)
-                # print('runtime params3',runtime_params.boundTeq)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
