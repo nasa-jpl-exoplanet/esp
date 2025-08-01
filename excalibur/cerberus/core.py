@@ -169,6 +169,14 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    print('  OLD in myxsecs')
+    print('knownspecies', knownspecies)
+    print('cialist', cialist)
+    print('xmollist', xmollist)
+    print('  NEW in myxsecs')
+    print('knownspecies', runtime_params.knownspecies)
+    print('cialist', runtime_params.cialist)
+    print('xmollist', runtime_params.xmollist)
 
     cs = False
     planet_letters = []
@@ -714,6 +722,8 @@ def atmos(
             # asdf: get this from runtime
             'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
         }
+        print('fitmolecules OLD:', modparlbl)
+        print('fitmolecules NEW:', runtime_params.fitmolecules)
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
             modparlbl['TEA'].remove('NtoO')
@@ -1414,11 +1424,17 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
+<<<<<<< HEAD
                         # print(
                         #    'UPDATE THIS to use runtime params!!!',
                         #    runtime_params.fitmolecules,
                         # )
                         # print(' ACTUALLY. UPDATE ALL THREE!!')
+=======
+                        print('UPDATE THIS to use runtime params!!!',
+                              runtime_params.fitmolecules)
+                        print(' ACTUALLY. UPDATE ALL THREE!!')
+>>>>>>> 45067d6 (propagate molecule runtime params into cerb,ariel,selftest)
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
