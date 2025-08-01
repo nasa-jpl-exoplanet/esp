@@ -361,7 +361,8 @@ class SpectrumSV(ExcaliburSV):
                         fullspec = [
                             np.mean(mc['rprs']) if np.isnan(rp) else rp
                             for mc, rp in zip(
-                                self['data'][p]['MCTRACE'], self['data'][p]['ES']
+                                self['data'][p]['MCTRACE'],
+                                self['data'][p]['ES'],
                             )
                         ]
                         fullspec = np.array(fullspec)
