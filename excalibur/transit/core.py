@@ -2818,7 +2818,6 @@ def spectrum(
         allz = wht['data'][p]['postsep']
         allphase = np.array(wht['data'][p]['postflatphase'])
         whiterprs = np.nanmedian(wht['data'][p]['mctrace']['rprs'])
-        print('whitelight Rp/Rs-squared', whiterprs)
         allwave = []
         allspec = []
         allim = []
@@ -2917,8 +2916,8 @@ def spectrum(
                 data = np.array(
                     [np.nanmean(d[s]) for d, s in zip(allspec, select)]
                 )
-                #print('data size',data.shape)
-                #for n, s in zip(allpnoise, select):
+                # print('data size',data.shape)
+                # for n, s in zip(allpnoise, select):
                 #    print('noise REDUCED by sampling factor!', np.nansum(s))
                 dnoise = np.array(
                     [
@@ -2927,17 +2926,7 @@ def spectrum(
                     ]
                 )
                 pass
-#asdf
-#  to do:
-#    maybe divide red points by im
-#    check that im normalization is used in the fit. probably not itk
-#    some of the above sampling sums are zero, so there are NaNs going on with select
-#     check that valid shows the NaNs ig. seems like arrays are full length still
-#   run longer to make sure converged
-#   ** show the fit model **
-#   plot the residuals
-#   maybe check some chi2 action inside of pymc
-    
+
             valid = np.isfinite(data)
             if selftype in ['transit']:
                 try:
@@ -3078,9 +3067,8 @@ def spectrum(
                     visits=visits,
                     mcmcdat=data[valid],
                     mcmcsig=dnoise[valid],
-#                    mcmcsig=1e0
-#                    / np.sqrt(tauwbdata[valid]),  # GMR: FIXME
-#                    / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
+                    # mcmcsig=1e0
+                    # / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
@@ -3139,8 +3127,7 @@ def spectrum(
                     pass
                 # save rprs
                 clspvl = np.nanmedian(trace.posterior['rprs'])
-                print(' wave,clspv from trace', (wl+wh)/2, clspvl)
-                    
+
                 # now produce fitted estimates
                 specparams = (
                     mcests['rprs'],
@@ -3158,8 +3145,8 @@ def spectrum(
                         vitcp=1e0,
                         oslope=0,
                         oitcp=1,
-                        #oslope=aos[iv],
-                        #oitcp=aoi[iv],
+                        # oslope=aos[iv],
+                        # oitcp=aoi[iv],
                     )
                     allimout.extend(imout)
                     pass
@@ -3182,20 +3169,14 @@ def spectrum(
                     'residuals': data[valid] - lout[valid],
                 }
                 # Spectrum outlier rejection + inpaint with np.nan
-                print(' whitelight Rp/Rs-squared', whiterprs)
-                print(' clspvl', clspvl)
                 clspvlsaved = clspvl
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
-                    print('  NANING IT!')
                     clspvl = np.nan
                     pass
                 out['data'][p]['ES'].append(clspvl)
                 out['data'][p]['ESerr'].append(
                     np.nanstd(trace.posterior['rprs'])
                 )
-                print(' wave,ES   ', (wl+wh)/2, clspvl)
-                print(' wave,ESerr', (wl+wh)/2,
-                      np.nanstd(trace.posterior['rprs']))
 
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
@@ -3211,63 +3192,75 @@ def spectrum(
                     # simplecorner(mctrace, verbose=verbose)
 
                     #  POSTERIOR HISTOS VS PRIOR
-                    # postpriors(mctrace, prior_center, nodes, verbose=verbose)
-                    
+                    postpriors(mctrace, prior_center, nodes, verbose=verbose)
+
                     #  PLOT LIGHTCURVE for this wavelength (cf whitelight)
-                    myfig = plt.figure(figsize=(6, 5))
+                    _ = plt.figure(figsize=(6, 5))
 
                     # print('datanorm keys',nrm['data'][p].keys())
                     # print('whitelight keys',wht['data'][p].keys())
                     # print(' visits',wht['data'][p]['visits'])
- 
-                    #asdf
+
+                    # asdf
                     # show the data for this wavelength channel as red
-                    plt.scatter(allphase, data, 
-                                marker='o', s=20, ls='None',
-                                edgecolors='r', facecolors='None')
+                    plt.scatter(
+                        allphase,
+                        data,
+                        marker='o',
+                        s=20,
+                        ls='None',
+                        edgecolors='r',
+                        facecolors='None',
+                    )
                     # compare the data against the fit depth (also red)
-                    print('red dashed line',
-                          [np.min(allphase), np.max(allphase)],
-                          [1-clspvlsaved**2, 1-clspvlsaved**2])
-                    plt.plot([np.min(allphase), np.max(allphase)],
-                             [1-clspvlsaved**2, 1-clspvlsaved**2],
-                             'r:')
+                    plt.plot(
+                        [np.min(allphase), np.max(allphase)],
+                        [1 - clspvlsaved**2, 1 - clspvlsaved**2],
+                        'r:',
+                    )
                     #  also show the uncertainties used for mcmcsig
                     #  ok actually use dnoise, which is where this comes from
-                    sigma = 1 / np.sqrt(np.nanmedian(tauwbdata))
-                    #print('tauwbdata', tauwbdata)
-                    #print('sigma', sigma)
-                    plt.errorbar(allphase, data,
-                                 yerr=dnoise,
-                                 ls='None',
-                                 color='r',
-                                 zorder=1,
-                                 )
+                    # sigma = 1 / np.sqrt(np.nanmedian(tauwbdata))
+                    # print('tauwbdata', tauwbdata)
+                    # print('sigma', sigma)
+                    plt.errorbar(
+                        allphase,
+                        data,
+                        yerr=dnoise,
+                        ls='None',
+                        color='r',
+                        zorder=1,
+                    )
                     # and show the best-fit lightcurve (single wavelength)
                     #  note that expected already includes the instrument model
                     #  to get raw, divide by lcfit['im']
                     orderme = np.argsort(lcfit['phase'])
-                    plt.plot(lcfit['phase'][orderme],
-                             lcfit['expected'][orderme],
-                             'g--', zorder=5)
-                    #print('expected',(lcfit['expected']))
-                    #print('len check',len(lcfit['phase']))
-                    #print('len check',len(lcfit['expected']))
-                    #print('len check',len(lcfit['im']))
-                    plt.plot(lcfit['phase'][orderme],
-                             lcfit['expected'][orderme]/lcfit['im'][orderme],
-                             'b--', zorder=5)
+                    plt.plot(
+                        lcfit['phase'][orderme],
+                        lcfit['expected'][orderme],
+                        'g--',
+                        zorder=5,
+                    )
+                    # print('expected',(lcfit['expected']))
+                    # print('len check',len(lcfit['phase']))
+                    # print('len check',len(lcfit['expected']))
+                    # print('len check',len(lcfit['im']))
+                    plt.plot(
+                        lcfit['phase'][orderme],
+                        lcfit['expected'][orderme] / lcfit['im'][orderme],
+                        'b--',
+                        zorder=5,
+                    )
                     print('mean of expected', np.median(lcfit['expected']))
-                    #asdf
-                    
-                    allwhite = wht['data'][p]['allwhite']
+                    # asdf
+
                     newdata = []
                     for d in wht['data'][p]['allwhite']:
                         newdata.extend(d)
                     newdata = np.array(newdata)
                     # these uncorrected fluxes are a bit lower
                     # plt.plot(allphase, newdata, 'o')
-                    plt.plot(allphase, newdata/allim, 'x', c='k')
+                    plt.plot(allphase, newdata / allim, 'x', c='k')
                     # postlc looks like the same thing as the model
                     # postlc = wht['data'][p]['postlc']
                     # plt.plot(allphase, postlc, '^')
@@ -3280,9 +3273,14 @@ def spectrum(
                     #    allwhite = wht['data'][p]['allwhite'][ivisit]
 
                     # compare the whitelight depth against the average depth
-                    plt.plot([np.min(allphase), np.max(allphase)],
-                             [1-whiterprs**2, 1-whiterprs**2, ],
-                             'k:')
+                    plt.plot(
+                        [np.min(allphase), np.max(allphase)],
+                        [
+                            1 - whiterprs**2,
+                            1 - whiterprs**2,
+                        ],
+                        'k:',
+                    )
                     # and put on the full whitelight model too
                     orderme = np.argsort(allphase)
                     plt.plot(allphase[orderme], model[orderme], 'k--')
@@ -3292,7 +3290,7 @@ def spectrum(
                 startflag = False
                 pass
             pass
-        plt.show() #asdf
+        plt.show()  # asdf
         out['data'][p]['RSTAR'].append(priors['R*'] * sscmks['Rsun'])
         out['data'][p]['Hs'].append(Hs)
         out['data'][p]['Teq'] = eqtemp
