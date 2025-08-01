@@ -676,9 +676,7 @@ def atmos(
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
-        # modfam = ['TEC', 'TEA']
-        # (just TEC for now, otherwise it takes twice as much CPU)
-        modfam = ['TEC']
+        modfam = ['TEC', 'TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -707,9 +705,7 @@ def atmos(
         if arielmodel not in spc['data']['models']:
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
-        # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        # asdf   don't slow down HST fitting with TEA just yet
-        modfam = ['TEC', 'PHOTOCHEM']
+        modfam = ['TEC', 'TEA', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
