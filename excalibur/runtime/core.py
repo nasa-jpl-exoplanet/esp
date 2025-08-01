@@ -62,6 +62,10 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_crbmodel_lbroadening',
         'cerberus_crbmodel_lshifting',
         'cerberus_crbmodel_isothermal',
+        'cerberus_crbmodel_fitmolecules',
+        'cerberus_crbmodel_HITEMPmolecules',
+        'cerberus_crbmodel_HITRANmolecules',
+        'cerberus_crbmodel_EXOMOLmolecules',
         'cerberus_atmos_bounds_Teq',
         'cerberus_atmos_bounds_abundances',
         'cerberus_atmos_bounds_CTP',
@@ -152,6 +156,33 @@ def load(sv_dict: {str: {}}, targets) -> None:
     controls = sv_dict['controls']
     for knob in controls:
         controls[knob] = controls[knob].new(getattr(settings.controls, knob))
+        print(knob, '=', controls[knob], type(controls[knob]))
+
+        # SPECIAL for molecule lists !!!
+        # the list looks pickleable, but the items are actually of type:
+        #  <class 'excalibur.runtime.binding.HITRANmolecule'>
+        # if type(controls[knob])==list:
+        if 'moleculess' in knob:
+            print('SPECIAL MOD!!')
+            cleancontrol = []
+            for item in controls[knob].molecules:
+                print('item',item,type(item))
+                cleancontrol.append(str(item))
+                print('item',item,type(str(item)))
+                print()
+            print(' NEW:', type(cleancontrol))
+            print(' NEW:', type(cleancontrol[0]))
+            print()
+            print(' BEFORE:', controls[knob].molecules)
+            print(' BEFORE:', type(controls[knob].molecules))
+            print(' BEFORE:', type(controls[knob].molecules[0]))
+            controls[knob].molecules = cleancontrol
+            print(' AFTER: ', controls[knob].molecules)
+            print(' AFTER: ', type(controls[knob].molecules))
+            print(' AFTER: ', type(controls[knob].molecules[0]))
+
+        # print()
+    # print('YEA controls knobs', controls)
     sv_dict['filters']['excludes'].extend(
         [str(s) for s in settings.filters.exclude]
     )
@@ -171,4 +202,4 @@ def load(sv_dict: {str: {}}, targets) -> None:
             sv['overrides'][override.name] = override.steps
     _sequester2sv(settings.run_only, sv_dict['run_only'], targets)
     _sequester2sv(settings.sequester, sv_dict['sequester'], targets)
-    return
+    import pdb; pdb.set_trace()
