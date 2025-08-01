@@ -166,17 +166,20 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     '''
     logarithmic_opacity_summing = False
 
-    knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
-    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-    print('  OLD in myxsecs')
-    print('knownspecies', knownspecies)
-    print('cialist', cialist)
-    print('xmollist', xmollist)
-    print('  NEW in myxsecs')
-    print('knownspecies', runtime_params.knownspecies)
-    print('cialist', runtime_params.cialist)
-    print('xmollist', runtime_params.xmollist)
+    # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
+    # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
+    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # print('  OLD in myxsecs')
+    # print('knownspecies', knownspecies)
+    # print('cialist', cialist)
+    # print('xmollist', xmollist)
+    # print('  NEW in myxsecs')
+    # print('knownspecies', runtime_params.knownspecies)
+    # print('cialist', runtime_params.cialist)
+    # print('xmollist', runtime_params.xmollist)
+    knownspecies = runtime_params.knownspecies
+    cialist = runtime_params.cialist
+    xmollist = runtime_params.xmollist
 
     cs = False
     planet_letters = []

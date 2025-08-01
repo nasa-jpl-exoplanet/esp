@@ -94,16 +94,16 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    print('   NEW IN CRBMODEL')
-    print('knownspecies', knownspecies)
-    print('cialist', cialist)
-    print('xmollist', xmollist)
-    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-    print('   OLD IN CRBMODEL')
-    print('knownspecies  NOT FOUND!!!')
-    print('cialist', cialist)
-    print('xmollist', xmollist)
+    # print('   NEW IN CRBMODEL')
+    # print('knownspecies', knownspecies)
+    # print('cialist', cialist)
+    # print('xmollist', xmollist)
+    # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
+    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # print('   OLD IN CRBMODEL')
+    # print('knownspecies  NOT FOUND!!!')
+    # print('cialist', cialist)
+    # print('xmollist', xmollist)
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
