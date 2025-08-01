@@ -282,10 +282,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 for atmosModel in atmosModels:
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
-                    if 'TEA' in atmosModel:
-                        useTEA = True
-                    else:
-                        useTEA = False
+                    useTEA = bool('TEA' in atmosModel)
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
                         # print(' - using a low mmw')
