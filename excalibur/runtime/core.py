@@ -3,9 +3,7 @@
 import os
 import re
 
-import dawgie
 import excalibur
-import excalibur.runtime.states as rntstt
 
 from . import binding
 
