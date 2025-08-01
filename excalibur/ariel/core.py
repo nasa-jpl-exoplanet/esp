@@ -204,15 +204,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
             pressure = pgrid[::-1]
             # Assume solar metallicity here but then below use each model's metallicity
             mmwsolar, Hs = calc_mmw_Hs(
-<<<<<<< HEAD
-<<<<<<< HEAD
                 pressure, eqtemp, model_params['logg'], useTEA=False
-=======
-                pressure, eqtemp, model_params['logg'], TEA=False
->>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
-=======
-                pressure, eqtemp, model_params['logg'], useTEA=False
->>>>>>> 16a6c2b (rename TEA boolean and TEA function to avoid confusion)
             )
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
             # this is used for plot scaling
@@ -288,12 +280,6 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
                     useTEA = bool('TEA' in atmosModel)
-
-                    if 'TEA' in atmosModel:
-                        useTEA = True
-                    else:
-                        useTEA = False
-
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
                         # print(' - using a low mmw')
