@@ -1268,7 +1268,14 @@ def wlversion():
 
 
 def hstwhitelight(
-    allnrm, fin, out, allext, selftype, runtime_params, chainlen=int(1e4), verbose=False
+    allnrm,
+    fin,
+    out,
+    allext,
+    selftype,
+    runtime_params,
+    chainlen=int(1e4),
+    verbose=False,
 ):
     '''
     G. ROUDIER: Combined orbital parameters recovery
