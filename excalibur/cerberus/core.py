@@ -169,14 +169,6 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-    print('  OLD in myxsecs')
-    print('knownspecies', knownspecies)
-    print('cialist', cialist)
-    print('xmollist', xmollist)
-    print('  NEW in myxsecs')
-    print('knownspecies', runtime_params.knownspecies)
-    print('cialist', runtime_params.cialist)
-    print('xmollist', runtime_params.xmollist)
 
     cs = False
     planet_letters = []
@@ -724,8 +716,6 @@ def atmos(
             # asdf: get this from runtime
             'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
         }
-        print('fitmolecules OLD:', modparlbl)
-        print('fitmolecules NEW:', runtime_params.fitmolecules)
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
             modparlbl['TEA'].remove('NtoO')
@@ -1426,11 +1416,11 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
-                        print(
-                            'UPDATE THIS to use runtime params!!!',
-                            runtime_params.fitmolecules,
-                        )
-                        print(' ACTUALLY. UPDATE ALL THREE!!')
+                        # print(
+                        #    'UPDATE THIS to use runtime params!!!',
+                        #    runtime_params.fitmolecules,
+                        # )
+                        # print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
@@ -1972,11 +1962,11 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         }
                         truth_params = atm[p]['TRUTH_MODELPARAMS']
                     else:
-                        print(
+                        log.error(
                             'ERROR: true spectrum is missing from the atmos output'
                         )
                 elif 'TRUTH_SPECTRUM' in atm[p].keys():
-                    print(
+                    log.error(
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
@@ -2511,7 +2501,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 ],
             }
         else:
-            print(
+            log.error(
                 'ERROR: unknown tier level for mass-metal plot',
                 runtime_params.tier,
             )
@@ -2852,6 +2842,7 @@ def rlsversion():
     '''
     GMR:110 Initial release to IPAC
     GMR:111 Removed empty keys
+    GMR: Dead code. Should be removed
     '''
     return dawgie.VERSION(1, 1, 1)
 
@@ -2865,7 +2856,9 @@ def release(trgt, fin, out, verbose=False):
     ext [INPUT]: 'HST-WFC3-IR-G141-SCAN'
     verbose [OPTIONAL]: verbosity
     '''
-    print('target name in cerb.release', trgt)
+    if verbose:
+        print('target name in cerb.release', trgt)
+        pass
     rlsed = False
     plist = fin['priors']['planets']
     thispath = os.path.join(excalibur.context['data_dir'], 'CERBERUS')

@@ -310,15 +310,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
-<<<<<<< HEAD
-<<<<<<< HEAD
                         useTEA=useTEA,
-=======
-                        TEA=useTEA,
->>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
-=======
-                        useTEA=useTEA,
->>>>>>> 16a6c2b (rename TEA boolean and TEA function to avoid confusion)
                     )
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
                     if HoverRp > 0.04:
@@ -515,15 +507,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
-<<<<<<< HEAD
-<<<<<<< HEAD
                         useTEA=useTEA,
-=======
-                        TEA=useTEA,
->>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
-=======
-                        useTEA=useTEA,
->>>>>>> 16a6c2b (rename TEA boolean and TEA function to avoid confusion)
                     )
                     # print('lower mmw,Hs new method', mmwnow, Hs)
 

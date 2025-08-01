@@ -5,7 +5,6 @@ import re
 
 import dawgie
 import excalibur
-import excalibur.runtime as rnt
 import excalibur.runtime.states as rntstt
 
 from . import binding
@@ -181,22 +180,4 @@ def load(sv_dict: {str: {}}, targets) -> None:
             sv['overrides'][override.name] = override.steps
     _sequester2sv(settings.run_only, sv_dict['run_only'], targets)
     _sequester2sv(settings.sequester, sv_dict['sequester'], targets)
-    return
-
-
-def trigger(selfroot, selfstatus, selftrigger) -> None:
-    '''
-    GMR: Populates selftrigger by combining elements of selfstatus.
-    That is convoluted because it could have be done by initiating
-    the composite SV with the right members to start with, inside algorithms.
-    Don t wanna do that, if anything, the list of members is gonna change,
-    I would like to have all changes kept here without affecting algorithms.py
-    '''
-    for it, trigger in enumerate(selftrigger):
-        keyloop = [k for k in selfstatus.keys() if k.startswith(trigger.name())]
-        members = [
-            dawgie.V_REF(rnt.task, selfroot, selfstatus, k) for k in keyloop
-        ]
-        selftrigger[it] = rntstt.TriggerSV(trigger.name(), members)
-        pass
     return

@@ -24,15 +24,6 @@ class Autofill(dawgie.Algorithm):
         self._version_ = dawgie.VERSION(1, 1, 1)
         self.__parent = Create()
         self.__status = states.StatusSV()
-<<<<<<< HEAD
-        self.__algotrigger = [
-            states.TriggerSV('spectrum', []),
-            states.TriggerSV('cerberus', []),
-            states.TriggerSV('ariel', []),
-            states.TriggerSV('selftest', []),
-        ]
-=======
->>>>>>> eb367fc (taking it back)
         pass
 
     def is_valid(self):
@@ -132,7 +123,7 @@ class Create(dawgie.Analyzer):
 
     def __init__(self):
         '''init the create process'''
-        self._version_ = dawgie.VERSION(1, 1, 1)
+        self._version_ = dawgie.VERSION(1, 0, 1)
         self.__table = [
             states.FilterSV(),
             states.PymcSV('cerberuschains'),
