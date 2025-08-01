@@ -5,7 +5,6 @@ import re
 
 import dawgie
 import excalibur
-import excalibur.runtime as rnt
 import excalibur.runtime.states as rntstt
 
 from . import binding
@@ -206,4 +205,4 @@ def load(sv_dict: {str: {}}, targets) -> None:
             sv['overrides'][override.name] = override.steps
     _sequester2sv(settings.run_only, sv_dict['run_only'], targets)
     _sequester2sv(settings.sequester, sv_dict['sequester'], targets)
-    import pdb; pdb.set_trace()
+    return

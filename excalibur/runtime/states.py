@@ -545,26 +545,3 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
         return
 
     pass
-
-
-class TriggerSV(dawgie.StateVector):
-    '''
-    GMR: Composite SV used to trigger tasks with a long list of knobs
-    '''
-
-    def __init__(self, name, members: [dawgie.V_REF]):
-        '''SV init'''
-        self._version_ = dawgie.VERSION(1, 0, 0)
-        self._name = name
-        self[name] = members
-        return
-
-    def name(self):
-        '''SV name'''
-        return self._name
-
-    def view(self) -> None:
-        '''SV view'''
-        return
-
-    pass
