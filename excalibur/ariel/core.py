@@ -294,6 +294,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         # stellar metallicity has already been added (in metallicity.py)
                         model_params['metallicity'] = metallicity_planet_dex
 
+                        # model_params['metallicity'] = 0.0
+                        # print('model_params metallicity SET BY HAND!!',
+                        #    model_params['metallicity'])
+
                         # planet C/O ratio is assumed to be solar
                         #  (0.54951 is the default in ACEChemistry, so it actually has no effect)
                         # actually, let's consider a distribution of C/O, as done for FINESSE
