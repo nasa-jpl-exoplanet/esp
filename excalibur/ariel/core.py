@@ -58,14 +58,12 @@ ArielParams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
-def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
+def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, TEA=False):
     '''
     calculate the mean molecular weight and scale height
     '''
-    if useTEA:
-        mixratio, fH2, fHe = crbutil.calcTEA(
-            pressureArray, temperature, X2Hr=X2Hr
-        )
+    if TEA:
+        mixratio, fH2, fHe = crbutil.TEA(pressureArray, temperature, X2Hr=X2Hr)
     else:
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
@@ -206,7 +204,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
             pressure = pgrid[::-1]
             # Assume solar metallicity here but then below use each model's metallicity
             mmwsolar, Hs = calc_mmw_Hs(
+<<<<<<< HEAD
                 pressure, eqtemp, model_params['logg'], useTEA=False
+=======
+                pressure, eqtemp, model_params['logg'], TEA=False
+>>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
             )
             HoverRmax = Hs / (model_params['Rp'] * sscmks['Rjup'])
             # this is used for plot scaling
@@ -283,6 +285,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     # print('starting Atmospheric Model:',atmosModel)
                     useTEA = bool('TEA' in atmosModel)
 
+                    if 'TEA' in atmosModel:
+                        useTEA = True
+                    else:
+                        useTEA = False
+
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
                         # print(' - using a low mmw')
@@ -309,7 +316,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
+<<<<<<< HEAD
                         useTEA=useTEA,
+=======
+                        TEA=useTEA,
+>>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
                     )
                     HoverRp = Hs / (model_params['Rp'] * sscmks['Rjup'])
                     if HoverRp > 0.04:
@@ -506,7 +517,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         eqtemp,
                         model_params['logg'],
                         X2Hr=model_params['metallicity'],
+<<<<<<< HEAD
                         useTEA=useTEA,
+=======
+                        TEA=useTEA,
+>>>>>>> 1cd028c (in ariel, calculate both crbce and CEA equilib chem)
                     )
                     # print('lower mmw,Hs new method', mmwnow, Hs)
 
