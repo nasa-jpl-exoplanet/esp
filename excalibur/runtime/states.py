@@ -332,7 +332,7 @@ class StatusSV(dawgie.StateVector):
 
     def __init__(self):
         '''init the state vector with empty values'''
-        self._version_ = dawgie.VERSION(1, 0, 0)
+        self._version_ = dawgie.VERSION(1, 1, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
         self['isValidTarget'] = BoolValue()
         self['runTarget'] = BoolValue(True)
@@ -542,6 +542,29 @@ class TargetsSV(dawgie.StateVector, dawgie.Value):
                 table.get_cell(row + 1, 0).add_primitive(tn[0])
                 table.get_cell(row + 1, 1).add_primitive(tn[1])
         visitor.add_declaration_inline('', div='</div>')
+        return
+
+    pass
+
+
+class TriggerSV(dawgie.StateVector):
+    '''
+    GMR: Composite SV used to trigger tasks with a long list of knobs
+    '''
+
+    def __init__(self, name, members: [dawgie.V_REF]):
+        '''SV init'''
+        self._version_ = dawgie.VERSION(1, 0, 0)
+        self._name = name
+        self[name] = members
+        return
+
+    def name(self):
+        '''SV name'''
+        return self._name
+
+    def view(self) -> None:
+        '''SV view'''
         return
 
     pass
