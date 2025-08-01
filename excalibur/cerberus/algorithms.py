@@ -156,25 +156,12 @@ class Atmos(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: transit.spectrum, system.finalize, cerberus.xslib'''
-<<<<<<< HEAD
-        return (
-            [
-                dawgie.ALG_REF(trn.task, self.__spc),
-                dawgie.ALG_REF(sys.task, self.__fin),
-                dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__xsl),
-                dawgie.ALG_REF(ariel.task, self.__arielsim),
-            ]
-            + self.__rt.trigger('cerberus')
-            + self.__rt.refs_for_proceed()
-        )
-=======
         return [
             dawgie.ALG_REF(trn.task, self.__spc),
             dawgie.ALG_REF(sys.task, self.__fin),
             dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__xsl),
             dawgie.ALG_REF(ariel.task, self.__arielsim),
         ] + + self.__rt.trigger('cerberus') + self.__rt.refs_for_proceed()
->>>>>>> 46b3afc (updating transit and cerberus triggers)
 
     def state_vectors(self):
         '''Output State Vectors: cerberus.atmos'''
@@ -381,7 +368,6 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-
                         knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
                         cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                         xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
