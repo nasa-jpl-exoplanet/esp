@@ -1592,7 +1592,7 @@ def plot_mass_vs_metals(
     # print('resultsstring',resultsstring)
     plt.text(
         xrange[0] * 1.2,
-        yrange[0] + 0.2 + 0.06 * (yrange[1] - yrange[0]),
+        yrange[0] + 0.2 + 0.1*(yrange[1]-yrange[0]),
         resultsstring,
         c='black',
         ha='left',
