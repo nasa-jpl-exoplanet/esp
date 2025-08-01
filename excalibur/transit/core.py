@@ -2990,9 +2990,10 @@ def spectrum(
             )  # [m]
             Hs = Hs / (priors['R*'] * sscmks['Rsun'])
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
+            # print('tauvs for vslope range', tauvs)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
             tauvi = 1e0 / (ootstd**2)
-            tauwbdata = 1e0 / dnoise**2
+            # tauwbdata = 1e0 / dnoise**2
             prwidth = 2e0 * Hs
             prcenter = whiterprs
             # PYMC
@@ -3094,6 +3095,10 @@ def spectrum(
                 else:
                     log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
                     sampler = pymc.Metropolis()
+
+                # asdf
+                # sampler = pymc.Slice()
+
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
@@ -3143,10 +3148,10 @@ def spectrum(
                         orbits[iv],
                         vslope=avs[iv],
                         vitcp=1e0,
-                        oslope=0,
-                        oitcp=1,
-                        # oslope=aos[iv],
-                        # oitcp=aoi[iv],
+                        # oslope=0,
+                        # oitcp=1,
+                        oslope=aos[iv],
+                        oitcp=aoi[iv],
                     )
                     allimout.extend(imout)
                     pass
@@ -3251,7 +3256,7 @@ def spectrum(
                         'b--',
                         zorder=5,
                     )
-                    print('mean of expected', np.median(lcfit['expected']))
+                    # print('mean of expected', np.median(lcfit['expected']))
                     # asdf
 
                     newdata = []
@@ -3284,13 +3289,14 @@ def spectrum(
                     # and put on the full whitelight model too
                     orderme = np.argsort(allphase)
                     plt.plot(allphase[orderme], model[orderme], 'k--')
-                    # plt.show()
+                    plt.show()
                 pass
             else:
                 startflag = False
                 pass
             pass
-        plt.show()  # asdf
+        # plt.show()  # asdf
+
         out['data'][p]['RSTAR'].append(priors['R*'] * sscmks['Rsun'])
         out['data'][p]['Hs'].append(Hs)
         out['data'][p]['Teq'] = eqtemp
@@ -3399,8 +3405,10 @@ def lcmodel(*specparams):
             ctxt.orbits[iv],
             vslope=avs[iv],
             vitcp=1e0,
-            oslope=0,
-            oitcp=1,
+            # oslope=0,
+            # oitcp=1,
+            oslope=aos[iv],
+            oitcp=aoi[iv],
         )
         allimout.extend(imout)
         pass
