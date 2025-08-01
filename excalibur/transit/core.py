@@ -2818,6 +2818,7 @@ def spectrum(
         allz = wht['data'][p]['postsep']
         allphase = np.array(wht['data'][p]['postflatphase'])
         whiterprs = np.nanmedian(wht['data'][p]['mctrace']['rprs'])
+        print('whitelight Rp/Rs-squared', whiterprs)
         allwave = []
         allspec = []
         allim = []
@@ -2895,7 +2896,11 @@ def spectrum(
         out['data'][p]['rp0hs'] = []
         out['data'][p]['Hs'] = []
         startflag = True
+        iwave = 0
         for wl, wh in zip(lwavec, hwavec):
+            if verbose:
+                iwave += 1
+                print('WAVELENGTH LOOP', iwave, len(lwavec))
             select = [(w > wl) & (w < wh) for w in allwave]
             if 'STIS' in ext:
                 data = np.array(
@@ -2912,6 +2917,9 @@ def spectrum(
                 data = np.array(
                     [np.nanmean(d[s]) for d, s in zip(allspec, select)]
                 )
+                #print('data size',data.shape)
+                #for n, s in zip(allpnoise, select):
+                #    print('noise REDUCED by sampling factor!', np.nansum(s))
                 dnoise = np.array(
                     [
                         np.nanmedian(n[s]) / np.sqrt(np.nansum(s))
@@ -2919,6 +2927,17 @@ def spectrum(
                     ]
                 )
                 pass
+#asdf
+#  to do:
+#    maybe divide red points by im
+#    check that im normalization is used in the fit. probably not itk
+#    some of the above sampling sums are zero, so there are NaNs going on with select
+#     check that valid shows the NaNs ig. seems like arrays are full length still
+#   run longer to make sure converged
+#   ** show the fit model **
+#   plot the residuals
+#   maybe check some chi2 action inside of pymc
+    
             valid = np.isfinite(data)
             if selftype in ['transit']:
                 try:
@@ -2960,14 +2979,16 @@ def spectrum(
             eqtemp = priors['T*'] * np.sqrt(
                 priors['R*'] * sscmks['Rsun/AU'] / (2.0 * priors[p]['sma'])
             )
+            # ANOTHER PROBLEM - the pressure grid should come from runtime probably
             pgrid = np.arange(
                 np.log(10.0) - 15.0, np.log(10.0) + 15.0 / 100, 15.0 / 99
             )
             pgrid = np.exp(pgrid)
             pressure = pgrid[::-1]
 
-            # asdf. need an option here to use TEA() instead of crbce()
-            log.warning('FUTURE: update transit.spectrum to use TEA chemistry')
+            # CAREFUL  need an option here to use TEA() instead of crbce()
+            # log.warning('FUTURE: update transit.spectrum to use TEA chemistry')
+            # ALSO: looks like this is inside of wavelength loop. move it outside I think
             mixratio, fH2, fHe = crbutil.crbce(pressure, eqtemp)
             mmw, fH2, fHe = crbutil.getmmw(
                 mixratio, protosolar=False, fH2=fH2, fHe=fHe
@@ -3039,7 +3060,7 @@ def spectrum(
                     'oitcp', mu=1e0, tau=tauvi, shape=shapevis
                 )
                 for i in range(shapevis):
-                    prior_center['oitcp__' + str(i)] = 0
+                    prior_center['oitcp__' + str(i)] = 1
                     pass
                 nodes.extend(alloitcp)
                 nodeshape.append(shapevis)
@@ -3056,8 +3077,10 @@ def spectrum(
                     valid=valid,
                     visits=visits,
                     mcmcdat=data[valid],
-                    mcmcsig=1e0
-                    / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
+                    mcmcsig=dnoise[valid],
+#                    mcmcsig=1e0
+#                    / np.sqrt(tauwbdata[valid]),  # GMR: FIXME
+#                    / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
@@ -3116,6 +3139,8 @@ def spectrum(
                     pass
                 # save rprs
                 clspvl = np.nanmedian(trace.posterior['rprs'])
+                print(' wave,clspv from trace', (wl+wh)/2, clspvl)
+                    
                 # now produce fitted estimates
                 specparams = (
                     mcests['rprs'],
@@ -3131,8 +3156,10 @@ def spectrum(
                         orbits[iv],
                         vslope=avs[iv],
                         vitcp=1e0,
-                        oslope=aos[iv],
-                        oitcp=aoi[iv],
+                        oslope=0,
+                        oitcp=1,
+                        #oslope=aos[iv],
+                        #oitcp=aoi[iv],
                     )
                     allimout.extend(imout)
                     pass
@@ -3155,13 +3182,21 @@ def spectrum(
                     'residuals': data[valid] - lout[valid],
                 }
                 # Spectrum outlier rejection + inpaint with np.nan
+                print(' whitelight Rp/Rs-squared', whiterprs)
+                print(' clspvl', clspvl)
+                clspvlsaved = clspvl
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
+                    print('  NANING IT!')
                     clspvl = np.nan
                     pass
                 out['data'][p]['ES'].append(clspvl)
                 out['data'][p]['ESerr'].append(
                     np.nanstd(trace.posterior['rprs'])
                 )
+                print(' wave,ES   ', (wl+wh)/2, clspvl)
+                print(' wave,ESerr', (wl+wh)/2,
+                      np.nanstd(trace.posterior['rprs']))
+
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
                 out['data'][p]['WBlow'].append(wl)
@@ -3169,10 +3204,95 @@ def spectrum(
                 out['data'][p]['WB'].append(np.mean([wl, wh]))
                 out['data'][p]['LCFIT'].append(lcfit)
                 pass
+
+                # when debugging, show the corner plot, etc
+                if verbose:
+                    #  CORNER PLOT
+                    # simplecorner(mctrace, verbose=verbose)
+
+                    #  POSTERIOR HISTOS VS PRIOR
+                    # postpriors(mctrace, prior_center, nodes, verbose=verbose)
+                    
+                    #  PLOT LIGHTCURVE for this wavelength (cf whitelight)
+                    myfig = plt.figure(figsize=(6, 5))
+
+                    # print('datanorm keys',nrm['data'][p].keys())
+                    # print('whitelight keys',wht['data'][p].keys())
+                    # print(' visits',wht['data'][p]['visits'])
+ 
+                    #asdf
+                    # show the data for this wavelength channel as red
+                    plt.scatter(allphase, data, 
+                                marker='o', s=20, ls='None',
+                                edgecolors='r', facecolors='None')
+                    # compare the data against the fit depth (also red)
+                    print('red dashed line',
+                          [np.min(allphase), np.max(allphase)],
+                          [1-clspvlsaved**2, 1-clspvlsaved**2])
+                    plt.plot([np.min(allphase), np.max(allphase)],
+                             [1-clspvlsaved**2, 1-clspvlsaved**2],
+                             'r:')
+                    #  also show the uncertainties used for mcmcsig
+                    #  ok actually use dnoise, which is where this comes from
+                    sigma = 1 / np.sqrt(np.nanmedian(tauwbdata))
+                    #print('tauwbdata', tauwbdata)
+                    #print('sigma', sigma)
+                    plt.errorbar(allphase, data,
+                                 yerr=dnoise,
+                                 ls='None',
+                                 color='r',
+                                 zorder=1,
+                                 )
+                    # and show the best-fit lightcurve (single wavelength)
+                    #  note that expected already includes the instrument model
+                    #  to get raw, divide by lcfit['im']
+                    orderme = np.argsort(lcfit['phase'])
+                    plt.plot(lcfit['phase'][orderme],
+                             lcfit['expected'][orderme],
+                             'g--', zorder=5)
+                    #print('expected',(lcfit['expected']))
+                    #print('len check',len(lcfit['phase']))
+                    #print('len check',len(lcfit['expected']))
+                    #print('len check',len(lcfit['im']))
+                    plt.plot(lcfit['phase'][orderme],
+                             lcfit['expected'][orderme]/lcfit['im'][orderme],
+                             'b--', zorder=5)
+                    print('mean of expected', np.median(lcfit['expected']))
+                    #asdf
+                    
+                    allwhite = wht['data'][p]['allwhite']
+                    newdata = []
+                    for d in wht['data'][p]['allwhite']:
+                        newdata.extend(d)
+                    newdata = np.array(newdata)
+                    # these uncorrected fluxes are a bit lower
+                    # plt.plot(allphase, newdata, 'o')
+                    plt.plot(allphase, newdata/allim, 'x', c='k')
+                    # postlc looks like the same thing as the model
+                    # postlc = wht['data'][p]['postlc']
+                    # plt.plot(allphase, postlc, '^')
+
+                    # note: allwhite and im are broken down by visit,
+                    #       but allz and postlc are not
+                    # for ivisit in range(len(wht['data'][p]['visits'])):
+                    #    print( wht['data'][p]['allwhite'])
+                    #    print('ivis',ivisit)
+                    #    allwhite = wht['data'][p]['allwhite'][ivisit]
+
+                    # compare the whitelight depth against the average depth
+                    plt.plot([np.min(allphase), np.max(allphase)],
+                             [1-whiterprs**2, 1-whiterprs**2, ],
+                             'k:')
+                    # and put on the full whitelight model too
+                    orderme = np.argsort(allphase)
+                    plt.plot(allphase[orderme], model[orderme], 'k--')
+                    # plt.show()
+                pass
             else:
                 startflag = False
                 pass
             pass
+        plt.show() #asdf
         out['data'][p]['RSTAR'].append(priors['R*'] * sscmks['Rsun'])
         out['data'][p]['Hs'].append(Hs)
         out['data'][p]['Teq'] = eqtemp
@@ -3183,6 +3303,7 @@ def spectrum(
             out['data'][p][keytoord] = temparr[orderme]
             pass
         out['STATUS'].append(True)
+
     return True
 
 
@@ -3272,14 +3393,16 @@ def lcmodel(*specparams):
     '''
     r, avs, aos, aoi = specparams
     allimout = []
+
+    # USE COMMENTED LINES BELOW TO LIMIT NUMBER OF FIT PARAMS (temp for debugging)
     for iv in range(len(ctxt.visits)):
         imout = timlc(
             ctxt.time[iv],
             ctxt.orbits[iv],
             vslope=avs[iv],
             vitcp=1e0,
-            oslope=aos[iv],
-            oitcp=aoi[iv],
+            oslope=0,
+            oitcp=1,
         )
         allimout.extend(imout)
         pass
