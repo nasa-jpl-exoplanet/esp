@@ -10,7 +10,7 @@ import numpy as np
 
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
-def TEA(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
+def calcTEA(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     '''
     TEA chemical equilibrium abundances
     '''
