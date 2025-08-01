@@ -106,7 +106,6 @@ class Autofill(dawgie.Algorithm):
         core.isolate(
             self.__status, self.__parent.sv_as_dict()['composite'], table_index
         )
-        core.trigger(self, self.__status, self.__algotrigger)
         _ = excalibur.lagger()
         ds.update()
         return

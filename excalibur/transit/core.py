@@ -3148,8 +3148,6 @@ def spectrum(
                         orbits[iv],
                         vslope=avs[iv],
                         vitcp=1e0,
-                        # oslope=0,
-                        # oitcp=1,
                         oslope=aos[iv],
                         oitcp=aoi[iv],
                     )
@@ -3405,8 +3403,6 @@ def lcmodel(*specparams):
             ctxt.orbits[iv],
             vslope=avs[iv],
             vitcp=1e0,
-            # oslope=0,
-            # oitcp=1,
             oslope=aos[iv],
             oitcp=aoi[iv],
         )
@@ -4312,8 +4308,6 @@ def lightcurve_jwst_niriss(
         # loop through epochs
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
-            print('processing event:', event)
-
             # compute phase + priors
             smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
             # smaors_up = (priors[p]['sma']+3*priors[p]['sma_uperr'])/(priors['R*']-abs(priors['R*_lowerr']))/ssc['Rsun/AU']
@@ -4504,7 +4498,6 @@ def jwst_niriss_spectrum(nrm, fin, out, selftype, wht, method='lm'):
         # loop through epochs
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
-            print('processing event:', event)
 
             # compute phase + priors
             smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
@@ -4713,8 +4706,6 @@ def lightcurve_spitzer(nrm, fin, out, selftype, fltr, hstwhitelight_sv):
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
             try:
-                print('processing event:', event)
-
                 # compute phase + priors
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 # smaors_up = (priors[p]['sma']+priors[p]['sma_uperr'])/(priors['R*']-abs(priors['R*_lowerr']))/ssc['Rsun/AU']
@@ -4865,8 +4856,6 @@ def lightcurve_spitzer(nrm, fin, out, selftype, fltr, hstwhitelight_sv):
                 # 10 minute time scale
                 nneighbors = int(10.0 / 24.0 / 60.0 / np.mean(np.diff(subt)))
                 nneighbors = min(200, nneighbors)
-                print("N neighbors:", nneighbors)
-                print("N datapoints:", len(subt))
 
                 # define free parameters
                 if selftype == 'transit':

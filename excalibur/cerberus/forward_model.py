@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d as itp
 import logging
 
 import excalibur.system.core as syscore
-from excalibur.util.cerberus import crbce, calcTEA, getmmw
+from excalibur.util.cerberus import crbce, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -109,8 +109,10 @@ def crbmodel(
 
     # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
+        fH2 = None
+        fHe = None
         if cheq is None:
-            log.warning('neither mixratio nor cheq are defined')
+            log.error('neither mixratio nor cheq are defined')
         if chemistry == 'TEC':
             mixratio, fH2, fHe = crbce(
                 pressure,

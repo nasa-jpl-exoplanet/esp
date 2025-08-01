@@ -3,9 +3,7 @@
 import os
 import re
 
-import dawgie
 import excalibur
-import excalibur.runtime.states as rntstt
 
 from . import binding
 
@@ -169,9 +167,9 @@ def load(sv_dict: {str: {}}, targets) -> None:
             print('SPECIAL MOD!!')
             cleancontrol = []
             for item in controls[knob].molecules:
-                print('item',item,type(item))
+                print('item', item, type(item))
                 cleancontrol.append(str(item))
-                print('item',item,type(str(item)))
+                print('item', item, type(str(item)))
                 print()
             print(' NEW:', type(cleancontrol))
             print(' NEW:', type(cleancontrol[0]))
