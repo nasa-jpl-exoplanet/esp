@@ -2502,7 +2502,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             }
         else:
             log.error(
-                f"ERROR: unknown tier level for mass-metal plot {runtime_params.tier}"
+                "ERROR: unknown tier level for mass-metal plot %s", runtime_params.tier
             )
     else:
         analysistargetlists.append(
