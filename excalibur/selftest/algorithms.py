@@ -40,8 +40,6 @@ numexpr.ncores = 1  # this is actually a performance enhancer!
 
 fltrs = [str(fn) for fn in rtbind.filter_names.values()]
 
-chemistrymodel = 'TEC'
-
 
 # ------------- ------------------------------------------------------
 # -- ALGORITHMS -- ---------------------------------------------------
@@ -667,10 +665,7 @@ class Analysis(dawgie.Analyzer):
                 # print('runtimeparams in selftest.alg',runtime_params)
                 # print()
                 # update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
-<<<<<<< HEAD
                 chemistrymodel = 'TEC'
-=======
->>>>>>> c8fb786 (generalize selftest for TEC/TEA chem model)
                 update = self._analysis(
                     aspects, fltr, chemistrymodel, fltrs.index(fltr)
                 )
