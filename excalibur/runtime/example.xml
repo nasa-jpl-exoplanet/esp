@@ -27,6 +27,38 @@
             ariel.simspectrum.CtoOaverage="-0.26"
             ariel.simspectrum.CtoOdispersion="0.3"
 	    selftest.Nrepeats="25">
+    <cerberus.crbmodel.fitmolecules>
+      <molecule>HCN</molecule>
+      <molecule>CH4</molecule>
+      <molecule>C2H2</molecule>
+      <molecule>CO2</molecule>
+      <molecule>H2CO</molecule>
+    </cerberus.crbmodel.fitmolecules>
+    <cerberus.crbmodel.HITEMPmolecules>
+      <molecule>NO</molecule>
+      <molecule>OH</molecule>
+      <molecule>C2H2</molecule>
+      <molecule>N2</molecule>
+      <molecule>N2O</molecule>
+      <molecule>O3</molecule>
+      <molecule>O2</molecule>
+    </cerberus.crbmodel.HITEMPmolecules>
+    <cerberus.crbmodel.HITRANmolecules>
+      <molecule>H2-H</molecule>
+      <molecule>H2-H2</molecule>
+      <molecule>H2-He</molecule>
+      <molecule>He-H</molecule>
+    </cerberus.crbmodel.HITRANmolecules>
+    <cerberus.crbmodel.EXOMOLmolecules>
+      <molecule>TIO</molecule>
+      <molecule>H2O</molecule>
+      <molecule>H2CO</molecule>
+      <molecule>HCN</molecule>
+      <molecule>CO</molecule>
+      <molecule>CO2</molecule>
+      <molecule>NH3</molecule>
+      <molecule>CH4</molecule>
+    </cerberus.crbmodel.EXOMOLmolecules>
     <cerberus.atmos.bounds.Teq lo="0.75" hi="1.5"/>
     <cerberus.atmos.bounds.abundances lo="-6" hi="6"/>
     <cerberus.atmos.bounds.CTP lo="-6" hi="1"/>
