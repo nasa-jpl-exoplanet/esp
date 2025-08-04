@@ -8,10 +8,6 @@ from __future__ import annotations
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
-import subprocess
-import pandas as pd
-import csv
-from collections import defaultdict
 import matplotlib.pyplot as plt
 
 
