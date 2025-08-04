@@ -66,10 +66,12 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     calculate the mean molecular weight and scale height
     '''
     if useTEA:
+        # 'temperature' should actually be the 10 T-P profile coefficients!!
         mixratio, fH2, fHe = crbutil.calcTEA(
-            pressureArray, temperature, X2Hr=X2Hr
+            temperature, pressureArray, metallicity=10.**X2Hr
         )
     else:
+
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )

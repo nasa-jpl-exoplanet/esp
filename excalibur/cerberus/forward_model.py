@@ -123,11 +123,12 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         elif chemistry == 'TEA':
+            # 'temp' should actually be the 10 T-P profile coefficients!!
             mixratio, fH2, fHe = calcTEA(
-                pressure,
                 temp,
+                pressure,
+                metallicity=10.**cheq['XtoH'],
                 C2Or=cheq['CtoO'],
-                X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
         else:
