@@ -9,6 +9,11 @@ from __future__ import annotations
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+
+from excalibur.cerberus.tea_code import python_makeatm as ma
+from excalibur.cerberus.tea_code import python_runatm as ra
+from excalibur.cerberus.tea_code import makeheader as mh
 
 
 def calcTEA(
@@ -41,8 +46,6 @@ def calcTEA(
     -------
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
-    from excalibur.cerberus.tea_code import python_makeatm as ma
-    from excalibur.cerberus.tea_code import python_runatm as ra
 
     input_species = species
 
@@ -63,8 +66,8 @@ def calcTEA(
         x = np.log10(P) + shift
         T_bg = T_base * (P / P_ref) ** alpha
 
-        rise = a_rise * np.tanh((x - c_rise) / w_rise)
-        fall = a_fall * np.tanh((x - c_fall) / w_fall)
+        # rise = a_rise * np.tanh((x - c_rise) / w_rise)
+        # fall = a_fall * np.tanh((x - c_fall) / w_fall)
 
         inv_rise = a_rise * (
             np.tanh((x - c_rise) / w_rise) - np.tanh(-(c_rise) / w_rise)
@@ -104,7 +107,7 @@ def calcTEA(
         dex = data[:, 2].astype(float)
 
         num_dens = 10.0 ** (dex - 12.0)
-        return {sym: val for sym, val in zip(symbols, num_dens)}
+        return dict(zip(symbols, num_dens))
 
     # scale abundances for metallicity, C/O, N/O
     def _scale_abund(
@@ -135,7 +138,7 @@ def calcTEA(
 
     pressure = np.asarray(pressure, dtype=float)
     temperature = _make_tp_profile(pressure, *tp_coeffs)
-    if plot_tp == True:
+    if plot_tp:
         plt.plot(temperature, pressure)
         plt.yscale("log")
         plt.gca().invert_yaxis()
@@ -143,13 +146,9 @@ def calcTEA(
 
     solar = _read_solar_abund(abundance_file)
 
-    from excalibur.cerberus.tea_code import makeheader as mh
-
     _, elem_arr = mh.read_stoich(species, stoich_file=stoich_file)
 
     needed_elem = set(elem_arr) | {"H"}
-
-    from pathlib import Path
 
     gdir = Path(cfg_file).with_name("gdata")
     atomic = [_reservoir_base(el, gdir) for el in needed_elem]
