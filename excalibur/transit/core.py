@@ -3160,8 +3160,7 @@ def spectrum(
                     'observed': data[valid],
                     'im': allimout[valid],
                     'phase': allphase[valid],
-                    # 'dnoise': np.nanmedian(dnoise[valid]),
-                    'dnoise': dnoise[valid],
+                    'dnoise': np.nanmedian(dnoise[valid]),
                     'residuals': data[valid] - lout[valid],
                 }
                 # Spectrum outlier rejection + inpaint with np.nan
