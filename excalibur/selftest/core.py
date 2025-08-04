@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------
 # def analysis(aspects, filt, runtime_params, out, verbose=False):
-def analysis(aspects, filt, out, chemistrymodel, verbose=False):
+def analysis(aspects, filt, chemistrymodel, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
     aspects: cross-target information
