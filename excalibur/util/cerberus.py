@@ -349,7 +349,7 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'NH3': 17.0,
         'H2O': 18.0,
         'H2CO': 30.0,
-        'TIO': 64,
+        'TIO': 64.0,
         'HCN': 27.0,
         'N2': 28.0,
         'C2H2': 26.0,
