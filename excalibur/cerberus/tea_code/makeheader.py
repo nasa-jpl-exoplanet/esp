@@ -61,7 +61,7 @@ location_TEA = os.path.realpath(os.path.dirname(__file__) + "/..") + "/"
 # =============================================================================
 
 
-def read_stoich(spec_list, stoich_file='lib/stoich.txt', getb=False):
+def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
     """
     Reads and returns stoichiometric values for the list of input species.
     This function is a common setup for both single T-P and multiple
@@ -74,8 +74,6 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt', getb=False):
        Array containing names of molecular species.
     stoich_file = 'lib/stoich.txt': string
        Path to the stoichiometric data.
-    getb: Bool
-       If True, read and return the elemental abudances
 
     Returns
     -------
@@ -131,16 +129,6 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt', getb=False):
     ielem = np.sum(spec_stoich, axis=0) > 0
     spec_stoich = spec_stoich[:, ielem]
     atom_stoich = elements[ielem]
-
-    # Read and return the elemental abudances
-    if getb:
-        b = 10 ** np.asarray(dex[ielem], float)
-        # Get hydrogen number density
-        H_num = 10**12
-        # Get fractions of element number density to hydrogen number density
-        b /= H_num
-
-        return spec_stoich, atom_stoich, b
 
     return spec_stoich, atom_stoich
 
