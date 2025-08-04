@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 #  no-member is for "Instance of HiLoValue has no _hi"
-# pylint: disable=no-member,method-hidden,
+# pylint: disable=no-member,method-hidden,invalid-name,
 
 import dawgie
 import excalibur
@@ -51,11 +51,11 @@ class HiLoValue(dawgie.Value):
 
     def __str__(self):
         '''define the string format of this class'''
-        # fails. HiLoValue object has no attribute '_HiLoValue__state'
-        # return str(self.__state)
-        return str(self.__getstate__())
-        #    it now prints this:
-        # "{'hi': 1.5, 'lo': 0.75, '_version_seal_': VERSION(design=1, impl=0, bugfix=0)}"
+        # state = self.__getstate__()
+        # if isinstance(state, dict) and '_version_seal_' in state.keys():
+        #    del state['_version_seal_']
+        # return str(state)
+        return str(self.lo) + ' to ' + str(self.hi)
 
     def features(self):
         '''contains no features'''
@@ -67,15 +67,56 @@ class HiLoValue(dawgie.Value):
             *((float(hilo.hi), float(hilo.lo)) if hilo else (1, 0))
         )
 
-    # def new(self):
-    #    '''hide explicit requirement for dawgie'''
-    #    return HiLoValue(*((float(self.hi), float(self.lo)) if hilo else (1, 0)))
-
     def hi(self):
         return self._hi
 
     def lo(self):
         return self._lo
+
+
+class MoleculeValue(dawgie.Value):
+    '''helper value for molecule-list type'''
+
+    def __init__(self, molecules: list = None):
+        '''init the molecule list'''
+        # having molecules=[] above is a dangerous-default-value; set here instead
+        if molecules is None:
+            molecules = []
+        self.molecules = list(molecules)
+        self._version_ = dawgie.VERSION(1, 0, 0)
+        return
+
+    def __str__(self):
+        '''define the string format of this class'''
+        # state = self.__getstate__()
+        # if isinstance(state, dict) and '_version_seal_' in state.keys():
+        #    del state['_version_seal_']
+        # print('str state', str(state), type(str(state)))
+        state = self.molecules
+        # print('alt state', state, type(state))
+        return str(state)
+
+    def features(self):
+        '''contains no features'''
+        return []
+
+    def new(self, state=None):
+        '''hide explicit requirement for dawgie'''
+        moleculeVals = MoleculeValue(
+            state.molecule if state is not None else self.__state
+        )
+
+        # if not isinstance(moleculeVals.molecules, list):
+        #    log.error('ERROR: molecules should be a list!')
+
+        # has to be pickleable; convert each molecule to a string
+        cleanVals = [str(item) for item in moleculeVals.molecules]
+        moleculeVals.molecules = cleanVals
+
+        return moleculeVals
+
+    def molecules(self):
+        return self._molecules
 
 
 class CompositeSV(dawgie.StateVector):
@@ -109,6 +150,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
+        self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
@@ -131,6 +173,10 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_fitmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
@@ -286,8 +332,11 @@ class StatusSV(dawgie.StateVector):
 
     def __init__(self):
         '''init the state vector with empty values'''
-        self._version_ = dawgie.VERSION(1, 0, 0)
+        self._version_ = dawgie.VERSION(1, 1, 0)
         self['allowed_filter_names'] = excalibur.ValuesList()
+        self['isValidTarget'] = BoolValue()
+        self['runTarget'] = BoolValue(True)
+
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
@@ -309,6 +358,10 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
+        self['cerberus_crbmodel_fitmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
@@ -321,13 +374,13 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
-        self['isValidTarget'] = BoolValue()
-        self['runTarget'] = BoolValue(True)
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
+        self['transit_pymc_sliceSampler'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        return
 
     def name(self):
         '''database name'''
@@ -389,6 +442,7 @@ class StatusSV(dawgie.StateVector):
             'isValidTarget',
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
+            'transit_pymc_sliceSampler',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
@@ -403,6 +457,10 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_fitCtoO',
             'cerberus_atmos_fitNtoO',
             'cerberus_atmos_fitCloudParameters',
+            'cerberus_crbmodel_fitmolecules',
+            'cerberus_crbmodel_HITEMPmolecules',
+            'cerberus_crbmodel_HITRANmolecules',
+            'cerberus_crbmodel_EXOMOLmolecules',
             'cerberus_crbmodel_lbroadening',
             'cerberus_crbmodel_lshifting',
             'cerberus_crbmodel_isothermal',

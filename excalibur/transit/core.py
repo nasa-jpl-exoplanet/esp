@@ -70,6 +70,13 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
+TransitPymcParams = namedtuple(
+    'transit_pymc_params_from_runtime',
+    [
+        'sliceSampler',
+    ],
+)
+
 ctxtglobals = [
     'alt',
     'ald',
@@ -322,7 +329,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     for p in events:
-        log.warning('>-- Planet: %s', p)
+        log.info('>-- Planet: %s', p)
         out['data'][p] = {}
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
@@ -408,7 +415,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     for p in events:
-        log.warning('>-- Planet: %s', p)
+        log.info('>-- Planet: %s', p)
         out['data'][p] = {}
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
@@ -472,7 +479,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         svnkey = 'svn' + selftype
         if len(tme['data'][p][svnkey]) == 1:
             singlevisit = True
-            log.warning('--< Single Visit Observation')
+            log.info('--< Single Visit Observation')
             pass
         for v in tme['data'][p][svnkey]:  # SINGLE SCAN NUMBERING
             selv = (visits == v) & ~ignore
@@ -588,11 +595,9 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                     )
                     pass
                 pass
-            log.warning('>-- Visit %s', str(int(v)))
-            log.warning(
-                '>-- Orbit %s', str([int(o) for o in set(orbits[selv])])
-            )
-            log.warning('>-- Trash %s', str(trash))
+            log.info('>-- Visit %s', str(int(v)))
+            log.info('>-- Orbit %s', str([int(o) for o in set(orbits[selv])]))
+            log.info('>-- Trash %s', str(trash))
             # UPDATE IGNORE FLAG WITH REJECTED ORBITS ------------------------------------
             if trash and (selftype in ['transit', 'eclipse']):
                 for o in trash:
@@ -865,7 +870,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                         pass
                     pass
                 nscale = np.round(np.percentile(wanted, 50))
-                log.warning(
+                log.info(
                     '--< Visit %s: Noise scale %s', str(int(v)), str(nscale)
                 )
                 # FLAGGING THRESHOLD
@@ -894,7 +899,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                     pass
                 check = np.array(check)
                 rejrate = check.size - np.sum(check)
-                log.warning(
+                log.info(
                     '--< Visit %s: Rejected %s/%s',
                     str(int(v)),
                     str(rejrate),
@@ -1021,7 +1026,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                 pass
             pass
         for v, m in zip(out['data'][p]['vignore'], out['data'][p]['trial']):
-            log.warning('--< Visit %s: %s', str(int(v)), str(m))
+            log.info('--< Visit %s: %s', str(int(v)), str(m))
             pass
 
         # SAVE A PLOT FOR EACH VISIT ----------------------------------------------------
@@ -1238,7 +1243,7 @@ def tplbuild(
             finiteloop += vdisp
         guess.append(finiteloop)
         if verbose:
-            log.warning(
+            log.info(
                 '>-- %s/%s', str(guess[-1]), str(max(vrange) + vdisp / 2e0)
             )
         pass
@@ -1263,7 +1268,14 @@ def wlversion():
 
 
 def hstwhitelight(
-    allnrm, fin, out, allext, selftype, chainlen=int(1e4), verbose=False
+    allnrm,
+    fin,
+    out,
+    allext,
+    selftype,
+    runtime_params,
+    chainlen=int(1e4),
+    verbose=False,
 ):
     '''
     G. ROUDIER: Combined orbital parameters recovery
@@ -1616,13 +1628,21 @@ def hstwhitelight(
             )
             # --------------
             # --< SAMPLING >--
-            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
+            if runtime_params.sliceSampler:
+                log.info('>-- HSTWHITELIGHT SAMPLER: Slice --<')
+                sampler = pymc.Slice()
+            else:
+                log.info('>-- HSTWHITELIGHT SAMPLER: Metropolis --<')
+                sampler = pymc.Metropolis()
+
+            log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
+
             trace = pymc.sample(
                 chainlen,
                 cores=4,
                 tune=int(chainlen / 2),
                 compute_convergence_checks=False,
-                step=pymc.Metropolis(),  # GMR: TBD - Use runtime
+                step=sampler,
                 progressbar=verbose,
             )
             mcpost = pymc.stats.summary(trace)
@@ -1705,7 +1725,6 @@ def hstwhitelight(
             for times in time:
                 mintime = np.min(times)
                 maxtime = np.max(times)
-                # print('min,max time for this visit',mintime,maxtime)
                 modeltimes_thisVisit = np.linspace(
                     mintime - 0.05, maxtime + 0.05, num=1000
                 )
@@ -1805,6 +1824,7 @@ def whitelight(
     ext,
     selftype,
     multiwl,
+    runtime_params,
     chainlen=int(1e4),
     verbose=False,
     parentprior=False,
@@ -2126,13 +2146,19 @@ def whitelight(
                 observed=flatwhite[selectfit],
                 logp=LogLH,
             )
-            log.warning('>-- MCMC nodes: %s', str(prior_center.keys()))
+            if runtime_params.sliceSampler:
+                log.info('>-- WHITELIGHT SAMPLER: Slice --<')
+                sampler = pymc.Slice()
+            else:
+                log.info('>-- WHITELIGHT SAMPLER: Metropolis --<')
+                sampler = pymc.Metropolis()
+            log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
             trace = pymc.sample(
                 chainlen,
                 cores=4,
                 tune=int(chainlen / 2),
                 compute_convergence_checks=False,
-                step=pymc.Metropolis(),
+                step=sampler,
                 progressbar=verbose,
             )
             mcpost = pymc.stats.summary(trace)
@@ -2437,9 +2463,9 @@ def createldgrid(
     feherr = np.sqrt(abs(orbp['FEH*_uperr'] * orbp['FEH*_lowerr']))
     loggstar = orbp['LOGG*']
     loggerr = np.sqrt(abs(orbp['LOGG*_uperr'] * orbp['LOGG*_lowerr']))
-    # log.warning('>-- Temperature: %s +/- %s', str(tstar), str(terr))
-    # log.warning('>-- Metallicity: %s +/- %s', str(fehstar), str(feherr))
-    # log.warning('>-- Surface Gravity: %s +/- %s', str(loggstar), str(loggerr))
+    # log.info('>-- Temperature: %s +/- %s', str(tstar), str(terr))
+    # log.info('>-- Metallicity: %s +/- %s', str(fehstar), str(feherr))
+    # log.info('>-- Surface Gravity: %s +/- %s', str(loggstar), str(loggerr))
     niter = int(len(minmu) / segmentation) + 1
     allcl = None
     allel = None
@@ -2554,7 +2580,7 @@ def createldgrid(
     out['LD'] = allcl.T
     out['ERR'] = allel.T
     # for i, _m in enumerate(allcl.T):
-    #     log.warning('>-- LD%s: %s +/- %s',
+    #     log.info('>-- LD%s: %s +/- %s',
     #                str(int(i)), str(float(allcl.T[i])), str(float(allel.T[i])))
     return out
 
@@ -2753,6 +2779,7 @@ def spectrum(
     out,
     ext,
     selftype,
+    runtime_params,
     chainlen=int(1e4),
     verbose=False,
     lcplot=False,
@@ -2867,7 +2894,11 @@ def spectrum(
         out['data'][p]['rp0hs'] = []
         out['data'][p]['Hs'] = []
         startflag = True
+        iwave = 0
         for wl, wh in zip(lwavec, hwavec):
+            if verbose:
+                iwave += 1
+                print('WAVELENGTH LOOP', iwave, len(lwavec))
             select = [(w > wl) & (w < wh) for w in allwave]
             if 'STIS' in ext:
                 data = np.array(
@@ -2891,6 +2922,7 @@ def spectrum(
                     ]
                 )
                 pass
+
             valid = np.isfinite(data)
             if selftype in ['transit']:
                 try:
@@ -2932,14 +2964,16 @@ def spectrum(
             eqtemp = priors['T*'] * np.sqrt(
                 priors['R*'] * sscmks['Rsun/AU'] / (2.0 * priors[p]['sma'])
             )
+            # ANOTHER PROBLEM - the pressure grid should come from runtime probably
             pgrid = np.arange(
                 np.log(10.0) - 15.0, np.log(10.0) + 15.0 / 100, 15.0 / 99
             )
             pgrid = np.exp(pgrid)
             pressure = pgrid[::-1]
 
-            # asdf. need an option here to use TEA() instead of crbce()
-            log.warning('FUTURE: update transit.spectrum to use TEA chemistry')
+            # CAREFUL  need an option here to use TEA() instead of crbce()
+            # log.warning('FUTURE: update transit.spectrum to use TEA chemistry')
+            # ALSO: looks like this is inside of wavelength loop. move it outside I think
             mixratio, fH2, fHe = crbutil.crbce(pressure, eqtemp)
             mmw, fH2, fHe = crbutil.getmmw(
                 mixratio, protosolar=False, fH2=fH2, fHe=fHe
@@ -2954,7 +2988,7 @@ def spectrum(
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
             tauvi = 1e0 / (ootstd**2)
-            tauwbdata = 1e0 / dnoise**2
+            # tauwbdata = 1e0 / dnoise**2
             prwidth = 2e0 * Hs
             prcenter = whiterprs
             # PYMC
@@ -3011,7 +3045,7 @@ def spectrum(
                     'oitcp', mu=1e0, tau=tauvi, shape=shapevis
                 )
                 for i in range(shapevis):
-                    prior_center['oitcp__' + str(i)] = 0
+                    prior_center['oitcp__' + str(i)] = 1
                     pass
                 nodes.extend(alloitcp)
                 nodeshape.append(shapevis)
@@ -3028,8 +3062,9 @@ def spectrum(
                     valid=valid,
                     visits=visits,
                     mcmcdat=data[valid],
-                    mcmcsig=1e0
-                    / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
+                    mcmcsig=dnoise[valid],
+                    # mcmcsig=1e0
+                    # / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
@@ -3049,12 +3084,19 @@ def spectrum(
                     logp=LogLH,
                 )
                 # SAMPLING
+                if runtime_params.sliceSampler:
+                    log.info('>-- SPECTRUM SAMPLER: Slice --<')
+                    sampler = pymc.Slice()
+                else:
+                    log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
+                    sampler = pymc.Metropolis()
+
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
                     tune=int(chainlen / 2),
                     compute_convergence_checks=False,
-                    step=pymc.Metropolis(),
+                    step=sampler,
                     progressbar=verbose,
                 )
                 mcpost = pymc.stats.summary(trace)
@@ -3082,6 +3124,7 @@ def spectrum(
                     pass
                 # save rprs
                 clspvl = np.nanmedian(trace.posterior['rprs'])
+
                 # now produce fitted estimates
                 specparams = (
                     mcests['rprs'],
@@ -3104,14 +3147,14 @@ def spectrum(
                     pass
                 allimout = np.array(allimout)
                 lout = tldlc(
-                    abs(allz),
+                    np.abs(allz),
                     clspvl,
                     g1=g1[0],
                     g2=g2[0],
                     g3=g3[0],
                     g4=g4[0],
                 )
-                lout = lout * np.array(allimout)
+                lout = lout * allimout
                 lcfit = {
                     'expected': lout[valid],
                     'observed': data[valid],
@@ -3121,6 +3164,7 @@ def spectrum(
                     'residuals': data[valid] - lout[valid],
                 }
                 # Spectrum outlier rejection + inpaint with np.nan
+                clspvlsaved = clspvl
                 if abs(clspvl - whiterprs) > 5e0 * Hs:
                     clspvl = np.nan
                     pass
@@ -3128,6 +3172,7 @@ def spectrum(
                 out['data'][p]['ESerr'].append(
                     np.nanstd(trace.posterior['rprs'])
                 )
+
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
                 out['data'][p]['WBlow'].append(wl)
@@ -3135,10 +3180,85 @@ def spectrum(
                 out['data'][p]['WB'].append(np.mean([wl, wh]))
                 out['data'][p]['LCFIT'].append(lcfit)
                 pass
+
+                # when debugging, show the corner plot, etc
+                if verbose:
+                    #  CORNER PLOT
+                    # simplecorner(mctrace, verbose=verbose)
+
+                    #  POSTERIOR HISTOS VS PRIOR
+                    postpriors(mctrace, prior_center, nodes, verbose=verbose)
+
+                    #  PLOT LIGHTCURVE for this wavelength (cf whitelight)
+                    _ = plt.figure(figsize=(6, 5))
+
+                    # show the data for this wavelength channel as red
+                    plt.scatter(
+                        allphase,
+                        data,
+                        marker='o',
+                        s=20,
+                        ls='None',
+                        edgecolors='r',
+                        facecolors='None',
+                    )
+                    # compare the data against the fit depth (also red)
+                    plt.plot(
+                        [np.min(allphase), np.max(allphase)],
+                        [1 - clspvlsaved**2, 1 - clspvlsaved**2],
+                        'r:',
+                    )
+                    #  also show the uncertainties used for mcmcsig
+                    plt.errorbar(
+                        allphase,
+                        data,
+                        yerr=dnoise,
+                        ls='None',
+                        color='r',
+                        zorder=1,
+                    )
+                    # and show the best-fit lightcurve (single wavelength)
+                    #  note that expected already includes the instrument model
+                    #  to get raw, divide by lcfit['im']
+                    orderme = np.argsort(lcfit['phase'])
+                    plt.plot(
+                        lcfit['phase'][orderme],
+                        lcfit['expected'][orderme],
+                        # lcfit['expected'][orderme] / lcfit['im'][orderme],
+                        'r--',
+                        zorder=5,
+                    )
+
+                    newdata = []
+                    for d in wht['data'][p]['allwhite']:
+                        newdata.extend(d)
+                    newdata = np.array(newdata)
+                    # these uncorrected fluxes are a bit lower
+                    plt.plot(allphase, newdata / allim, 'x', c='k')
+                    # postlc looks like the same thing as the model
+                    # postlc = wht['data'][p]['postlc']
+                    # plt.plot(allphase, postlc, '^')
+
+                    # compare the whitelight depth against the average depth
+                    plt.plot(
+                        [np.min(allphase), np.max(allphase)],
+                        [
+                            1 - whiterprs**2,
+                            1 - whiterprs**2,
+                        ],
+                        'k:',
+                    )
+                    # and put on the full whitelight model too
+                    orderme = np.argsort(allphase)
+                    plt.plot(allphase[orderme], model[orderme], 'k--')
+                    plt.show()
+                pass
             else:
                 startflag = False
                 pass
             pass
+        # plt.show()
+
         out['data'][p]['RSTAR'].append(priors['R*'] * sscmks['Rsun'])
         out['data'][p]['Hs'].append(Hs)
         out['data'][p]['Teq'] = eqtemp
@@ -3149,6 +3269,7 @@ def spectrum(
             out['data'][p][keytoord] = temparr[orderme]
             pass
         out['STATUS'].append(True)
+
     return True
 
 
@@ -3238,6 +3359,7 @@ def lcmodel(*specparams):
     '''
     r, avs, aos, aoi = specparams
     allimout = []
+
     for iv in range(len(ctxt.visits)):
         imout = timlc(
             ctxt.time[iv],
@@ -3250,7 +3372,7 @@ def lcmodel(*specparams):
         allimout.extend(imout)
         pass
     out = tldlc(
-        ctxt.allz,
+        np.abs(ctxt.allz),
         r,
         g1=float(ctxt.g1[0]),
         g2=float(ctxt.g2[0]),
@@ -4149,8 +4271,6 @@ def lightcurve_jwst_niriss(
         # loop through epochs
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
-            print('processing event:', event)
-
             # compute phase + priors
             smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
             # smaors_up = (priors[p]['sma']+3*priors[p]['sma_uperr'])/(priors['R*']-abs(priors['R*_lowerr']))/ssc['Rsun/AU']
@@ -4341,7 +4461,6 @@ def jwst_niriss_spectrum(nrm, fin, out, selftype, wht, method='lm'):
         # loop through epochs
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
-            print('processing event:', event)
 
             # compute phase + priors
             smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
@@ -4550,8 +4669,6 @@ def lightcurve_spitzer(nrm, fin, out, selftype, fltr, hstwhitelight_sv):
         ec = 0  # event counter
         for event in nrm['data'][p][selftype]:
             try:
-                print('processing event:', event)
-
                 # compute phase + priors
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 # smaors_up = (priors[p]['sma']+priors[p]['sma_uperr'])/(priors['R*']-abs(priors['R*_lowerr']))/ssc['Rsun/AU']
@@ -4702,8 +4819,6 @@ def lightcurve_spitzer(nrm, fin, out, selftype, fltr, hstwhitelight_sv):
                 # 10 minute time scale
                 nneighbors = int(10.0 / 24.0 / 60.0 / np.mean(np.diff(subt)))
                 nneighbors = min(200, nneighbors)
-                print("N neighbors:", nneighbors)
-                print("N datapoints:", len(subt))
 
                 # define free parameters
                 if selftype == 'transit':

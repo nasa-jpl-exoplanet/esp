@@ -21,9 +21,10 @@ class Autofill(dawgie.Algorithm):
 
     def __init__(self):
         '''init autofill'''
-        self._version_ = dawgie.VERSION(1, 0, 1)
+        self._version_ = dawgie.VERSION(1, 1, 1)
         self.__parent = Create()
         self.__status = states.StatusSV()
+        pass
 
     def is_valid(self):
         '''convenience function'''
@@ -84,6 +85,20 @@ class Autofill(dawgie.Algorithm):
                 'isValidTarget',
             )
         ]
+
+    def trigger(self, taskname: str) -> [dawgie.V_REF]:
+        '''
+        Returns a list of the knobs for a given task
+        taskname examples ['ariel', 'cerberus', 'spectrum', 'system', 'selftest']
+        '''
+        keyloop = [k for k in self.__status.keys() if k.startswith(taskname)]
+        out = [
+            dawgie.V_REF(
+                fetch('excalibur.runtime').task, self, self.__status, k
+            )
+            for k in keyloop
+        ]
+        return out
 
     def run(self, ds, ps):
         '''isolate target specific information from the global table'''

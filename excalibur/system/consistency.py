@@ -43,7 +43,7 @@ def consistency_checks(priors, ignoredPlanets):
         # special check needed for HAT-P-11 c
         #  (it's a non-transiting RV planet that shouldn't be here, but there's an Archive bug)
         if planet_letter in ignoredPlanets:
-            log.warning(
+            log.info(
                 'SKIPPING consistency check for ignored planets: %s',
                 planet_letter,
             )

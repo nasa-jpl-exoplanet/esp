@@ -65,6 +65,9 @@ pymclog.setLevel(logging.ERROR)
 CerbXSlibParams = namedtuple(
     'cerberus_xslib_params_from_runtime',
     [
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -84,6 +87,10 @@ CerbAtmosParams = namedtuple(
         'fitT',
         'fitCtoO',
         'fitNtoO',
+        'fitmolecules',
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -104,13 +111,16 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
+        'knownspecies',
+        'cialist',
+        'xmollist',
         'nlevels',
         'Hsmax',
         'solrad',
         'cornerBins',
+        'lbroadening',
+        'lshifting',
+        'isothermal',
     ],
 )
 
@@ -155,8 +165,6 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-
-    # these used to be default parameters above, but are dangerous-default-values
     knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
@@ -172,7 +180,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
             ):  # make sure it has a spectrum (Kepler-37e bug)
                 planet_letters.append(p)
             else:
-                log.warning(
+                log.info(
                     '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
                     spc['data']['target'],
                     p,
@@ -187,7 +195,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
         nugrid = (1e4 / np.copy(wgrid))[::-1]
         dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
         for myexomol in xmollist:
-            # log.warning('>-- %s', str(myexomol))
+            # log.info('>-- %s', str(myexomol))
             library[myexomol] = {
                 'I': [],
                 'nu': [],
@@ -303,7 +311,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
                 pass
             pass
         for mycia in cialist:
-            # log.warning('>-- %s', str(mycia))
+            # log.info('>-- %s', str(mycia))
             myfile = '_'.join((os.path.join(ciadir, mycia), '2011.cia'))
             library[mycia] = {
                 'I': [],
@@ -389,7 +397,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
                 pass
             pass
         for ks in knownspecies:
-            # log.warning('>-- %s', str(ks))
+            # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
                 'I': [],
@@ -500,7 +508,7 @@ def myxsecs(spc, runtime_params, out, verbose=False):
             allwavenumbers = []
             alltemperatures = []
             for tstep in np.arange(300, 2000, 100):  # asdf put in runtime?
-                # log.warning('>---- %s K', str(Tstep))
+                # log.info('>---- %s K', str(Tstep))
                 sigma, lsig = absorb(
                     library[ks],
                     qtgrid[ks],
@@ -668,11 +676,10 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        # (just TEC for now, otherwise it takes twice as much CPU)
         modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
         }
 
         # ** select which Ariel model to fit **
@@ -680,10 +687,10 @@ def atmos(
         # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
         if runtime_params.fitCloudParameters:
-            log.warning('--< CERBERUS: using CLOUDY arielsim forward model >--')
+            log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             arielmodel = 'cerberus'
         else:
-            log.warning('--< CERBERUS: using CLOUDFREE ariel forward model >--')
+            log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel = 'cerberusNoclouds'
 
         # option to fix N/O
@@ -1138,7 +1145,7 @@ def atmos(
                     # CERBERUS MCMC
                     if not runtime_params.fitCloudParameters and 'sim' in ext:
                         # print('TURNING OFF CLOUDS!')
-                        log.warning('--< RUNNING MCMC - NO CLOUDS! >--')
+                        log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
@@ -1270,7 +1277,7 @@ def atmos(
                                     pass
                                 pass
                         if 'STIS-WFC3' not in ext:
-                            log.warning('--< STANDARD MCMC (WITH CLOUDS) >--')
+                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
 
                             # before calling MCMC, save the fixed-parameter info in the context
                             ctxtupdt(
@@ -1308,14 +1315,14 @@ def atmos(
                         pass
 
                     if runtime_params.MCMC_sliceSampler:
-                        log.warning('>-- SLICE SAMPLER: ON  --<')
+                        log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
-                        log.warning('>-- SLICE SAMPLER: OFF --<')
+                        log.info('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    # log.warning('>-- MCMC nodes: %s', str([n.name for n in nodes]))
-                    log.warning('>-- MCMC nodes: %s', str(prior_ranges.keys()))
+                    # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
+                    log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # asdf: careful here. #-chains and #-cores are same thing?
 
@@ -1407,6 +1414,11 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
+                        # print(
+                        #    'UPDATE THIS to use runtime params!!!',
+                        #    runtime_params.fitmolecules,
+                        # )
+                        # print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
@@ -1948,11 +1960,11 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         }
                         truth_params = atm[p]['TRUTH_MODELPARAMS']
                     else:
-                        print(
+                        log.error(
                             'ERROR: true spectrum is missing from the atmos output'
                         )
                 elif 'TRUTH_SPECTRUM' in atm[p].keys():
-                    print(
+                    log.error(
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
@@ -2092,7 +2104,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     mixratio_profiled['H2CO'] = float(mdp_profiled[4])
 
                 else:
-                    log.warning('--< Expecting TEQ or PHOTOCHEM model! >--')
+                    log.warning(
+                        '--< Expecting TEQ, TEC, or PHOTOCHEM model! >--'
+                    )
 
                 crbhzlib = {'PROFILE': []}
                 hazedir = os.path.join(
@@ -2136,6 +2150,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     orbp=fin['priors'],
                     hzlib=crbhzlib,
                     planet=p,
+                    knownspecies=runtime_params.knownspecies,
+                    cialist=runtime_params.cialist,
+                    xmollist=runtime_params.xmollist,
                     lbroadening=runtime_params.lbroadening,
                     lshifting=runtime_params.lshifting,
                     isothermal=runtime_params.isothermal,
@@ -2150,12 +2167,6 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     (transitdata['depth'][okPart] - fmc[okPart]),
                     weights=1 / transitdata['error'][okPart] ** 2,
                 )
-                # if np.all(np.isfinite(transitdata['depth'])):
-                #    patmos_model = fmc + np.average(
-                #        (transitdata['depth'] - fmc),
-                #        weights=1 / transitdata['error'] ** 2)
-                # else:
-                #    patmos_model = fmc + np.nanmean(transitdata['depth'] - fmc)
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
                 fmc_profiled = crbmodel(
@@ -2173,6 +2184,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     hzlib=crbhzlib,
                     cheq=tceqdict_profiled,
                     planet=p,
+                    knownspecies=runtime_params.knownspecies,
+                    cialist=runtime_params.cialist,
+                    xmollist=runtime_params.xmollist,
                     lbroadening=runtime_params.lbroadening,
                     lshifting=runtime_params.lshifting,
                     isothermal=runtime_params.isothermal,
@@ -2189,13 +2203,13 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                 # calculate chi2 values to see which is the best fit
                 offsets_model = (
-                    patmos_model - transitdata['depth']
-                ) / transitdata['error']
+                    patmos_model - transitdata['depth'][okPart]
+                ) / transitdata['error'][okPart]
                 chi2model = np.nansum(offsets_model**2)
                 # print('chi2model', chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
-                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
+                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth'][okPart]) / transitdata['error'][okPart]
                 # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
                 # print('chi2 after profiling',chi2modelProfiled)
 
@@ -2256,7 +2270,7 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                                     'NtoO'
                                 ]
                             else:
-                                # log.warning('--< NtoO is missing from TRUTH_MODELPARAMS >--')
+                                # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                 tceqdict['NtoO'] = 0.0
 
                     elif model_name == 'PHOTOCHEM':
@@ -2284,6 +2298,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                         hzlib=crbhzlib,
                         cheq=tceqdict,
                         planet=p,
+                        knownspecies=runtime_params.knownspecies,
+                        cialist=runtime_params.cialist,
+                        xmollist=runtime_params.xmollist,
                         lbroadening=runtime_params.lbroadening,
                         lshifting=runtime_params.lshifting,
                         isothermal=runtime_params.isothermal,
@@ -2301,8 +2318,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                     # check to see if this model is the best one
                     offsets_modelrand = (
-                        patmos_modelrand - transitdata['depth']
-                    ) / transitdata['error']
+                        patmos_modelrand - transitdata['depth'][okPart]
+                    ) / transitdata['error'][okPart]
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
                     # print('chi2modelrand', chi2modelrand)
@@ -2425,7 +2442,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     aspecttargets = []
     for a in aspects:
         aspecttargets.append(a)
-    log.warning(
+    log.info(
         '--< CERBERUS ANALYSIS: NUMBER OF TARGETS IN ASPECT %s >--',
         len(aspecttargets),
     )
@@ -2476,8 +2493,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 ],
             }
         else:
-            print(
-                'ERROR: unknown tier level for mass-metal plot',
+            log.error(
+                "ERROR: unknown tier level for mass-metal plot %s",
                 runtime_params.tier,
             )
     else:
@@ -2817,6 +2834,7 @@ def rlsversion():
     '''
     GMR:110 Initial release to IPAC
     GMR:111 Removed empty keys
+    GMR: Dead code. Should be removed
     '''
     return dawgie.VERSION(1, 1, 1)
 
@@ -2830,7 +2848,9 @@ def release(trgt, fin, out, verbose=False):
     ext [INPUT]: 'HST-WFC3-IR-G141-SCAN'
     verbose [OPTIONAL]: verbosity
     '''
-    print('target name in cerb.release', trgt)
+    if verbose:
+        print('target name in cerb.release', trgt)
+        pass
     rlsed = False
     plist = fin['priors']['planets']
     thispath = os.path.join(excalibur.context['data_dir'], 'CERBERUS')
@@ -2873,5 +2893,5 @@ def release(trgt, fin, out, verbose=False):
         pass
     rlsed = out['STATUS'][-1]
     if verbose:
-        log.warning('--< %s', out['STATUS'])
+        log.info('--< %s', out['STATUS'])
     return rlsed

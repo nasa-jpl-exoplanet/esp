@@ -39,8 +39,10 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     '''isolate target specific state from the global table'''
     if table['filters']['includes']:
         allowed_names = table['filters']['includes']
+        pass
     else:
         allowed_names = binding.filter_names.itervalues()
+        pass
     # make a copy of unique names ditching the old types along the way
     allowed_names = set(allowed_names)
     for exclude in table['filters']['excludes']:
@@ -49,6 +51,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     for key in [
         'system_validate_selectMostRecent',
         'system_validate_maximizeSelfConsistency',
+        'transit_pymc_sliceSampler',
         'cerberus_atmos_fitCloudParameters',
         'cerberus_atmos_fitNtoO',
         'cerberus_atmos_fitCtoO',
@@ -60,6 +63,10 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_crbmodel_lbroadening',
         'cerberus_crbmodel_lshifting',
         'cerberus_crbmodel_isothermal',
+        'cerberus_crbmodel_fitmolecules',
+        'cerberus_crbmodel_HITEMPmolecules',
+        'cerberus_crbmodel_HITRANmolecules',
+        'cerberus_crbmodel_EXOMOLmolecules',
         'cerberus_atmos_bounds_Teq',
         'cerberus_atmos_bounds_abundances',
         'cerberus_atmos_bounds_CTP',
@@ -84,20 +91,26 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             table['controls'][key], excalibur.runtime.states.BoolValue
         ):
             sv[key] = table['controls'][key].new()
+            pass
         else:
             # these are excalibur.ValueScalar objects. value() converts to float/int/string
             # actually careful - now they are sometimes HiLoValues
             sv[key] = table['controls'][key]
+            pass
+        pass
+
     pymc = table['pymc-cerberuschainlen']
     default = pymc['default'].value()
     sv['cerberus_steps'] = sv['cerberus_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+
     pymc = table['pymc-cerberuschains']
     default = pymc['default'].value()
     sv['cerberus_chains'] = sv['cerberus_chains'].new(
         pymc['overrides'].get(tn, default)
     )
+
     sv['isValidTarget'] = sv['isValidTarget'].new(
         tn
         not in [
@@ -113,16 +126,20 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
                 for targetandreason in table['run_only']['targets']
             ]
         )
+
     pymc = table['pymc-spectrumchainlen']
     default = pymc['default'].value()
     sv['spectrum_steps'] = sv['spectrum_steps'].new(
         pymc['overrides'].get(tn, default)
     )
+
     pymc = table['pymc-spectrumchains']
     default = pymc['default'].value()
     sv['spectrum_chains'] = sv['spectrum_chains'].new(
         pymc['overrides'].get(tn, default)
     )
+
+    return
 
 
 def load(sv_dict: {str: {}}, targets) -> None:
@@ -140,6 +157,7 @@ def load(sv_dict: {str: {}}, targets) -> None:
     controls = sv_dict['controls']
     for knob in controls:
         controls[knob] = controls[knob].new(getattr(settings.controls, knob))
+        # print(knob, '=', controls[knob], type(controls[knob]))
     sv_dict['filters']['excludes'].extend(
         [str(s) for s in settings.filters.exclude]
     )
@@ -159,3 +177,4 @@ def load(sv_dict: {str: {}}, targets) -> None:
             sv['overrides'][override.name] = override.steps
     _sequester2sv(settings.run_only, sv_dict['run_only'], targets)
     _sequester2sv(settings.sequester, sv_dict['sequester'], targets)
+    return

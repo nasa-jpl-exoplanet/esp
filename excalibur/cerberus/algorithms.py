@@ -16,7 +16,6 @@ import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
 import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
 import excalibur.transit as trn
@@ -89,10 +88,19 @@ class XSLib(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vspc:
-                log.warning('--< CERBERUS XSLIB: %s >--', fltr)
+                log.info('--< CERBERUS XSLIB: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
+                    knownspecies=runtime[
+                        'cerberus_crbmodel_HITEMPmolecules'
+                    ].molecules,
+                    cialist=runtime[
+                        'cerberus_crbmodel_HITRANmolecules'
+                    ].molecules,
+                    xmollist=runtime[
+                        'cerberus_crbmodel_EXOMOLmolecules'
+                    ].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -154,42 +162,16 @@ class Atmos(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: transit.spectrum, system.finalize, cerberus.xslib'''
-        return [
-            dawgie.ALG_REF(trn.task, self.__spc),
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__xsl),
-            dawgie.ALG_REF(ariel.task, self.__arielsim),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_steps',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCloudParameters',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitT',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCtoO',
-            ),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitNtoO',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        return (
+            [
+                dawgie.ALG_REF(trn.task, self.__spc),
+                dawgie.ALG_REF(sys.task, self.__fin),
+                dawgie.ALG_REF(fetch('excalibur.cerberus').task, self.__xsl),
+                dawgie.ALG_REF(ariel.task, self.__arielsim),
+            ]
+            + self.__rt.trigger('cerberus')
+            + self.__rt.refs_for_proceed()
+        )
 
     def state_vectors(self):
         '''Output State Vectors: cerberus.atmos'''
@@ -201,9 +183,6 @@ class Atmos(dawgie.Algorithm):
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         if sfin:
             sfin = 'Missing system params!'
-
-        # print('  ALLOWED FILTERS',self.__rt.sv_as_dict()['status']['allowed_filter_names'])
-
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
@@ -234,14 +213,12 @@ class Atmos(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             if vfin and vxsl and vspc:
-                log.warning('--< CERBERUS ATMOS: %s >--', fltr)
+                log.info('--< CERBERUS ATMOS: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbAtmosParams(
                     MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
-                    # MCMC_chains=1,
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
                     fitCloudParameters=runtime[
                         'cerberus_atmos_fitCloudParameters'
@@ -250,6 +227,18 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    fitmolecules=runtime[
+                        'cerberus_crbmodel_fitmolecules'
+                    ].molecules,
+                    knownspecies=runtime[
+                        'cerberus_crbmodel_HITEMPmolecules'
+                    ].molecules,
+                    cialist=runtime[
+                        'cerberus_crbmodel_HITRANmolecules'
+                    ].molecules,
+                    xmollist=runtime[
+                        'cerberus_crbmodel_EXOMOLmolecules'
+                    ].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -263,16 +252,6 @@ class Atmos(dawgie.Algorithm):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
-                # print()
-                # print('runtime',runtime)
-                # print()
-                # print('runtime params1',runtime_params)
-                # fails print('runtime params2',runtime_params.keys())
-                # import pdb; pdb.set_trace()
-
-                # print('runtime fitT',runtime_params.fitT)
-                # print('runtime lbroad',runtime_params.lbroadening)
-                # print('runtime params3',runtime_params.boundTeq)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
@@ -397,7 +376,7 @@ class Results(dawgie.Algorithm):
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
                 if vxsl and vatm:
-                    log.warning('--< CERBERUS RESULTS: %s >--', fltr)
+                    log.info('--< CERBERUS RESULTS: %s >--', fltr)
 
                     runtime = self.__rt.sv_as_dict()['status']
                     runtime_params = crbcore.CerbResultsParams(
@@ -407,15 +386,24 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
-                        isothermal=runtime['cerberus_crbmodel_isothermal'],
+                        knownspecies=runtime[
+                            'cerberus_crbmodel_HITEMPmolecules'
+                        ].molecules,
+                        cialist=runtime[
+                            'cerberus_crbmodel_HITRANmolecules'
+                        ].molecules,
+                        xmollist=runtime[
+                            'cerberus_crbmodel_EXOMOLmolecules'
+                        ].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
                         cornerBins=runtime[
                             'cerberus_plotters_cornerBins'
                         ].value(),
+                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                        lshifting=runtime['cerberus_crbmodel_lshifting'],
+                        isothermal=runtime['cerberus_crbmodel_isothermal'],
                     )
 
                     update = self._results(
@@ -563,7 +551,7 @@ class Analysis(dawgie.Analyzer):
                 )
                 # print('runtime', runtime_params)
 
-                log.warning('--< CERBERUS ANALYSIS: %s  >--', fltr)
+                log.info('--< CERBERUS ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
                     aspects, fltr, runtime_params, fltrs.index(fltr)
                 )
@@ -626,7 +614,7 @@ class Release(dawgie.Algorithm):
         fltr = 'HST-WFC3-IR-G141-SCAN'
         update = False
         if vfin:
-            log.warning(
+            log.info(
                 '--< CERBERUS RELEASE: %s %s >--',
                 fltr,
                 repr(self).split('.')[1],

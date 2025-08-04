@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d as itp
 import logging
 
 import excalibur.system.core as syscore
-from excalibur.util.cerberus import crbce, calcTEA, getmmw
+from excalibur.util.cerberus import crbce, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -45,6 +45,9 @@ def crbmodel(
     isothermal=None,
     lbroadening=None,
     lshifting=None,
+    knownspecies=None,
+    cialist=None,
+    xmollist=None,
     nlevels=None,
     Hsmax=None,
     solrad=None,
@@ -62,6 +65,12 @@ def crbmodel(
         planet = ctxt.planet
     if orbp is None:
         orbp = ctxt.orbp
+    if knownspecies is None:
+        knownspecies = ctxt.knownspecies
+    if cialist is None:
+        cialist = ctxt.cialist
+    if xmollist is None:
+        xmollist = ctxt.xmollist
     if nlevels is None:
         nlevels = ctxt.nlevels
     if Hsmax is None:
@@ -85,9 +94,6 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    # these used to be default parameters above, but are dangerous-default-values
-    # note that these are also defined in cerberus/core/myxsecs()
-    #  maybe put them inside runtime/ops.xml to ensure consistency?
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
 
@@ -103,22 +109,11 @@ def crbmodel(
 
     # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
+        fH2 = None
+        fHe = None
         if cheq is None:
-            log.warning('neither mixratio nor cheq are defined')
-        if chemistry == 'TEA':
-            mixratio, fH2, fHe = calcTEA(
-                pressure,
-                temp,
-                C2Or=cheq['CtoO'],
-                X2Hr=cheq['XtoH'],
-                N2Or=cheq['NtoO'],
-            )
-        else:
-            if chemistry != 'TEC':
-                log.warning(
-                    '--< ERROR: unknown %s chemistry model! >--', chemistry
-                )
-
+            log.error('neither mixratio nor cheq are defined')
+        if chemistry == 'TEC':
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -126,6 +121,16 @@ def crbmodel(
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
+        elif chemistry == 'TEA':
+            mixratio, fH2, fHe = crbce(
+                pressure,
+                temp,
+                C2Or=cheq['CtoO'],
+                X2Hr=cheq['XtoH'],
+                N2Or=cheq['NtoO'],
+            )
+        else:
+            log.warning('--< %s >--', chemistry)
         # print('mixratio',mixratio,fH2,fHe)
         mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
     else:

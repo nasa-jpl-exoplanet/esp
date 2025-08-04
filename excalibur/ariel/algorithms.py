@@ -51,7 +51,7 @@ class SimSpectrum(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.warning(
+            log.info(
                 '--< ARIEL.%s: not a valid target >--', self.name().upper()
             )
 
@@ -92,6 +92,15 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
+                    knownspecies=runtime[
+                        'cerberus_crbmodel_HITEMPmolecules'
+                    ].molecules,
+                    cialist=runtime[
+                        'cerberus_crbmodel_HITRANmolecules'
+                    ].molecules,
+                    xmollist=runtime[
+                        'cerberus_crbmodel_EXOMOLmolecules'
+                    ].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),

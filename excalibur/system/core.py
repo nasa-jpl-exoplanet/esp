@@ -357,7 +357,7 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     # special adjustments based on Raissa/Edypo identification of RUNIDs with lower residuals
     setRefByHand = fix_default_reference(target)
     if setRefByHand:
-        log.warning(
+        log.info(
             '--< SYSTEM setting default publication: %s %s >--',
             target,
             setRefByHand,
@@ -902,7 +902,7 @@ def forcepar(overwrite, out, verbose=False):
         log.warning('>-- PARAMETER STILL MISSING; ADD TO SYSTEM/OVERWRITER')
     else:
         success = True
-        log.warning('>-- PARAMETER FORCING SUCCESSFUL')
+        log.info('>-- PARAMETER FORCING SUCCESSFUL')
     return success
 
 

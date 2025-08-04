@@ -24,7 +24,6 @@ from excalibur.util.checksv import checksv
 
 import excalibur.data as dat
 import excalibur.data.algorithms as datalg
-import excalibur.runtime as rtime
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
 import excalibur.system as sys
@@ -91,7 +90,7 @@ class Normalization(dawgie.Algorithm):
             vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
             vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
             if vcal and vtme and vfin:
-                log.warning(
+                log.info(
                     '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
                 )
                 update = self._norm(
@@ -187,16 +186,14 @@ class WhiteLight(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: transit.normalization, system.finalize'''
-        return [
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'spectrum_steps',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        return (
+            [
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
+                dawgie.ALG_REF(sys.task, self.__fin),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     def state_vectors(self):
         '''Output State Vectors: transit.whitelight'''
@@ -204,6 +201,11 @@ class WhiteLight(dawgie.Algorithm):
 
     def run(self, ds, ps):
         '''Top level algorithm call'''
+
+        runtime = self.__rt.sv_as_dict()['status']
+        runtime_params = trncore.TransitPymcParams(
+            sliceSampler=runtime['transit_pymc_sliceSampler'],
+        )
 
         svupdate = []
         fin = self.__fin.sv_as_dict()['parameters']
@@ -218,6 +220,7 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
+
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
@@ -232,7 +235,7 @@ class WhiteLight(dawgie.Algorithm):
                         break
                     vnrm, snrm = checksv(nrm)
                     if vnrm and vfin:
-                        log.warning(
+                        log.info(
                             '--< %s MERGING: %s >--', self._type.upper(), fltr
                         )
                         allnormdata.append(nrm)
@@ -245,12 +248,13 @@ class WhiteLight(dawgie.Algorithm):
                 pass
             if allnormdata:
                 try:
-                    log.warning(
+                    log.info(
                         '--< %s WHITELIGHT: HSTCOMBO >--', self._type.upper()
                     )
                     update = self._hstwhitelight(
                         allnormdata,
                         fin,
+                        runtime_params,
                         self.__rt.sv_as_dict()['status'][
                             'spectrum_steps'
                         ].value(),
@@ -275,12 +279,11 @@ class WhiteLight(dawgie.Algorithm):
             nrm = self._nrm.sv_as_dict()[fltr]
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
-                log.warning(
-                    '--< %s WHITELIGHT: %s >--', self._type.upper(), fltr
-                )
+                log.info('--< %s WHITELIGHT: %s >--', self._type.upper(), fltr)
                 update = self._whitelight(
                     nrm,
                     fin,
+                    runtime_params,
                     self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
                     self.__out[fltrs.index(fltr)],
                     fltr,
@@ -301,7 +304,7 @@ class WhiteLight(dawgie.Algorithm):
             )
         return
 
-    def _hstwhitelight(self, nrm, fin, chain_length, out, fltr):
+    def _hstwhitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
         '''Core code call for merged HST data'''
 
         wl = trncore.hstwhitelight(
@@ -310,12 +313,13 @@ class WhiteLight(dawgie.Algorithm):
             out,
             fltr,
             self._type,
+            runtime_params,
             chainlen=chain_length,
             verbose=False,
         )
         return wl
 
-    def _whitelight(self, nrm, fin, chain_length, out, fltr):
+    def _whitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
         '''Core code call'''
 
         if 'Spitzer' in fltr:
@@ -334,6 +338,7 @@ class WhiteLight(dawgie.Algorithm):
                 fltr,
                 self._type,
                 self.__out[-1],
+                runtime_params,
                 chainlen=chain_length,
                 verbose=False,
                 # parentprior=True,  # GMR: Not safe with new data
@@ -375,17 +380,15 @@ class Spectrum(dawgie.Algorithm):
     def previous(self):
         '''Input State Vectors: system.finalize, transit.normalization,
         transit.whitelight'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
-            dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
-            dawgie.V_REF(
-                rtime.task,
-                self.__rt,
-                self.__rt.sv_as_dict()['status'],
-                'spectrum_steps',
-            ),
-        ] + self.__rt.refs_for_proceed()
+        return (
+            [
+                dawgie.ALG_REF(sys.task, self.__fin),
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
+                dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     def state_vectors(self):
         '''Output State Vectors: transit.spectrum'''
@@ -407,11 +410,18 @@ class Spectrum(dawgie.Algorithm):
             vnrm, snrm = checksv(self._nrm.sv_as_dict()[fltr])
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             if vfin and vnrm and vwht:
-                log.warning('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
+                log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
+
+                runtime = self.__rt.sv_as_dict()['status']
+                runtime_params = trncore.TransitPymcParams(
+                    sliceSampler=runtime['transit_pymc_sliceSampler'],
+                )
+
                 update = self._spectrum(
                     self.__fin.sv_as_dict()['parameters'],
                     self._nrm.sv_as_dict()[fltr],
                     self._wht.sv_as_dict()[fltr],
+                    runtime_params,
                     self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
                     self.__out[fltrs.index(fltr)],
                     fltr,
@@ -423,7 +433,7 @@ class Spectrum(dawgie.Algorithm):
                 svupdate.append(self.__out[fltrs.index(fltr)])
 
         merg = trncore.hstspectrum(self.__out, fltrs)
-        log.warning('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
+        log.info('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
         if merg:
             svupdate.append(self.__out[-1])
 
@@ -440,7 +450,7 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, chain_length, out, fltr):
+    def _spectrum(self, fin, nrm, wht, runtime_params, chain_length, out, fltr):
         '''Core code call'''
         # chain_length = 10
         # print('chain length in spectrum',chain_length)
@@ -459,6 +469,7 @@ class Spectrum(dawgie.Algorithm):
                 out,
                 fltr,
                 self._type,
+                runtime_params,
                 chainlen=chain_length,
                 verbose=False,
             )
@@ -523,7 +534,7 @@ class StarSpots(dawgie.Algorithm):
             vspc, sspc = checksv(self._spc.sv_as_dict()[fltr])
 
             if vfin and vspc:
-                # log.warning(
+                # log.info(
                 #     '--< %s STARSPOTS: %s >--', self._type.upper(), fltr
                 # )
                 update = self._starspots(

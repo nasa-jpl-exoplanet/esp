@@ -307,7 +307,7 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
             # 3 - activefilters filtering on TELESCOPE INSTRUMENT FILTER
             if 'data' not in outjson:
                 outjson['data'] = []  # special case for TOI-1338
-            log.warning(
+            log.info(
                 '--< TARGET AUTOFILL: %s  #-of-obs %s >--',
                 thistarget,
                 len(outjson['data']),
@@ -347,7 +347,7 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
                         platformlist.append(obs['obs_collection'])
                     pass
                 pass
-            log.warning(
+            log.info(
                 '--< TARGET AUTOFILL: %s  in targettable %s >--',
                 thistarget,
                 len(targettable),
@@ -1261,7 +1261,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             allmiss.extend([obscol] * len(scidata))
             allurl.extend([thisurl] * len(scidata))
             if verbose:
-                log.warning('%s: %s: %s', obscol, o, len(scidata))
+                log.info('%s: %s: %s', obscol, o, len(scidata))
                 pass
             pass
         else:
@@ -1293,7 +1293,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             pass
         # VERBOSE
         if verbose:
-            log.warning('>-- %s %s', os.path.getsize(fileout), fileout)
+            log.info('>-- %s %s', os.path.getsize(fileout), fileout)
             pass
         pass
 
@@ -1420,7 +1420,7 @@ def dbscp(target, locations, dbs, out, verbose=False):
             n_fails += 1
             pass
         pass
-    log.warning(
+    log.info(
         '--< %s: %i out of %i MAST files are unreadable >--',
         target,
         n_fails,
@@ -1508,7 +1508,7 @@ def dbscp(target, locations, dbs, out, verbose=False):
                     key = mainheader.get("FILENAME").split('.')[0]
                     out['name'][key] = filedict
                     if verbose:
-                        log.warning(
+                        log.info(
                             '--< %s: %s %s %s %s %s',
                             key,
                             filedict['observatory'],

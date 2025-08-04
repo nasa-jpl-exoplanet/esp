@@ -84,7 +84,7 @@ class pcnormalization(dawgie.Algorithm):
             vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
             vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
             if vcal and vtme and vfin:
-                log.warning(
+                log.info(
                     '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
                 )
                 update = self._norm(
@@ -169,9 +169,7 @@ class pcwhitelight(dawgie.Algorithm):
             nrm = self._nrm.sv_as_dict()[fltr]
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
-                log.warning(
-                    '--< %s WHITE LIGHT: %s >--', self._type.upper(), fltr
-                )
+                log.info('--< %s WHITE LIGHT: %s >--', self._type.upper(), fltr)
                 update = self._whitelight(nrm, fin, self.__out[index], index)
                 pass
             else:

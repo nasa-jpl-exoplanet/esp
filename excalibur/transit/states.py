@@ -359,9 +359,10 @@ class SpectrumSV(ExcaliburSV):
                         plt.xlabel(str('Wavelength [$\\mu$m]'))
                         plt.ylabel(str('$(R_p/R_*)^2$ [%]'))
                         fullspec = [
-                            mc['mean']['rprs'] if np.isnan(rp) else rp
+                            np.mean(mc['rprs']) if np.isnan(rp) else rp
                             for mc, rp in zip(
-                                self['data'][p]['MCPOST'], self['data'][p]['ES']
+                                self['data'][p]['MCTRACE'],
+                                self['data'][p]['ES'],
                             )
                         ]
                         fullspec = np.array(fullspec)
@@ -377,7 +378,7 @@ class SpectrumSV(ExcaliburSV):
                             fmt='.',
                             yerr=1e2 * fullspecerr,
                         )
-                        # highight high variance channels
+                        # highlight high variance channels
                         if 'LCFIT' in self['data'][p]:
                             spec_rsdpn = [
                                 np.nanstd(i['residuals']) / i['dnoise']
