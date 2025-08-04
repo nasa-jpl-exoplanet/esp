@@ -2318,8 +2318,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                     # check to see if this model is the best one
                     offsets_modelrand = (
-                        patmos_modelrand - transitdata['depth'][okpart]
-                    ) / transitdata['error'][okpart]
+                        patmos_modelrand - transitdata['depth'][okPart]
+                    ) / transitdata['error'][okPart]
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
                     # print('chi2modelrand', chi2modelrand)
