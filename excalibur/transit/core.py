@@ -1725,7 +1725,6 @@ def hstwhitelight(
             for times in time:
                 mintime = np.min(times)
                 maxtime = np.max(times)
-                # print('min,max time for this visit',mintime,maxtime)
                 modeltimes_thisVisit = np.linspace(
                     mintime - 0.05, maxtime + 0.05, num=1000
                 )
@@ -2916,9 +2915,6 @@ def spectrum(
                 data = np.array(
                     [np.nanmean(d[s]) for d, s in zip(allspec, select)]
                 )
-                # print('data size',data.shape)
-                # for n, s in zip(allpnoise, select):
-                #    print('noise REDUCED by sampling factor!', np.nansum(s))
                 dnoise = np.array(
                     [
                         np.nanmedian(n[s]) / np.sqrt(np.nansum(s))
@@ -2990,7 +2986,6 @@ def spectrum(
             )  # [m]
             Hs = Hs / (priors['R*'] * sscmks['Rsun'])
             tauvs = 1e0 / ((1e-2 / trdura) ** 2)
-            # print('tauvs for vslope range', tauvs)
             ootstd = np.nanstd(data[abs(allz) > (1e0 + whiterprs)])
             tauvi = 1e0 / (ootstd**2)
             # tauwbdata = 1e0 / dnoise**2
@@ -3096,9 +3091,6 @@ def spectrum(
                     log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
                     sampler = pymc.Metropolis()
 
-                # asdf
-                # sampler = pymc.Slice()
-
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
@@ -3155,20 +3147,21 @@ def spectrum(
                     pass
                 allimout = np.array(allimout)
                 lout = tldlc(
-                    abs(allz),
+                    np.abs(allz),
                     clspvl,
                     g1=g1[0],
                     g2=g2[0],
                     g3=g3[0],
                     g4=g4[0],
                 )
-                lout = lout * np.array(allimout)
+                lout = lout * allimout
                 lcfit = {
                     'expected': lout[valid],
                     'observed': data[valid],
                     'im': allimout[valid],
                     'phase': allphase[valid],
-                    'dnoise': np.nanmedian(dnoise[valid]),
+                    # 'dnoise': np.nanmedian(dnoise[valid]),
+                    'dnoise': dnoise[valid],
                     'residuals': data[valid] - lout[valid],
                 }
                 # Spectrum outlier rejection + inpaint with np.nan
@@ -3200,11 +3193,6 @@ def spectrum(
                     #  PLOT LIGHTCURVE for this wavelength (cf whitelight)
                     _ = plt.figure(figsize=(6, 5))
 
-                    # print('datanorm keys',nrm['data'][p].keys())
-                    # print('whitelight keys',wht['data'][p].keys())
-                    # print(' visits',wht['data'][p]['visits'])
-
-                    # asdf
                     # show the data for this wavelength channel as red
                     plt.scatter(
                         allphase,
@@ -3222,10 +3210,6 @@ def spectrum(
                         'r:',
                     )
                     #  also show the uncertainties used for mcmcsig
-                    #  ok actually use dnoise, which is where this comes from
-                    # sigma = 1 / np.sqrt(np.nanmedian(tauwbdata))
-                    # print('tauwbdata', tauwbdata)
-                    # print('sigma', sigma)
                     plt.errorbar(
                         allphase,
                         data,
@@ -3241,39 +3225,20 @@ def spectrum(
                     plt.plot(
                         lcfit['phase'][orderme],
                         lcfit['expected'][orderme],
-                        'g--',
+                        # lcfit['expected'][orderme] / lcfit['im'][orderme],
+                        'r--',
                         zorder=5,
                     )
-                    # print('expected',(lcfit['expected']))
-                    # print('len check',len(lcfit['phase']))
-                    # print('len check',len(lcfit['expected']))
-                    # print('len check',len(lcfit['im']))
-                    plt.plot(
-                        lcfit['phase'][orderme],
-                        lcfit['expected'][orderme] / lcfit['im'][orderme],
-                        'b--',
-                        zorder=5,
-                    )
-                    # print('mean of expected', np.median(lcfit['expected']))
-                    # asdf
 
                     newdata = []
                     for d in wht['data'][p]['allwhite']:
                         newdata.extend(d)
                     newdata = np.array(newdata)
                     # these uncorrected fluxes are a bit lower
-                    # plt.plot(allphase, newdata, 'o')
                     plt.plot(allphase, newdata / allim, 'x', c='k')
                     # postlc looks like the same thing as the model
                     # postlc = wht['data'][p]['postlc']
                     # plt.plot(allphase, postlc, '^')
-
-                    # note: allwhite and im are broken down by visit,
-                    #       but allz and postlc are not
-                    # for ivisit in range(len(wht['data'][p]['visits'])):
-                    #    print( wht['data'][p]['allwhite'])
-                    #    print('ivis',ivisit)
-                    #    allwhite = wht['data'][p]['allwhite'][ivisit]
 
                     # compare the whitelight depth against the average depth
                     plt.plot(
@@ -3293,7 +3258,7 @@ def spectrum(
                 startflag = False
                 pass
             pass
-        # plt.show()  # asdf
+        # plt.show()
 
         out['data'][p]['RSTAR'].append(priors['R*'] * sscmks['Rsun'])
         out['data'][p]['Hs'].append(Hs)
@@ -3396,7 +3361,6 @@ def lcmodel(*specparams):
     r, avs, aos, aoi = specparams
     allimout = []
 
-    # USE COMMENTED LINES BELOW TO LIMIT NUMBER OF FIT PARAMS (temp for debugging)
     for iv in range(len(ctxt.visits)):
         imout = timlc(
             ctxt.time[iv],
