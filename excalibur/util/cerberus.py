@@ -15,16 +15,24 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 
 
-def calcTEA(tp_coeffs, pressure, species,
-            metallicity=1.0, C_O=None, N_O=None, plot_tp = False,
-            abundance_file="abundances.txt", cfg_file="TEA.cfg", stoich_file="stoich.txt"):
-    
+def calcTEA(
+    tp_coeffs,
+    pressure,
+    species,
+    metallicity=1.0,
+    C_O=None,
+    N_O=None,
+    plot_tp=False,
+    abundance_file="abundances.txt",
+    cfg_file="TEA.cfg",
+    stoich_file="stoich.txt",
+):
     """
     Parameters
     ----------
     tp_coeffs : 1-D array of 10 values. See _make_tp_profile for what each value does. Best to only fit/retrieve one or two tp values and leave the rest constant.
     pressure       : pressure grid
-    species            : array of desired species ["H2O_g", "CH4_g", ...]. Must use format seen here to work with TEA. Must use the filename for the species in    /gdata. Sometimes the extension will be like _ref. For example "N2_ref". 
+    species            : array of desired species ["H2O_g", "CH4_g", ...]. Must use format seen here to work with TEA. Must use the filename for the species in    /gdata. Sometimes the extension will be like _ref. For example "N2_ref".
 
     metallicity        : X solar
     C_O              : None = solar. Also 0.55 = solar. This is the number ratio so 1.1 is 2x solar metallicity.
@@ -38,33 +46,40 @@ def calcTEA(tp_coeffs, pressure, species,
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
     from excalibur.cerberus.tea_code import python_makeatm as ma
-    from excalibur.cerberus.tea_code import python_runatm  as ra
+    from excalibur.cerberus.tea_code import python_runatm as ra
+
     input_species = species
 
-    def _make_tp_profile(P,
-                         shift,             # log-P shift (moves inversion up/down)
-                         T_base=1500,       # background scale
-                         alpha=0.05,       # background slope
-                         P_ref=1e-2,        # ref pressure
-                         a_rise=400,        # rise amplitude
-                         c_rise=-2.3,       # center of rise (in log10 P)
-                         w_rise=0.25,       # width of rise
-                         a_fall=-350,       # fall amplitude
-                         c_fall=-1.9,       # center of fall
-                         w_fall=0.35):      # width of fall
-        
-        x = np.log10(P) + shift 
-        T_bg = T_base * (P / P_ref)**alpha
-    
+    def _make_tp_profile(
+        P,
+        shift,  # log-P shift (moves inversion up/down)
+        T_base=1500,  # background scale
+        alpha=0.05,  # background slope
+        P_ref=1e-2,  # ref pressure
+        a_rise=400,  # rise amplitude
+        c_rise=-2.3,  # center of rise (in log10 P)
+        w_rise=0.25,  # width of rise
+        a_fall=-350,  # fall amplitude
+        c_fall=-1.9,  # center of fall
+        w_fall=0.35,
+    ):  # width of fall
+
+        x = np.log10(P) + shift
+        T_bg = T_base * (P / P_ref) ** alpha
+
         rise = a_rise * np.tanh((x - c_rise) / w_rise)
         fall = a_fall * np.tanh((x - c_fall) / w_fall)
-    
-        inv_rise = a_rise * (np.tanh((x - c_rise) / w_rise) - np.tanh(-(c_rise) / w_rise))
-        inv_fall = a_fall * (np.tanh((x - c_fall) / w_fall) - np.tanh(-(c_fall) / w_fall))
-    
+
+        inv_rise = a_rise * (
+            np.tanh((x - c_rise) / w_rise) - np.tanh(-(c_rise) / w_rise)
+        )
+        inv_fall = a_fall * (
+            np.tanh((x - c_fall) / w_fall) - np.tanh(-(c_fall) / w_fall)
+        )
+
         T = T_bg + inv_rise + inv_fall
         return T
-        
+
     def _reservoir_base(el: str, gdir: Path) -> str:
         """
         Return base name for atomic reservoir species for element `el`
@@ -78,7 +93,7 @@ def calcTEA(tp_coeffs, pressure, species,
                 if (gdir / f"{base}{ext}").exists():
                     return base
         raise FileNotFoundError(f"No thermo file for element '{el}' in {gdir}")
-    
+
     def _read_solar_abund(abundance_file: str) -> dict[str, float]:
         """
         Returns dict {element_symbol: number_fraction} with H fixed at 1.0.
@@ -88,92 +103,98 @@ def calcTEA(tp_coeffs, pressure, species,
          N_X / N_H = 10**(dex_X - 12)
         so H=1.0, He≈0.085, C≈2.7e-4, N≈6.8e-5, O≈4.9e-4, … (solar values).
         """
-        data    = np.genfromtxt(abundance_file, comments="#", dtype=str)
-        symbols = data[:, 1]                    
-        dex     = data[:, 2].astype(float)      
+        data = np.genfromtxt(abundance_file, comments="#", dtype=str)
+        symbols = data[:, 1]
+        dex = data[:, 2].astype(float)
 
-        num_dens = 10.0 ** (dex - 12.0)         
+        num_dens = 10.0 ** (dex - 12.0)
         return {sym: val for sym, val in zip(symbols, num_dens)}
-    
-    
-    #scale abundances for metallicity, C/O, N/O 
-    def _scale_abund(solar: dict[str, float],
-                     metallicity: float,
-                     C_O: float | None,
-                     N_O: float | None) -> dict[str, float]:
+
+    # scale abundances for metallicity, C/O, N/O
+    def _scale_abund(
+        solar: dict[str, float],
+        metallicity: float,
+        C_O: float | None,
+        N_O: float | None,
+    ) -> dict[str, float]:
         """
         Apply metallicity & C/O, N/O tweaks while preserving mass balance.
         H & He are rescaled together (constant H/He ratio).
         """
         abund = solar.copy()
-    
+
         metals = [el for el in abund if el not in ("H", "He")]
         for el in metals:
             abund[el] *= metallicity
-    
+
         if C_O is not None:
             O = abund["O"]
             abund["C"] = C_O * O
-    
+
         if N_O is not None:
             O = abund["O"]
             abund["N"] = N_O * O
-            
+
         return abund
 
     pressure = np.asarray(pressure, dtype=float)
-    temperature = _make_tp_profile(pressure, *tp_coeffs) 
+    temperature = _make_tp_profile(pressure, *tp_coeffs)
     if plot_tp == True:
         plt.plot(temperature, pressure)
         plt.yscale("log")
         plt.gca().invert_yaxis()
         plt.title("Temperature Pressure Profile")
 
-    solar   = _read_solar_abund(abundance_file)
+    solar = _read_solar_abund(abundance_file)
 
-    from excalibur.cerberus.tea_code import makeheader as mh                 
-    _, elem_arr = mh.read_stoich(species, stoich_file= stoich_file)          
+    from excalibur.cerberus.tea_code import makeheader as mh
 
-    needed_elem = set(elem_arr) | {"H"}            
+    _, elem_arr = mh.read_stoich(species, stoich_file=stoich_file)
+
+    needed_elem = set(elem_arr) | {"H"}
 
     from pathlib import Path
-    gdir   = Path(cfg_file).with_name("gdata")      
+
+    gdir = Path(cfg_file).with_name("gdata")
     atomic = [_reservoir_base(el, gdir) for el in needed_elem]
 
     species_ordered = []
-    for sp in atomic:             
+    for sp in atomic:
         if sp not in species_ordered:
             species_ordered.append(sp)
-    for sp in species:                 
+    for sp in species:
         if sp not in species_ordered:
             species_ordered.append(sp)
 
-    species = species_ordered        
+    species = species_ordered
 
-    abund   = _scale_abund({k: solar[k] for k in needed_elem},
-                       metallicity, C_O, N_O)
+    abund = _scale_abund(
+        {k: solar[k] for k in needed_elem}, metallicity, C_O, N_O
+    )
 
-    input_elem = list(elem_arr)                        
-    abund_vec  = np.array([abund[e] for e in input_elem])
- 
-    pre_atm = ma.build_pre_atm(pressure, temperature,
-                            input_elem=input_elem,
-                            output_species=species,
-                            abundances_path=abundance_file,
-                            cfg_file=cfg_file)
+    input_elem = list(elem_arr)
+    abund_vec = np.array([abund[e] for e in input_elem])
+
+    pre_atm = ma.build_pre_atm(
+        pressure,
+        temperature,
+        input_elem=input_elem,
+        output_species=species,
+        abundances_path=abundance_file,
+        cfg_file=cfg_file,
+    )
 
     n_layers = pressure.size
     pre_atm["atom_abundances"] = np.tile(abund_vec, (n_layers, 1))
 
     df = ra.run_tea(pre_atm, cfg_file=cfg_file)
 
-    avg = df.mean(axis=0)              
+    avg = df.mean(axis=0)
 
-    mixratio = {sp.split("_")[0] : float(avg[sp])
-             for sp in input_species
-             if sp in avg}
-    return mixratio          
-    
+    mixratio = {
+        sp.split("_")[0]: float(avg[sp]) for sp in input_species if sp in avg
+    }
+    return mixratio
 
 
 # ------------ -------------------------------------------------------

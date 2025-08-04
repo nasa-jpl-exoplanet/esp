@@ -58,8 +58,9 @@ def dF_dlam(s, i, x, y, delta, c, x_bar, y_bar, delta_bar):
     """
     dF_dlam = 0
     for n in np.arange(i):
-        dF_dlam += delta[n] * (c[n] + np.log(y[n] + s*delta[n]) -
-                               np.log(y_bar + s*delta_bar))
+        dF_dlam += delta[n] * (
+            c[n] + np.log(y[n] + s * delta[n]) - np.log(y_bar + s * delta_bar)
+        )
     return dF_dlam
 
 
@@ -121,15 +122,15 @@ def lambdacorr(it_num, verb, input, info, save_info=None):
 
     Notes
     -----
-    The code works without adjustments for the temperatures above ~500 K. 
+    The code works without adjustments for the temperatures above ~500 K.
     For temperatures below 500 K the code produces results with low
-    precision, thus it is not recommended to use TEA below 500 K. 
-    Setting xtol to 1e-8 and maxinter to 200 is most optimizing. 
+    precision, thus it is not recommended to use TEA below 500 K.
+    Setting xtol to 1e-8 and maxinter to 200 is most optimizing.
     If higher tolerance level is desired (xtol>1e-8), maxium number
     of iterations must be increased. The result can be further improved
-    with fine adjustments to the lambda exploration variables 
-    'lower' and 'steps' to larger magnitudes 
-    (i.e., lower = -100,  steps = 1000). This will lengthen the time 
+    with fine adjustments to the lambda exploration variables
+    'lower' and 'steps' to larger magnitudes
+    (i.e., lower = -100,  steps = 1000). This will lengthen the time
     of execution.
     '''
 
@@ -138,15 +139,15 @@ def lambdacorr(it_num, verb, input, info, save_info=None):
     np.seterr(divide='ignore')
 
     pressure = info[0]
-    i        = info[1]
-    g_RT     = info[5]
+    i = info[1]
+    g_RT = info[5]
 
     # Take final values from last iteration, lagrange.py
-    y         = input[0]
-    x         = input[1]
-    delta     = input[2]
-    y_bar     = input[3]
-    x_bar     = input[4]
+    y = input[0]
+    x = input[1]
+    delta = input[2]
+    y_bar = input[3]
+    x_bar = input[4]
     delta_bar = input[5]
 
     # Create 'c' value, equation (17) TEA theory document
@@ -168,7 +169,7 @@ def lambdacorr(it_num, verb, input, info, save_info=None):
     steps = 100
 
     # Create lower exponential range
-    low_range = np.exp(np.linspace(lower, 0, steps+1))
+    low_range = np.exp(np.linspace(lower, 0, steps + 1))
 
     # Create linear, evenly spaced range, high_range
     high_step = 0.01
@@ -207,22 +208,45 @@ def lambdacorr(it_num, verb, input, info, save_info=None):
         location_out, desc, speclist, temp = save_info
         hfolder = location_out + desc + "/headers/"
         headerfile = "{:s}/header_{:s}_{:.0f}K_{:.2e}bar.txt".format(
-                        hfolder, desc, temp, pressure)
+            hfolder, desc, temp, pressure
+        )
         # Create and name outputs and results directories if they do not exist
-        datadir   = location_out + desc + '/outputs/'
+        datadir = location_out + desc + '/outputs/'
         datadir = "{:s}/{:s}_{:.0f}K_{:.2e}bar/".format(
-                    datadir, desc, temp, pressure)
+            datadir, desc, temp, pressure
+        )
 
         # Export all values into machine and human readable output files
         file = '{:s}/lagrange_iteration-{:03d}_machine-read.txt'.format(
-                datadir, it_num)
-        form.output(headerfile, it_num, speclist, y, x_corr, delta_corr,
-                    y_bar, x_corr_bar, delta_corr_bar, file, verb)
+            datadir, it_num
+        )
+        form.output(
+            headerfile,
+            it_num,
+            speclist,
+            y,
+            x_corr,
+            delta_corr,
+            y_bar,
+            x_corr_bar,
+            delta_corr_bar,
+            file,
+            verb,
+        )
         file = '{:s}/lagrange_iteration-{:03d}_visual.txt'.format(
-              datadir, it_num)
-        form.fancyout(it_num, speclist, y, x_corr, delta_corr, y_bar,
-                     x_corr_bar, delta_corr_bar, file, verb)
+            datadir, it_num
+        )
+        form.fancyout(
+            it_num,
+            speclist,
+            y,
+            x_corr,
+            delta_corr,
+            y_bar,
+            x_corr_bar,
+            delta_corr_bar,
+            file,
+            verb,
+        )
 
     return y, x_corr, delta_corr, y_bar, x_corr_bar, delta_corr_bar
-
-

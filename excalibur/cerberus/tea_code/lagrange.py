@@ -114,13 +114,13 @@ def lagrange(it_num, verb, input, info, save_info=None):
 
     # Read values from the header file
     pressure = info[0]
-    j        = info[2]
-    a        = info[3]
-    b        = info[4]
-    g_RT     = info[5]
+    j = info[2]
+    a = info[3]
+    b = info[4]
+    g_RT = info[5]
 
     # Use final values from last iteration (x values) as new initial
-    y     = input[1]
+    y = input[1]
     y_bar = input[4]
 
     # ============== CREATE VARIABLES FOR LAGRANGE EQUATION ============== #
@@ -135,35 +135,35 @@ def lagrange(it_num, verb, input, info, save_info=None):
 
     # Allocate value of u, equation (28) TEA theory document
     # List all unknowns in the above set of equations
-    unknowns = [None]*(j+1)
+    unknowns = [None] * (j + 1)
 
     # Allocate pi_j, where j is element index
     for m in np.arange(j):
-        unknowns[m] = Symbol('pi_' + str(m+1))
+        unknowns[m] = Symbol('pi_' + str(m + 1))
     unknowns[j] = Symbol('u')
-    
+
     # ================= SET SYSTEM OF EQUATIONS ======================= #
     # Total number of equations is j + 1
     # Create first j'th equations equation (27) TEA theory document
     # r_1j*pi_1 + r_2j*pi_2 + ... + r_jj*pi_j + b_j*u = sum_i[a_ij * fi(Y)]
-    system = np.zeros((j+1,j+2))
+    system = np.zeros((j + 1, j + 2))
 
     # Fill out values of r_ij, equation (26) TEA theory document
     # rjk = rkj = sum_i(a_ij * a_ik) * y_i
     for l in np.arange(j):
         for m in np.arange(j):
-            system[m, l] = np.sum(a[:,m] * a[:,l] * y)
+            system[m, l] = np.sum(a[:, m] * a[:, l] * y)
     # Last column, b_j*u:
-    system[:j,j] = b
+    system[:j, j] = b
 
     # Set up a_ij * fi(Y) summations equation (27) TEA theory document
     # sum_i[a_ij * fi(Y)]
-    system[:j,j+1] = np.sum(a.T*fi_y, axis=1)
+    system[:j, j + 1] = np.sum(a.T * fi_y, axis=1)
 
     # Last (j+1)th equation (27) TEA theory document
     # b_1*pi_1 + b_2*pi_2 + ... + b_m*pi_m  = sum_i[fi(Y)]
-    system[j,:j] = b
-    system[j, j+1] = np.sum(fi_y)
+    system[j, :j] = b
+    system[j, j + 1] = np.sum(fi_y)
 
     # Solve final system of j+1 equations
     fsol = solve_linear_system(Matrix(system), *unknowns)
@@ -174,7 +174,6 @@ def lagrange(it_num, verb, input, info, save_info=None):
         pi_f[m] = fsol[unknowns[m]]
     fsolu = fsol[unknowns[j]]
 
-
     # ============ CALCULATE xi VALUES FOR CURRENT ITERATION ============ #
     # Calculate x_bar from solution to get 'u', eq (28) TEA theory document
     # u = -1. + (x_bar/y_bar), where fsolu is u
@@ -183,39 +182,53 @@ def lagrange(it_num, verb, input, info, save_info=None):
     # Apply Lagrange solution for final set of x_i values for this iteration
     # equation (23) TEA theory document
     # x_i = -fi(Y) + (y_i/y_bar) * x_bar + [sum_j(pi_j * a_ij)] * y_i
-    sum_pi_aij = np.sum(pi_f*a, axis=1)
-    x = np.array(-fi_y + (y/y_bar)*x_bar + sum_pi_aij*y, np.double)
+    sum_pi_aij = np.sum(pi_f * a, axis=1)
+    x = np.array(-fi_y + (y / y_bar) * x_bar + sum_pi_aij * y, np.double)
 
     # Calculate other variables of interest
-    x_bar = np.sum(x)             # sum of all x_i
-    delta = x - y                 # difference between initial and final values
-    delta_bar = x_bar - y_bar     # difference between sum of initial and
-                                  # final values
+    x_bar = np.sum(x)  # sum of all x_i
+    delta = x - y  # difference between initial and final values
+    delta_bar = x_bar - y_bar  # difference between sum of initial and
+    # final values
 
     # Name output files with corresponding iteration number name
     if save_info:
         location_out, desc, speclist, temp = save_info
         hfolder = location_out + desc + "/headers/"
         headerfile = "{:s}/header_{:s}_{:.0f}K_{:.2e}bar.txt".format(
-                        hfolder, desc, temp, pressure)
+            hfolder, desc, temp, pressure
+        )
         # Create and name outputs and results directories if they do not exist
-        datadir   = location_out + desc + '/outputs/'
+        datadir = location_out + desc + '/outputs/'
         datadir = "{:s}/{:s}_{:.0f}K_{:.2e}bar/".format(
-                  datadir, desc, temp, pressure)
+            datadir, desc, temp, pressure
+        )
         if not os.path.exists(datadir):
             os.makedirs(datadir)
 
         # Export all values into machine and human readable output files
         file = '{:s}/lagrange_iteration-{:03d}_machine-read-nocorr.txt'.format(
-                datadir, it_num)
-        form.output(headerfile, it_num, speclist, y, x, delta,
-                  y_bar, x_bar, delta_bar, file, verb)
+            datadir, it_num
+        )
+        form.output(
+            headerfile,
+            it_num,
+            speclist,
+            y,
+            x,
+            delta,
+            y_bar,
+            x_bar,
+            delta_bar,
+            file,
+            verb,
+        )
 
         file = '{:s}/lagrange_iteration-{:03d}_visual-nocorr.txt'.format(
-                datadir, it_num)
-        form.fancyout(it_num, speclist, y, x, delta, y_bar, x_bar,
-                    delta_bar, file, verb)
+            datadir, it_num
+        )
+        form.fancyout(
+            it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar, file, verb
+        )
 
     return y, x, delta, y_bar, x_bar, delta_bar
-
-

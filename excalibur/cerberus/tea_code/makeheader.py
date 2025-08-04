@@ -1,4 +1,3 @@
-
 ############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
@@ -58,8 +57,9 @@ location_TEA = os.path.realpath(os.path.dirname(__file__) + "/..") + "/"
 
 # =============================================================================
 # This module contains functions to write headers containing all necessary
-# chemical information for a single T-P and multiple T-P runs. 
+# chemical information for a single T-P and multiple T-P runs.
 # =============================================================================
+
 
 def read_stoich(spec_list, stoich_file='lib/stoich.txt', getb=False):
     """
@@ -111,30 +111,30 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt', getb=False):
         stoich_data = np.asarray(stoich_data)
 
     # All species names
-    allspec = stoich_data[2:,0]
+    allspec = stoich_data[2:, 0]
 
     # Elemental abundances
-    dex      = stoich_data[0, 1:]
+    dex = stoich_data[0, 1:]
     elements = stoich_data[1, 1:]
 
     # Trim species names and cast to float
-    stoich_data = np.asarray(stoich_data[2:,1:], np.double)
+    stoich_data = np.asarray(stoich_data[2:, 1:], np.double)
 
     # Select species
     # Has to be in a for-loop to keep order
     idx = np.zeros(nspec, int)
     for i in np.arange(nspec):
-      idx[i] = np.where(allspec == nostate[i])[0][0]
+        idx[i] = np.where(allspec == nostate[i])[0][0]
     spec_stoich = stoich_data[idx]
 
     # Select elements
     ielem = np.sum(spec_stoich, axis=0) > 0
-    spec_stoich = spec_stoich[:,ielem]
+    spec_stoich = spec_stoich[:, ielem]
     atom_stoich = elements[ielem]
 
     # Read and return the elemental abudances
     if getb:
-        b = 10**np.asarray(dex[ielem], float)
+        b = 10 ** np.asarray(dex[ielem], float)
         # Get hydrogen number density
         H_num = 10**12
         # Get fractions of element number density to hydrogen number density
@@ -151,7 +151,7 @@ def read_gdata(spec_list, thermo_dir):
     tables, and returns a list of spline functions and formation heat
     values for each input species (such that they can be later
     evaluated by the calc_gRT() function).
-    
+
     Parameters
     ----------
     spec_list: List of strings
@@ -170,24 +170,24 @@ def read_gdata(spec_list, thermo_dir):
 
     # Obtain thermo_dir files, and count species
     gdata_files = os.listdir(thermo_dir)
-    nspec       = np.size(spec_list)
+    nspec = np.size(spec_list)
 
     free_energy, heat = [], []
     # Create index of where species listed in the input file are in thermo_dir
     for i in np.arange(nspec):
         spec_file = '{:s}/{:s}.txt'.format(thermo_dir, spec_list[i])
         with open(spec_file, 'r') as f:
-          # Skip first line (header)
-          lines = f.readlines()[1:]  
+            # Skip first line (header)
+            lines = f.readlines()[1:]
 
         # Gather free energies and heat terms for T=298.15 K
         nlines = len(lines)
-        T     = np.zeros(nlines)
+        T = np.zeros(nlines)
         term1 = np.zeros(nlines)
         for j in np.arange(nlines):
             T[j], term1[j], term2 = lines[j].split()
             if T[j] == 298.15:
-              heat.append(term2)
+                heat.append(term2)
 
         # Convert data to an array
         free_energy.append(UnivariateSpline(T, term1, s=1))
@@ -236,16 +236,17 @@ def calc_gRT(free_energy, heat, temp):
         # Evaluate free-energy spline at given temperature
         free_en = free_energy[i](temp)
         # Calculate the above equation
-        g_RT[i] = -(free_en/sc.R) + (heat[i]*1000 / (temp*sc.R))
+        g_RT[i] = -(free_en / sc.R) + (heat[i] * 1000 / (temp * sc.R))
 
     return g_RT
 
 
-def write_header(hfolder, desc, temp, pressure, speclist, atomlist,
-                 stoich_arr, b, g_RT):
+def write_header(
+    hfolder, desc, temp, pressure, speclist, atomlist, stoich_arr, b, g_RT
+):
     """
     Writes a header file that contains all necessary data
-    for TEA to run. 
+    for TEA to run.
 
     Parameters
     ----------
@@ -278,17 +279,19 @@ def write_header(hfolder, desc, temp, pressure, speclist, atomlist,
 
     # Create header file to be used by the main pipeline
     outfile = "{:s}/header_{:s}_{:.0f}K_{:.2e}bar.txt".format(
-                    hfolder, desc, temp, pressure)
+        hfolder, desc, temp, pressure
+    )
 
     # Open file to write
     f = open(outfile, 'w+')
 
     # Comment at top of header file
     f.write(
-    "# This is a header file for one T-P. It contains the following data:\n"
-    "# pressure (bar), temperature (K), elemental abundances (b, unitless),\n"
-    "# species names, stoichiometric values of each element in the species (a),\n"
-    "# and chemical potentials.\n\n")
+        "# This is a header file for one T-P. It contains the following data:\n"
+        "# pressure (bar), temperature (K), elemental abundances (b, unitless),\n"
+        "# species names, stoichiometric values of each element in the species (a),\n"
+        "# and chemical potentials.\n\n"
+    )
     f.write("{:.5e}\n".format(pressure))
     f.write("{:.3f}\n".format(temp))
 
@@ -299,7 +302,7 @@ def write_header(hfolder, desc, temp, pressure, speclist, atomlist,
     # Title for species names
     f.write("# Species")
     for j in np.arange(natom):
-      f.write("{:>3s}".format(atomlist[j]))
+        f.write("{:>3s}".format(atomlist[j]))
     f.write("  Chemical potential\n")
 
     # Loop over all species and titles
@@ -308,7 +311,7 @@ def write_header(hfolder, desc, temp, pressure, speclist, atomlist,
         f.write("{:>9s}".format(speclist[i]))
         for j in np.arange(natom):
             # Write elemental number density
-            f.write("{:>3.0f}".format(stoich_arr[i,j]))
+            f.write("{:>3.0f}".format(stoich_arr[i, j]))
         # Write chemical potentials, adjust spacing for minus sign
         f.write("  {:-14.10f}\n".format(g_RT[i]))
 
@@ -317,7 +320,7 @@ def write_header(hfolder, desc, temp, pressure, speclist, atomlist,
 
 def read_single(infile):
     '''
-    Reads the input T-P file and retrieves necessary data.  
+    Reads the input T-P file and retrieves necessary data.
     It is called by the runsingle() module.
 
     Parameters
@@ -348,7 +351,7 @@ def read_single(infile):
     for line in f.readlines():
         # Retrieve temperature
         if l == 0:
-            temp     = float([value for value in line.split()][0])
+            temp = float([value for value in line.split()][0])
         # Retrieve pressure
         if l == 1:
             pressure = float([value for value in line.split()][0])
@@ -361,5 +364,3 @@ def read_single(infile):
     f.close()
 
     return temp, pressure, speclist
-
-

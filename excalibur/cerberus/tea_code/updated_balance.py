@@ -4,6 +4,7 @@ from sympy import Symbol, solve
 from excalibur.cerberus.tea_code import readconf as rc
 from excalibur.cerberus.tea_code import format as form
 
+
 def balance(a, b, verb=0, loc_out=None):
     """
     Generates an initial guess for TEA by satisfying the mass balance equation.
@@ -26,7 +27,7 @@ def balance(a, b, verb=0, loc_out=None):
     y_bar : float
         Sum of all species abundances
     """
-    
+
     nspec, natom = a.shape
     verb = 0
 
@@ -34,7 +35,7 @@ def balance(a, b, verb=0, loc_out=None):
         print("b values:", b)
     # Find a block of species that covers all elements
     for n in range(nspec - natom + 1):
-        a_chunk = a[n:n + natom, :]
+        a_chunk = a[n : n + natom, :]
         if np.all(np.sum(a_chunk, axis=0) != 0):
             free_id = list(range(n, n + natom))
             if verb > 1:
@@ -52,9 +53,12 @@ def balance(a, b, verb=0, loc_out=None):
         free = [Symbol(f'y_unknown_{i}') for i in range(natom)]
         y_init = np.concatenate((pre_free, free, post_free))
 
-        eqs = [sum(a[i, j] * y_init[i] for i in range(nspec)) - b[j] for j in range(natom)]
+        eqs = [
+            sum(a[i, j] * y_init[i] for i in range(nspec)) - b[j]
+            for j in range(natom)
+        ]
         result = solve(eqs, free, dict=True)
-        
+
         if not result:
             scale /= 10
             if verb > 1:

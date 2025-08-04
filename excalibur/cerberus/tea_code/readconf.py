@@ -1,4 +1,3 @@
-
 ############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
@@ -48,10 +47,11 @@
 
 import os
 import sys
+
 if sys.version_info.major == 3:
-  import configparser
+    import configparser
 else:
-  import ConfigParser as configparser
+    import ConfigParser as configparser
 
 
 def readcfg(cfg_name):
@@ -85,50 +85,52 @@ def readcfg(cfg_name):
     input_elem: String list
         Input elemental species (as in periodic table)
     output_species: String list
-        Output species as given by JANAF.   
-         
+        Output species as given by JANAF.
+
     Note
     ------
-    There are two sections in TEA.cfg file: TEA section and PRE-ATM section. 
-    The TEA section carries parameters and booleans to run and debug TEA. 
-    The PRE-ATM section carries paramaters to make pre-atmospheric file. 
+    There are two sections in TEA.cfg file: TEA section and PRE-ATM section.
+    The TEA section carries parameters and booleans to run and debug TEA.
+    The PRE-ATM section carries paramaters to make pre-atmospheric file.
     """
 
     # Get current working directory
-    #cwd = os.getcwd() + '/'
+    # cwd = os.getcwd() + '/'
 
     # Name of the configuration file
-    #cfg_name = cwd + 'TEA.cfg'
+    # cfg_name = cwd + 'TEA.cfg'
 
     # Check if config file exists
     try:
         f = open(cfg_name)
     except IOError:
-        print("\nMissing config file, place TEA.cfg in the working directory.\n")
+        print(
+            "\nMissing config file, place TEA.cfg in the working directory.\n"
+        )
 
     # Open config file:
     config = configparser.RawConfigParser({})
     config.read(cfg_name)
 
     # Read TEA section:
-    abun_file    = config.get('TEA', 'abun_file')
+    abun_file = config.get('TEA', 'abun_file')
     location_out = config.get('TEA', 'location_out')
 
     # Defaults:
-    maxiter   = 200
+    maxiter = 200
     savefiles = False
-    verb      = 1
-    times     = False
-    xtol      = 1e-8
-    ncpu      = 1
+    verb = 1
+    times = False
+    xtol = 1e-8
+    ncpu = 1
 
     # Optional arguments:
     if config.has_option("TEA", "maxiter"):
-        maxiter   = config.getint('TEA', 'maxiter')
+        maxiter = config.getint('TEA', 'maxiter')
     if config.has_option("TEA", "savefiles"):
         savefiles = config.getboolean('TEA', 'savefiles')
     if config.has_option("TEA", "times"):
-        times     = config.getboolean('TEA', 'times')
+        times = config.getboolean('TEA', 'times')
     if config.has_option("TEA", "xtol"):
         xtol = config.getfloat('TEA', 'xtol')
     if config.has_option("TEA", "verb"):
@@ -137,13 +139,18 @@ def readcfg(cfg_name):
         ncpu = config.getint('TEA', 'ncpu')
 
     # read PRE-ATM section
-    PT_file        = config.get('PRE-ATM', 'PT_file')
-    pre_atm_name   = config.get('PRE-ATM', 'pre_atm_name')
-    input_elem     = config.get('PRE-ATM', 'input_elem')
+    PT_file = config.get('PRE-ATM', 'PT_file')
+    pre_atm_name = config.get('PRE-ATM', 'pre_atm_name')
+    input_elem = config.get('PRE-ATM', 'input_elem')
     output_species = config.get('PRE-ATM', 'output_species')
 
-    return [maxiter, savefiles, verb, times, abun_file,
-            location_out, xtol, ncpu], \
-           [PT_file, pre_atm_name, input_elem, output_species]
-
-
+    return [
+        maxiter,
+        savefiles,
+        verb,
+        times,
+        abun_file,
+        location_out,
+        xtol,
+        ncpu,
+    ], [PT_file, pre_atm_name, input_elem, output_species]

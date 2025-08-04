@@ -1,4 +1,3 @@
-
 ############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
@@ -65,6 +64,7 @@ from sys import stdout
 #         printout(): Prints iteration number.
 # =============================================================================
 
+
 def readheader(file):
     '''
     Reads the current header file (one T-P) and returns data common
@@ -114,9 +114,9 @@ def readheader(file):
     comment = '#'
 
     # Allocates lists of
-    speclist = []     # species names
-    a = [[]]          # stoichiometric values
-    c = []            # chemical potential
+    speclist = []  # species names
+    a = [[]]  # stoichiometric values
+    c = []  # chemical potential
 
     # Read the file line by line and if correct line is found, assign the data
     #      to corresponding variables and convert to floats/strings
@@ -124,12 +124,12 @@ def readheader(file):
         contents = [value for value in line.split()]
 
         # Boolean to check if the line is blank
-        is_blank   = (contents == [])
+        is_blank = contents == []
 
         # Check if non-blank line is comment or data
         if not is_blank:
             # Boolean to check if the line is comment
-            is_comment = (contents[0][0] == comment)
+            is_comment = contents[0][0] == comment
             # If line is not comment or blank start reading
             if not start and contents[0][0].isdigit():
                 start = l
@@ -139,22 +139,22 @@ def readheader(file):
             if is_comment or is_blank:
                 start += 1
             # Read pressure
-            elif (l == start):
+            elif l == start:
                 pressure = np.float([value for value in line.split()][0])
             # Read temperature
-            elif (l == start+1):
+            elif l == start + 1:
                 temp = np.float([value for value in line.split()][0])
             # Read elemental abundances
-            elif (l == start+2):
+            elif l == start + 2:
                 val = [value for value in line.split()]
-                b   = [float(u) for u in val[1:]]
+                b = [float(u) for u in val[1:]]
             # Read species list, stoichiometry, and chemical potentials
-            elif (l == start+3):
+            elif l == start + 3:
                 val = [value for value in line.split()]
                 speclist = np.append(speclist, val[0])
                 a = [[int(u) for u in val[1:-1]]]
                 g_RT = np.float(val[-1])
-            elif (l > start+3):
+            elif l > start + 3:
                 val = [value for value in line.split()]
                 speclist = np.append(speclist, val[0])
                 a = np.append(a, [[int(u) for u in val[1:-1]]], axis=0)
@@ -225,21 +225,22 @@ def readoutput(file):
     f.close()
 
     # Take appropriate data
-    header    = data[0][0]                            # header name
-    it_num    = np.array(data[1]).astype(np.int)[0]   # iteration number
-    speclist  = np.array(data[2]).astype(np.str)      # species list
-    y         = np.array(data[3]).astype(np.float)    # initial mole numbers
-    x         = np.array(data[4]).astype(np.float)    # final mole numbers
-    delta     = np.array(data[5]).astype(np.float)    # difference (x - y)
-    y_bar     = np.array(data[6]).astype(np.float)[0] # sum of y_i's
-    x_bar     = np.array(data[7]).astype(np.float)[0] # sum of x_i's
-    delta_bar = np.array(data[8]).astype(np.float)[0] # difference in sums
+    header = data[0][0]  # header name
+    it_num = np.array(data[1]).astype(np.int)[0]  # iteration number
+    speclist = np.array(data[2]).astype(np.str)  # species list
+    y = np.array(data[3]).astype(np.float)  # initial mole numbers
+    x = np.array(data[4]).astype(np.float)  # final mole numbers
+    delta = np.array(data[5]).astype(np.float)  # difference (x - y)
+    y_bar = np.array(data[6]).astype(np.float)[0]  # sum of y_i's
+    x_bar = np.array(data[7]).astype(np.float)[0]  # sum of x_i's
+    delta_bar = np.array(data[8]).astype(np.float)[0]  # difference in sums
 
-    return(header, it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar)
+    return (header, it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar)
 
 
-def output(header, it_num, speclist, y, x, delta, y_bar,
-            x_bar, delta_bar, file, verb=0):
+def output(
+    header, it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar, file, verb=0
+):
     '''
     This function produces machine-readable output files. The files are saved
     only if saveout = True in TEA.cfg file. The function is used by the
@@ -288,39 +289,43 @@ def output(header, it_num, speclist, y, x, delta, y_bar,
     i = speclist.size
 
     # Write the location of the header file
-    f.write(header + '\n')                  # 1st row
+    f.write(header + '\n')  # 1st row
 
     # Write current number of iteration
-    f.write(np.str(it_num) + '\n')          # 2nd row
+    f.write(np.str(it_num) + '\n')  # 2nd row
 
     # Write species list
-    for n in np.arange(i):                 # 3rd row
+    for n in np.arange(i):  # 3rd row
         f.write(speclist[n] + ' ')
-        if n == (i-1): f.write('\n')
+        if n == (i - 1):
+            f.write('\n')
 
     # Write starting mole numbers of molecular species for that iteration
-    for n in np.arange(i):                 # 4th row
+    for n in np.arange(i):  # 4th row
         f.write(np.str(y[n]) + ' ')
-        if n == (i-1): f.write('\n')
+        if n == (i - 1):
+            f.write('\n')
 
     # Write final mole numbers of molecular species after iteration is done
-    for n in np.arange(i):                 # 5th row
+    for n in np.arange(i):  # 5th row
         f.write(np.str(x[n]) + ' ')
-        if n == (i-1): f.write('\n')
+        if n == (i - 1):
+            f.write('\n')
 
     # Write difference between initial and final mole numbers
-    for n in np.arange(i):                 # 6th row
+    for n in np.arange(i):  # 6th row
         f.write(np.str(delta[n]) + ' ')
-        if n == (i-1): f.write('\n')
+        if n == (i - 1):
+            f.write('\n')
 
     # Write total sum of initial mole numbers
-    f.write(np.str(y_bar) + '\n')           # 7th row
+    f.write(np.str(y_bar) + '\n')  # 7th row
 
     # Write total sum of final mole numbers
-    f.write(np.str(x_bar) + '\n')           # 8th row
+    f.write(np.str(x_bar) + '\n')  # 8th row
 
     # Write difference of total mole numbers
-    f.write(np.str(delta_bar) + '\n')       # 9th row
+    f.write(np.str(delta_bar) + '\n')  # 9th row
 
     f.close()
 
@@ -329,8 +334,9 @@ def output(header, it_num, speclist, y, x, delta, y_bar,
         print('\n\nMade file \'' + file + '\' containing machine data.')
 
 
-def fancyout(it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar,
-             file, verb=0):
+def fancyout(
+    it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar, file, verb=0
+):
     '''
     This function produces human readable output files. The files are saved
     only if saveout = True in TEA.cfg file. The function is used by the
@@ -375,8 +381,10 @@ def fancyout(it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar,
     f = open(file, 'w+')
 
     # Write top comment and iteration number
-    f.write('This .txt file is for visual use only.  \
-             DO NOT USE FOR ITERATIONS!\n')
+    f.write(
+        'This .txt file is for visual use only.  \
+             DO NOT USE FOR ITERATIONS!\n'
+    )
     f.write('Data for iteration #' + np.str(it_num) + '\n\n')
 
     # Count number of species
@@ -386,21 +394,33 @@ def fancyout(it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar,
     for n in np.arange(i):
         if n == 0:
             # Write labels for columns
-            f.write('Species |'.rjust(14) + 'y_i |'.rjust(14) + \
-                     'x_i |'.rjust(14) + 'delta \n'.rjust(15))
+            f.write(
+                'Species |'.rjust(14)
+                + 'y_i |'.rjust(14)
+                + 'x_i |'.rjust(14)
+                + 'delta \n'.rjust(15)
+            )
 
         # Fill out variables
-        xs   = '%.4e'%x[n]         # Final mole numbers
-        ys   = '%.4e'%y[n]         # Initial mole numbers
-        ds   = '%.4e'%delta[n]     # Difference between initial and final
-        xbs  = '%.4e'%x_bar        # Total sum of final mole numbers
-        ybs  = '%.4e'%y_bar        # Total sum of initial mole numbers
-        dbs  = '%.4e'%delta_bar    # Difference of total sums
-        name = speclist[n]          # Species name
+        xs = '%.4e' % x[n]  # Final mole numbers
+        ys = '%.4e' % y[n]  # Initial mole numbers
+        ds = '%.4e' % delta[n]  # Difference between initial and final
+        xbs = '%.4e' % x_bar  # Total sum of final mole numbers
+        ybs = '%.4e' % y_bar  # Total sum of initial mole numbers
+        dbs = '%.4e' % delta_bar  # Difference of total sums
+        name = speclist[n]  # Species name
 
         # Write mole numbers in aligned columns
-        f.write(name.rjust(12) + ' |' + ys.rjust(12) + ' |' + xs.rjust(12) + \
-                ' |' +ds.rjust(13) + '\n')
+        f.write(
+            name.rjust(12)
+            + ' |'
+            + ys.rjust(12)
+            + ' |'
+            + xs.rjust(12)
+            + ' |'
+            + ds.rjust(13)
+            + '\n'
+        )
 
         # Write initial, final, and difference of totals after species data
         if n == (i - 1):
@@ -425,8 +445,21 @@ def fancyout(it_num, speclist, y, x, delta, y_bar, x_bar, delta_bar,
         f.close()
 
 
-def fancyout_results(header, it_num, speclist, y, x, delta, y_bar,
-                     x_bar, delta_bar, pressure, temp, file, verb):
+def fancyout_results(
+    header,
+    it_num,
+    speclist,
+    y,
+    x,
+    delta,
+    y_bar,
+    x_bar,
+    delta_bar,
+    pressure,
+    temp,
+    file,
+    verb,
+):
     '''
     This function produces the final result output for each T-P in the
     human-readable format. The final mole number for each species is divided
@@ -471,9 +504,15 @@ def fancyout_results(header, it_num, speclist, y, x, delta, y_bar,
     # Write top comment
     f.write('This .txt file is for visual use only.\n')
     f.write('These results are for the "' + header + '" run.\n')
-    f.write('Iterations complete after ' + np.str(it_num) + ' runs at ' + \
-                          np.str(pressure) + ' bar and ' + np.str(temp) + \
-                                           ' K. Final computation:\n\n')
+    f.write(
+        'Iterations complete after '
+        + np.str(it_num)
+        + ' runs at '
+        + np.str(pressure)
+        + ' bar and '
+        + np.str(temp)
+        + ' K. Final computation:\n\n'
+    )
 
     # Count number of species
     i = speclist.size
@@ -482,35 +521,49 @@ def fancyout_results(header, it_num, speclist, y, x, delta, y_bar,
     for n in np.arange(i):
         if n == 0:
             # Write labels for columns
-            f.write('Species |'.rjust(10) + 'Initial x |'.rjust(16) + \
-                        'Final x |'.rjust(16) + 'Delta |'.rjust(16) + \
-                                         'Final Abun \n'.rjust(16))
+            f.write(
+                'Species |'.rjust(10)
+                + 'Initial x |'.rjust(16)
+                + 'Final x |'.rjust(16)
+                + 'Delta |'.rjust(16)
+                + 'Final Abun \n'.rjust(16)
+            )
 
         # Fill out variables
-        xs   = '%8.10f'%x[n]         # Final mole numbers
-        ys   = '%8.10f'%y[n]         # Initial mole numbers
-        ds   = '%8.10f'%delta[n]     # Difference between initial and final
-        xbs  = '%8.10f'%x_bar        # Total sum of final mole numbers
-        ybs  = '%8.10f'%y_bar        # Total sum of initial mole numbers
-        dbs  = '%8.10f'%delta_bar    # Difference of total sums
+        xs = '%8.10f' % x[n]  # Final mole numbers
+        ys = '%8.10f' % y[n]  # Initial mole numbers
+        ds = '%8.10f' % delta[n]  # Difference between initial and final
+        xbs = '%8.10f' % x_bar  # Total sum of final mole numbers
+        ybs = '%8.10f' % y_bar  # Total sum of initial mole numbers
+        dbs = '%8.10f' % delta_bar  # Difference of total sums
 
         # Divide final result by the total number of moles of the species
         #        in the mixture, making mole fractions
         abn_float = x[n] / x_bar
-        abn = '%8.7e'%abn_float
+        abn = '%8.7e' % abn_float
 
         # Species name
         name = speclist[n]
 
         # Write variables in aligned columns
-        f.write(name.rjust(8) + ' |' + ys.rjust(14) + ' |' + xs.rjust(14) + \
-                           ' |' +ds.rjust(14) + ' |' + abn.rjust(14) + '\n')
+        f.write(
+            name.rjust(8)
+            + ' |'
+            + ys.rjust(14)
+            + ' |'
+            + xs.rjust(14)
+            + ' |'
+            + ds.rjust(14)
+            + ' |'
+            + abn.rjust(14)
+            + '\n'
+        )
 
         # Write initial, final, and difference of totals after species data
         if n == (i - 1):
             f.write('\n')
-            f.write('Initial Total Mol : '.rjust(35)   + ybs.rjust(9) + '\n')
-            f.write('Final Total Mol : '.rjust(35)     + xbs.rjust(9) + '\n')
+            f.write('Initial Total Mol : '.rjust(35) + ybs.rjust(9) + '\n')
+            f.write('Final Total Mol : '.rjust(35) + xbs.rjust(9) + '\n')
             f.write('Change in Total Mol : '.rjust(35) + dbs.rjust(9) + '\n')
 
     f.close()
@@ -554,4 +607,3 @@ def printout(str, it_num=False):
 
     # Clear printed value to allow overwriting for next
     stdout.flush()
-
