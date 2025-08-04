@@ -3373,7 +3373,7 @@ def lcmodel(*specparams):
         allimout.extend(imout)
         pass
     out = tldlc(
-        ctxt.allz,
+        np.abs(ctxt.allz),
         r,
         g1=float(ctxt.g1[0]),
         g2=float(ctxt.g2[0]),
