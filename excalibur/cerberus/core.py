@@ -675,10 +675,11 @@ def atmos(
     # SELECT WHICH MODELS TO RUN FOR THIS FILTER
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
-        modfam = ['TEC', 'TEA']
+        # modfam = ['TEC', 'TEA']
+        modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
         }
 
         # ** select which Ariel model to fit **
@@ -2166,12 +2167,6 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                     (transitdata['depth'][okPart] - fmc[okPart]),
                     weights=1 / transitdata['error'][okPart] ** 2,
                 )
-                # if np.all(np.isfinite(transitdata['depth'])):
-                #    patmos_model = fmc + np.average(
-                #        (transitdata['depth'] - fmc),
-                #        weights=1 / transitdata['error'] ** 2)
-                # else:
-                #    patmos_model = fmc + np.nanmean(transitdata['depth'] - fmc)
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
                 fmc_profiled = crbmodel(
@@ -2208,13 +2203,13 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                 # calculate chi2 values to see which is the best fit
                 offsets_model = (
-                    patmos_model - transitdata['depth']
-                ) / transitdata['error']
+                    patmos_model - transitdata['depth'][okPart]
+                ) / transitdata['error'][okPart]
                 chi2model = np.nansum(offsets_model**2)
                 # print('chi2model', chi2model)
 
                 # actually the profiled chi2 isn't used below just now, so has to be commented out
-                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth']) / transitdata['error']
+                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth'][okPart]) / transitdata['error'][okPart]
                 # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
                 # print('chi2 after profiling',chi2modelProfiled)
 
@@ -2323,8 +2318,8 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
                     # check to see if this model is the best one
                     offsets_modelrand = (
-                        patmos_modelrand - transitdata['depth']
-                    ) / transitdata['error']
+                        patmos_modelrand - transitdata['depth'][okpart]
+                    ) / transitdata['error'][okpart]
                     chi2modelrand = np.nansum(offsets_modelrand**2)
                     # print('chi2 for a random walker', chi2modelrand)
                     # print('chi2modelrand', chi2modelrand)
