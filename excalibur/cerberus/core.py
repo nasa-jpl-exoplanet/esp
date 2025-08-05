@@ -682,7 +682,7 @@ def atmos(
         modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO'],
         }
 
         # ** select which Ariel model to fit **
@@ -714,8 +714,8 @@ def atmos(
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
-            # asdf: get this from runtime
-            'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            'PHOTOCHEM': runtime_param.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
