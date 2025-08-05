@@ -1,4 +1,3 @@
-############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
 #                                                                              #
@@ -43,7 +42,6 @@
 #   Reach us directly at:                                                      #
 #   Jasmina Blecic <jasmina@nyu.edu>                                           #
 #                                                                              #
-############################## END FRONTMATTER #################################
 
 import os
 import numpy as np
@@ -150,9 +148,9 @@ def lagrange(it_num, verb, input, info, save_info=None):
 
     # Fill out values of r_ij, equation (26) TEA theory document
     # rjk = rkj = sum_i(a_ij * a_ik) * y_i
-    for l in np.arange(j):
+    for lindex in np.arange(j):
         for m in np.arange(j):
-            system[m, l] = np.sum(a[:, m] * a[:, l] * y)
+            system[m, lindex] = np.sum(a[:, m] * a[:, lindex] * y)
     # Last column, b_j*u:
     system[:j, j] = b
 

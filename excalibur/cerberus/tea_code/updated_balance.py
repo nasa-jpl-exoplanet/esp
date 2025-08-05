@@ -1,8 +1,5 @@
-import os
 import numpy as np
 from sympy import Symbol, solve
-from excalibur.cerberus.tea_code import readconf as rc
-from excalibur.cerberus.tea_code import format as form
 
 
 def balance(a, b, verb=0, loc_out=None):

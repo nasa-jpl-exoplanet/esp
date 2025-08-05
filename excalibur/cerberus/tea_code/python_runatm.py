@@ -12,18 +12,17 @@ Only:
   • removed final file write of results;
   • refactored into a callable `run_tea(...)` function that returns a DataFrame.
 """
+import os
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
-import ctypes, time, os, warnings
+import ctypes
 
 from excalibur.cerberus.tea_code import readconf as rc
 from excalibur.cerberus.tea_code import iterate as it
-from excalibur.cerberus.tea_code import format as form
 from excalibur.cerberus.tea_code import makeheader as mh
 from excalibur.cerberus.tea_code import updated_balance as bal
 
-import multiprocessing as mp
 
 mp.set_start_method("spawn", force=True)
 DEBUG_NCPU = 1
@@ -55,7 +54,7 @@ def _multiproc_worker(
     )
     for q in range(start, end):
         if verb > 1:
-            print(f"\nLayer {q+1:d}:")
+            print(f"\nLayer {q + 1:d}:")
         g_RT = mh.calc_gRT(free_energy, heat, temp_arr[q])
         try:
 
@@ -87,7 +86,7 @@ def _multiproc_worker(
             abn[q, :] = x / x_bar
 
         except Exception as exc:
-            print(f"[Layer {q+1}] iterate failed: {exc} — using balanced guess")
+            print(f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess")
             x, x_bar = guess
             abn[q, :] = x / x_bar
         else:
@@ -150,8 +149,6 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
 
     shared_abn = mp.Array(ctypes.c_double, int(n_runs * nspec))
     procs = []
-
-    import time, sys
 
     time.sleep(0.1)
     for n in range(ncpu):

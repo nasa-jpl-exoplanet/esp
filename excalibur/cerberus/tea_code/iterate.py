@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
 #                                                                              #
@@ -45,12 +42,10 @@
 #   Reach us directly at:                                                      #
 #   Jasmina Blecic <jasmina@nyu.edu>                                           #
 #                                                                              #
-############################## END FRONTMATTER #################################
 
 import os
 import time
 import numpy as np
-from sys import argv
 from sys import stdout
 
 from excalibur.cerberus.tea_code import lagrange as lg

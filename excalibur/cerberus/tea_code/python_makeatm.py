@@ -6,7 +6,6 @@ Generates the TEA pre-atmospheric structure as a python object rather than a fil
 Uses the same abundance-conversion logic used in TEA from Asplund-2009 (https://arxiv.org/pdf/0909.0948 (Table 1, pg 42.)) solar data.
 """
 import numpy as np
-import pandas as pd
 from excalibur.cerberus.tea_code import readconf as rc
 
 __all__ = ["build_pre_atm"]

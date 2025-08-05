@@ -126,12 +126,10 @@ def calcTEA(
             abund[el] *= metallicity
 
         if C_O is not None:
-            O = abund["O"]
-            abund["C"] = C_O * O
+            abund["C"] = C_O * abund["O"]
 
         if N_O is not None:
-            O = abund["O"]
-            abund["N"] = N_O * O
+            abund["N"] = N_O * abund["O"]
 
         return abund
 

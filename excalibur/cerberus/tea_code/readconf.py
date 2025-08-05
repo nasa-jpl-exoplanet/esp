@@ -1,4 +1,3 @@
-############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
 #                                                                              #
@@ -43,9 +42,7 @@
 #   Reach us directly at:                                                      #
 #   Jasmina Blecic <jasmina@nyu.edu>                                           #
 #                                                                              #
-############################## END FRONTMATTER #################################
 
-import os
 import sys
 
 if sys.version_info.major == 3:

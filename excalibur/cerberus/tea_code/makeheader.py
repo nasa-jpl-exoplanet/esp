@@ -1,4 +1,3 @@
-############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
 #                                                                              #
@@ -43,7 +42,6 @@
 #   Reach us directly at:                                                      #
 #   Jasmina Blecic <jasmina@nyu.edu>                                           #
 #                                                                              #
-############################## END FRONTMATTER #################################
 
 import numpy as np
 import re
@@ -102,8 +100,8 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
     with open(stoich_file, 'r') as f:
         stoich_data = []
         for line in f.readlines():
-            l = [value for value in line.split()]
-            stoich_data.append(l)
+            somestoich = [value for value in line.split()]
+            stoich_data.append(somestoich)
 
         # Store information in stoich_data array
         stoich_data = np.asarray(stoich_data)
@@ -112,7 +110,7 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
     allspec = stoich_data[2:, 0]
 
     # Elemental abundances
-    dex = stoich_data[0, 1:]
+    # dex = stoich_data[0, 1:]
     elements = stoich_data[1, 1:]
 
     # Trim species names and cast to float
@@ -157,7 +155,7 @@ def read_gdata(spec_list, thermo_dir):
     """
 
     # Obtain thermo_dir files, and count species
-    gdata_files = os.listdir(thermo_dir)
+    # gdata_files = os.listdir(thermo_dir)
     nspec = np.size(spec_list)
 
     free_energy, heat = [], []
@@ -333,21 +331,21 @@ def read_single(infile):
     speclist = []
 
     # Begin by reading first line of file (l = 0)
-    l = 0
+    linenum = 0
 
     # Loop over all lines in input file to retrieve appropriate data
     for line in f.readlines():
         # Retrieve temperature
-        if l == 0:
+        if linenum == 0:
             temp = float([value for value in line.split()][0])
         # Retrieve pressure
-        if l == 1:
+        if linenum == 1:
             pressure = float([value for value in line.split()][0])
         # Retrieve list of species
-        if l > 1:
+        if linenum > 1:
             val = [value for value in line.split()][0]
             speclist = np.append(speclist, val)
-        l += 1
+        linenum += 1
 
     f.close()
 

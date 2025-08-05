@@ -1,4 +1,3 @@
-############################# BEGIN FRONTMATTER ################################
 #                                                                              #
 #   TEA - calculates Thermochemical Equilibrium Abundances of chemical species #
 #                                                                              #
@@ -43,7 +42,6 @@
 #   Reach us directly at:                                                      #
 #   Jasmina Blecic <jasmina@nyu.edu>                                           #
 #                                                                              #
-############################## END FRONTMATTER #################################
 
 import numpy as np
 from sys import stdout
@@ -104,7 +102,7 @@ def readheader(file):
     f = open(file, 'r+')
 
     # Initiate reading the file from zero-th line
-    l = 0
+    linenum = 0
 
     # Start indicates when data begins, begin with False so top comment is not
     #       included in data
@@ -116,7 +114,7 @@ def readheader(file):
     # Allocates lists of
     speclist = []  # species names
     a = [[]]  # stoichiometric values
-    c = []  # chemical potential
+    # c = []  # chemical potential
 
     # Read the file line by line and if correct line is found, assign the data
     #      to corresponding variables and convert to floats/strings
@@ -132,36 +130,36 @@ def readheader(file):
             is_comment = contents[0][0] == comment
             # If line is not comment or blank start reading
             if not start and contents[0][0].isdigit():
-                start = l
+                start = linenum
 
         if start:
             # Skip line if blank or comment
             if is_comment or is_blank:
                 start += 1
             # Read pressure
-            elif l == start:
+            elif linenum == start:
                 pressure = np.float([value for value in line.split()][0])
             # Read temperature
-            elif l == start + 1:
+            elif linenum == start + 1:
                 temp = np.float([value for value in line.split()][0])
             # Read elemental abundances
-            elif l == start + 2:
+            elif linenum == start + 2:
                 val = [value for value in line.split()]
                 b = [float(u) for u in val[1:]]
             # Read species list, stoichiometry, and chemical potentials
-            elif l == start + 3:
+            elif linenum == start + 3:
                 val = [value for value in line.split()]
                 speclist = np.append(speclist, val[0])
                 a = [[int(u) for u in val[1:-1]]]
                 g_RT = np.float(val[-1])
-            elif l > start + 3:
+            elif linenum > start + 3:
                 val = [value for value in line.split()]
                 speclist = np.append(speclist, val[0])
                 a = np.append(a, [[int(u) for u in val[1:-1]]], axis=0)
                 g_RT = np.append(g_RT, np.float(val[-1]))
 
         # Go to the next line of the file and check again
-        l += 1
+        linenum += 1
 
     # Take the number of species and elements
     i = speclist.size
@@ -218,8 +216,8 @@ def readoutput(file):
     # Allocate and fill out data array with all info
     data = []
     for line in f.readlines():
-        l = [value for value in line.split()]
-        data.append(l)
+        somedata = [value for value in line.split()]
+        data.append(somedata)
 
     # Close file
     f.close()
