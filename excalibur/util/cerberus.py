@@ -4,7 +4,7 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-positional-arguments
 
-from __future__ import annotations
+# from __future__ import annotations
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np

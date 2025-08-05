@@ -11,7 +11,8 @@ from scipy.interpolate import interp1d as itp
 import logging
 
 import excalibur.system.core as syscore
-from excalibur.util.cerberus import crbce, calcTEA, getmmw
+# from excalibur.util.cerberus import crbce, calcTEA, getmmw
+from excalibur.util.cerberus as crbutil
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -115,7 +116,7 @@ def crbmodel(
         if cheq is None:
             log.error('neither mixratio nor cheq are defined')
         if chemistry == 'TEC':
-            mixratio, fH2, fHe = crbce(
+            mixratio, fH2, fHe = crbutil.crbce(
                 pressure,
                 temp,
                 C2Or=cheq['CtoO'],
@@ -125,7 +126,7 @@ def crbmodel(
         elif chemistry == 'TEA':
             tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             species = ['H2O', 'CO', 'CO2']
-            mixratio, fH2, fHe = calcTEA(
+            mixratio, fH2, fHe = crbutil.calcTEA(
                 tempCoeffs,
                 pressure,
                 species,
@@ -137,9 +138,14 @@ def crbmodel(
             mixratio = {'H2O': 6}
             log.error('--< UNKNOWN CHEM MODEL: %s >--', chemistry)
         # print('mixratio',mixratio,fH2,fHe)
-        mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
+        mmw, fH2, fHe = crbutil.getmmw(
+            mixratio,
+            protosolar=False,
+            fH2=fH2,
+            fHe=fHe,
+        )
     else:
-        mmw, fH2, fHe = getmmw(mixratio)
+        mmw, fH2, fHe = crbutil.getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
 
     if debug:
