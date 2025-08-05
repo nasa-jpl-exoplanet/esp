@@ -99,7 +99,7 @@ def readcfg(cfg_name):
 
     # Check if config file exists
     try:
-        f = open(cfg_name)
+        _ = open(cfg_name)
     except IOError:
         print(
             "\nMissing config file, place TEA.cfg in the working directory.\n"
