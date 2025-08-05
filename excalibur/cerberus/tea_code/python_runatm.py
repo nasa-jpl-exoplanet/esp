@@ -86,7 +86,9 @@ def _multiproc_worker(
             abn[q, :] = x / x_bar
 
         except Exception as exc:
-            print(f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess")
+            print(
+                f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess"
+            )
             x, x_bar = guess
             abn[q, :] = x / x_bar
         else:
