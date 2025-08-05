@@ -125,9 +125,11 @@ def crbmodel(
         elif chemistry == 'TEA':
             # 'temp' should actually be the 10 T-P profile coefficients!!
             tempCoeffs = [0, temperature, 0, 0, 0, 0, 0, 0, 0, 0]
+            species = ['H2O', 'CO', 'CO2']
             mixratio, fH2, fHe = calcTEA(
                 tempCoeffs,
                 pressure,
+                species,
                 metallicity=10.0**cheq['XtoH'],
                 C_O=0.55 * 10.0**cheq['CtoO'],
                 # N_O=?? * 10.0**cheq['NtoO'],
