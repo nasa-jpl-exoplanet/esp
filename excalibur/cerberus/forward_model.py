@@ -129,9 +129,9 @@ def crbmodel(
                 tempCoeffs,
                 pressure,
                 species,
-                metallicity=10.0**cheq['XtoH'],
-                C_O=0.55 * 10.0**cheq['CtoO'],
-                # N_O=?? * 10.0**cheq['NtoO'],
+                metallicity=10.0 ** cheq['XtoH'],
+                C_O=0.55 * 10.0 ** cheq['CtoO'],
+                # N_O=?? * 10.0 ** cheq['NtoO'],
             )
         else:
             mixratio = {'H2O': 6}
