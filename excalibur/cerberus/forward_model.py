@@ -12,7 +12,7 @@ import logging
 
 import excalibur.system.core as syscore
 # from excalibur.util.cerberus import crbce, calcTEA, getmmw
-from excalibur.util.cerberus as crbutil
+import excalibur.util.cerberus as crbutil
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
