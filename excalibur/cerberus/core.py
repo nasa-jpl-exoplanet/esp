@@ -715,7 +715,7 @@ def atmos(
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
             # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
-            'PHOTOCHEM': runtime_param.fitmolecules,
+            'PHOTOCHEM': runtime_params.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
