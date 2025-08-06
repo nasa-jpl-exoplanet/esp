@@ -66,7 +66,8 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     calculate the mean molecular weight and scale height
     '''
     if useTEA:
-        tempCoeffs = [0, temperature, 0, 0, 0, 0, 0, 0, 0, 0]
+        # tempCoeffs = [0, temperature, 0, 0, 0, 0, 0, 0, 0, 0]
+        tempCoeffs = [0, temperature]
         species = ['H2O', 'CO', 'CO2']
         mixratio, fH2, fHe = crbutil.calcTEA(
             tempCoeffs, pressureArray, species, metallicity=10.0**X2Hr
