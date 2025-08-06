@@ -12,8 +12,9 @@ import logging
 
 import excalibur.system.core as syscore
 
-# from excalibur.util.cerberus import crbce, calcTEA, getmmw
-import excalibur.util.cerberus as crbutil
+#from excalibur.util.cerberus import crbce, calcTEA, getmmw
+#import excalibur.util.cerberus as crbutil
+from excalibur.util.cerberus import crbce, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -117,7 +118,8 @@ def crbmodel(
         if cheq is None:
             log.error('neither mixratio nor cheq are defined')
         if chemistry == 'TEC':
-            mixratio, fH2, fHe = crbutil.crbce(
+            # mixratio, fH2, fHe = crbutil.crbce(
+            mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
                 C2Or=cheq['CtoO'],
@@ -127,14 +129,17 @@ def crbmodel(
         elif chemistry == 'TEA':
             tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             species = ['H2O', 'CO', 'CO2']
-            mixratio, fH2, fHe = crbutil.calcTEA(
-                tempCoeffs,
-                pressure,
-                species,
-                metallicity=10.0 ** cheq['XtoH'],
-                C_O=0.55 * 10.0 ** cheq['CtoO'],
-                # N_O=?? * 10.0 ** cheq['NtoO'],
-            )
+
+            log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
+
+            # mixratio, fH2, fHe = crbutil.calcTEA(
+            #     tempCoeffs,
+            #    pressure,
+            #    species,
+            #    metallicity=10.0 ** cheq['XtoH'],
+            #    C_O=0.55 * 10.0 ** cheq['CtoO'],
+            #    # N_O=?? * 10.0 ** cheq['NtoO'],
+            # )
         else:
             mixratio = {'H2O': 6}
             log.error('--< UNKNOWN CHEM MODEL: %s >--', chemistry)
