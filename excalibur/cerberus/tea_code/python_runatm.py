@@ -16,7 +16,6 @@ import os
 import time
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 import ctypes
 
 from excalibur.cerberus.tea_code import readconf as rc
@@ -25,9 +24,9 @@ from excalibur.cerberus.tea_code import makeheader as mh
 from excalibur.cerberus.tea_code import updated_balance as bal
 
 
-mp.set_start_method("spawn", force=True)
-DEBUG_NCPU = 1
+  *** REMOVE "mp." multiprocessing stuff below ***
 
+DEBUG_NCPU = 1
 
 __all__ = ["run_tea"]
 # -----------------------------------------------------------------------------
