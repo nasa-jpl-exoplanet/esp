@@ -73,8 +73,10 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
         # mixratio, fH2, fHe = crbutil.calcTEA(
         #     tempCoeffs, pressureArray, species, metallicity=10.0**X2Hr
         # )
+        mixratio, fH2, fHe = crbutil.crbce(
+            pressureArray, temperature, X2Hr=X2Hr
+        )
     else:
-
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
