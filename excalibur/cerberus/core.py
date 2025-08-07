@@ -165,9 +165,12 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
-    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
+    # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
+    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    knownspecies = runtime_params.knownspecies
+    cialist = runtime_params.cialist
+    xmollist = runtime_params.xmollist
 
     cs = False
     planet_letters = []
@@ -679,7 +682,7 @@ def atmos(
         modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO'],
         }
 
         # ** select which Ariel model to fit **
@@ -711,8 +714,8 @@ def atmos(
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
-            # asdf: get this from runtime
-            'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            'PHOTOCHEM': runtime_params.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')

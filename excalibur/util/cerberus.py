@@ -4,22 +4,17 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-positional-arguments
 
+# from __future__ import annotations
+
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
 
+# import matplotlib.pyplot as plt
+# from pathlib import Path
 
-# ------------ -------------------------------------------------------
-# -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
-def calcTEA(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
-    '''
-    TEA chemical equilibrium abundances
-    '''
-
-    mixratio, nH2, nHe = crbce(
-        p, temp, X2Hr=X2Hr * 1.1, C2Or=C2Or * 0.9, N2Or=N2Or
-    )
-
-    return mixratio, nH2, nHe
+# from excalibur.cerberus.tea_code import python_makeatm as ma
+# from excalibur.cerberus.tea_code import python_runatm as ra
+# from excalibur.cerberus.tea_code import makeheader as mh
 
 
 # ------------ -------------------------------------------------------
@@ -180,10 +175,11 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'NH3': 17.0,
         'H2O': 18.0,
         'H2CO': 30.0,
-        'TIO': 64,
+        'TIO': 64.0,
         'HCN': 27.0,
         'N2': 28.0,
         'C2H2': 26.0,
+        'C2H4': 28.0,
         'NO2': 46.0,
         'N2O': 44.0,
         'O3': 48.0,
@@ -193,7 +189,11 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'CO2': 44.0,
         'NO': 30.0,
         'OH': 17.0,
+        'PH3': 34.0,
+        'SO2': 64.0,
+        'H2S': 34.0,
     }
+
     for elem in mixratio:
         molsum = molsum + 10.0 ** (mixratio[elem] - 6.0)
         mmw = mmw + 10.0 ** (mixratio[elem] - 6.0) * weights[elem]

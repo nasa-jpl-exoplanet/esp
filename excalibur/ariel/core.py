@@ -66,7 +66,14 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     calculate the mean molecular weight and scale height
     '''
     if useTEA:
-        mixratio, fH2, fHe = crbutil.calcTEA(
+        # tempCoeffs = [0, temperature, 0, 0, 0, 0, 0, 0, 0, 0]
+        # tempCoeffs = [0, temperature]
+        # species = ['H2O', 'CO', 'CO2']
+        log.error('TEA removed for now')
+        # mixratio, fH2, fHe = crbutil.calcTEA(
+        #     tempCoeffs, pressureArray, species, metallicity=10.0**X2Hr
+        # )
+        mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
     else:
@@ -285,6 +292,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
                     useTEA = bool('TEA' in atmosModel)
+
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
                         # print(' - using a low mmw')
@@ -295,6 +303,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         # model_params['metallicity'] = metallicity_star_dex + metallicity_planet_dex
                         # stellar metallicity has already been added (in metallicity.py)
                         model_params['metallicity'] = metallicity_planet_dex
+
+                        # model_params['metallicity'] = 0.0
+                        # print('model_params metallicity SET BY HAND!!',
+                        #    model_params['metallicity'])
+
                         # planet C/O ratio is assumed to be solar
                         #  (0.54951 is the default in ACEChemistry, so it actually has no effect)
                         # actually, let's consider a distribution of C/O, as done for FINESSE

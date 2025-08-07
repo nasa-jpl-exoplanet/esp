@@ -3172,7 +3172,6 @@ def spectrum(
                 out['data'][p]['ESerr'].append(
                     np.nanstd(trace.posterior['rprs'])
                 )
-
                 out['data'][p]['MCPOST'].append(mcpost)
                 out['data'][p]['MCTRACE'].append(mctrace)
                 out['data'][p]['WBlow'].append(wl)
@@ -3184,7 +3183,7 @@ def spectrum(
                 # when debugging, show the corner plot, etc
                 if verbose:
                     #  CORNER PLOT
-                    # simplecorner(mctrace, verbose=verbose)
+                    simplecorner(mctrace, verbose=verbose)
 
                     #  POSTERIOR HISTOS VS PRIOR
                     postpriors(mctrace, prior_center, nodes, verbose=verbose)
@@ -3268,6 +3267,9 @@ def spectrum(
             temparr = np.array(out['data'][p][keytoord])
             out['data'][p][keytoord] = temparr[orderme]
             pass
+        # print('final out',out['data'][p])
+        # print('final ES',out['data'][p]['ES'])
+        # print('final ESerr',out['data'][p]['ESerr'])
         out['STATUS'].append(True)
 
     return True
