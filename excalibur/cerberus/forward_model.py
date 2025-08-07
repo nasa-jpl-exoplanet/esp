@@ -125,8 +125,8 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         elif chemistry == 'TEA':
-            tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-            species = ['H2O', 'CO', 'CO2']
+            # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+            # species = ['H2O', 'CO', 'CO2']
 
             log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
 
@@ -138,6 +138,13 @@ def crbmodel(
             #    C_O=0.55 * 10.0 ** cheq['CtoO'],
             #    # N_O=?? * 10.0 ** cheq['NtoO'],
             # )
+            mixratio, fH2, fHe = crbce(
+                pressure,
+                temp,
+                C2Or=cheq['CtoO'],
+                X2Hr=cheq['XtoH'],
+                N2Or=cheq['NtoO'],
+            )
         else:
             mixratio = {'H2O': 6}
             log.error('--< UNKNOWN CHEM MODEL: %s >--', chemistry)

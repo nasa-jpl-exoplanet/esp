@@ -24,7 +24,7 @@ from excalibur.cerberus.tea_code import makeheader as mh
 from excalibur.cerberus.tea_code import updated_balance as bal
 
 
-  *** REMOVE "mp." multiprocessing stuff below ***
+# *** REMOVE "mp." multiprocessing stuff below ***
 
 DEBUG_NCPU = 1
 
