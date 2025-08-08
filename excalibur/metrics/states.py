@@ -7,6 +7,8 @@ import bokeh.plotting
 import dawgie
 import excalibur
 import logging
+import math
+import numpy
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class CpuAndMem(dawgie.StateVector):
         self['bytn'] = excalibur.ValuesDict()
         for md in mds:
             if md.run_id not in self['byrid']:
-                sel['byrid'][md.run_id] = []
+                self['byrid'][md.run_id] = []
             self['byrid'][md.run_id].append(md.sv)
             if md.target not in self['bytn']:
                 self['bytn'][md.target] = []
