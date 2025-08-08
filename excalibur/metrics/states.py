@@ -95,7 +95,7 @@ def plot_resource(data_table, keys, tan, xlabel, mem):
         tools='pan,ywheel_zoom,box_zoom,xwheel_zoom,save,reset',
         width=600,
     )
-    x = [i for i in range(len(keys))]
+    x = list(range(len(keys)))
     y = []
     yn = []
     yx = []
