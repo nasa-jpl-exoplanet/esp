@@ -36,6 +36,11 @@ class CpuAndMem(dawgie.StateVector):
 
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''Show the configutation information'''
+        visitor.add_declaration_inline('', div='<div><hr>')
+        visitor.add_declaration_inline('Dark blue dots are the median')
+        visitor.add_declaration_inline('Thin cyan lines are the min/max')
+        visitor.add_declaration_inline('When x-axis is run id, then min/max is over targets and run id when x-axis is target')
+        visitor.add_declaration_inline('', div='</div>')
         c1r1 = plot_resource(self['byrid'], sorted(self['byrid'].keys()),
                              self._name, 'Run ID', True)
         c1r2 = plot_resource(self['byrid'], sorted(self['byrid'].keys()),
