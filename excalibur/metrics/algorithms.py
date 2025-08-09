@@ -31,7 +31,7 @@ class Performance(dawgie.Analyzer):
             known = table.get(name, [])
             known.append(md)
             table[name] = known
-        self._svs = [states.CpuAndMem(**i) for i in known.items()]
+        self._svs = [states.CpuAndMem(*i) for i in table.items()]
         aspects.ds().update()
 
     def state_vectors(self) -> [dawgie.StateVector]:

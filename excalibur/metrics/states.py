@@ -23,12 +23,17 @@ class CpuAndMem(dawgie.StateVector):
         self['byrid'] = excalibur.ValuesDict()
         self['bytn'] = excalibur.ValuesDict()
         for md in mds:
+            sv = {
+                'db_memory': md.sv['db_memory'].value(),
+                'task_memory': md.sv['task_memory'].value(),
+                'task_wall': md.sv['task_wall'].value(),
+            }
             if md.run_id not in self['byrid']:
                 self['byrid'][md.run_id] = []
-            self['byrid'][md.run_id].append(md.sv)
+            self['byrid'][md.run_id].append(sv)
             if md.target not in self['bytn']:
                 self['bytn'][md.target] = []
-            self['bytn'][md.target].append(md.sv)
+            self['bytn'][md.target].append(sv)
 
     def features(self):
         '''contains no features'''
@@ -102,8 +107,8 @@ def plot_resource(data_table, keys, tan, xlabel, mem):
     for svl in svs:
         w = [
             (
-                sv['db_memory' if mem else 'task_wall'].value()
-                + sv['task_memory' if mem else 'task_wall'].value()
+                sv['db_memory' if mem else 'task_wall']
+                + sv['task_memory' if mem else 'task_wall']
             )
             * (1024 if mem else 1)
             for sv in svl
