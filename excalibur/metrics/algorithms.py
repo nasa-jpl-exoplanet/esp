@@ -32,6 +32,10 @@ class Performance(dawgie.Analyzer):
             known.append(md)
             table[name] = known
         self._svs = [states.CpuAndMem(*i) for i in table.items()]
+        tsk = aspects.ds()._bot()  # pylint: disable=protected-access
+        for sv in self._svs:
+            for vn, v in sv.items():
+                dawgie.db.update(tsk, self, sv, vn, v)
         aspects.ds().update()
 
     def state_vectors(self) -> [dawgie.StateVector]:
