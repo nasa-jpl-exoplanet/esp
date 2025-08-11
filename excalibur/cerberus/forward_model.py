@@ -11,6 +11,8 @@ from scipy.interpolate import interp1d as itp
 import logging
 
 import excalibur.system.core as syscore
+
+# from excalibur.util.cerberus import crbce, calcTEA, getmmw
 from excalibur.util.cerberus import crbce, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
@@ -69,8 +71,12 @@ def crbmodel(
         knownspecies = ctxt.knownspecies
     if cialist is None:
         cialist = ctxt.cialist
+    else:
+        cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     if xmollist is None:
         xmollist = ctxt.xmollist
+    else:
+        xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
     if nlevels is None:
         nlevels = ctxt.nlevels
     if Hsmax is None:
@@ -93,9 +99,6 @@ def crbmodel(
         wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
     if hzlib is None:
         hzlib = ctxt.hzlib
-
-    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
@@ -122,6 +125,19 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         elif chemistry == 'TEA':
+            # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+            # species = ['H2O', 'CO', 'CO2']
+
+            log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
+
+            # mixratio, fH2, fHe = calcTEA(
+            #     tempCoeffs,
+            #    pressure,
+            #    species,
+            #    metallicity=10.0 ** cheq['XtoH'],
+            #    C_O=0.55 * 10.0 ** cheq['CtoO'],
+            #    # N_O=?? * 10.0 ** cheq['NtoO'],
+            # )
             mixratio, fH2, fHe = crbce(
                 pressure,
                 temp,
@@ -130,9 +146,15 @@ def crbmodel(
                 N2Or=cheq['NtoO'],
             )
         else:
-            log.warning('--< %s >--', chemistry)
+            mixratio = {'H2O': 6}
+            log.error('--< UNKNOWN CHEM MODEL: %s >--', chemistry)
         # print('mixratio',mixratio,fH2,fHe)
-        mmw, fH2, fHe = getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
+        mmw, fH2, fHe = getmmw(
+            mixratio,
+            protosolar=False,
+            fH2=fH2,
+            fHe=fHe,
+        )
     else:
         mmw, fH2, fHe = getmmw(mixratio)
     mmw = mmw * cst.m_p  # [kg]
