@@ -135,10 +135,6 @@ class Create(dawgie.Analyzer):
         ]
         self.__table.append(states.CompositeSV(self.__table))
 
-    @staticmethod
-    def _do(arg):
-        fetch('excalibur.runtime.bot').TaskTeam(*arg[0], **arg[1]).do()
-
     def name(self) -> str:
         '''database name'''
         return 'create'
