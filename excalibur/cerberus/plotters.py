@@ -169,7 +169,9 @@ def plot_spectrumfit(
             label='truth',
         )
 
-    offsets_model = (patmos_model - transitdata['depth'][okPart]) / transitdata['error'][okPart]
+    offsets_model = (patmos_model - transitdata['depth'][okPart]) / transitdata[
+        'error'
+    ][okPart]
     offsets_modelProfiled = (
         patmos_modelProfiled - transitdata['depth'][okPart]
     ) / transitdata['error'][okPart]
