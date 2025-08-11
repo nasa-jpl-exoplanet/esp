@@ -99,6 +99,8 @@ def plot_spectrumfit(
     )
     ax = plt.subplot(1, 2, 1)
 
+    okPart = np.where(np.isfinite(transitdata['depth']))
+
     # 1) plot the data
     plt.errorbar(
         transitdata['wavelength'],
@@ -132,7 +134,7 @@ def plot_spectrumfit(
     #         label='best fit (old method)')
     # 3b) plot the best-fit model - new random selection parameter-set checking
     plt.plot(
-        transitdata['wavelength'],
+        transitdata['wavelength'][okPart],
         patmos_bestfit * 100,
         # c='k', lw=2, zorder=4,
         c='orange',
@@ -148,7 +150,7 @@ def plot_spectrumfit(
         fmcarray = []
     for patmos_modeli in fmcarray:
         plt.plot(
-            transitdata['wavelength'],
+            transitdata['wavelength'][okPart],
             patmos_modeli * 100,
             c='grey',
             lw=0.2,
@@ -167,14 +169,13 @@ def plot_spectrumfit(
             label='truth',
         )
 
-    offsets_model = (patmos_model - transitdata['depth']) / transitdata['error']
+    offsets_model = (patmos_model - transitdata['depth'][okPart]) / transitdata['error'][okPart]
     offsets_modelProfiled = (
-        patmos_modelProfiled - transitdata['depth']
-    ) / transitdata['error']
+        patmos_modelProfiled - transitdata['depth'][okPart]
+    ) / transitdata['error'][okPart]
 
     # the 'average' function (which allows for weights) doesn't have a NaN version,
     #  so mask out any NaN regions by hand
-    okPart = np.where(np.isfinite(transitdata['depth']))
     flatlineFit = np.average(
         transitdata['depth'][okPart],
         weights=1 / transitdata['error'][okPart] ** 2,
@@ -351,7 +352,7 @@ def plot_spectrumfit(
         #         label='best fit (old method)')
         # 3b) plot the best-fit model - new random selection parameter-set checking
         plt.plot(
-            transitdata['wavelength'],
+            transitdata['wavelength'][okPart],
             patmos_bestfit * 100,
             c='orange',
             lw=2,
