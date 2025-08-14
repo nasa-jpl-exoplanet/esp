@@ -5,7 +5,7 @@
 
 import numpy
 import copy
-import excalibur.system.core as syscore
+from importlib import import_module as fetch
 from excalibur.system.autofill import (
     derive_LOGGplanet_from_R_and_M,
     derive_Teqplanet_from_Lstar_and_sma,
@@ -58,7 +58,7 @@ def ppar():
         }
     }
     '''
-    sscmks = syscore.ssconstants(cgs=True)
+    sscmks = fetch('excalibur.system.core').ssconstants(cgs=True)
 
     overwrite = {}
     # this one is somewhat higher than bonomo (0.6).  drop here ig
