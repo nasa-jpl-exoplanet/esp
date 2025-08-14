@@ -6,7 +6,10 @@
 import numpy
 import copy
 import excalibur.system.core as syscore
-from excalibur.system.autofill import derive_LOGGplanet_from_R_and_M, derive_Teqplanet_from_Lstar_and_sma
+from excalibur.system.autofill import (
+    derive_LOGGplanet_from_R_and_M,
+    derive_Teqplanet_from_Lstar_and_sma,
+)
 
 
 def fix_default_reference(target):
@@ -1836,7 +1839,7 @@ def ppar():
             'logg': 3.394,
         },
     }
-    
+
     # (for Ines's paper on L 98-59)
     # 08/13/2025 : update planet b's parameters to the Cadieux et al. 2025 parameters
     overwrite['L 98-59'] = {
@@ -1864,57 +1867,81 @@ def ppar():
         'T*_uperr': 60,
         'T*_lowerr': -60,
         'T*_ref': 'Cadieux et al. 2025',
-        'AGE*':4.94,
+        'AGE*': 4.94,
         'AGE*_uperr': 0.28,
         'AGE*_lowerr': -0.28,
         'AGE*_ref': 'Cadieux et al. 2025',
-        'b':{
-            'rp':0.837, 'rp_uperr':0.0019, 'rp_lowerr':-0.0019,
-            'rp_ref':'Cadieux et al. 2025',
-            'mass':0.0014, 'mass_uperr':0.0003, 'mass_lowerr':-0.0003,
-            'mass_ref':'Cadieux et al. 2025',
-            'logg_ref':'Cadieux et al. 2025',
-            'teq_ref':'Cadieux et al. 2025',
-            'sma':0.0223, 'sma_uperr':0.0007, 'sma_lowerr':-0.0007,
-            'sma_ref':'Cadieux et al. 2025',
-            'period':2.2531140, 'period_uperr':0.0000004, 'period_lowerr':-0.0000004,
-            'period_ref':'Cadieux et al. 2025',
-            't0':2458366.17056, 't0_uperr':0.00013, 't0_lowerr':-0.00022,
-            't0_ref':'Cadieux et al. 2025',
-            'inc':88.08, 'inc_uperr':0.23, 'inc_lowerr':-0.20,
-            'inc_ref':'Cadieux et al. 2025',
-            'ecc':0.031, 'ecc_uperr':0.017, 'ecc_lowerr':-0.016,
-            'ecc_ref':'Cadieux et al. 2025',
-            'impact':0.51, 'impact_uperr':0.04, 'impact_lowerr':-0.05,
-            'impact_ref':'Cadieux et al. 2025',
-            'trandur':1.01, 'trandur_uperr':0.03, 'trandur_lowerr':-0.03,
-            'trandur_ref':'Cadieux et al. 2025',
-           },
+        'b': {
+            'rp': 0.837,
+            'rp_uperr': 0.0019,
+            'rp_lowerr': -0.0019,
+            'rp_ref': 'Cadieux et al. 2025',
+            'mass': 0.0014,
+            'mass_uperr': 0.0003,
+            'mass_lowerr': -0.0003,
+            'mass_ref': 'Cadieux et al. 2025',
+            'logg_ref': 'Cadieux et al. 2025',
+            'teq_ref': 'Cadieux et al. 2025',
+            'sma': 0.0223,
+            'sma_uperr': 0.0007,
+            'sma_lowerr': -0.0007,
+            'sma_ref': 'Cadieux et al. 2025',
+            'period': 2.2531140,
+            'period_uperr': 0.0000004,
+            'period_lowerr': -0.0000004,
+            'period_ref': 'Cadieux et al. 2025',
+            't0': 2458366.17056,
+            't0_uperr': 0.00013,
+            't0_lowerr': -0.00022,
+            't0_ref': 'Cadieux et al. 2025',
+            'inc': 88.08,
+            'inc_uperr': 0.23,
+            'inc_lowerr': -0.20,
+            'inc_ref': 'Cadieux et al. 2025',
+            'ecc': 0.031,
+            'ecc_uperr': 0.017,
+            'ecc_lowerr': -0.016,
+            'ecc_ref': 'Cadieux et al. 2025',
+            'impact': 0.51,
+            'impact_uperr': 0.04,
+            'impact_lowerr': -0.05,
+            'impact_ref': 'Cadieux et al. 2025',
+            'trandur': 1.01,
+            'trandur_uperr': 0.03,
+            'trandur_lowerr': -0.03,
+            'trandur_ref': 'Cadieux et al. 2025',
+        },
     }
-        
-    g = sscmks['G'] * float(overwrite['L 98-59']['b']['mass']) * sscmks['Mjup'] / \
-        (float(overwrite['L 98-59']['b']['rp']) * sscmks['Rjup'])**2
+
+    g = (
+        sscmks['G']
+        * float(overwrite['L 98-59']['b']['mass'])
+        * sscmks['Mjup']
+        / (float(overwrite['L 98-59']['b']['rp']) * sscmks['Rjup']) ** 2
+    )
     overwrite['L 98-59']['b']['logg'] = numpy.log10(g)
-    
+
     system_info = copy.deepcopy(overwrite['L 98-59'])
     system_info['L*'] = [0.0123]
     system_info['L*_uperr'] = [0.0009]
     system_info['L*_lowerr'] = [-0.0011]
-    
+
     system_info['b']['teq'] = ['']
     system_info['b']['teq_uperr'] = ['']
     system_info['b']['teq_lowerr'] = ['']
     system_info['b']['teq_ref'] = ['']
-    
-    logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = \
+
+    logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = (
         derive_LOGGplanet_from_R_and_M(system_info, 'b')
+    )
     overwrite['L 98-59']['b']['logg'] = logg_derived[0]
     overwrite['L 98-59']['b']['logg_lowerr'] = logg_lowerr_derived[0]
     overwrite['L 98-59']['b']['logg_uperr'] = logg_uperr_derived[0]
     overwrite['L 98-59']['b']['logg_ref'] = logg_ref_derived[0]
-    
-    teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = \
+
+    teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = (
         derive_Teqplanet_from_Lstar_and_sma(system_info, 'b')
+    )
     overwrite['L 98-59']['b']['teq'] = teq_derived[0]
     overwrite['L 98-59']['b']['teq_lowerr'] = teq_lowerr_derived[0]
     overwrite['L 98-59']['b']['teq_uperr'] = teq_uperr_derived[0]
