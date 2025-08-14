@@ -1696,25 +1696,25 @@ def ppar():
     # print('logg before',overwrite['L 98-59']['c']['logg'])
     # print('logg before',overwrite['L 98-59']['d']['logg'])
 
-    # systemInfo = copy.deepcopy(overwrite['L 98-59'])
-    # systemInfo['L*'] = [0.0113]
-    # systemInfo['L*_uperr'] = [0.0004]
-    # systemInfo['L*_lowerr'] = [-0.0004]
+    # system_info = copy.deepcopy(overwrite['L 98-59'])
+    # system_info['L*'] = [0.0113]
+    # system_info['L*_uperr'] = [0.0004]
+    # system_info['L*_lowerr'] = [-0.0004]
     # for p in ['c','d']:
-    #    systemInfo[p]['teq'] = ['']
-    #    systemInfo[p]['teq_uperr'] = ['']
-    #    systemInfo[p]['teq_lowerr'] = ['']
-    #    systemInfo[p]['teq_ref'] = ['']
+    #    system_info[p]['teq'] = ['']
+    #    system_info[p]['teq_uperr'] = ['']
+    #    system_info[p]['teq_lowerr'] = ['']
+    #    system_info[p]['teq_ref'] = ['']
     #
     #    logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = \
-    #        derive_LOGGplanet_from_R_and_M(systemInfo, p)
+    #        derive_LOGGplanet_from_R_and_M(system_info, p)
     #    overwrite['L 98-59'][p]['logg'] = logg_derived[0]
     #    overwrite['L 98-59'][p]['logg_lowerr'] = logg_lowerr_derived[0]
     #    overwrite['L 98-59'][p]['logg_uperr'] = logg_uperr_derived[0]
     #    overwrite['L 98-59'][p]['logg_ref'] = logg_ref_derived[0]
     #
     #    teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = \
-    #        derive_Teqplanet_from_Lstar_and_sma(systemInfo, p)
+    #        derive_Teqplanet_from_Lstar_and_sma(system_info, p)
     #    overwrite['L 98-59'][p]['teq'] = teq_derived[0]
     #    overwrite['L 98-59'][p]['teq_lowerr'] = teq_lowerr_derived[0]
     #    overwrite['L 98-59'][p]['teq_uperr'] = teq_uperr_derived[0]
@@ -1896,25 +1896,25 @@ def ppar():
         (float(overwrite['L 98-59']['b']['rp']) * sscmks['Rjup'])**2
     overwrite['L 98-59']['b']['logg'] = numpy.log10(g)
     
-    systemInfo = copy.deepcopy(overwrite['L 98-59'])
-    systemInfo['L*'] = [0.0123]
-    systemInfo['L*_uperr'] = [0.0009]
-    systemInfo['L*_lowerr'] = [-0.0011]
+    system_info = copy.deepcopy(overwrite['L 98-59'])
+    system_info['L*'] = [0.0123]
+    system_info['L*_uperr'] = [0.0009]
+    system_info['L*_lowerr'] = [-0.0011]
     
-    systemInfo['b']['teq'] = ['']
-    systemInfo['b']['teq_uperr'] = ['']
-    systemInfo['b']['teq_lowerr'] = ['']
-    systemInfo['b']['teq_ref'] = ['']
+    system_info['b']['teq'] = ['']
+    system_info['b']['teq_uperr'] = ['']
+    system_info['b']['teq_lowerr'] = ['']
+    system_info['b']['teq_ref'] = ['']
     
     logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = \
-        derive_LOGGplanet_from_R_and_M(systemInfo, 'b')
+        derive_LOGGplanet_from_R_and_M(system_info, 'b')
     overwrite['L 98-59']['b']['logg'] = logg_derived[0]
     overwrite['L 98-59']['b']['logg_lowerr'] = logg_lowerr_derived[0]
     overwrite['L 98-59']['b']['logg_uperr'] = logg_uperr_derived[0]
     overwrite['L 98-59']['b']['logg_ref'] = logg_ref_derived[0]
     
     teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = \
-        derive_Teqplanet_from_Lstar_and_sma(systemInfo, 'b')
+        derive_Teqplanet_from_Lstar_and_sma(system_info, 'b')
     overwrite['L 98-59']['b']['teq'] = teq_derived[0]
     overwrite['L 98-59']['b']['teq_lowerr'] = teq_lowerr_derived[0]
     overwrite['L 98-59']['b']['teq_uperr'] = teq_uperr_derived[0]
