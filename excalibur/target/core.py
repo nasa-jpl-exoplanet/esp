@@ -23,6 +23,7 @@ import excalibur.target.mast_api_utils as masttool
 import numpy as np
 import astropy.io.fits as pyfits
 import urllib.request as urlrequest
+import urllib3.exceptions
 
 from collections import namedtuple
 
@@ -1279,7 +1280,21 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                 # GMR: Fill that when we get STIS back in
                 pass
             payload = {"uri": row['dataURI']}
-            resp = requests.get(allurl[irow], params=payload, timeout=42)
+            iteration = 0
+            while iteration < 10:
+                try:
+                    time.sleep(2**iteration)
+                    resp = requests.get(
+                        allurl[irow], params=payload, timeout=42
+                    )
+                    iteration = 10
+                except urllib3.exceptions.ProtocolError:
+                    log.exception(
+                        'failed to download % on iteration %d',
+                        allurl[irow],
+                        iteration,
+                    )
+                    iteration += 1
             fileout = os.path.join(
                 tempdir, os.path.basename(row['productFilename'])
             )
