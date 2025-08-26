@@ -1872,9 +1872,9 @@ def ppar():
         'AGE*_lowerr': -0.28,
         'AGE*_ref': 'Cadieux et al. 2025',
         'b': {
-            'rp': 0.837,
-            'rp_uperr': 0.0019,
-            'rp_lowerr': -0.0019,
+            'rp': 0.0747,
+            'rp_uperr': 0.0017,
+            'rp_lowerr': -0.0017,
             'rp_ref': 'Cadieux et al. 2025',
             'mass': 0.0014,
             'mass_uperr': 0.0003,
