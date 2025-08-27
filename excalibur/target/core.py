@@ -1183,10 +1183,15 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
         # Need to catch the error message right here and log it
         if iobs < 1:  # We dont want the 1776388 of them in the log
-            log.info('>-- First MAST query: %s', errmastq)
+            log.warning('>-- First MAST query: %s', errmastq)
             pass
         if datastr is None:  # Catches the current trouble
-            log.warning('>-- datastr is None for obsid %s, index number %s in the list of obsids: \n%s', o, iobs, errmastq)
+            log.warning(
+                '>-- datastr is None for obsid %s, index number %s in the list of obsids: \n%s',
+                o,
+                iobs,
+                errmastq,
+            )
             # URL is actually embedded in masttool.mast_query()
             # saving obsid and the index in the log before failure
             # Letting the loop do its thing and forcing data to contain nothing
