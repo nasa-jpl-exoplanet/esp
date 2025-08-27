@@ -1291,9 +1291,9 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                     fileout = os.path.join(
                         tempdir, os.path.basename(row['productFilename'])
                     )
-                   with open(fileout, 'wb') as flt:
-                       flt.write(resp.content)
-                       pass
+                    with open(fileout, 'wb') as flt:
+                        flt.write(resp.content)
+                        pass
                 except urllib3.exceptions.ProtocolError:
                     log.exception(
                         'failed to download % on iteration %d',
@@ -1302,8 +1302,9 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
                     )
                     iteration += 1
                 if iteration == 10:
-                    log.critical('After 10 network failures, ignoring %s',
-                                  allurl[irow])
+                    log.critical(
+                        'After 10 network failures, ignoring %s', allurl[irow]
+                    )
             pass
         # SPITZER
         else:
