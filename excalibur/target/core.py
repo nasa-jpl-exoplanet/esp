@@ -1173,13 +1173,26 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
     allurl = []
     allmiss = []
     allraw = []
-    for o in obsids:
+    allstrnone = []
+    for iobs, o in enumerate(obsids):
         request = {
             'service': 'Mast.Caom.Products',
             'params': {'obsid': o},
             'format': 'json',
         }
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
+        # Need to catch the error message right here and log it
+        if iobs < 1:  # We dont want the 1776388 of them in the log
+            log.info('>-- First MAST query: %s', errmastq)
+            pass
+        if datastr is None:  # Catches the current trouble
+            log.warning('>-- datastr is None for obsid %s, index number %s in the list of obsids: \n%s', o, iobs, errmastq)
+            # URL is actually embedded in masttool.mast_query()
+            # saving obsid and the index in the log before failure
+            # Letting the loop do its thing and forcing data to contain nothing
+            allstrnone.append(o)
+            datastr = {}
+            pass
         data = json.loads(datastr)
         # ines mertz : adding an if statement to test the length of data['data']
         donmast = False
@@ -1269,6 +1282,11 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             log.warning('>-- No data in MAST query %s', errmastq)
             pass
         pass
+
+    if allstrnone:
+        log.warning('>-- %s of files returned None', len(allstrnone))
+        pass
+
     tempdir = tempfile.mkdtemp(
         dir=dawgie.context.data_stg, prefix=target.replace(' ', '') + '_'
     )
