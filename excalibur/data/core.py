@@ -558,6 +558,78 @@ def timing(force, ext, clc, out):
 
 # ------------ -------------------------------------------------------
 # -- JWST CALIBRATION -- ---------------------------------------------
+def rampfits(raws):
+    '''
+    G. ROUDIER: Ramp fits
+    '''
+    out = {'alldet':[], 'alldexp':[], 'allunits':[], 'allerr':[],
+           'alldq':[], 'allwaves':[], 'alltiming':[]}
+    alldexp = raws['alldexp'].copy()
+    alltiming = raws['alltiming'].copy()
+    # Timing format
+    # TTYPE1  = 'integration_number'
+    # TFORM1  = 'J       '
+    # TTYPE2  = 'int_start_MJD_UTC'
+    # TFORM2  = 'D       '
+    # TTYPE3  = 'int_mid_MJD_UTC'
+    # TFORM3  = 'D       '
+    # TTYPE4  = 'int_end_MJD_UTC'
+    # TFORM4  = 'D       '
+    # TTYPE5  = 'int_start_BJD_TDB'
+    # TFORM5  = 'D       '
+    # TTYPE6  = 'int_mid_BJD_TDB'
+    # TFORM6  = 'D       '
+    # TTYPE7  = 'int_end_BJD_TDB'
+    # TFORM7  = 'D       '
+    
+
+    import pdb; pdb.set_trace()
+
+    return out
+
+
+
+def readfitsdata(loclist, dbs, raws=False):
+    '''
+    G. ROUDIER: Creates a dictionnary of time series of
+    data of interest for JWST datasets from fits files
+    '''
+    out = {'alldet':[], 'alldexp':[], 'allunits':[], 'allerr':[],
+           'alldq':[], 'allwaves':[], 'alltiming':[]}
+    for loc in loclist:
+        fullloc = os.path.join(dbs, loc)
+        with pyfits.open(fullloc) as hdulist:
+            nints = None
+            for hdu in hdulist:
+                if 'PRIMARY' in hdu.name:
+                    nints = hdu.header['NINTS']
+                    out['alldet'].extend(nints * [hdu.header['DETECTOR']])
+                    pass
+                elif 'SCI' in hdu.name:
+                    out['alldexp'].extend(hdu.data)
+                    out['allunits'].extend([hdu.header['BUNIT']] * len(hdu.data))
+                    pass
+                # <-- L2b data only
+                elif 'ERR' in hdu.name:
+                    out['allerr'].extend(hdu.data)
+                elif 'DQ' in hdu.name:
+                    out['alldq'].extend(hdu.data)
+                elif ('WAVELENGTH' in hdu.name) and nints:
+                    out['allwaves'].extend(nints * [hdu.data])
+                    pass
+                # -->
+                elif 'INT_TIMES' in hdu.name:
+                    out['alltiming'].extend(hdu.data)
+                    pass
+                pass
+            pass
+        pass
+    if raws:
+        out = rampfits(out)
+        pass
+    return out
+
+
 def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
@@ -585,36 +657,18 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     allunits = []
     allerr = []
     alldq = []
-    for loc in sorted(clc['LOC']):
-        fullloc = os.path.join(dbs, loc)
-        with pyfits.open(fullloc) as hdulist:
-            nints = None
-            for hdu in hdulist:
-                if 'PRIMARY' in hdu.name:
-                    nints = hdu.header['NINTS']
-                    alldet.extend(nints * [hdu.header['DETECTOR']])
-                    pass
-                elif 'SCI' in hdu.name:
-                    alldexp.extend(hdu.data)
-                    allunits.extend([hdu.header['BUNIT']] * len(hdu.data))
-                    pass
-                # <-- L2b data only
-                elif 'ERR' in hdu.name:
-                    allerr.extend(hdu.data)
-                elif 'DQ' in hdu.name:
-                    alldq.extend(hdu.data)
-                elif ('WAVELENGTH' in hdu.name) and nints:
-                    allwaves.extend(nints * [hdu.data])
-                    pass
-                # -->
-                elif 'INT_TIMES' in hdu.name:
-                    alldinm.extend(hdu.data['integration_number'])
-                    alldintimes.extend(hdu.data['int_mid_MJD_UTC'])
-                    pass
-                pass
-            pass
-        pass
 
+    # RAW VERSUS CALIBRATED LISTS
+    rawloc = [l for l, n in zip(clc['LOC'], clc['ROOTNAME']) if n.endswith('uncal')]
+    calloc = [l for l, n in zip(clc['LOC'], clc['ROOTNAME']) if n.endswith('calints')]
+
+    # DATASET
+    rawdata = readfitsdata(rawloc, dbs, raws=True)
+    caldata = readfitsdata(calloc, dbs, raws=False)
+
+    import pdb; pdb.set_trace()
+    
+    # CONCATENATE DATA
     alldinm = np.array(alldinm)
     alldexp = np.array(alldexp)
     allwaves = np.array(allwaves)
