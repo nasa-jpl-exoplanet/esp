@@ -15,6 +15,7 @@ import dawgie.context
 import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.time
+import excalibur.util.nerdclub as nerdclub
 
 import lmfit as lm
 import matplotlib.pyplot as plt
@@ -558,12 +559,15 @@ def timing(force, ext, clc, out):
 
 # ------------ -------------------------------------------------------
 # -- JWST CALIBRATION -- ---------------------------------------------
-def rampfits(raws):
+def rampfits(raws, verbose=False):
     '''
     G. ROUDIER: Ramp fits
     '''
     out = {'alldet':[], 'alldexp':[], 'allunits':[], 'allerr':[],
            'alldq':[], 'allwaves':[], 'alltiming':[]}
+    for k in out:
+        out[k] = raws[k]
+        pass
     alldexp = raws['alldexp'].copy()
     alltiming = raws['alltiming'].copy()
     # Timing format
@@ -581,15 +585,31 @@ def rampfits(raws):
     # TFORM6  = 'D       '
     # TTYPE7  = 'int_end_BJD_TDB'
     # TFORM7  = 'D       '
-    
-
-    import pdb; pdb.set_trace()
-
+    exposures = []
+    err = []
+    argsdict = {'progbar':verbose, 'progsizemax':35, 'lbllen':15, 'proginprompt':True}
+    progbar = nerdclub.progressbar(argsdict, '--< RAMPFITS', alldexp)
+    for ramps, xtime in zip(alldexp, alltiming):
+        # VECTORIAL FIT
+        dramps = [r.flatten() for r in ramps]
+        # TIMESTAMPS
+        deltat = ((xtime[-1] - xtime[-3])*24e0*36e2) / (1e0*len(ramps))  # [seconds]
+        xfit = deltat*np.arange(len(dramps))
+        # LINFIT
+        fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
+        exposures.append(fitresult[0][0].reshape(ramps[0].shape))
+        cov = fitresult[1][0, 0].reshape(ramps[0].shape)
+        err.append(np.sqrt(abs(cov)))
+        progbar.update()
+        pass
+    progbar.close()
+    out['alldexp'] = exposures
+    out['allerr'] = err
     return out
 
 
 
-def readfitsdata(loclist, dbs, raws=False):
+def readfitsdata(loclist, dbs, raws=False, verbose=False):
     '''
     G. ROUDIER: Creates a dictionnary of time series of
     data of interest for JWST datasets from fits files
@@ -625,7 +645,7 @@ def readfitsdata(loclist, dbs, raws=False):
             pass
         pass
     if raws:
-        out = rampfits(out)
+        out = rampfits(out, verbose=verbose)
         pass
     return out
 
@@ -663,10 +683,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     calloc = [l for l, n in zip(clc['LOC'], clc['ROOTNAME']) if n.endswith('calints')]
 
     # DATASET
-    rawdata = readfitsdata(rawloc, dbs, raws=True)
-    caldata = readfitsdata(calloc, dbs, raws=False)
-
-    import pdb; pdb.set_trace()
+    rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
+    caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
     
     # CONCATENATE DATA
     alldinm = np.array(alldinm)
