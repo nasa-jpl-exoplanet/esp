@@ -266,6 +266,7 @@ def crbmodel(
     # model is a 1xN matrix; it needs to be a 1-d array
     #  otherwise some subsequent * or ** operations fail
     model = np.asarray(model).reshape(-1)
+    plotmodel = model.copy()
     model = model[::-1]
 
     models_by_molecule = {}
@@ -286,7 +287,6 @@ def crbmodel(
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
 
     if verbose:
-        plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
