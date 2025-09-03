@@ -15,22 +15,29 @@ from excalibur.util.cerberus import crbce, calcTEA, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
-def _tp_from_coeffs(P,
-                    shift,             # log-P shift
-                    T_base=1500,       # background scale
-                    alpha=0.05,        # background slope
-                    P_ref=1e-2,        # ref pressure
-                    a_rise=400,        # rise amplitude
-                    c_rise=-2.3,       # center of rise (log10 P)
-                    w_rise=0.25,       # width of rise
-                    a_fall=-350,       # fall amplitude
-                    c_fall=-1.9,       # center of fall
-                    w_fall=0.35):      # width of fall
-    x    = np.log10(P) + shift
-    T_bg = T_base * (P / P_ref)**alpha
+
+def _tp_from_coeffs(
+    P,
+    shift,  # log-P shift
+    T_base=1500,  # background scale
+    alpha=0.05,  # background slope
+    P_ref=1e-2,  # ref pressure
+    a_rise=400,  # rise amplitude
+    c_rise=-2.3,  # center of rise (log10 P)
+    w_rise=0.25,  # width of rise
+    a_fall=-350,  # fall amplitude
+    c_fall=-1.9,  # center of fall
+    w_fall=0.35,
+):  # width of fall
+    x = np.log10(P) + shift
+    T_bg = T_base * (P / P_ref) ** alpha
     # identical to calcTEA's TP builder
-    inv_rise = a_rise * (np.tanh((x - c_rise)/w_rise) - np.tanh(-c_rise/w_rise))
-    inv_fall = a_fall * (np.tanh((x - c_fall)/w_fall) - np.tanh(-c_fall/w_fall))
+    inv_rise = a_rise * (
+        np.tanh((x - c_rise) / w_rise) - np.tanh(-c_rise / w_rise)
+    )
+    inv_fall = a_fall * (
+        np.tanh((x - c_fall) / w_fall) - np.tanh(-c_fall / w_fall)
+    )
     return T_bg + inv_rise + inv_fall
 
 
@@ -43,7 +50,7 @@ ctxt = ctxtinit()
 # ----------- --------------------------------------------------------
 # -- CERBERUS MODEL -- -----------------------------------------------
 def crbmodel(
-    temp, # can be: scalar T, 10-coef TP vector, or per-layer array
+    temp,  # can be: scalar T, 10-coef TP vector, or per-layer array
     cloudtp,
     cheq=None,
     mixratio=None,
@@ -107,7 +114,25 @@ def crbmodel(
     # note that these are also defined in cerberus/core/myxsecs()
     #  maybe put them inside runtime/ops.xml to ensure consistency?
     cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']   
+    xmollist = [
+        'TIO',
+        'H2O',
+        'HCN',
+        'CO',
+        'CO2',
+        'NH3',
+        'CH4',
+        'H2S',
+        'PH3',
+        'C2H2',
+        'OH',
+        'O2',
+        'O3',
+        'SO2',
+        'C2H6',
+        'C3H8',
+        'CH3CHO',
+    ]
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
@@ -136,7 +161,9 @@ def crbmodel(
                 f"'temp' must be a scalar, a 10-element TP vector, or a {Nz}-long T(P) array"
             )
     # A scalar representative for geometry-only pieces (keeps current dz logic)
-    Tgeom = float(np.mean(Tgrid)) # not correct way to do this, going to need to adjust
+    Tgeom = float(
+        np.mean(Tgrid)
+    )  # not correct way to do this, going to need to adjust
 
     # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
@@ -179,13 +206,19 @@ def crbmodel(
             logg = float(orbp[planet]['logg'])  # expected: log10(g[cm s^-2])
         elif 'g' in orbp[planet]:
             # fallback if only g in m/s^2 is available
-            logg = float(np.log10(orbp[planet]['g'] * 100.0))  # m/s^2 -> cm/s^2, then log10
+            logg = float(
+                np.log10(orbp[planet]['g'] * 100.0)
+            )  # m/s^2 -> cm/s^2, then log10
         else:
-            raise KeyError(f"orbp['{planet}'] must have 'logg' (cgs) or 'g' (m/s^2).")
+            raise KeyError(
+                f"orbp['{planet}'] must have 'logg' (cgs) or 'g' (m/s^2)."
+            )
     else:
-        raise KeyError("Parameter 'orbp' must be a dict with a key for the selected 'planet'.")
+        raise KeyError(
+            "Parameter 'orbp' must be a dict with a key for the selected 'planet'."
+        )
 
-    Hs = (cst.Boltzmann * Tgeom) / (mmw * 1e-2 * (10.0 ** logg))
+    Hs = (cst.Boltzmann * Tgeom) / (mmw * 1e-2 * (10.0**logg))
 
     # when the Pressure grid is log-spaced, rdz is a constant
     #  drop dz[] and dzprime[] arrays and just use this constant instead
@@ -198,7 +231,7 @@ def crbmodel(
     tau, tau_by_molecule, wtau = gettau(
         xsecs,
         qtgrid,
-        Tgrid,                   # <-- per-layer temperatures
+        Tgrid,  # <-- per-layer temperatures
         mixratio,
         z,
         dz,
@@ -407,7 +440,7 @@ def gettau(
 
     # Handle temperature: scalar or per-layer
     tarr = np.asarray(temp, dtype=float)
-    layered_T = (tarr.ndim == 1 and tarr.size == Nzones)
+    layered_T = tarr.ndim == 1 and tarr.size == Nzones
     if layered_T:
         Tlayers = tarr
     else:
@@ -430,13 +463,15 @@ def gettau(
                 logP_dst = np.log10(np.asarray(pressure, dtype=float))
                 order = np.argsort(logP_dst)
                 logP_sorted = logP_dst[order]
-                logP_src = np.linspace(logP_sorted.min(), logP_sorted.max(), val_arr.size)
+                logP_src = np.linspace(
+                    logP_sorted.min(), logP_sorted.max(), val_arr.size
+                )
                 prof_sorted = np.interp(logP_sorted, logP_src, val_arr)
                 logppm_profile = np.empty_like(logP_dst)
                 logppm_profile[order] = prof_sorted
 
         # convert log10(ppm) → mole fraction
-        mmr = 10.0 ** (logppm_profile - 6.0)   # ppm → fraction
+        mmr = 10.0 ** (logppm_profile - 6.0)  # ppm → fraction
 
         # --- Cross sections ---
         # NOTE: historical hack in original code:
@@ -473,10 +508,14 @@ def gettau(
                     wgrid,
                 )
                 sigma = np.array(sigma) * 1e-4  # m^2/mol
-                sigma_mat = sigma if sigma.ndim == 2 else np.tile(sigma, (Nzones, 1))
+                sigma_mat = (
+                    sigma if sigma.ndim == 2 else np.tile(sigma, (Nzones, 1))
+                )
         else:
             # EXOMOL: evaluate σ(T) per layer (temperature dependence only)
-            sigma, lsig = getxmolxs(Tlayers, xsecs[elem])  # can return (layers×λ)
+            sigma, lsig = getxmolxs(
+                Tlayers, xsecs[elem]
+            )  # can return (layers×λ)
             sigma = np.array(sigma)
             if sigma.ndim == 1:
                 sigma_mat = np.tile(sigma, (Nzones, 1))
@@ -514,7 +553,9 @@ def gettau(
             f1 = fHe
             f2 = fH2 * 2.0
         else:
-            log.warning('--< CERBERUS gettau(): UNEXPECTED MOLECULE %s >--', cia)
+            log.warning(
+                '--< CERBERUS gettau(): UNEXPECTED MOLECULE %s >--', cia
+            )
             f1 = 0
             f2 = 0
 
@@ -675,7 +716,9 @@ def gettau(
         )
 
     # Choose a wavelength grid to report back
-    wtau = 1e4 / lsig  # μm   (lsig is wavenumber grid from last species evaluated)
+    wtau = (
+        1e4 / lsig
+    )  # μm   (lsig is wavenumber grid from last species evaluated)
 
     if debug:
         plt.figure(figsize=(12, 6))
