@@ -1555,7 +1555,6 @@ def targetlist_G141():
     targets = [
         '55 Cnc',
         'AU Mic',
-        'CoRoT-1',  # STARE, not SCAN
         'GJ 1132',
         'GJ 1214',
         'GJ 3053',
@@ -1595,28 +1594,20 @@ def targetlist_G141():
         'KELT-20',
         'KELT-7',
         'KELT-9',
-        'Kepler-11',  # STARE, not SCAN
-        'Kepler-13',  # STARE, not SCAN
         'Kepler-138',
         'Kepler-16',
-        # 'Kepler-1625',  # G141 is STARE only, not SCAN
-        # 'Kepler-51',  # G141 is STARE only, not SCAN
         'Kepler-79',
         'L 98-59',
-        # 'LHS 1140',  # alias for GJ 3470
-        # 'LHS 6343',  # has G141, but is a false-positive candidate planet
         'LTT 1445 A',
         'LTT 9779',
-        # 'TIC 184892124',  # G141 is STARE only, not SCAN
         'TOI-1201',
         'TOI-1231',
         'TOI-1759',
-        'TOI-270',  # not showing up on the data.collect notebook
+        'TOI-270',
         'TOI-431',
         'TOI-561',
         'TOI-674',
         'TRAPPIST-1',
-        'TrES-4',  # STARE, not SCAN
         'V1298 Tau',
         'WASP-101',
         'WASP-103',
@@ -1654,9 +1645,20 @@ def targetlist_G141():
         'HAT-P-67',  # new Oct.2024
         'TOI-178',  # new Oct.2024
         'TOI-2109',  # new Oct.2024
-        'TOI-700',  # new Oct.2024
         'TOI-199',  # new Dec.2024
         'Kepler-682',  # new Dec.2024
+        #
+        'CoRoT-1',  # G141 is STARE only, not SCAN
+        'Kepler-11',  # G141 is STARE only, not SCAN
+        'Kepler-13',  # G141 is STARE only, not SCAN
+        # 'TrES-4',  # G141 is STARE only, not SCAN
+        # 'Kepler-1625',  # G141 is STARE only, not SCAN
+        # 'Kepler-51',  # G141 is STARE only, not SCAN
+        # 'TIC 184892124',  # G141 is STARE only, not SCAN
+        # 'TOI-700',  # new Oct.2024; G141 is STARE only, not SCAN
+        'placeholdertest',
+        # 'LHS 1140',  # alias for GJ 3470
+        # 'LHS 6343',  # has G141, but is a false-positive candidate planet
     ]
 
     return targets
@@ -1748,8 +1750,21 @@ def targetlist_JWST():
         'TOI-6255',  # added from Mark's cycle-4 cross-check
         'TOI-6894',  # added from Mark's cycle-4 cross-check
         'GJ 341',  # added as previous candidate now in Archive
+        'HAT-P-18',  # added Aug.2025
+        'LHS 3844',  # added Aug.2025
+        'TrES-4',  # added Aug.2025
+        'WASP-121',  # added Aug.2025
+        'HAT-P-11',  # added Aug.2025
+        'HAT-P-65',  # added Aug.2025
+        'LTT 3780',  # added Aug.2025
+        'TOI-1130',  # added Aug.2025
+        'TOI-1231',  # added Aug.2025
+        'TOI-561',  # added Aug.2025
+        'TOI-824',  # added Aug.2025
+        'WASP-47',  # added Aug.2025
+        'WASP-76',  # added Aug.2025
+        'TOI-3235',  # added Aug.2025
     ]
-
     return targets
 
 
