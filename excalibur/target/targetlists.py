@@ -1549,7 +1549,8 @@ def targetlist_roudier62():
 
 def targetlist_G141():
     '''
-    all targets with HST G141 spectra.  currently 89 stars
+    all targets with HST G141 data.  currently 97 stars
+    (5 are eclipse only; 3 are scan only; 1 cal only. 88 with transit spectra)
     '''
 
     targets = [
@@ -1564,6 +1565,7 @@ def targetlist_G141():
         'HAT-P-1',
         'HAT-P-11',
         'HAT-P-12',
+        'HAT-P-14',  # just some cal data maybe (just 1 frame of G141)
         'HAT-P-17',
         'HAT-P-18',
         'HAT-P-2',
@@ -1573,8 +1575,9 @@ def targetlist_G141():
         'HAT-P-32',
         'HAT-P-38',
         'HAT-P-41',
-        'HAT-P-7',
-        'HAT-P-70',
+        'HAT-P-67',  # new Oct.2024
+        'HAT-P-7',  # eclipse only
+        'HAT-P-70',  # eclipse only
         'HATS-7',
         'HD 106315',
         'HD 149026',
@@ -1582,6 +1585,7 @@ def targetlist_G141():
         'HD 191939',
         'HD 209458',
         'HD 219666',
+        'HD 86226',  # transit.norm fails: 'lost guidance variance excess'
         'HD 97658',
         'K2-18',
         'K2-24',
@@ -1593,9 +1597,10 @@ def targetlist_G141():
         'KELT-11',
         'KELT-20',
         'KELT-7',
-        'KELT-9',
+        'KELT-9',  # eclipse only
         'Kepler-138',
         'Kepler-16',
+        'Kepler-682',  # new Dec.2024
         'Kepler-79',
         'L 98-59',
         'LTT 1445 A',
@@ -1603,6 +1608,9 @@ def targetlist_G141():
         'TOI-1201',
         'TOI-1231',
         'TOI-1759',
+        'TOI-178',  # new Oct.2024
+        'TOI-199',  # new Dec.2024
+        'TOI-2109',  # new Oct.2024
         'TOI-270',
         'TOI-431',
         'TOI-561',
@@ -1622,7 +1630,7 @@ def targetlist_G141():
         'WASP-19',
         'WASP-29',
         'WASP-31',
-        'WASP-33',
+        'WASP-33',  # eclipse only
         'WASP-39',
         'WASP-43',
         'WASP-52',
@@ -1633,20 +1641,13 @@ def targetlist_G141():
         'WASP-69',
         'WASP-74',
         'WASP-76',
-        'WASP-77',
+        'WASP-77',  # eclipse only
         'WASP-79',
         'WASP-80',
         'WASP-96',
         'WASP-98',
         'XO-1',
         'XO-2',
-        'HAT-P-14',
-        'HD 86226',
-        'HAT-P-67',  # new Oct.2024
-        'TOI-178',  # new Oct.2024
-        'TOI-2109',  # new Oct.2024
-        'TOI-199',  # new Dec.2024
-        'Kepler-682',  # new Dec.2024
         #
         'CoRoT-1',  # G141 is STARE only, not SCAN
         'Kepler-11',  # G141 is STARE only, not SCAN
@@ -1655,9 +1656,9 @@ def targetlist_G141():
         # 'Kepler-1625',  # G141 is STARE only, not SCAN
         # 'Kepler-51',  # G141 is STARE only, not SCAN
         # 'TIC 184892124',  # G141 is STARE only, not SCAN
-        # 'TOI-700',  # new Oct.2024; G141 is STARE only, not SCAN
+        # 'TOI-700',  # G141 is STARE only, not SCAN; new Oct.2024
         'placeholdertest',
-        # 'LHS 1140',  # alias for GJ 3470
+        # 'LHS 1140',  # alias for GJ 3053
         # 'LHS 6343',  # has G141, but is a false-positive candidate planet
     ]
 
@@ -1863,7 +1864,7 @@ def targetlist_Spitzer():
         'Kepler-68',
         'Kepler-9',
         'Kepler-93',
-        # 'LHS 1140',  # alias for 'GJ 3470'
+        # 'LHS 1140',  # alias for 'GJ 3053'
         'LHS 3844',
         'LP 791-18',
         'MASCARA-1',
