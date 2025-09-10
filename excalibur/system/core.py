@@ -76,11 +76,11 @@ def buildsp(autofill, runtime_params, out, verbose=False):
             'Kmag',
         ]
     )
-    # NEW CATEGORY: PARAMS TO PASS THROUGH TO ANCILLARY, BUT THEY"RE NOT MANDATORY
+    # NEW CATEGORY: PARAMS TO PASS THROUGH TO ANCILLARY, BUT THEY'RE NOT MANDATORY
     # change L* to mandatory (needed for planet T_eq)
     # 3 additional parameters needed for Ariel-RAD - distance, impact parameter, and transit duration
     # also add in transit depth. may be useful for tracking down depth differences vs taurex
-    out['starnonmdt'].extend(['spTyp', 'AGE*', 'dist', 'TESSmag'])
+    out['starnonmdt'].extend(['spTyp', 'AGE*', 'dist', 'TESSmag', 'Vmag', 'Zmag'])
     # AWKWARD: non-mandatory has to be included in 'starmdt' or it won't display
     out['starmdt'].extend(out['starnonmdt'])
     # MANDATORY PLANET PARAMETERS
@@ -165,6 +165,7 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         autofill['starID'][target],
         starLimitReplacements,
         planetLimitReplacements,
+        verbose=True
     )
 
     # use stellar mass,radius to fill in blank stellar density

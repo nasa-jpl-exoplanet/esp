@@ -1657,7 +1657,7 @@ def targetlist_G141():
         # 'Kepler-51',  # G141 is STARE only, not SCAN
         # 'TIC 184892124',  # G141 is STARE only, not SCAN
         # 'TOI-700',  # G141 is STARE only, not SCAN; new Oct.2024
-        'placeholdertest',
+        #
         # 'LHS 1140',  # alias for GJ 3053
         # 'LHS 6343',  # has G141, but is a false-positive candidate planet
     ]
