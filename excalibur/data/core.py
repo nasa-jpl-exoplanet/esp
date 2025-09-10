@@ -575,10 +575,10 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
             'proginprompt': True,
         }
         if nl:
-            progbar = nerdclub.progressbar(argsdict, '>-- SB + NL', alldexp)
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB + NL', alldexp)
             pass
         else:
-            progbar = nerdclub.progressbar(argsdict, '>-- SB', alldexp)
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB', alldexp)
             pass
         for i in range(len(raws['alldexp'])):
             sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i])
@@ -637,7 +637,7 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
         'lbllen': 15,
         'proginprompt': True,
     }
-    progbar = nerdclub.progressbar(argsdict, '>-- RAMPFITS', alldexp)
+    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', alldexp)
     for i, _ in enumerate(alldexp):
         # VECTORIAL FIT
         dramps = [r.flatten() for r in alldexp[i]]
@@ -919,7 +919,7 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
                 'lbllen': 15,
                 'proginprompt': True,
             }
-            progbar = nerdclub.progressbar(argsdict, '>-- WAVECAL', allrexp)
+            progbar = nerdclub.Progressbar(argsdict, '>-- WAVECAL', allrexp)
             for it, thisexp in enumerate(allrexp):
                 this1d = np.sum(thisexp, axis=0)
                 this1dwave = np.nanmedian(allwaves[it], axis=0)
@@ -1132,7 +1132,7 @@ def lfnoise(xps, flg, verbose=False):
         'lbllen': 15,
         'proginprompt': True,
     }
-    progbar = nerdclub.progressbar(argsdict, '>-- LFNER', xps)
+    progbar = nerdclub.Progressbar(argsdict, '>-- LFNER', xps)
     out = []
     for i, _ in enumerate(xps):
         lfcorr = xps[i].copy()

@@ -12,7 +12,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-class Progressbar:
+class Progressbar:  # pylint: disable=R0902
     """
     0.0.0:2024/09/20:GMR:Progress bar nerd club
     0.1.0:2024/09/21:GMR:Added timing in the log
@@ -21,7 +21,7 @@ class Progressbar:
     0.2.2:2024/10/24:GMR:Fixed rounding error condition
     """
 
-    def __init__(self, argsdict, title, iterobj):  # pylint: disable=R0902
+    def __init__(self, argsdict, title, iterobj):
         """
         argsdict['progbar']: True / False
         argsdict['progsizemax']: Max size of the progress bar in [command window prompts]
