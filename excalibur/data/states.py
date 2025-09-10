@@ -40,6 +40,19 @@ class CalibrateSV(dawgie.StateVector):
             if 'Spitzer' in self.__name:
                 pass
             elif "JWST" in self.__name:
+                scores = [self['data']['SCORES'][k] for k in self['data']['SCORES']]
+                labels = self['data']['SCORES'].keys()
+                myfig = plt.figure(figsize=(12, 9))
+                plt.plot(scores, 'o--')
+                plt.xticks(
+                    ticks=np.arange(len(labels)),
+                    labels=labels,
+                    fontsize=16,
+                    rotation=45,
+                )
+                plt.yticks(fontsize=16)
+                plt.ylabel('DN', fontsize=20)
+                save_plot_toscreen(myfig, visitor)
                 pass
             else:
                 data = self['data']

@@ -4,7 +4,9 @@ import time
 import datetime
 import logging
 import numpy as np
+
 logger = logging.getLogger(__name__)
+
 
 class progressbar:
     """
@@ -27,7 +29,7 @@ class progressbar:
         self.iterobj = iterobj
         self.progbsize = len(iterobj)
         self.maxindex = len(iterobj)
-        self.scale = 1.
+        self.scale = 1.0
         self.current = 0
         self.call = 0
         self.start = time.time()
@@ -42,11 +44,13 @@ class progressbar:
             "\033[1;34m",
         ]
         if self.progbsize > self._argsdict["progsizemax"]:
-            self.scale = 1e0*self._argsdict["progsizemax"] / self.progbsize
+            self.scale = 1e0 * self._argsdict["progsizemax"] / self.progbsize
             self.progbsize = self._argsdict["progsizemax"]
             pass
         if len(self.title) < self._argsdict["lbllen"]:
-            self.title = self.title + " " * (self._argsdict["lbllen"] - len(self.title))
+            self.title = self.title + " " * (
+                self._argsdict["lbllen"] - len(self.title)
+            )
             pass
         if len(self.title) > self._argsdict["lbllen"]:
             self.title = self.title[0 : self._argsdict["lbllen"] - 3] + "..."
@@ -76,7 +80,9 @@ class progressbar:
                     sys.stdout.flush()
                     pass
                 self.current += 1
-                self.percent = int(100 * self.call * self.scale / self.progbsize)
+                self.percent = int(
+                    100 * self.call * self.scale / self.progbsize
+                )
                 pass
             if (not self.done) and (self.call == self.maxindex):
                 if self._argsdict["proginprompt"]:
