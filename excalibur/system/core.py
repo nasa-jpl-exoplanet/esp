@@ -80,7 +80,9 @@ def buildsp(autofill, runtime_params, out, verbose=False):
     # change L* to mandatory (needed for planet T_eq)
     # 3 additional parameters needed for Ariel-RAD - distance, impact parameter, and transit duration
     # also add in transit depth. may be useful for tracking down depth differences vs taurex
-    out['starnonmdt'].extend(['spTyp', 'AGE*', 'dist', 'TESSmag', 'Vmag', 'Zmag'])
+    out['starnonmdt'].extend(
+        ['spTyp', 'AGE*', 'dist', 'TESSmag', 'Vmag', 'Zmag']
+    )
     # AWKWARD: non-mandatory has to be included in 'starmdt' or it won't display
     out['starmdt'].extend(out['starnonmdt'])
     # MANDATORY PLANET PARAMETERS
