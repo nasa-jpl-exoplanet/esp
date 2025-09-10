@@ -772,8 +772,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     ]
     out['data']['LOC'] = rawloc
     # TEST
-    rawloc = rawloc[0:1]
-    calloc = calloc[0:1]
+    # rawloc = rawloc[0:1]
+    # calloc = calloc[0:1]
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
