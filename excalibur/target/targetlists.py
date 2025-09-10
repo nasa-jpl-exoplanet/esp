@@ -2192,7 +2192,7 @@ def planetlist_ariel2year_nov2024():
         'K2-32 b',
         'LHS 1478 b',
         'TOI-270 d',
-        'WD 1856+534 b',
+        # 'WD 1856+534 b',  # too faint!
         'HAT-P-68 b',
         'WASP-182 b',
         'TOI-1431 b',
@@ -2211,6 +2211,7 @@ def planetlist_ariel2year_nov2024():
         'TOI-5293 A b',
         'HATS-37 A b',
         'TOI-178 g',
+        'TOI-3976 A b',  # added on to replace WD 1856+534
     ]
 
     return targets
@@ -2470,11 +2471,12 @@ def targetlist_ariel2year_nov2024():
         'WASP-94',
         'WASP-95',
         'WASP-96',
-        'WD 1856+534',
+        # 'WD 1856+534',  # too faint!
         'XO-1',
         'XO-2',
         'XO-6',
         'XO-7',
+        'TOI-3976 A',  # added on to replace WD 1856+534
     ]
 
     return targets
