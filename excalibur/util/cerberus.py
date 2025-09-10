@@ -12,9 +12,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from excalibur.cerberus.tea_code import python_makeatm
-from excalibur.cerberus.tea_code import python_runatm
-from excalibur.cerberus.tea_code import makeheader
+from excalibur.util.tea_code import python_makeatm
+from excalibur.util.tea_code import python_runatm
+from excalibur.util.tea_code import makeheader
 
 # --------------------------------------------------------------------
 
