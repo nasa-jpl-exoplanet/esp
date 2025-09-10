@@ -167,7 +167,7 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         autofill['starID'][target],
         starLimitReplacements,
         planetLimitReplacements,
-        verbose=True
+        # verbose=True,
     )
 
     # use stellar mass,radius to fill in blank stellar density
