@@ -1,3 +1,7 @@
+'''
+GMR: For Nerds
+'''
+
 # IMPORTS
 import sys
 import time
@@ -8,7 +12,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-class progressbar:
+class Progressbar:
     """
     0.0.0:2024/09/20:GMR:Progress bar nerd club
     0.1.0:2024/09/21:GMR:Added timing in the log
@@ -17,7 +21,7 @@ class progressbar:
     0.2.2:2024/10/24:GMR:Fixed rounding error condition
     """
 
-    def __init__(self, argsdict, title, iterobj):
+    def __init__(self, argsdict, title, iterobj):  # pylint: disable=R0902
         """
         argsdict['progbar']: True / False
         argsdict['progsizemax']: Max size of the progress bar in [command window prompts]
@@ -33,6 +37,7 @@ class progressbar:
         self.current = 0
         self.call = 0
         self.start = time.time()
+        self.stop = None
         self.done = False
         self.percent = int(100 * self.call * self.scale / self.progbsize)
         self.colors = [

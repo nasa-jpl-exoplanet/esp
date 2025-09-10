@@ -15,7 +15,7 @@ import dawgie.context
 import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.time
-import excalibur.util.nerdclub as nerdclub
+from excalibur.util import nerdclub
 
 import lmfit as lm
 import matplotlib.pyplot as plt
@@ -638,7 +638,7 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
         'proginprompt': True,
     }
     progbar = nerdclub.progressbar(argsdict, '>-- RAMPFITS', alldexp)
-    for i in range(len(alldexp)):
+    for i, _ in enumerate(alldexp):
         # VECTORIAL FIT
         dramps = [r.flatten() for r in alldexp[i]]
         # TIMESTAMPS
@@ -654,7 +654,7 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
         cov = fitresult[1][0, 0].reshape(alldexp[i][0].shape)
         err.append(np.sqrt(abs(cov)))
         dqmap = np.bool(err[-1])  # zero error means trouble
-        dqmap = dqmap.astype(float)
+        dqmap = dqmap.astype(float)  # pylint: disable=E1101
         if sb:
             thrplus = np.nanpercentile(allsb[i], 50 + 68 / 2)
             sigma = thrplus - np.nanmedian(allsb[i])
@@ -765,10 +765,14 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     _ = tim
     # RAW VERSUS CALIBRATED LISTS
     rawloc = [
-        loc for loc, n in zip(clc['LOC'], clc['ROOTNAME']) if n.endswith('uncal')
+        loc
+        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        if n.endswith('uncal')
     ]
     calloc = [
-        loc for loc, n in zip(clc['LOC'], clc['ROOTNAME']) if n.endswith('calints')
+        loc
+        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        if n.endswith('calints')
     ]
     out['data']['LOC'] = rawloc
     # TEST
@@ -790,7 +794,7 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     allscores = {'0 RAW': getscore(allrexp)}
     # 1 - Data quality initialization
     alldq = np.array(rawdata['alldq'])
-    for i in range(len(alldq)):
+    for i, _ in enumerate(alldq):
         if alldq[i].shape != caldata['alldq'][i].shape:
             # Play with allstartpix
             pass
@@ -1009,6 +1013,8 @@ def jwstdqfiles(thisdet):
     DQ definition: https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/references_general.html#data-quality-flags
     Find a way to fetch the latest version
     '''
+    local = ''
+    fpath = ''
     if thisdet.startswith('NRS'):
         local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
         pass
@@ -1032,6 +1038,8 @@ def jwstsbfiles(thisdet, thisgrating):
     Local: /proj/sdp/data/cal/
     Find a way to fetch the latest version
     '''
+    local = ''
+    fpath = ''
     if thisdet.startswith('NRS'):
         local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
         pass
@@ -1054,6 +1062,8 @@ def jwstnlfiles(thisdet):
     Local: /proj/sdp/data/cal/
     Find a way to fetch the latest version
     '''
+    local = ''
+    fpath = ''
     if thisdet.startswith('NRS'):
         local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
         pass
@@ -1124,7 +1134,7 @@ def lfnoise(xps, flg, verbose=False):
     }
     progbar = nerdclub.progressbar(argsdict, '>-- LFNER', xps)
     out = []
-    for i in range(len(xps)):
+    for i, _ in enumerate(xps):
         lfcorr = xps[i].copy()
         lfcorr[4:-4] = np.nan
         lfr = np.nanmean(lfcorr, axis=0)
