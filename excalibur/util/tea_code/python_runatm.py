@@ -24,10 +24,6 @@ from excalibur.util.tea_code import makeheader
 from excalibur.util.tea_code import updated_balance
 
 
-# *** REMOVE "mp." multiprocessing stuff below ***
-
-DEBUG_NCPU = 1
-
 __all__ = ["run_tea"]
 # -----------------------------------------------------------------------------
 
@@ -46,12 +42,7 @@ def _multiproc_worker(
     xtol,
     start,
     end,
-    shared_abn,
 ):
-    """Exactly the same per-layer loop as original runatm, minus file I/O."""
-    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape(
-        (len(pres_arr), len(stoich_arr))
-    )
     for q in range(start, end):
         if verb > 1:
             print(f"\nLayer {q + 1:d}:")
@@ -146,41 +137,24 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
 
     guess = updated_balance.balance(stoich_arr, atom_arr[0], verb)
 
-    ncpu = DEBUG_NCPU
-    chunk = int(n_runs / float(ncpu) + 1)
-
-    shared_abn = mp.Array(ctypes.c_double, int(n_runs * nspec))
-    procs = []
-
-    time.sleep(0.1)
-    for n in range(ncpu):
-        s = n * chunk
-        e = min((n + 1) * chunk, n_runs)
-        p = mp.Process(
-            target=_multiproc_worker,
-            args=(
-                pres_arr,
-                temp_arr,
-                atom_arr,
-                free_energy,
-                heat,
-                stoich_arr,
-                guess,
-                maxiter,
-                verb,
-                times,
-                xtol,
-                s,
-                e,
-                shared_abn,
-            ),
-        )
-        procs.append(p)
-        p.start()
-    for p in procs:
-        p.join()
-
-    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape((n_runs, nspec))
+    # start and end stuff should be removed I guess
+    s = 0
+    e = 1
+    _multiproc_worker(
+        pres_arr,
+        temp_arr,
+        atom_arr,
+        free_energy,
+        heat,
+        stoich_arr,
+        guess,
+        maxiter,
+        verb,
+        times,
+        xtol,
+        s,
+        e,
+    )
 
     cols = ["Pressure", "Temp"] + speclist.tolist()
     df = pd.DataFrame(np.column_stack((pres_arr, temp_arr, abn)), columns=cols)
