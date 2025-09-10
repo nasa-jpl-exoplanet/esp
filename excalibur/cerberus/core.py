@@ -168,6 +168,8 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # alternate list used by Luke:
+    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4','C2H2', 'C2H6', 'C3H8', 'CH3CHO', 'SO2','H2S']
     knownspecies = runtime_params.knownspecies
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
