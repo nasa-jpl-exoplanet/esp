@@ -143,20 +143,7 @@ def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
                 pass
             pass
         pass
-    # new additions 6/5/24:
-    #   lower/upper limit flags (particularly for eccentricity)
-    # new additions 4/14/23:
-    #   pl_orblper (omega is used as prior in the transit fitting)
-    #   pl_trandep (transit depth    is not used, but load it in, in case we want it later)
-    #   pl_insol   (insolation       is not used, but load it in, in case we want it later)
-    #   pl_trandur (transit duration is not used, but load it in, in case we want it later)
-    #   pl_ratdor  (a/R*             is not used, but load it in, in case we want it later)
-    #   pl_ratror  (Rp/R*            is not used, but load it in, in case we want it later)
-    #   sy_dist    (same for distance; not used, but potentially useful)
-    #  actually these additional references are only in the PSCompPars table, not the PS table
-    # NO  sy_hmag_reflink (H magnitude reference can differ from the star param reference)
-    # NO  sy_age_reflink  (age reference can differ from the star param reference)
-    cols = "hostname,pl_letter,rowupdate,st_refname,pl_refname,sy_pnum,pl_orbper,pl_orbpererr1,pl_orbpererr2,pl_orbperlim,pl_orbsmax,pl_orbsmaxerr1,pl_orbsmaxerr2,pl_orbsmaxlim,pl_orbeccen,pl_orbeccenerr1,pl_orbeccenerr2,pl_orbeccenlim,pl_orbincl,pl_orbinclerr1,pl_orbinclerr2,pl_orbincllim,pl_bmassj,pl_bmassjerr1,pl_bmassjerr2,pl_bmassjlim,pl_radj,pl_radjerr1,pl_radjerr2,pl_radjlim,pl_dens,pl_denserr1,pl_denserr2,pl_denslim,pl_eqt,pl_eqterr1,pl_eqterr2,pl_eqtlim,pl_tranmid,pl_tranmiderr1,pl_tranmiderr2,pl_tranmidlim,pl_imppar,pl_impparerr1,pl_impparerr2,pl_impparlim,st_teff,st_tefferr1,st_tefferr2,st_tefflim,st_mass,st_masserr1,st_masserr2,st_masslim,st_rad,st_raderr1,st_raderr2,st_radlim,st_lum,st_lumerr1,st_lumerr2,st_lumlim,st_logg,st_loggerr1,st_loggerr2,st_logglim,st_dens,st_denserr1,st_denserr2,st_denslim,st_met,st_meterr1,st_meterr2,st_metlim,sy_jmag,sy_jmagerr1,sy_jmagerr2,sy_hmag,sy_hmagerr1,sy_hmagerr2,sy_kmag,sy_kmagerr1,sy_kmagerr2,sy_tmag,sy_tmagerr1,sy_tmagerr2,st_age,st_ageerr1,st_ageerr2,st_agelim,pl_orblper,pl_orblpererr1,pl_orblpererr2,pl_orblperlim,pl_trandep,pl_trandeperr1,pl_trandeperr2,pl_trandeplim,pl_insol,pl_insolerr1,pl_insolerr2,pl_insollim,pl_trandur,pl_trandurerr1,pl_trandurerr2,pl_trandurlim,pl_ratdor,pl_ratdorerr1,pl_ratdorerr2,pl_ratdorlim,pl_ratror,pl_ratrorerr1,pl_ratrorerr2,pl_ratrorlim,sy_dist,sy_disterr1,sy_disterr2,st_spectype"
+    cols = "hostname,pl_letter,rowupdate,st_refname,pl_refname,sy_pnum,pl_orbper,pl_orbpererr1,pl_orbpererr2,pl_orbperlim,pl_orbsmax,pl_orbsmaxerr1,pl_orbsmaxerr2,pl_orbsmaxlim,pl_orbeccen,pl_orbeccenerr1,pl_orbeccenerr2,pl_orbeccenlim,pl_orbincl,pl_orbinclerr1,pl_orbinclerr2,pl_orbincllim,pl_bmassj,pl_bmassjerr1,pl_bmassjerr2,pl_bmassjlim,pl_radj,pl_radjerr1,pl_radjerr2,pl_radjlim,pl_dens,pl_denserr1,pl_denserr2,pl_denslim,pl_eqt,pl_eqterr1,pl_eqterr2,pl_eqtlim,pl_tranmid,pl_tranmiderr1,pl_tranmiderr2,pl_tranmidlim,pl_imppar,pl_impparerr1,pl_impparerr2,pl_impparlim,st_teff,st_tefferr1,st_tefferr2,st_tefflim,st_mass,st_masserr1,st_masserr2,st_masslim,st_rad,st_raderr1,st_raderr2,st_radlim,st_lum,st_lumerr1,st_lumerr2,st_lumlim,st_logg,st_loggerr1,st_loggerr2,st_logglim,st_dens,st_denserr1,st_denserr2,st_denslim,st_met,st_meterr1,st_meterr2,st_metlim,sy_vmag,sy_vmag_err1,sy_vmag_err2,sy_zmag,sy_zmag_err1,sy_zmag_err2,sy_jmag,sy_jmagerr1,sy_jmagerr2,sy_hmag,sy_hmagerr1,sy_hmagerr2,sy_kmag,sy_kmagerr1,sy_kmagerr2,sy_tmag,sy_tmagerr1,sy_tmagerr2,st_age,st_ageerr1,st_ageerr2,st_agelim,pl_orblper,pl_orblpererr1,pl_orblpererr2,pl_orblperlim,pl_trandep,pl_trandeperr1,pl_trandeperr2,pl_trandeplim,pl_insol,pl_insolerr1,pl_insolerr2,pl_insollim,pl_trandur,pl_trandurerr1,pl_trandurerr2,pl_trandurlim,pl_ratdor,pl_ratdorerr1,pl_ratdorerr2,pl_ratdorlim,pl_ratror,pl_ratrorerr1,pl_ratrorerr2,pl_ratrorlim,sy_dist,sy_disterr1,sy_disterr2,st_spectype"
     uri_ipac_query = {
         "select": cols,
         "from": 'ps',
@@ -582,6 +569,10 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
                     out['starID'][thistarget]['AGE*_lowerr'] = []
                     out['starID'][thistarget]['AGE*_units'] = []
                     out['starID'][thistarget]['AGE*_ref'] = []
+                    out['starID'][thistarget]['Vmag_units'] = []
+                    out['starID'][thistarget]['Vmag_ref'] = []
+                    out['starID'][thistarget]['Zmag_units'] = []
+                    out['starID'][thistarget]['Zmag_ref'] = []
                     out['starID'][thistarget]['Jmag_units'] = []
                     out['starID'][thistarget]['Jmag_ref'] = []
                     out['starID'][thistarget]['Hmag_units'] = []
@@ -688,6 +679,8 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
             out['starID'][thistarget]['LOGG*_units'].append('log10[cm.s-2]')
             out['starID'][thistarget]['RHO*_units'].append('[g.cm-3]')
             out['starID'][thistarget]['AGE*_units'].append('[Gyr]')
+            out['starID'][thistarget]['Vmag_units'].append('[mag]')
+            out['starID'][thistarget]['Zmag_units'].append('[mag]')
             out['starID'][thistarget]['Jmag_units'].append('[mag]')
             out['starID'][thistarget]['Hmag_units'].append('[mag]')
             out['starID'][thistarget]['Kmag_units'].append('[mag]')
@@ -1093,6 +1086,18 @@ def translatekeys(header):
             xclbrkey = 'FEH*_units'
         elif 'st_metreflink' == thiskey:
             xclbrkey = 'FEH*_ref'
+        elif 'sy_vmag' == thiskey:
+            xclbrkey = 'Vmag'
+        elif 'sy_vmagerr1' == thiskey:
+            xclbrkey = 'Vmag_uperr'
+        elif 'sy_vmagerr2' == thiskey:
+            xclbrkey = 'Vmag_lowerr'
+        elif 'sy_zmag' == thiskey:
+            xclbrkey = 'Zmag'
+        elif 'sy_zmagerr1' == thiskey:
+            xclbrkey = 'Zmag_uperr'
+        elif 'sy_zmagerr2' == thiskey:
+            xclbrkey = 'Zmag_lowerr'
         elif 'sy_jmag' == thiskey:
             xclbrkey = 'Jmag'
         elif 'sy_jmagerr1' == thiskey:
@@ -1181,6 +1186,7 @@ def mastapi(tfl, out, dbs, download_url=None, hst_url=None, verbose=False):
             'format': 'json',
         }
         errmastq, datastr = masttool.mast_query(request, maxwaittime=1000)
+
         # Need to catch the error message right here and log it
         if iobs < 1:  # We dont want the 1776388 of them in the log
             log.warning('>-- First MAST query: %s', errmastq)
