@@ -1881,8 +1881,10 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
             # limit results to just the TEC model?  No, not for HST/G141
             # but do verify that TEC exists at least
-            if 'TEC' not in atm[p]['MODELPARNAMES'].keys() and \
-               'TEA' not in atm[p]['MODELPARNAMES'].keys():
+            if (
+                    'TEC' not in atm[p]['MODELPARNAMES'].keys()
+                    and 'TEA' not in atm[p]['MODELPARNAMES'].keys()
+            ):
                 log.warning('>-- %s', 'TROUBLE: theres no TEC/TEA fit!?')
                 return False
 

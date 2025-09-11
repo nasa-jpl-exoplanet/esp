@@ -40,6 +40,9 @@ def _multiproc_worker(
     start,
     end,
 ):
+    # THIS IS TEMP FOR FLAKE; MULTIPROCESSING STILL NEEDS REMOVAL/REPLACMENT
+    abn = np.array(1000,1000)
+
     for q in range(start, end):
         if verb > 1:
             print(f"\nLayer {q + 1:d}:")
