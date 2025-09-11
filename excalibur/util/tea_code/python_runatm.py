@@ -13,10 +13,8 @@ Only:
   • refactored into a callable `run_tea(...)` function that returns a DataFrame.
 """
 import os
-import time
 import numpy as np
 import pandas as pd
-import ctypes
 
 from excalibur.util.tea_code import readconf
 from excalibur.util.tea_code import iterate
@@ -24,7 +22,6 @@ from excalibur.util.tea_code import makeheader
 from excalibur.util.tea_code import updated_balance
 
 
-__all__ = ["run_tea"]
 # -----------------------------------------------------------------------------
 
 
@@ -109,8 +106,8 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     atom_name = np.asarray(pre_atm["atom_name"])
     speclist = np.asarray(pre_atm["output_species"])
 
-    n_runs = pres_arr.size
-    nspec = speclist.size
+    # n_runs = pres_arr.size
+    # nspec = speclist.size
 
     free_energy, heat = makeheader.read_gdata(speclist, thermo_dir)
 
@@ -159,7 +156,3 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     cols = ["Pressure", "Temp"] + speclist.tolist()
     df = pd.DataFrame(np.column_stack((pres_arr, temp_arr, abn)), columns=cols)
     return df
-
-
-if __name__ == "__main__":
-    raise RuntimeError("Import and call run_tea(pre_atm) from your driver.")
