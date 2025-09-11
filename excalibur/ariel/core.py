@@ -292,6 +292,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
                     useTEA = bool('TEA' in atmosModel)
+                    if useTEA:
+                        chemistry = 'TEA'
+                    else:
+                        chemistry = 'TEC'
 
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
@@ -414,33 +418,28 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                                     existingPlanetLetter
                                 ]
 
-                        # cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
                         fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
                             runtime_params,
                             wavelength_um,
                             model_params,
                             xslib,
                             planet_letter,
+                            chemistry=chemistry,
                         )
-
-                        # fluxDepth = cerbModel
-                        # fluxDepth_by_molecule = {}
-                        # for molecule, model in cerbModel_by_molecule.items():
-                        #    fluxDepth_by_molecule[molecule] = model
 
                     elif 'taurex' in atmosModel:
-                        sys.exit('ERROR: taurex no longer an option')
+                        log.error('ERROR: taurex no longer an option')
                     else:
-                        sys.exit('ERROR: unknown model')
+                        log.error('ERROR: unknown model')
 
-                    bads = np.where(np.isnan(fluxDepth))
-                    if len(bads[0]) > 0:
-                        print(
-                            '   bad fluxDepths:',
-                            len(bads[0]),
-                            'out of',
-                            len(fluxDepth),
-                        )
+                    # bads = np.where(np.isnan(fluxDepth))
+                    # if len(bads[0]) > 0:
+                    #    print(
+                    #        '   bad fluxDepths:',
+                    #        len(bads[0]),
+                    #        'out of',
+                    #        len(fluxDepth),
+                    #    )
 
                     # REBIN to the Ariel spectral resolution
                     wavelength_um_rebin = []
