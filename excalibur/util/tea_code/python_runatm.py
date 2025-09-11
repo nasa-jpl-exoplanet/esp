@@ -41,7 +41,7 @@ def _multiproc_worker(
     end,
 ):
     # THIS IS TEMP FOR FLAKE; MULTIPROCESSING STILL NEEDS REMOVAL/REPLACMENT
-    abn = np.array(1000,1000)
+    abn = np.array(1000, 1000)
 
     for q in range(start, end):
         if verb > 1:
@@ -155,6 +155,8 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
         s,
         e,
     )
+    # THIS IS TEMP FOR FLAKE; MULTIPROCESSING STILL NEEDS REMOVAL/REPLACMENT
+    abn = np.array(1000, 1000)
 
     cols = ["Pressure", "Temp"] + speclist.tolist()
     df = pd.DataFrame(np.column_stack((pres_arr, temp_arr, abn)), columns=cols)
