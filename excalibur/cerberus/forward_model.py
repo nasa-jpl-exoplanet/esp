@@ -88,6 +88,7 @@ def crbmodel(
     #    ]
     # this is passed in. why reset it here?
     #    # longer list currently used by Luke:
+    #  PUT THIS INTO RUNTIME OPS!!
     #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
     if nlevels is None:
         nlevels = ctxt.nlevels

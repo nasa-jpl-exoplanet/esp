@@ -671,8 +671,6 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    runtimeparam_useTEA = False
-
     okfit = False
     orbp = fin['priors'].copy()
 
@@ -683,10 +681,7 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        if runtimeparam_useTEA:
-            modfam = ['TEA']
-        else:
-            modfam = ['TEC']
+        modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -716,22 +711,19 @@ def atmos(
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        if runtimeparam_useTEA:
-            modfam = ['TEA', 'PHOTOCHEM']
-        else:
-            modfam = ['TEC', 'PHOTOCHEM']
+        modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
             # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
             'PHOTOCHEM': runtime_params.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
-            modparlbl['TEA'].remove('NtoO')
+            # modparlbl['TEA'].remove('NtoO')
         if not runtime_params.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
-            modparlbl['TEA'].remove('CtoO')
+            # modparlbl['TEA'].remove('CtoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
