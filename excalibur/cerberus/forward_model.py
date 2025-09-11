@@ -279,6 +279,7 @@ def crbmodel(
     #  otherwise some subsequent * or ** operations fail
     model = np.asarray(model).reshape(-1)
     model = model[::-1]
+    plotmodel = model.copy()
 
     models_by_molecule = {}
     for molecule in molecules:
@@ -298,7 +299,6 @@ def crbmodel(
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
 
     if verbose:
-        plotmodel = model.copy()
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
@@ -334,9 +334,6 @@ def crbmodel(
             pass
         plt.show()
         pass
-
-    # print('crbmodel: model at end',model)
-
     if break_down_by_molecule:
         return model, models_by_molecule
     return model
