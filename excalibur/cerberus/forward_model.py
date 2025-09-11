@@ -268,6 +268,7 @@ def crbmodel(
     model = np.asarray(model).reshape(-1)
     plotmodel = model.copy()
     model = model[::-1]
+    plotmodel = model.copy()
 
     models_by_molecule = {}
     for molecule in molecules:
@@ -322,9 +323,6 @@ def crbmodel(
             pass
         plt.show()
         pass
-
-    # print('crbmodel: model at end',model)
-
     if break_down_by_molecule:
         return model, models_by_molecule
     return model

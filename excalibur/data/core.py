@@ -15,6 +15,7 @@ import dawgie.context
 import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.time
+from excalibur.util import nerdclub
 
 import lmfit as lm
 import matplotlib.pyplot as plt
@@ -558,89 +559,304 @@ def timing(force, ext, clc, out):
 
 # ------------ -------------------------------------------------------
 # -- JWST CALIBRATION -- ---------------------------------------------
-def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
+def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
     '''
-    G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
+    G. ROUDIER: Ramp fits
     '''
-    dbs = os.path.join(dawgie.context.data_dbs, 'mast')
-    data = {
-        'LOC': [],
-        'EPS': [],
-        'EXP': [],
-        'EXPERR': [],
-        'EXPFLAG': [],
-        'TIME': [],
+    out = raws.copy()
+    alldexp = raws['alldexp'].copy()
+    allsb = []
+    alldqnl = []
+    if sb:
+        argsdict = {
+            'progbar': verbose,
+            'progsizemax': 35,
+            'lbllen': 15,
+            'proginprompt': True,
+        }
+        if nl:
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB + NL', alldexp)
+            pass
+        else:
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB', alldexp)
+            pass
+        for i in range(len(raws['alldexp'])):
+            sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i])
+            alldexp[i] = raws['alldexp'][i] - sbmap
+            allsb.append(sbmap)
+            if nl:
+                nlmap = jwstnlfiles(raws['alldet'][i])
+                domain = raws['allstartpix'][i]
+                coeffs = [
+                    n[
+                        domain[1] - 1 : domain[1] - 1 + sbmap.shape[0],
+                        domain[0] - 1 : domain[0] - 1 + sbmap.shape[1],
+                    ]
+                    for n in nlmap[0]
+                ]
+                alldqnl.append(
+                    ~np.bool(
+                        nlmap[1][
+                            domain[1] - 1 : domain[1] - 1 + sbmap.shape[0],
+                            domain[0] - 1 : domain[0] - 1 + sbmap.shape[1],
+                        ]
+                    )
+                )
+                powers = np.arange(len(coeffs))
+                alldexp[i] = np.sum(
+                    [c * (alldexp[i] ** p) for c, p in zip(coeffs, powers)],
+                    axis=0,
+                )
+                pass
+            progbar.update()
+            pass
+        progbar.close()
+        pass
+    # TIMING FORMAT
+    # TTYPE1  = 'integration_number'
+    # TFORM1  = 'J       '
+    # TTYPE2  = 'int_start_MJD_UTC'
+    # TFORM2  = 'D       '
+    # TTYPE3  = 'int_mid_MJD_UTC'
+    # TFORM3  = 'D       '
+    # TTYPE4  = 'int_end_MJD_UTC'
+    # TFORM4  = 'D       '
+    # TTYPE5  = 'int_start_BJD_TDB'
+    # TFORM5  = 'D       '
+    # TTYPE6  = 'int_mid_BJD_TDB'
+    # TFORM6  = 'D       '
+    # TTYPE7  = 'int_end_BJD_TDB'
+    # TFORM7  = 'D       '
+    exposures = []
+    err = []
+    dq = []  # valid data flag
+
+    argsdict = {
+        'progbar': verbose,
+        'progsizemax': 35,
+        'lbllen': 15,
+        'proginprompt': True,
     }
-    # TEMP CI
-    _ = tim
-    _ = out
-    _ = verbose
-    _ = data
-    # -------
-    alldinm = []  # Flatten integration number
-    alldexp = []  # Flatten exposure time serie
-    allwaves = []
-    alldet = []
-    alldintimes = []
-    allunits = []
-    allerr = []
-    alldq = []
-    for loc in sorted(clc['LOC']):
+    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', alldexp)
+    for i, _ in enumerate(alldexp):
+        # VECTORIAL FIT
+        dramps = [r.flatten() for r in alldexp[i]]
+        # TIMESTAMPS
+        deltat = (
+            (raws['alltiming'][i][-1] - raws['alltiming'][i][-3]) * 24e0 * 36e2
+        ) / (
+            1e0 * len(alldexp[i])
+        )  # [s]
+        xfit = deltat * np.arange(len(dramps))
+        # LINFIT
+        fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
+        exposures.append(fitresult[0][0].reshape(alldexp[i][0].shape))
+        cov = fitresult[1][0, 0].reshape(alldexp[i][0].shape)
+        err.append(np.sqrt(abs(cov)))
+        dqmap = np.bool(err[-1])  # zero error means trouble
+        dqmap = dqmap.astype(float)  # pylint: disable=E1101
+        if sb:
+            thrplus = np.nanpercentile(allsb[i], 50 + 68 / 2)
+            sigma = thrplus - np.nanmedian(allsb[i])
+            dqmap = (
+                dqmap
+                * (abs(allsb[i] - np.nanmedian(allsb[i])) < 3 * sigma).astype(
+                    float
+                )
+                * alldq[i]
+            )
+            if nl:
+                dqmap = dqmap * alldqnl[i]
+                pass
+            pass
+        dqmap[dqmap < 1] = np.nan
+        dq.append(dqmap)
+        progbar.update()
+        pass
+    progbar.close()
+
+    out['alldexp'] = exposures
+    out['allerr'] = err
+    out['alldq'] = dq
+    return out
+
+
+def getscore(expts):
+    '''
+    G. ROUDIER: Time variations of a patch of the frame
+    Assuming no full frame, it is the upper band, 2040 wide
+    '''
+    patch = np.nanstd([expo[0:4, 4:-4] for expo in expts], axis=0)
+    return np.nanmedian(patch)
+
+
+def readfitsdata(
+    loclist, dbs, raws=False, sb=False, nl=False, alldq=None, verbose=False
+):
+    '''
+    G. ROUDIER: Creates a dictionnary of time series of
+    data of interest for JWST datasets from fits files
+    '''
+    out = {
+        'alldet': [],
+        'alldexp': [],
+        'allunits': [],
+        'allerr': [],
+        'alldq': [],
+        'allwaves': [],
+        'alltiming': [],
+        'allfilter': [],
+        'allgrating': [],
+        'allslit': [],
+        'allread': [],
+        'allstartpix': [],
+    }
+    for loc in loclist:
         fullloc = os.path.join(dbs, loc)
         with pyfits.open(fullloc) as hdulist:
             nints = None
             for hdu in hdulist:
                 if 'PRIMARY' in hdu.name:
                     nints = hdu.header['NINTS']
-                    alldet.extend(nints * [hdu.header['DETECTOR']])
+                    out['alldet'].extend(nints * [hdu.header['DETECTOR']])
+                    out['allfilter'].extend(nints * [hdu.header['FILTER']])
+                    out['allgrating'].extend(nints * [hdu.header['GRATING']])
+                    out['allslit'].extend(nints * [hdu.header['FXD_SLIT']])
+                    out['allread'].extend(nints * [hdu.header['READPATT']])
+                    # (X,Y)
+                    out['allstartpix'].extend(
+                        nints
+                        * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
+                    )
                     pass
                 elif 'SCI' in hdu.name:
-                    alldexp.extend(hdu.data)
-                    allunits.extend([hdu.header['BUNIT']] * len(hdu.data))
+                    out['alldexp'].extend(hdu.data)
+                    out['allunits'].extend(
+                        [hdu.header['BUNIT']] * len(hdu.data)
+                    )
                     pass
                 # <-- L2b data only
                 elif 'ERR' in hdu.name:
-                    allerr.extend(hdu.data)
+                    out['allerr'].extend(hdu.data)
                 elif 'DQ' in hdu.name:
-                    alldq.extend(hdu.data)
+                    out['alldq'].extend(hdu.data)
                 elif ('WAVELENGTH' in hdu.name) and nints:
-                    allwaves.extend(nints * [hdu.data])
+                    out['allwaves'].extend(nints * [hdu.data])
                     pass
                 # -->
                 elif 'INT_TIMES' in hdu.name:
-                    alldinm.extend(hdu.data['integration_number'])
-                    alldintimes.extend(hdu.data['int_mid_MJD_UTC'])
+                    out['alltiming'].extend(hdu.data)
                     pass
                 pass
             pass
         pass
+    if raws:
+        out = rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
+        pass
+    return out
 
-    alldinm = np.array(alldinm)
-    alldexp = np.array(alldexp)
-    allwaves = np.array(allwaves)
-    alldet = np.array(alldet)
-    alldintimes = np.array(alldintimes)
-    allunits = np.array(allunits)
-    allerr = np.array(allerr)
-    alldq = np.array(alldq)
 
-    # Split L1 and L2 calib levels
-    selraw = allunits == 'DN'
-    # _allraw = alldexp[selraw]
-    alldinm = alldinm[~selraw]
-    alldexp = alldexp[~selraw]
-    alldet = alldet[~selraw]
-    alldintimes = alldintimes[~selraw]
+def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
+    '''
+    G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
+    '''
+    dbs = os.path.join(dawgie.context.data_dbs, 'mast')
+    # TEMP CI
+    _ = tim
+    # RAW VERSUS CALIBRATED LISTS
+    rawloc = [
+        loc
+        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        if n.endswith('uncal')
+    ]
+    calloc = [
+        loc
+        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        if n.endswith('calints')
+    ]
+    out['data']['LOC'] = rawloc
+    # TEST
+    # rawloc = rawloc[0:1]
+    # calloc = calloc[0:1]
+    # DATASET
+    rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
+    caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
+    # NRS1 STSCI clips ref.pixels and detector plate (28, 1271)
+    # NRS2 STSCI (32, 2048)
+    # RAWS (32, 2048)
+    datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
+    allrexp = np.array(rawdata['alldexp'])
+    allrerr = np.array(rawdata['allerr'])
+    alldet = np.array(rawdata['alldet'])
+    allwaves = caldata['allwaves']
 
-    # Time ordered data
-    isort = np.argsort(alldintimes)
+    # CALIBRATION STEPS
+    allscores = {'0 RAW': getscore(allrexp)}
+    # 1 - Data quality initialization
+    alldq = np.array(rawdata['alldq'])
+    for i, _ in enumerate(alldq):
+        if alldq[i].shape != caldata['alldq'][i].shape:
+            # Play with allstartpix
+            pass
+        else:
+            alldq[i] = ~np.bool(caldata['alldq'][i])
+            pass
+        pass
+    alldq = alldq.astype(float)
+    alldq[alldq < 1] = np.nan
+    allscores['1 DQ'] = getscore(allrexp * alldq)
+    # 2 - Saturation check
+    # Useless. Either the NL files are reliable or they re not.
+    # There s no saturation for a detector. Only non linearities.
+    # 2.1 - Superbias
+    rawdata = readfitsdata(
+        rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
+    )
+    allrexp = np.array(rawdata['alldexp'])
+    alldq = np.array(rawdata['alldq'])
+    allscores['2 SB'] = getscore(allrexp * alldq)
+    # 2.2 - Linearity correction
+    rawdata = readfitsdata(
+        rawloc, dbs, raws=True, sb=True, nl=True, alldq=alldq, verbose=verbose
+    )
+    allrexp = np.array(rawdata['alldexp'])
+    alldq = np.array(rawdata['alldq'])
+    allscores['3 NL'] = getscore(allrexp * alldq)
+    # 2.3 - Persistence correction [IM]
+    # 2.4 - Dark subtraction [IM]
+    # 3 - Reference pixel correction [Exposure Low Freq Noise]
+    allrexp = lfnoise(allrexp, alldq, verbose=verbose)
+    allscores['4 LFN'] = getscore(allrexp * alldq)
+    out['data']['SCORES'] = allscores
+    # 4 - Jump detection [that is a joke when we have 2, 3 or 4 groups...]
 
-    alldexp = alldexp[isort]
-    allwaves = allwaves[isort]
-    alldintimes = alldintimes[isort]
+    if verbose:
+        scores = [out['data']['SCORES'][k] for k in out['data']['SCORES']]
+        labels = out['data']['SCORES'].keys()
+        plt.figure(figsize=(12, 9))
+        plt.plot(scores, 'o--')
+        plt.xticks(
+            ticks=np.arange(len(labels)),
+            labels=labels,
+            fontsize=16,
+            rotation=45,
+        )
+        plt.yticks(fontsize=16)
+        plt.ylabel('DN', fontsize=20)
+        plt.show()
+        pass
+
+    isort = np.argsort(datatiming)
+    out['data']['TIME'] = datatiming[isort]
+    allrexp = allrexp[isort]
+    out['data']['EXP'] = allrexp
+    allrerr = allrerr[isort]
+    out['data']['EXPERR'] = allrerr
     alldet = alldet[isort]
+    out['data']['DET'] = alldet
+    alldq = alldq[isort]
+    out['data']['EXPFLAG'] = alldq
 
-    # Calibration files
     reffile = jwstreffiles(ext)
     Tstar = fin['priors']['T*']
     bbfunc = astrobb(Tstar * astropy.units.K)
@@ -664,7 +880,7 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
             refB.append(bbstar)
             refS.append(refT[-1] * refB[-1] / np.nansum(refB[-1]))
             pass
-        YY, XX = np.mgrid[0 : alldexp[0].shape[0], 0 : alldexp[0].shape[1]]
+        YY, XX = np.mgrid[0 : allrexp[0].shape[0], 0 : allrexp[0].shape[1]]
         # Mixing Matrix
         MM = list(reffile[0])
         # Transforms
@@ -683,19 +899,13 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
         all1d = []
         all1dwave = []
         excld = []
-        # 2/12/25 Geoff: commented these out (were flagged as unused-variable)
-        # sel1 = np.array(['1' in test for test in alldet])
-        # sel2 = np.array(['2' in test for test in alldet])
-        # timeorder1 = np.argsort(alldintimes[sel1])
-        # timeorder2 = np.argsort(alldintimes[sel2])
-        # _NRS1 = alldexp[sel1][timeorder1]
-        # _NRS1w = allwaves[sel1][timeorder1]
-        # _NRS2 = alldexp[sel2][timeorder2]
-        # _NRS2w = allwaves[sel2][timeorder2]
+        if ps is None:
+            ps = 1
+            pass
         if ps > 1:
             with Pool(ps) as pool:
                 multiout = pool.map(
-                    starnirspeccal, list(zip(alldexp, allwaves))
+                    starnirspeccal, list(zip(allrexp, allwaves))
                 )
                 pool.close()
                 pool.join()
@@ -703,7 +913,14 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
             excld, all1d, all1dwave = zip(*multiout)
             pass
         else:
-            for it, thisexp in enumerate(alldexp):
+            argsdict = {
+                'progbar': verbose,
+                'progsizemax': 35,
+                'lbllen': 15,
+                'proginprompt': True,
+            }
+            progbar = nerdclub.Progressbar(argsdict, '>-- WAVECAL', allrexp)
+            for it, thisexp in enumerate(allrexp):
                 this1d = np.sum(thisexp, axis=0)
                 this1dwave = np.nanmedian(allwaves[it], axis=0)
                 this1d[this1d < 0] = np.nan
@@ -734,9 +951,9 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
                 excld.append(np.sum(select))
                 all1d.append(this1d)
                 all1dwave.append(this1dwave)
-                if verbose:
-                    log.info('>-- : %d/%d', it, len(alldexp))
+                progbar.update()
                 pass
+            progbar.close()
             pass
         out['STATUS'].append(True)
         out['data']['EXCLNUM'] = excld
@@ -788,6 +1005,80 @@ def nirspeccal(thisexp, thosewaves):
     return (np.sum(select), this1d, this1dwave)
 
 
+def jwstdqfiles(thisdet):
+    '''
+    G. ROUDIER: Returns a mask for DQ init
+    Source: https://jwst-crds.stsci.edu
+    Local: /proj/sdp/data/cal/
+    DQ definition: https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/references_general.html#data-quality-flags
+    Find a way to fetch the latest version
+    '''
+    local = ''
+    fpath = ''
+    if thisdet.startswith('NRS'):
+        local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
+        pass
+    if thisdet in ['NRS1']:
+        fpath = os.path.join(local, 'jwst_nirspec_mask_0085.fits')
+        pass
+    if thisdet in ['NRS2']:
+        fpath = os.path.join(local, 'jwst_nirspec_mask_0087.fits')
+        pass
+    with pyfits.open(fpath) as prfhdul:
+        mask = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        pass
+    # mask[1] contains bit definition
+    return mask[0]  # Full array...
+
+
+def jwstsbfiles(thisdet, thisgrating):
+    '''
+    G. ROUDIER: Returns a list of reference files for SuperBias sub
+    Source: https://jwst-crds.stsci.edu
+    Local: /proj/sdp/data/cal/
+    Find a way to fetch the latest version
+    '''
+    local = ''
+    fpath = ''
+    if thisdet.startswith('NRS'):
+        local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
+        pass
+    if thisdet in ['NRS1'] and thisgrating in ['G395H']:
+        fpath = os.path.join(local, 'jwst_nirspec_superbias_0479.fits')
+        pass
+    if thisdet in ['NRS2'] and thisgrating in ['G395H']:
+        fpath = os.path.join(local, 'jwst_nirspec_superbias_0474.fits')
+        pass
+    with pyfits.open(fpath) as prfhdul:
+        sb = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        pass
+    return sb[0]
+
+
+def jwstnlfiles(thisdet):
+    '''
+    G. ROUDIER: Returns a list of reference files for NL correction
+    Source: https://jwst-crds.stsci.edu
+    Local: /proj/sdp/data/cal/
+    Find a way to fetch the latest version
+    '''
+    local = ''
+    fpath = ''
+    if thisdet.startswith('NRS'):
+        local = os.path.join(excalibur.context['data_cal'], 'NIRSPEC')
+        pass
+    if thisdet in ['NRS1']:
+        fpath = os.path.join(local, 'jwst_nirspec_linearity_0022.fits')
+        pass
+    if thisdet in ['NRS2']:
+        fpath = os.path.join(local, 'jwst_nirspec_linearity_0025.fits')
+        pass
+    with pyfits.open(fpath) as prfhdul:
+        nl = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        pass
+    return nl  # [Coeff, DQ, DQdef, ?]
+
+
 def jwstreffiles(thisext):
     '''
     G. ROUDIER: Returns a list of reference files for wavelegnth calibration
@@ -829,6 +1120,35 @@ def jwstreffiles(thisext):
         reffiles = [orders, waves]
         pass
     return reffiles
+
+
+def lfnoise(xps, flg, verbose=False):
+    '''
+    G. ROUDIER: Low Frequency Noise Excess Removal
+    '''
+    argsdict = {
+        'progbar': verbose,
+        'progsizemax': 35,
+        'lbllen': 15,
+        'proginprompt': True,
+    }
+    progbar = nerdclub.Progressbar(argsdict, '>-- LFNER', xps)
+    out = []
+    for i, _ in enumerate(xps):
+        lfcorr = xps[i].copy()
+        lfcorr[4:-4] = np.nan
+        lfr = np.nanmean(lfcorr, axis=0)
+        select = ~np.isfinite(lfr)
+        if np.sum(select):
+            temp = flg[i]
+            temp[:, select] = np.nan
+            flg[i] = temp
+            pass
+        out.append(xps[i] - lfr)
+        progbar.update()
+        pass
+    progbar.close()
+    return np.array(out)
 
 
 # ---------------------- ---------------------------------------------
