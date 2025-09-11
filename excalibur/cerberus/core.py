@@ -671,6 +671,8 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
+    runtimeparam_useTEA = False
+
     okfit = False
     orbp = fin['priors'].copy()
 
@@ -681,7 +683,10 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        modfam = ['TEC']
+        if runtimeparam_useTEA:
+            modfam = ['TEA']
+        else:
+            modfam = ['TEC']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -711,8 +716,10 @@ def atmos(
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        # asdf   don't slow down HST fitting with TEA just yet
-        modfam = ['TEC', 'PHOTOCHEM']
+        if runtimeparam_useTEA:
+            modfam = ['TEA', 'PHOTOCHEM']
+        else:
+            modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -1874,8 +1881,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
             # limit results to just the TEC model?  No, not for HST/G141
             # but do verify that TEC exists at least
-            if 'TEC' not in atm[p]['MODELPARNAMES'].keys():
-                log.warning('>-- %s', 'TROUBLE: theres no TEC fit!?')
+            if 'TEC' not in atm[p]['MODELPARNAMES'].keys() and \
+               'TEA' not in atm[p]['MODELPARNAMES'].keys():
+                log.warning('>-- %s', 'TROUBLE: theres no TEC/TEA fit!?')
                 return False
 
             # there was a bug before where PHOTOCHEM was passed in for Ariel
