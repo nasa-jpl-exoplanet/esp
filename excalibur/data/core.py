@@ -730,22 +730,38 @@ def readfitsdata(
                     )
                     pass
                 elif 'SCI' in hdu.name:
-                    out['alldexp'].extend(hdu.data)
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    out['alldexp'].extend(fitsdata)
                     out['allunits'].extend(
-                        [hdu.header['BUNIT']] * len(hdu.data)
+                        [hdu.header['BUNIT']] * len(fitsdata)
                     )
+                    del hdu.data
                     pass
                 # <-- L2b data only
                 elif 'ERR' in hdu.name:
-                    out['allerr'].extend(hdu.data)
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    out['allerr'].extend(fitsdata)
+                    del hdu.data
+                    pass
                 elif 'DQ' in hdu.name:
-                    out['alldq'].extend(hdu.data)
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    out['alldq'].extend(fitsdata)
+                    del hdu.data
+                    pass
                 elif ('WAVELENGTH' in hdu.name) and nints:
-                    out['allwaves'].extend(nints * [hdu.data])
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    out['allwaves'].extend(nints * [fitsdata])
+                    del hdu.data
                     pass
                 # -->
                 elif 'INT_TIMES' in hdu.name:
-                    out['alltiming'].extend(hdu.data)
+                    fitsdata = hdu.data[:].copy()
+                    out['alltiming'].extend(fitsdata)
+                    del hdu.data
                     pass
                 pass
             pass
@@ -776,8 +792,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     ]
     out['data']['LOC'] = rawloc
     # TEST
-    # rawloc = rawloc[0:1]
-    # calloc = calloc[0:1]
+    rawloc = rawloc[0:1]
+    calloc = calloc[0:1]
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
@@ -1025,7 +1041,15 @@ def jwstdqfiles(thisdet):
         fpath = os.path.join(local, 'jwst_nirspec_mask_0087.fits')
         pass
     with pyfits.open(fpath) as prfhdul:
-        mask = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        mask = []
+        for hdu in prfhdul:
+            if hdu.data is not None:
+                fitsdata = np.empty(hdu.data.shape)
+                fitsdata[:] = hdu.data[:]
+                mask.append(fitsdata)
+                del hdu.data
+                pass
+            pass
         pass
     # mask[1] contains bit definition
     return mask[0]  # Full array...
@@ -1050,7 +1074,14 @@ def jwstsbfiles(thisdet, thisgrating):
         fpath = os.path.join(local, 'jwst_nirspec_superbias_0474.fits')
         pass
     with pyfits.open(fpath) as prfhdul:
-        sb = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        sb = []
+        for hdu in prfhdul:
+            if hdu.data is not None:
+                fitsdata = hdu.data[:].copy()
+                sb.append(fitsdata)
+                del hdu.data
+                pass
+            pass
         pass
     return sb[0]
 
@@ -1074,7 +1105,14 @@ def jwstnlfiles(thisdet):
         fpath = os.path.join(local, 'jwst_nirspec_linearity_0025.fits')
         pass
     with pyfits.open(fpath) as prfhdul:
-        nl = [hdu.data for hdu in prfhdul if hdu.data is not None]
+        nl = []
+        for hdu in prfhdul:
+            if hdu.data is not None:
+                fitsdata = hdu.data[:].copy()
+                nl.append(fitsdata)
+                del hdu.data
+                pass
+            pass
         pass
     return nl  # [Coeff, DQ, DQdef, ?]
 
@@ -1109,13 +1147,29 @@ def jwstreffiles(thisext):
         )
         # Trace template for each order (2D ARRAY)
         with pyfits.open(fpath) as prfhdul:
-            orders = [hdu.data for hdu in prfhdul if hdu.data is not None]
+            orders = []
+            for hdu in prfhdul:
+                if hdu.data is not None:
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    orders.append(fitsdata)
+                    del hdu.data
+                    pass
+                pass
             pass
         # Trace pixel (waves[0]['X'], waves[0]['Y']) and
         # associated calibrated wavelength (waves[0]['WAVELENGTH']) (1D ARRAYS)
         fpath = os.path.join(excalibur.context['data_cal'], thisdir, thistrace)
-        with pyfits.open(fpath) as trchdul:
-            waves = [hdu.data for hdu in trchdul if hdu.data is not None]
+        with pyfits.open(fpath) as prfhdul:
+            waves = []
+            for hdu in prfhdul:
+                if hdu.data is not None:
+                    fitsdata = np.empty(hdu.data.shape)
+                    fitsdata[:] = hdu.data[:]
+                    waves.append(fitsdata)
+                    del hdu.data
+                    pass
+                pass
             pass
         reffiles = [orders, waves]
         pass
