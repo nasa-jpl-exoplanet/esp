@@ -6,10 +6,7 @@ GMR: For Nerds
 import sys
 import time
 import datetime
-import logging
 import numpy as np
-
-logger = logging.getLogger(__name__)
 
 
 class Progressbar:  # pylint: disable=R0902
@@ -66,8 +63,6 @@ class Progressbar:  # pylint: disable=R0902
                 sys.stdout.flush()
                 sys.stdout.write("\b" * (self.progbsize + 1))
                 pass
-            else:
-                print(f"\t{self.title}")
             pass
         pass
 
@@ -103,7 +98,6 @@ class Progressbar:  # pylint: disable=R0902
         """close"""
         self.stop = time.time()
         ftime = datetime.timedelta(seconds=self.stop - self.start)
-        logger.info("\t\t\t%s: %s", self.title, ftime)
         if self._argsdict["progbar"]:
             if self._argsdict["proginprompt"]:
                 fillme = " " * (self._argsdict["progsizemax"] - self.progbsize)
