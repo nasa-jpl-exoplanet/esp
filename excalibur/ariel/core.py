@@ -25,7 +25,7 @@ from excalibur.cerberus.core import myxsecs
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
 # import os
-import sys
+# import sys
 
 # import pickle
 import numpy as np
@@ -337,6 +337,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             HoverRmax,
                             atmosModel,
                         )
+
+                    fluxDepth_by_molecule = {}
 
                     if 'cerberus' in atmosModel:
                         # CLOUD PARAMETERS
