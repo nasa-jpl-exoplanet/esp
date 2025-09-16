@@ -922,7 +922,7 @@ def targetlist():
     CoRoT-6 :
     CoRoT-8 :
     CoRoT-9 :
-    CoRoTID 223977153 :
+    CoRoT-32 :
     EPIC 212297394 :
     EPIC 220674823 :
     EPIC 229004835 :
@@ -2325,7 +2325,7 @@ def targetondisk():
     CoRoT-6 : CoRoT6
     CoRoT-8 : CoRoT8
     CoRoT-9 : CoRoT9
-    CoRoTID 223977153 : CoRoTID223977153
+    CoRoTID-32 : CoRoT32
     EPIC 212297394 : EPIC212297394
     EPIC 220674823 : EPIC220674823
     EPIC 229004835 : EPIC229004835
