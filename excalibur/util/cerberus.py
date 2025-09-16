@@ -105,7 +105,7 @@ def calcTEA(
 
         num_dens = 10.0 ** (dex - 12.0)
         return {sym: val for sym, val in zip(symbols, num_dens)}
-        #return dict(zip(symbols, num_dens))
+        # return dict(zip(symbols, num_dens))
 
     # scale abundances for metallicity, C/O, N/O
     def _scale_abund(
@@ -180,7 +180,7 @@ def calcTEA(
 
     df = python_runatm.run_tea(pre_atm, cfg_file=cfg_file)
 
-    # avg = df.mean(axis=0) 
+    # avg = df.mean(axis=0)
     def vmr_to_logppm(v):
         v = np.asarray(v, float)
         out = np.full_like(v, -np.inf)
