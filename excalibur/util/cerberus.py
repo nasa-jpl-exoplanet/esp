@@ -4,22 +4,15 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-positional-arguments
 
-
 # -- IMPORTS -- ------------------------------------------------------
-
-# from __future__ import annotations
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from pathlib import Path
 
 from excalibur.util.tea_code import python_makeatm
 from excalibur.util.tea_code import python_runatm
 from excalibur.util.tea_code import makeheader
-
 # --------------------------------------------------------------------
-
 
 def calcTEA(
     tp_coeffs,
@@ -39,7 +32,6 @@ def calcTEA(
     tp_coeffs        : 1-D array of 10 values. See _make_tp_profile for what each value does. Best to only fit/retrieve one or two tp values and leave the rest constant.
     pressure         : pressure grid
     species          : array of desired species ["H2O_g", "CH4_g", ...]. Must use format seen here to work with TEA. Must use the filename for the species in /gdata. Sometimes the extension will be like _ref. For example "N2_ref".
-
     metallicity      : X solar
     C_O              : None = solar. Also 0.55 = solar. This is the number ratio so 1.1 is 2x solar metallicity.
     N_O              : Same as C_O
@@ -64,8 +56,8 @@ def calcTEA(
         w_rise=0.25,  # width of rise
         a_fall=-350,  # fall amplitude
         c_fall=-1.9,  # center of fall
-        w_fall=0.35,
-    ):  # width of fall
+        w_fall=0.35,  # width of fall
+    ):
 
         x = np.log10(P) + shift
         T_bg = T_base * (P / P_ref) ** alpha
@@ -112,7 +104,8 @@ def calcTEA(
         dex = data[:, 2].astype(float)
 
         num_dens = 10.0 ** (dex - 12.0)
-        return dict(zip(symbols, num_dens))
+        return {sym: val for sym, val in zip(symbols, num_dens)}
+        #return dict(zip(symbols, num_dens))
 
     # scale abundances for metallicity, C/O, N/O
     def _scale_abund(
@@ -187,14 +180,22 @@ def calcTEA(
 
     df = python_runatm.run_tea(pre_atm, cfg_file=cfg_file)
 
-    avg = df.mean(axis=0)
+    # avg = df.mean(axis=0) 
+    def vmr_to_logppm(v):
+        v = np.asarray(v, float)
+        out = np.full_like(v, -np.inf)
+        m = v > 0
+        out[m] = np.log10(v[m]) + 6.0
+        return out
 
-    mixratio = {
-        sp.split("_")[0]: float(avg[sp]) for sp in input_species if sp in avg
-    }
+    # mixratio = {sp.split("_")[0] : float(avg[sp])
+    #          for sp in input_species
+    #          if sp in avg}
+    mixratio = {sp.split("_")[0] : df[sp].values
+               for sp in input_species
+               if sp in df.columns}
+    mixratio = {sp:vmr_to_logppm(v) for sp, v in mixratio.items()}
     return mixratio
-
-
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
 def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
@@ -356,6 +357,7 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'TIO': 64.0,
         'HCN': 27.0,
         'N2': 28.0,
+        'N': 14.0,
         'C2H2': 26.0,
         'C2H4': 28.0,
         'NO2': 46.0,
@@ -388,11 +390,11 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         HEoH2 = fHe / fH2
     if verbose:
         print('fHe,fH2', fHe, fH2)
-    if verbose:
         print('HEoH2', HEoH2)
     mrH2 = mrH2He / (1.0 + HEoH2)
     mrHe = HEoH2 * mrH2
     mmw = mrH2 * weights['H2'] + mrHe * weights['He'] + mmw
+
     if verbose:
         print('*** mmw ***', mmw)
     return mmw, mrH2, mrHe
