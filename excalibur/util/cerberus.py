@@ -12,7 +12,9 @@ from pathlib import Path
 from excalibur.util.tea_code import python_makeatm
 from excalibur.util.tea_code import python_runatm
 from excalibur.util.tea_code import makeheader
+
 # --------------------------------------------------------------------
+
 
 def calcTEA(
     tp_coeffs,
@@ -104,8 +106,8 @@ def calcTEA(
         dex = data[:, 2].astype(float)
 
         num_dens = 10.0 ** (dex - 12.0)
-        return {sym: val for sym, val in zip(symbols, num_dens)}
-        # return dict(zip(symbols, num_dens))
+        # return {sym: val for sym, val in zip(symbols, num_dens)}
+        return dict(zip(symbols, num_dens))
 
     # scale abundances for metallicity, C/O, N/O
     def _scale_abund(
