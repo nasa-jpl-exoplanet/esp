@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+import excalibur
 from excalibur.util.tea_code import python_makeatm
 from excalibur.util.tea_code import python_runatm
 from excalibur.util.tea_code import makeheader
@@ -24,6 +25,7 @@ def calcTEA(
     C_O=None,
     N_O=None,
     plot_tp=False,
+    filedir=excalibur.context['data_dir'],
     abundance_file="abundances.txt",
     cfg_file="TEA.cfg",
     stoich_file="stoich.txt",
@@ -193,11 +195,15 @@ def calcTEA(
     # mixratio = {sp.split("_")[0] : float(avg[sp])
     #          for sp in input_species
     #          if sp in avg}
-    mixratio = {sp.split("_")[0] : df[sp].values
-               for sp in input_species
-               if sp in df.columns}
-    mixratio = {sp:vmr_to_logppm(v) for sp, v in mixratio.items()}
+    mixratio = {
+        sp.split("_")[0] : df[sp].values
+        for sp in input_species
+        if sp in df.columns
+    }
+    mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
     return mixratio
+
+
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
 def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
@@ -300,6 +306,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     nCO = np.mean(BCO * pH2 / p)
     nCH4 = np.mean((2.0 * nX / nXsolar / nH * solar['nC'] - BCO) * (pH2 / p))
     nH2O = np.mean((2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p))
+    # nH2O = ((2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p))
 
     a2 = 8.16413e5
     b2 = -2.9109e4
