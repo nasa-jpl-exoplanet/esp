@@ -792,8 +792,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     ]
     out['data']['LOC'] = rawloc
     # TEST
-    # rawloc = rawloc[0:1]
-    # calloc = calloc[0:1]
+    rawloc = rawloc[0:2]
+    calloc = calloc[0:2]
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
@@ -802,9 +802,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     # RAWS (32, 2048)
     datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
     allrexp = np.array(rawdata['alldexp'])
-    allrerr = np.array(rawdata['allerr'])
     alldet = np.array(rawdata['alldet'])
-    allwaves = caldata['allwaves']
+    allwaves = caldata['allwaves'].copy()
 
     # CALIBRATION STEPS
     allscores = {'0 RAW': getscore(allrexp)}
@@ -866,7 +865,7 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     out['data']['TIME'] = datatiming[isort]
     allrexp = allrexp[isort]
     out['data']['EXP'] = allrexp
-    allrerr = allrerr[isort]
+    allrerr = alldq[isort]
     out['data']['EXPERR'] = allrerr
     alldet = alldet[isort]
     out['data']['DET'] = alldet
@@ -937,40 +936,20 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
             }
             progbar = nerdclub.Progressbar(argsdict, '>-- WAVECAL', allrexp)
             for it, thisexp in enumerate(allrexp):
-                this1d = np.sum(thisexp, axis=0)
-                this1dwave = np.nanmedian(allwaves[it], axis=0)
-                this1d[this1d < 0] = np.nan
-                logthis1d = np.log10(this1d)
-                flood = []
-                stdflood = []
-                ws = 32
-                for i in np.arange(logthis1d.size):
-                    il = int(i - ws / 2)
-                    il = max(il, 0)
-                    iu = int(i + ws / 2)
-                    if iu >= logthis1d.size:
-                        iu = logthis1d.size - 1
-                    test = logthis1d[il:iu]
-                    select = (test > np.nanpercentile(test, 10)) & (
-                        test < np.nanpercentile(test, 90)
-                    )
-                    flood.append(np.nanmedian(test[select]))
-                    stdflood.append(np.nanstd(test[select]))
+                check = thisexp.shape == allwaves[it].shape
+                if not check:
+                    # NRS1
+                    import pdb; pdb.set_trace()
                     pass
-                stdflood = np.array(stdflood)
-                stdflood[~np.isfinite(stdflood)] = np.nanmedian(stdflood)
-                ff = int(np.sqrt(ws))
-                s1 = (logthis1d - (np.array(flood) - ff * stdflood)) < 0
-                s2 = (logthis1d - (np.array(flood) + ff * stdflood)) > 0
-                select = s1 | s2
-                this1d[select | ~np.isfinite(flood)] = np.nan
-                excld.append(np.sum(select))
-                all1d.append(this1d)
-                all1dwave.append(this1dwave)
+                wct = nirspeccal(thisexp, allwaves[it])
+                excld.append(wct[0])
+                all1d.append(wct[1])
+                all1dwave.append(wct[2])
                 progbar.update()
                 pass
             progbar.close()
             pass
+
         out['STATUS'].append(True)
         out['data']['EXCLNUM'] = excld
         out['data']['IGNORED'] = np.array(excld) > int(len(all1d[0]) / 2)
@@ -989,35 +968,12 @@ def starnirspeccal(thoseargs):
 
 def nirspeccal(thisexp, thosewaves):
     '''
-    NIRSPEC calibration - The cheap version
+    GMR: NIRSPEC wavelength calibration
+    Assumes lfer removed data
     '''
-    this1d = np.sum(thisexp, axis=0)
+    this1d = np.nansum(thisexp, axis=0)
     this1dwave = np.nanmedian(thosewaves, axis=0)
-    this1d[this1d < 0] = np.nan
-    logthis1d = np.log10(this1d)
-    flood = []
-    stdflood = []
-    ws = 32
-    for i in np.arange(logthis1d.size):
-        il = int(i - ws / 2)
-        il = max(il, 0)
-        iu = int(i + ws / 2)
-        if iu >= logthis1d.size:
-            iu = logthis1d.size - 1
-        test = logthis1d[il:iu]
-        select = (test > np.nanpercentile(test, 10)) & (
-            test < np.nanpercentile(test, 90)
-        )
-        flood.append(np.nanmedian(test[select]))
-        stdflood.append(np.nanstd(test[select]))
-        pass
-    stdflood = np.array(stdflood)
-    stdflood[~np.isfinite(stdflood)] = np.nanmedian(stdflood)
-    ff = int(np.sqrt(ws))
-    s1 = (logthis1d - (np.array(flood) - ff * stdflood)) < 0
-    s2 = (logthis1d - (np.array(flood) + ff * stdflood)) > 0
-    select = s1 | s2
-    this1d[select | ~np.isfinite(flood)] = np.nan
+    select = np.isfinite(this1d)
     return (np.sum(select), this1d, this1dwave)
 
 
