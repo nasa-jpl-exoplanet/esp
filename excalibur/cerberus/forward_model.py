@@ -59,6 +59,9 @@ def crbmodel(
     '''
     G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
     radius solrad evenly log divided amongst nlevels steps
+    - TP profile
+    - VMR profile
+    - MMW profile
     '''
 
     if planet is None:
