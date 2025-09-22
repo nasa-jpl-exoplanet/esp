@@ -315,7 +315,7 @@ def crbmodel(
         ax2 = ax1.twiny()
 
         for k in mxr.items():
-            ax1.plot(mxr[k], pressure, label=k)
+            ax1.plot(k[1], pressure, label=k[0])
             pass
         ax1.legend(loc='upper left')
 
