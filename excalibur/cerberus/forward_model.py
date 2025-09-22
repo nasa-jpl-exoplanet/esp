@@ -105,7 +105,7 @@ def crbmodel(
         _ = tpp.extend(temp)
         pass
     if len(tpp) != int(nlevels):
-        tpp = tpp*nlevels
+        tpp = tpp * nlevels
         pass
     if len(tpp) not in [int(nlevels)]:
         log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
@@ -115,9 +115,11 @@ def crbmodel(
     if mixratio is not None:
         mxr = {}
         for k in mixratio:
-            if not (isinstance(mixratio[k], list) or
-                    isinstance(mixratio[k], np.ndarray)):
-                mxr[k] = np.array([mixratio[k]]*len(tpp))
+            if not (
+                isinstance(mixratio[k], list)
+                or isinstance(mixratio[k], np.ndarray)
+            ):
+                mxr[k] = np.array([mixratio[k]] * len(tpp))
                 pass
             else:
                 mxr[k] = mixratio[k]
@@ -426,15 +428,17 @@ def gettau(
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
         mlp = []
-        if not (isinstance(mixratio[elem], list) or
-                isinstance(mixratio[elem], np.ndarray)):
+        if not (
+            isinstance(mixratio[elem], list)
+            or isinstance(mixratio[elem], np.ndarray)
+        ):
             mlp = [mixratio[elem]]
             pass
         else:
             _ = mlp.extend(mixratio[elem])
             pass
         if len(mlp) != len(pressure):
-            mlp = mlp*len(pressure)
+            mlp = mlp * len(pressure)
             pass
         if len(mlp) not in [len(pressure)]:
             log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
@@ -519,8 +523,8 @@ def gettau(
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
-    tau = tau + (fH2 * rho * np.array(len(rho)*[sigma]).T).T
-    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho)*[sigma]).T).T
+    tau = tau + (fH2 * rho * np.array(len(rho) * [sigma]).T).T
+    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
