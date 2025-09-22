@@ -314,8 +314,8 @@ def crbmodel(
         fig, ax1 = plt.subplots(figsize=(10, 6))
         ax2 = ax1.twiny()
 
-        for k in mxr.keys():
-            ax1.plot(mxr[k], pressure, label=k)
+        for k in mxr.items():
+            ax1.plot(k[1], pressure, label=k[0])
             pass
         ax1.legend(loc='upper left')
 
