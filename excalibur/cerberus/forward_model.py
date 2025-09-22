@@ -330,7 +330,6 @@ def crbmodel(
         ax1.set_ylabel('Pressure [bar]')
         plt.show()
 
-        
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
