@@ -98,11 +98,11 @@ def crbmodel(
         hzlib = ctxt.hzlib
 
     tpp = []
-    if not (isinstance(temp, list) or isinstance(temp, np.ndarray)):
+    if not (isinstance(temp, (list, np.ndarray))):
         tpp = [temp]
         pass
     else:
-        _ = tpp.extend(temp)
+        tpp.extend(temp)
         pass
     if len(tpp) != int(nlevels):
         tpp = tpp * nlevels
@@ -115,10 +115,7 @@ def crbmodel(
     if mixratio is not None:
         mxr = {}
         for k in mixratio:
-            if not (
-                isinstance(mixratio[k], list)
-                or isinstance(mixratio[k], np.ndarray)
-            ):
+            if not (isinstance(mixratio[k], (list, np.ndarray))):
                 mxr[k] = np.array([mixratio[k]] * len(tpp))
                 pass
             else:
@@ -317,7 +314,7 @@ def crbmodel(
         fig, ax1 = plt.subplots(figsize=(10, 6))
         ax2 = ax1.twiny()
 
-        for k in mxr:
+        for k in mxr.items():
             ax1.plot(mxr[k], pressure, label=k)
             pass
         ax1.legend(loc='upper left')
@@ -428,14 +425,11 @@ def gettau(
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
         mlp = []
-        if not (
-            isinstance(mixratio[elem], list)
-            or isinstance(mixratio[elem], np.ndarray)
-        ):
+        if not (isinstance(mixratio[elem], (list, np.ndarray))):
             mlp = [mixratio[elem]]
             pass
         else:
-            _ = mlp.extend(mixratio[elem])
+            mlp.extend(mixratio[elem])
             pass
         if len(mlp) != len(pressure):
             mlp = mlp * len(pressure)
