@@ -98,7 +98,7 @@ def crbmodel(
         hzlib = ctxt.hzlib
 
     tpp = []
-    if not (isinstance(temp, (list, np.ndarray))):
+    if not isinstance(temp, (list, np.ndarray)):
         tpp = [temp]
         pass
     else:
@@ -115,7 +115,7 @@ def crbmodel(
     if mixratio is not None:
         mxr = {}
         for k in mixratio:
-            if not (isinstance(mixratio[k], (list, np.ndarray))):
+            if not isinstance(mixratio[k], (list, np.ndarray)):
                 mxr[k] = np.array([mixratio[k]] * len(tpp))
                 pass
             else:
@@ -425,7 +425,7 @@ def gettau(
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
         mlp = []
-        if not (isinstance(mixratio[elem], (list, np.ndarray))):
+        if not isinstance(mixratio[elem], (list, np.ndarray)):
             mlp = [mixratio[elem]]
             pass
         else:
