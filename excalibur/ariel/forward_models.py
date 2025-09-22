@@ -82,7 +82,6 @@ def make_cerberus_atmos(
         xmollist=runtime_params.xmollist,
         lbroadening=runtime_params.lbroadening,
         lshifting=runtime_params.lshifting,
-        isothermal=runtime_params.isothermal,
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,

@@ -44,7 +44,6 @@ def crbmodel(
     wgrid=None,
     xsecs=None,
     qtgrid=None,
-    isothermal=None,
     lbroadening=None,
     lshifting=None,
     knownspecies=None,
@@ -87,8 +86,6 @@ def crbmodel(
         lshifting = ctxt.lshifting
     if not bool(lbroadening):
         lbroadening = ctxt.lbroadening
-    if not bool(isothermal):
-        isothermal = ctxt.isothermal
     if rp0 is None:
         rp0 = ctxt.rp0
     if xsecs is None:
@@ -100,6 +97,33 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
+    tpp = []
+    if not isinstance(temp, (list, np.ndarray)):
+        tpp = [temp]
+        pass
+    else:
+        tpp.extend(temp)
+        pass
+    if len(tpp) != int(nlevels):
+        tpp = tpp * nlevels
+        pass
+    if len(tpp) not in [int(nlevels)]:
+        log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
+        pass
+    tpp = np.array(tpp)
+
+    if mixratio is not None:
+        mxr = {}
+        for k in mixratio:
+            if not isinstance(mixratio[k], (list, np.ndarray)):
+                mxr[k] = np.array([mixratio[k]] * len(tpp))
+                pass
+            else:
+                mxr[k] = mixratio[k]
+                pass
+            pass
+        pass
+
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
         np.log(solrad) - Hsmax,
@@ -110,26 +134,25 @@ def crbmodel(
     pressure = pgrid[::-1]
     dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
-    # print('PARAMETERS', temp, cheq['CtoO'], cheq['XtoH'])
     if not mixratio:
         fH2 = None
         fHe = None
         if cheq is None:
-            log.error('neither mixratio nor cheq are defined')
+            log.error('!!! >--< Neither mixratio nor cheq are defined')
+            pass
         if chemistry == 'TEC':
             mixratio, fH2, fHe = crbce(
                 pressure,
-                temp,
+                tpp,
                 C2Or=cheq['CtoO'],
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
+            pass
         elif chemistry == 'TEA':
             # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             # species = ['H2O', 'CO', 'CO2']
-
             log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
-
             # mixratio, fH2, fHe = calcTEA(
             #     tempCoeffs,
             #    pressure,
@@ -140,46 +163,48 @@ def crbmodel(
             # )
             mixratio, fH2, fHe = crbce(
                 pressure,
-                temp,
+                tpp,
                 C2Or=cheq['CtoO'],
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
         else:
-            mixratio = {'H2O': 6}
-            log.error('--< UNKNOWN CHEM MODEL: %s >--', chemistry)
-        # print('mixratio',mixratio,fH2,fHe)
+            mixratio = {}
+            log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
+            pass
         mmw, fH2, fHe = getmmw(
             mixratio,
             protosolar=False,
             fH2=fH2,
             fHe=fHe,
         )
+        pass
     else:
-        mmw, fH2, fHe = getmmw(mixratio)
+        mmw, fH2, fHe = getmmw(mxr)
+        pass
     mmw = mmw * cst.m_p  # [kg]
 
     if debug:
-        print('mmw', mmw * 6.022e26)
+        log.info('>-- mmw: %s', mmw * 6.022e26)
+        pass
 
     Hs = (
         cst.Boltzmann
-        * temp
+        * tpp
         / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
     )  # [m]
 
     # when the Pressure grid is log-spaced, rdz is a constant
     #  drop dz[] and dzprime[] arrays and just use this constant instead
-    rdz = abs(Hs / 2.0 * np.log(1.0 + dPoverP))
-    dz = 2 * rdz
+    dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
     z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
 
-    rho = pressure * 1e5 / (cst.Boltzmann * temp)
+    rho = pressure * 1e5 / (cst.Boltzmann * tpp)
     tau, tau_by_molecule, wtau = gettau(
         xsecs,
         qtgrid,
-        temp,
-        mixratio,
+        tpp,
+        mxr,
         z,
         dz,
         rho,
@@ -197,7 +222,6 @@ def crbmodel(
         hazeprof,
         hazeslope,
         hazeloc,
-        isothermal,
         hazethick,
         debug=debug,
     )
@@ -208,6 +232,7 @@ def crbmodel(
 
     if not break_down_by_molecule:
         tau_by_molecule = {}
+        pass
     molecules = tau_by_molecule.keys()
     # SEMI FINITE CLOUD ------------------------------------------------------------------
     reversep = np.array(pressure[::-1])
@@ -266,9 +291,8 @@ def crbmodel(
     # model is a 1xN matrix; it needs to be a 1-d array
     #  otherwise some subsequent * or ** operations fail
     model = np.asarray(model).reshape(-1)
-    model = model[::-1]
     plotmodel = model.copy()
-
+    model = model[::-1]
     models_by_molecule = {}
     for molecule in molecules:
         absorptiongrid = 1.0 - np.exp(-tau_by_molecule[molecule])
@@ -287,6 +311,24 @@ def crbmodel(
         models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
 
     if verbose:
+        fig, ax1 = plt.subplots(figsize=(10, 6))
+        ax2 = ax1.twiny()
+
+        for k in mxr.items():
+            ax1.plot(mxr[k], pressure, label=k)
+            pass
+        ax1.legend(loc='upper left')
+
+        ax2.plot(tpp, pressure, color='pink', label='Temperature', ls='--')
+        ax2.legend(loc='center left')
+
+        plt.semilogy()
+        plt.gca().invert_yaxis()
+        ax1.set_xlabel('log(VMR) [ppm]')
+        ax2.set_xlabel('Temperature [K]')
+        ax1.set_ylabel('Pressure [bar]')
+        plt.show()
+
         noatm = np.nanmin(plotmodel)
         rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
 
@@ -304,10 +346,10 @@ def crbmodel(
         yaxmin, yaxmax = axes[0].get_ylim()
         ax2min = (
             np.sqrt(1e-2 * yaxmin) * orbp['R*'] * ssc['Rsun'] - rp0hs
-        ) / Hs
+        ) / np.nanmean(Hs)
         ax2max = (
             np.sqrt(1e-2 * yaxmax) * orbp['R*'] * ssc['Rsun'] - rp0hs
-        ) / Hs
+        ) / np.nanmean(Hs)
         axes[-1].set_ylabel('Transit Depth Modulation [Hs]')
         axes[-1].set_ylim(ax2min, ax2max)
         axes[-1].get_yaxis().get_major_formatter().set_useOffset(False)
@@ -351,7 +393,6 @@ def gettau(
     hazeprof,
     hazeslope,
     hazeloc,
-    isothermal,
     hazethick,
     debug=False,
 ):
@@ -359,17 +400,14 @@ def gettau(
     G. ROUDIER: Builds optical depth matrix
     '''
 
-    # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -------------------------------------------
+    # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) ---------------------------------------
     # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(pressure)
     tau = np.zeros((Nzones, wgrid.size))
-    # print('tau shape at the top', tau.shape)
     tau_by_molecule = {}
     # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     zprime = np.broadcast_to(z, (Nzones, Nzones))
     thisz = zprime.T
-    # print('zprime',zprime)
-    # print('thisz',thisz)
 
     dl = np.sqrt(
         np.max(
@@ -384,12 +422,23 @@ def gettau(
         )
     )
     dlarray = dl - dl0
-    # print('dl', dlarray)
-
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
-        # tau_by_molecule[elem] = np.zeros((len(z), wgrid.size))
-        mmr = 10.0 ** (mixratio[elem] - 6.0)
+        mlp = []
+        if not isinstance(mixratio[elem], (list, np.ndarray)):
+            mlp = [mixratio[elem]]
+            pass
+        else:
+            mlp.extend(mixratio[elem])
+            pass
+        if len(mlp) != len(pressure):
+            mlp = mlp * len(pressure)
+            pass
+        if len(mlp) not in [len(pressure)]:
+            log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
+            pass
+        mlp = np.array(mlp)
+        mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
         # Fake use of xmollist due to changes in xslib v112
         # THIS HAS TO BE FIXED
         # if elem not in xmollist:
@@ -404,28 +453,31 @@ def gettau(
                 lbroadening,
                 lshifting,
                 wgrid,
-            )
-            # sigma = np.array(sigma)  # cm^2/mol
+            )  # cm^2/mol
             if True in (sigma < 0):
                 sigma[sigma < 0] = 0e0
+                pass
             if True in ~np.isfinite(sigma):
                 sigma[~np.isfinite(sigma)] = 0e0
+                pass
             sigma = sigma * 1e-4  # m^2/mol
             pass
         else:
             # EXOMOL HILL ET AL. 2013 ------------------------------------------------
-            sigma, lsig = getxmolxs(temp, xsecs[elem])
-            # sigma = np.array(sigma)   # cm^2/mol
+            sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+            # sigma.shape(n_waves, n_pressure)
             if True in (sigma < 0):
                 sigma[sigma < 0] = 0e0
+                pass
             if True in ~np.isfinite(sigma):
                 sigma[~np.isfinite(sigma)] = 0e0
-            # sigma = np.array(sigma)*1e-4  # m^2/mol
+                pass
             sigma = sigma * 1e-4  # m^2/mol
             pass
-        if isothermal:
-            tau = tau + mmr * sigma * np.array([rho]).T
-            tau_by_molecule[elem] = mmr * sigma * np.array([rho]).T
+        # GMR: Array Broadcasting
+        # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
+        tau = tau + (rho * mmr * sigma).T
+        tau_by_molecule[elem] = (rho * mmr * sigma).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
@@ -443,26 +495,30 @@ def gettau(
             f2 = fH2 * 2.0
         else:
             log.warning(
-                '--< CERBERUS gettau(): UNEXPECTED MOLECULE %s >--', cia
+                '--< CERBERUS gettau(): UNEXPECTED CIA SPECIES %s >--', cia
             )
             f1 = 0
             f2 = 0
+            pass
         # HITRAN RICHARD ET AL. 2012
         sigma, lsig = getciaxs(temp, xsecs[cia])  # cm^5/mol^2
+        # sigma.shape(n_waves, n_pressure)
         sigma = np.array(sigma) * 1e-10  # m^5/mol^2
         if True in (sigma < 0):
             sigma[sigma < 0] = 0e0
+            pass
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
-        tau = tau + f1 * f2 * sigma * np.array([rho**2]).T
-        tau_by_molecule[cia] = f1 * f2 * sigma * np.array([rho**2]).T
-    # RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
+            pass
+        tau = tau + (f1 * f2 * sigma * rho**2).T
+        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
+    # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
-    sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4)
-    tau = tau + fH2 * sigma * np.array([rho]).T
-    tau_by_molecule['rayleigh'] = fH2 * sigma * np.array([rho]).T
+    sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
+    tau = tau + (fH2 * rho * np.array(len(rho) * [sigma]).T).T
+    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
@@ -564,10 +620,10 @@ def gettau(
 
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
-        # print(' MOLECULE:', molecule)
         tau_by_molecule[molecule] = (
             2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
         )
+        pass
 
     if debug:
         plt.figure(figsize=(12, 6))
