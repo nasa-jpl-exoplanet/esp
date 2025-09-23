@@ -15,11 +15,17 @@ Only:
 import os
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
+import ctypes
+from pathlib import Path
 
 from excalibur.util.tea_code import readconf
 from excalibur.util.tea_code import iterate
 from excalibur.util.tea_code import makeheader
 from excalibur.util.tea_code import updated_balance
+
+
+mp.set_start_method("spawn", force=True)
 
 
 # -----------------------------------------------------------------------------
@@ -37,13 +43,14 @@ def _multiproc_worker(
     verb,
     times,
     xtol,
-    start,
-    end,
+    shared_abn,
 ):
-    # THIS IS TEMP FOR FLAKE; MULTIPROCESSING STILL NEEDS REMOVAL/REPLACMENT
-    abn = np.array(1000, 1000)
-
-    for q in range(start, end):
+    """Exactly the same per-layer loop as original runatm, minus file I/O."""
+    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape(
+        (len(pres_arr), len(stoich_arr))
+    )
+    n_pres = pres_arr.size
+    for q in range(n_pres):
         if verb > 1:
             print(f"\nLayer {q + 1:d}:")
         g_RT = makeheader.calc_gRT(free_energy, heat, temp_arr[q])
@@ -77,9 +84,7 @@ def _multiproc_worker(
             abn[q, :] = x / x_bar
 
         except Exception as exc:
-            print(
-                f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess"
-            )
+            print(f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess")
             x, x_bar = guess
             abn[q, :] = x / x_bar
         else:
@@ -100,7 +105,7 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     pandas.DataFrame  with columns ['Pressure', 'Temp', *species ]
     """
     TEApars, _ = readconf.readcfg(cfg_file)
-    maxiter, savefiles, verb, times, _, location_out, xtol, ncpu = TEApars
+    maxiter, savefiles, verb, times, _, location_out, xtol, _ = TEApars
     thermo_dir = os.path.join(os.path.dirname(cfg_file), "gdata")
 
     pres_arr = np.asarray(pre_atm["pressure"], dtype=float)
@@ -109,12 +114,10 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     atom_name = np.asarray(pre_atm["atom_name"])
     speclist = np.asarray(pre_atm["output_species"])
 
-    # n_runs = pres_arr.size
-    # nspec = speclist.size
+    n_pres = pres_arr.size
+    n_spec = speclist.size
 
     free_energy, heat = makeheader.read_gdata(speclist, thermo_dir)
-
-    from pathlib import Path
 
     thermo_dir = Path(cfg_file).with_name("gdata")
 
@@ -131,32 +134,36 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
             f"in {thermo_dir}. Add the file(s) or remove those species."
         )
 
-    stoich_arr, elements = makeheader.read_stoich(speclist)
+    stoich_arr, elements = makeheader.read_stoich(
+        speclist, stoich_file=Path(cfg_file).with_name("stoich.txt")
+    )
     elem_idx = [np.where(atom_name == el)[0][0] for el in elements]
     atom_arr = atom_arr[:, elem_idx]  # (n_layers, n_elements)
 
     guess = updated_balance.balance(stoich_arr, atom_arr[0], verb)
 
-    # start and end stuff should be removed I guess
-    s = 0
-    e = 1
-    _multiproc_worker(
-        pres_arr,
-        temp_arr,
-        atom_arr,
-        free_energy,
-        heat,
-        stoich_arr,
-        guess,
-        maxiter,
-        verb,
-        times,
-        xtol,
-        s,
-        e,
+    shared_abn = mp.Array(ctypes.c_double, int(n_pres * n_spec))
+    p = mp.Process(
+        target=_multiproc_worker,
+        args=(
+            pres_arr,
+            temp_arr,
+            atom_arr,
+            free_energy,
+            heat,
+            stoich_arr,
+            guess,
+            maxiter,
+            verb,
+            times,
+            xtol,
+            shared_abn,
+        ),
     )
-    # THIS IS TEMP FOR FLAKE; MULTIPROCESSING STILL NEEDS REMOVAL/REPLACMENT
-    abn = np.array(1000, 1000)
+    p.start()
+    p.join()  # mandatory
+
+    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape((n_pres, n_spec))
 
     cols = ["Pressure", "Temp"] + speclist.tolist()
     df = pd.DataFrame(np.column_stack((pres_arr, temp_arr, abn)), columns=cols)

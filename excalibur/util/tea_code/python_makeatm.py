@@ -8,8 +8,6 @@ Uses the same abundance-conversion logic used in TEA from Asplund-2009 (https://
 import numpy as np
 from excalibur.util.tea_code import readconf
 
-__all__ = ["build_pre_atm"]
-
 
 def _dex_to_fraction(dex_values):
     """Convert log10(dex) to number-fraction relative to hydrogen."""
@@ -72,8 +70,3 @@ def build_pre_atm(
         "atom_abundances": atom_abund.astype(float),
         "output_species": output_species,
     }
-
-
-# ---------------------------------------------------------------------------
-if __name__ == "__main__":
-    raise RuntimeError("Import and call build_pre_atm(...) from your driver.")
