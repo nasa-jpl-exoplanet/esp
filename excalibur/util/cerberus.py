@@ -49,7 +49,7 @@ def calcTEA(
     """
     input_species = species
 
-    if filedir=='default':
+    if filedir == 'default':
         filedir = excalibur.context['data_dir'] + '/tea_files/'
 
     def _make_tp_profile(

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
 python_runatm.py
 ----------------
@@ -23,9 +22,6 @@ from excalibur.util.tea_code import readconf
 from excalibur.util.tea_code import iterate
 from excalibur.util.tea_code import makeheader
 from excalibur.util.tea_code import updated_balance
-
-
-mp.set_start_method("spawn", force=True)
 
 
 # -----------------------------------------------------------------------------
@@ -84,7 +80,9 @@ def _multiproc_worker(
             abn[q, :] = x / x_bar
 
         except Exception as exc:
-            print(f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess")
+            print(
+                f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess"
+            )
             x, x_bar = guess
             abn[q, :] = x / x_bar
         else:

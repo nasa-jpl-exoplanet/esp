@@ -169,7 +169,7 @@ def crbmodel(
             species = ['H2O', 'CO', 'CO2']
 
             # have to take the average! (same as done in crbce)
-            
+
             mixratio, fH2, fHe = calcTEA(
                 tempCoeffs,
                 pressure,
@@ -186,6 +186,8 @@ def crbmodel(
             #    N2Or=cheq['NtoO'],
             # )
         else:
+            fH2 = 0
+            fHe = 0
             mixratio = {}
             log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
             pass
