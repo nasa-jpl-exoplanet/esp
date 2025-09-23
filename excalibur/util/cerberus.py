@@ -25,10 +25,10 @@ def calcTEA(
     C_O=None,
     N_O=None,
     plot_tp=False,
-    filedir=excalibur.context['data_dir'],
-    abundance_file="abundances.txt",
-    cfg_file="TEA.cfg",
-    stoich_file="stoich.txt",
+    filedir='default',
+    abundance_file='abundances.txt',
+    cfg_file='TEA.cfg',
+    stoich_file='stoich.txt',
 ):
     """
     Parameters
@@ -48,6 +48,9 @@ def calcTEA(
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
     input_species = species
+
+    if filedir=='default':
+        filedir = excalibur.context['data_dir'] + '/tea_files/'
 
     def _make_tp_profile(
         P,
@@ -144,13 +147,16 @@ def calcTEA(
         plt.gca().invert_yaxis()
         plt.title("Temperature Pressure Profile")
 
-    solar = _read_solar_abund(abundance_file)
+    solar = _read_solar_abund(filedir + abundance_file)
 
-    _, elem_arr = makeheader.read_stoich(species, stoich_file=stoich_file)
+    _, elem_arr = makeheader.read_stoich(
+        species,
+        stoich_file=filedir + stoich_file,
+    )
 
     needed_elem = set(elem_arr) | {"H"}
 
-    gdir = Path(cfg_file).with_name("gdata")
+    gdir = Path(filedir + cfg_file).with_name("gdata")
     atomic = [_reservoir_base(el, gdir) for el in needed_elem]
 
     species_ordered = []
@@ -175,14 +181,14 @@ def calcTEA(
         temperature,
         input_elem=input_elem,
         output_species=species,
-        abundances_path=abundance_file,
-        cfg_file=cfg_file,
+        abundances_path=filedir + abundance_file,
+        cfg_file=filedir + cfg_file,
     )
 
     n_layers = pressure.size
     pre_atm["atom_abundances"] = np.tile(abund_vec, (n_layers, 1))
 
-    df = python_runatm.run_tea(pre_atm, cfg_file=cfg_file)
+    df = python_runatm.run_tea(pre_atm, cfg_file=filedir + cfg_file)
 
     # avg = df.mean(axis=0)
     def vmr_to_logppm(v):
@@ -196,7 +202,7 @@ def calcTEA(
     #          for sp in input_species
     #          if sp in avg}
     mixratio = {
-        sp.split("_")[0] : df[sp].values
+        sp.split("_")[0]: df[sp].values
         for sp in input_species
         if sp in df.columns
     }
