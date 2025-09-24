@@ -11,8 +11,8 @@ from pathlib import Path
 import time
 
 import excalibur
-from excalibur.util.tea_code import python_makeatm
-from excalibur.util.tea_code import python_runatm
+from excalibur.util.tea_code import makeatm
+from excalibur.util.tea_code import runatm
 from excalibur.util.tea_code import makeheader
 
 # --------------------------------------------------------------------
@@ -179,7 +179,7 @@ def calcTEA(
     abund_vec = np.array([abund[e] for e in input_elem])
 
     time0 = time.time()
-    pre_atm = python_makeatm.build_pre_atm(
+    pre_atm = makeatm.build_pre_atm(
         pressure,
         temperature,
         input_elem=input_elem,
@@ -194,7 +194,7 @@ def calcTEA(
     pre_atm["atom_abundances"] = np.tile(abund_vec, (n_layers, 1))
 
     time0 = time.time()
-    df = python_runatm.run_tea(pre_atm, cfg_file=filedir + cfg_file)
+    df = runatm.run_tea(pre_atm, cfg_file=filedir + cfg_file)
     if verbose:
         print('  cpu time for runatm', time.time() - time0)
 

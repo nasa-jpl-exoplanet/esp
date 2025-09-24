@@ -1,8 +1,6 @@
 """
-python_runatm.py
-----------------
 Thermochemical-equilibrium driver that consumes the in-memory pre-atmosphere
-dictionary produced by `python_makeatm.build_pre_atm` and returns a pandas
+dictionary produced by `makeatm.build_pre_atm` and returns a pandas
 DataFrame instead of a `.tea` file.
 
 Mathematical core (iterate, makeheader, etc.) is unchanged from original TEA framework.
