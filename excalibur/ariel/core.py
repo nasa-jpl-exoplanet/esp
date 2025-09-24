@@ -76,26 +76,41 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
             'H2O_g','H2CO_g','HCN_g','CO_g','CO2_g','NH3_g','CH4_g',
             'PH3_g','C2H2_g','SO2_g','H2S_g','H2_ref',
         ]
-        mixratio, fH2, fHe = crbutil.calcTEA(
+        mixratioarray = crbutil.calcTEA(
             tempCoeffs, pressureArray, species, metallicity=10.0**X2Hr
         )
-        # print('TEA:', mixratio, fH2, fHe)
+        # have to take the average! (same as done in crbce)
+        mixratio = {}
+        for molecule in mixratioarray:
+            mixratio[molecule] = np.log10(
+                np.mean(10.**mixratioarray[molecule]))
+        print('TEA:', mixratio)
+
+        mmw, fH2, fHe = getmmw(mixratio)
+        print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
+        # DELETE: (just for testing)
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
-        # print('TEC:', mixratio, fH2, fHe)
+        print('TEC:', mixratio, fH2, fHe)
+
     else:
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
+        mmw, fH2, fHe = crbutil.getmmw(
+            mixratio,
+            protosolar=False,
+            fH2=fH2,
+            fHe=fHe,
+        )
+    # print('mmw      (inside)', mmw, fH2, fHe)
 
     # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
     # assume solar C/O and N/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-
-    mmw, fH2, fHe = crbutil.getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
-    # print('mmw      (inside)', mmw, fH2, fHe)
 
     mmw_kg = mmw * cst.m_p  # [kg]
     Hs = (
