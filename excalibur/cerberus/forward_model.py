@@ -162,18 +162,25 @@ def crbmodel(
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
+            mmw, fH2, fHe = getmmw(
+                mixratio,
+                protosolar=False,
+                fH2=fH2,
+                fHe=fHe,
+            )
             pass
-        elif chemistry == 'TEA':
-            log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
 
-            #  this one gives a div-by-0 error
+        elif chemistry == 'TEA':
+            #  (this one gives a div-by-0 error)
             # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-            species = ['H2O', 'CO', 'CO2']
+            species =[
+                'NO_g','OH_g','C2H2_g','N2_ref','N2O_g','O3_g','O2_ref',
+                'H2O_g','H2CO_g','HCN_g','CO_g','CO2_g','NH3_g','CH4_g',
+                'PH3_g','C2H2_g','SO2_g','H2S_g','H2_ref',
+            ]
 
-            # have to take the average! (same as done in crbce)
-
-            mixratio, fH2, fHe = calcTEA(
+            mixratioarray = calcTEA(
                 tempCoeffs,
                 pressure,
                 species,
@@ -181,26 +188,26 @@ def crbmodel(
                 C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
             )
-            # mixratio, fH2, fHe = crbce(
-            #    pressure,
-            #    temp,
-            #    C2Or=cheq['CtoO'],
-            #    X2Hr=cheq['XtoH'],
-            #    N2Or=cheq['NtoO'],
-            # )
+
+            # have to take the average! (same as done in crbce)
+            mixratio = {}
+            for molecule in mixratioarray:
+                mixratio[molecule] = np.log10(
+                    np.mean(10.**mixratioarray[molecule]))
+            print('mixratio',mixratio)
+            print('mixratio',mixratio.keys())
+
+            mmw, fH2, fHe = getmmw(mixratio)
+            print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
         else:
             fH2 = 0
             fHe = 0
             mixratio = {}
+            mmw = 1
             log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
             pass
 
-        mmw, fH2, fHe = getmmw(
-            mixratio,
-            protosolar=False,
-            fH2=fH2,
-            fHe=fHe,
-        )
         mxr = mixratio
         pass
 
@@ -301,7 +308,8 @@ def crbmodel(
         # adjust rp0 based on the cloudtop
         ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
         ctpdz = abs(
-            Hs / 2.0 * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+            Hs[cloudtopindex] / 2.0 *
+            np.log(1.0 + ctpdpress / pressure[cloudtopindex])
         )
         rp0 += z[cloudtopindex] + ctpdz
     pass
