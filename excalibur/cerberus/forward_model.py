@@ -150,6 +150,7 @@ def crbmodel(
     dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
     if not mixratio:
+        # chemical equilibrium case
         if cheq is None:
             log.error('!!! >--< Neither mixratio nor cheq are defined')
             pass
@@ -193,14 +194,18 @@ def crbmodel(
             mixratio = {}
             log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
             pass
+
         mmw, fH2, fHe = getmmw(
             mixratio,
             protosolar=False,
             fH2=fH2,
             fHe=fHe,
         )
+        mxr = mixratio
         pass
+
     else:
+        # DISEQ case
         mmw, fH2, fHe = getmmw(mxr)
         pass
     mmw = mmw * cst.m_p  # [kg]
