@@ -14,8 +14,8 @@ Only:
 import os
 import numpy as np
 import pandas as pd
-import ctypes
 from pathlib import Path
+
 # import time
 
 from excalibur.util.tea_code import readconf
@@ -91,6 +91,7 @@ def nonmultiprocessing(
 
     return abundanceresult
 
+
 def run_tea(pre_atm, cfg_file, desc="tea_output"):
     """
     Parameters
@@ -115,9 +116,6 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     atom_arr = np.asarray(pre_atm["atom_abundances"], dtype=float)
     atom_name = np.asarray(pre_atm["atom_name"])
     speclist = np.asarray(pre_atm["output_species"])
-
-    n_pres = pres_arr.size
-    n_spec = speclist.size
 
     free_energy, heat = makeheader.read_gdata(speclist, thermo_dir)
 
@@ -164,6 +162,7 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     # print('   cpu time check within runatm', time.time() - time0)
 
     cols = ["Pressure", "Temp"] + speclist.tolist()
-    df = pd.DataFrame(np.column_stack(
-        (pres_arr, temp_arr, abundance_arr)), columns=cols)
+    df = pd.DataFrame(
+        np.column_stack((pres_arr, temp_arr, abundance_arr)), columns=cols
+    )
     return df
