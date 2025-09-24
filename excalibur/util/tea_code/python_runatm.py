@@ -14,9 +14,9 @@ Only:
 import os
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 import ctypes
 from pathlib import Path
+# import time
 
 from excalibur.util.tea_code import readconf
 from excalibur.util.tea_code import iterate
@@ -27,7 +27,7 @@ from excalibur.util.tea_code import updated_balance
 # -----------------------------------------------------------------------------
 
 
-def _multiproc_worker(
+def nonmultiprocessing(
     pres_arr,
     temp_arr,
     atom_arr,
@@ -39,13 +39,13 @@ def _multiproc_worker(
     verb,
     times,
     xtol,
-    shared_abn,
 ):
     """Exactly the same per-layer loop as original runatm, minus file I/O."""
-    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape(
-        (len(pres_arr), len(stoich_arr))
-    )
-    n_pres = pres_arr.size
+
+    n_pres = len(pres_arr)
+    n_spec = len(stoich_arr)
+    abundanceresult = np.zeros((n_pres, n_spec))
+
     for q in range(n_pres):
         if verb > 1:
             print(f"\nLayer {q + 1:d}:")
@@ -77,18 +77,19 @@ def _multiproc_worker(
 
             y, x, delta, y_bar, x_bar, delta_bar = result
             guess = (x, x_bar)
-            abn[q, :] = x / x_bar
+            abundanceresult[q, :] = x / x_bar
 
         except Exception as exc:
             print(
                 f"[Layer {q + 1}] iterate failed: {exc} — using balanced guess"
             )
             x, x_bar = guess
-            abn[q, :] = x / x_bar
+            abundanceresult[q, :] = x / x_bar
         else:
             y, x, delta, y_bar, x_bar, delta_bar = result
         continue
 
+    return abundanceresult
 
 def run_tea(pre_atm, cfg_file, desc="tea_output"):
     """
@@ -102,6 +103,9 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     -------
     pandas.DataFrame  with columns ['Pressure', 'Temp', *species ]
     """
+
+    # time0 = time.time()
+
     TEApars, _ = readconf.readcfg(cfg_file)
     maxiter, savefiles, verb, times, _, location_out, xtol, _ = TEApars
     thermo_dir = os.path.join(os.path.dirname(cfg_file), "gdata")
@@ -138,31 +142,28 @@ def run_tea(pre_atm, cfg_file, desc="tea_output"):
     elem_idx = [np.where(atom_name == el)[0][0] for el in elements]
     atom_arr = atom_arr[:, elem_idx]  # (n_layers, n_elements)
 
+    # print('   cpu time check for runatm start', time.time() - time0)
     guess = updated_balance.balance(stoich_arr, atom_arr[0], verb)
+    # print('   cpu time check after balance', time.time() - time0)
 
-    shared_abn = mp.Array(ctypes.c_double, int(n_pres * n_spec))
-    p = mp.Process(
-        target=_multiproc_worker,
-        args=(
-            pres_arr,
-            temp_arr,
-            atom_arr,
-            free_energy,
-            heat,
-            stoich_arr,
-            guess,
-            maxiter,
-            verb,
-            times,
-            xtol,
-            shared_abn,
-        ),
+    abundance_arr = nonmultiprocessing(
+        pres_arr,
+        temp_arr,
+        atom_arr,
+        free_energy,
+        heat,
+        stoich_arr,
+        guess,
+        maxiter,
+        verb,
+        times,
+        xtol,
     )
-    p.start()
-    p.join()  # mandatory
-
-    abn = np.ctypeslib.as_array(shared_abn.get_obj()).reshape((n_pres, n_spec))
+    # print('new', abundance_arr)
+    # print('new', abundance_arr.shape)
+    # print('   cpu time check within runatm', time.time() - time0)
 
     cols = ["Pressure", "Temp"] + speclist.tolist()
-    df = pd.DataFrame(np.column_stack((pres_arr, temp_arr, abn)), columns=cols)
+    df = pd.DataFrame(np.column_stack(
+        (pres_arr, temp_arr, abundance_arr)), columns=cols)
     return df

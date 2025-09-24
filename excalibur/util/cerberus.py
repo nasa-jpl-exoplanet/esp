@@ -8,6 +8,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+import time
 
 import excalibur
 from excalibur.util.tea_code import python_makeatm
@@ -29,6 +30,7 @@ def calcTEA(
     abundance_file='abundances.txt',
     cfg_file='TEA.cfg',
     stoich_file='stoich.txt',
+    verbose=False,
 ):
     """
     Parameters
@@ -176,6 +178,7 @@ def calcTEA(
     input_elem = list(elem_arr)
     abund_vec = np.array([abund[e] for e in input_elem])
 
+    time0 = time.time()
     pre_atm = python_makeatm.build_pre_atm(
         pressure,
         temperature,
@@ -184,11 +187,16 @@ def calcTEA(
         abundances_path=filedir + abundance_file,
         cfg_file=filedir + cfg_file,
     )
+    if verbose:
+        print('  cpu time for makeatm', time.time() - time0)
 
     n_layers = pressure.size
     pre_atm["atom_abundances"] = np.tile(abund_vec, (n_layers, 1))
 
+    time0 = time.time()
     df = python_runatm.run_tea(pre_atm, cfg_file=filedir + cfg_file)
+    if verbose:
+        print('  cpu time for runatm', time.time() - time0)
 
     # avg = df.mean(axis=0)
     def vmr_to_logppm(v):
