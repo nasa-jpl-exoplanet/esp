@@ -136,6 +136,8 @@ def crbmodel(
                 pass
             pass
         pass
+    else:
+        mxr = None
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
