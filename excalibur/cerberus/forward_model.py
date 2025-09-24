@@ -174,16 +174,30 @@ def crbmodel(
             #  (this one gives a div-by-0 error)
             # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-            species =[
-                'NO_g','OH_g','C2H2_g','N2_ref','N2O_g','O3_g','O2_ref',
-                'H2O_g','H2CO_g','HCN_g','CO_g','CO2_g','NH3_g','CH4_g',
-                'PH3_g','C2H2_g','SO2_g','H2S_g','H2_ref',
+            tea_species = [
+                'C2H2_g',
+                'CH4_g',
+                'CO2_g',
+                'CO_g',
+                'H2CO_g',
+                'H2O_g',
+                'H2_ref',
+                'H2S_g',
+                'HCN_g',
+                'N2O_g',
+                'N2_ref',
+                'NH3_g',
+                'NO_g',
+                'O2_ref',
+                'O3_g',
+                'OH_g',
+                'PH3_g',
+                'SO2_g',
             ]
-
             mixratioarray = calcTEA(
                 tempCoeffs,
                 pressure,
-                species,
+                tea_species,
                 metallicity=10.0 ** cheq['XtoH'],
                 C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
@@ -193,7 +207,7 @@ def crbmodel(
             mixratio = {}
             for molecule in mixratioarray:
                 mixratio[molecule] = np.log10(
-                    np.mean(10.**mixratioarray[molecule]))
+                    np.mean(10.0**mixratioarray[molecule]))
             print('mixratio',mixratio)
             print('mixratio',mixratio.keys())
 
@@ -308,8 +322,9 @@ def crbmodel(
         # adjust rp0 based on the cloudtop
         ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
         ctpdz = abs(
-            Hs[cloudtopindex] / 2.0 *
-            np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+            Hs[cloudtopindex]
+            / 2.0
+            * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
         )
         rp0 += z[cloudtopindex] + ctpdz
     pass
