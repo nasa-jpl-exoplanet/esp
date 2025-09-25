@@ -49,7 +49,7 @@ def calcTEA(
     -------
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
-    if species == None:
+    if species is None:
         species = [
             'C2H2_g',
             'CH4_g',
@@ -67,7 +67,7 @@ def calcTEA(
             'O2_ref',
             'O3_g',
             'OH_g',
-            # 'PH3_g',
+            'PH3_g',
             'SO2_g',
         ]
         # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
@@ -232,7 +232,7 @@ def calcTEA(
     #          for sp in input_species
     #          if sp in avg}
     mixratio = {
-        sp.split("_")[0]: df[sp].values
+        sp.split('_', maxsplit=1)[0]: df[sp].values
         for sp in input_species
         if sp in df.columns
     }

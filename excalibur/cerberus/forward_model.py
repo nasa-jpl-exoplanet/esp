@@ -188,11 +188,10 @@ def crbmodel(
             mixratio = {}
             for molecule in mixratioarray:
                 mixratio[molecule] = np.log10(
-                    np.mean(10.0**mixratioarray[molecule])
+                    np.mean(10.0 ** mixratioarray[molecule])
                 )
-            print('mixratio', mixratio)
-            print('mixratio', mixratio.keys())
-
+            print()
+            print('mixratio in cerb', mixratio)
             mmw, fH2, fHe = getmmw(mixratio)
             print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
@@ -470,45 +469,50 @@ def gettau(
             pass
         mlp = np.array(mlp)
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
-        # Fake use of xmollist due to changes in xslib v112
-        # THIS HAS TO BE FIXED
-        # if elem not in xmollist:
-        if not xmollist:
-            # HITEMP/HITRAN ROTHMAN ET AL. 2010 --------------------------------------
-            sigma, lsig = absorb(
-                xsecs[elem],
-                qtgrid[elem],
-                temp,
-                pressure,
-                mmr,
-                lbroadening,
-                lshifting,
-                wgrid,
-            )  # cm^2/mol
-            if True in (sigma < 0):
-                sigma[sigma < 0] = 0e0
-                pass
-            if True in ~np.isfinite(sigma):
-                sigma[~np.isfinite(sigma)] = 0e0
-                pass
-            sigma = sigma * 1e-4  # m^2/mol
-            pass
+        if elem not in xsecs:
+            # TEA species might not have cross-sections calculated
+            log.warning('ERR: no cross-sections for molecule',elem)
         else:
-            # EXOMOL HILL ET AL. 2013 ------------------------------------------------
-            sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
-            # sigma.shape(n_waves, n_pressure)
-            if True in (sigma < 0):
-                sigma[sigma < 0] = 0e0
+            # Fake use of xmollist due to changes in xslib v112
+            # THIS HAS TO BE FIXED
+            # if elem not in xmollist:
+            if not xmollist:
+                # HITEMP/HITRAN ROTHMAN ET AL. 2010 --------------------------------------
+                sigma, lsig = absorb(
+                    xsecs[elem],
+                    qtgrid[elem],
+                    temp,
+                    pressure,
+                    mmr,
+                    lbroadening,
+                    lshifting,
+                    wgrid,
+                )  # cm^2/mol
+                if True in (sigma < 0):
+                    sigma[sigma < 0] = 0e0
+                    pass
+                if True in ~np.isfinite(sigma):
+                    sigma[~np.isfinite(sigma)] = 0e0
+                    pass
+                sigma = sigma * 1e-4  # m^2/mol
                 pass
-            if True in ~np.isfinite(sigma):
-                sigma[~np.isfinite(sigma)] = 0e0
+            else:
+                # EXOMOL HILL ET AL. 2013 ------------------------------------------------
+                sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+                # sigma.shape(n_waves, n_pressure)
+                if True in (sigma < 0):
+                    sigma[sigma < 0] = 0e0
+                    pass
+                if True in ~np.isfinite(sigma):
+                    sigma[~np.isfinite(sigma)] = 0e0
+                    pass
+                sigma = sigma * 1e-4  # m^2/mol
                 pass
-            sigma = sigma * 1e-4  # m^2/mol
+            # GMR: Array Broadcasting
+            # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
+            tau = tau + (rho * mmr * sigma).T
+            tau_by_molecule[elem] = (rho * mmr * sigma).T
             pass
-        # GMR: Array Broadcasting
-        # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
-        tau = tau + (rho * mmr * sigma).T
-        tau_by_molecule[elem] = (rho * mmr * sigma).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:

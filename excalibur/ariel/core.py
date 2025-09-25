@@ -78,18 +78,18 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
         mixratio = {}
         for molecule in mixratioarray:
             mixratio[molecule] = np.log10(
-                np.mean(10.0**mixratioarray[molecule])
+                np.mean(10.0 ** mixratioarray[molecule])
             )
-        print('TEA:', mixratio)
+        # print('TEA:', mixratio)
 
         mmw, fH2, fHe = crbutil.getmmw(mixratio)
         print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
-        # DELETE: (just for testing)
-        mixratio, fH2, fHe = crbutil.crbce(
-            pressureArray, temperature, X2Hr=X2Hr
-        )
-        print('TEC:', mixratio, fH2, fHe)
+        # (uncomment to compare TEC vs TEA)
+        # mixratio, fH2, fHe = crbutil.crbce(
+        #    pressureArray, temperature, X2Hr=X2Hr
+        # )
+        # print('TEC:', mixratio, fH2, fHe)
 
     else:
         mixratio, fH2, fHe = crbutil.crbce(
