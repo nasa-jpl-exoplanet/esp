@@ -70,7 +70,6 @@ def calcTEA(
             'PH3_g',
             'SO2_g',
         ]
-        # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
     input_species = species
 
     if filedir == 'default':

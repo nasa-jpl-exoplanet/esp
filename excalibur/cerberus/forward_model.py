@@ -471,7 +471,7 @@ def gettau(
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
-            log.warning('ERR: no cross-sections for molecule',elem)
+            log.warning('ERR: no cross-sections for molecule %s', elem)
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED
