@@ -47,8 +47,6 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
 
-from multiprocessing import Pool
-
 log = logging.getLogger(__name__)
 
 
@@ -674,7 +672,6 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
         progbar.update()
         pass
     progbar.close()
-
     out['alldexp'] = exposures
     out['allerr'] = err
     out['alldq'] = dq
@@ -717,7 +714,7 @@ def readfitsdata(
             nints = None
             for hdu in hdulist:
                 if 'PRIMARY' in hdu.name:
-                    nints = hdu.header['NINTS']
+                    nints = 1 + hdu.header['INTEND'] - hdu.header['INTSTART']
                     out['alldet'].extend(nints * [hdu.header['DETECTOR']])
                     out['allfilter'].extend(nints * [hdu.header['FILTER']])
                     out['allgrating'].extend(nints * [hdu.header['GRATING']])
@@ -772,7 +769,7 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
+def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
@@ -791,9 +788,10 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
         if n.endswith('calints')
     ]
     out['data']['LOC'] = rawloc
-    # TEST
-    # rawloc = rawloc[0:1]
-    # calloc = calloc[0:1]
+    if fastdev:
+        rawloc = rawloc[0:2]
+        calloc = calloc[0:2]
+        pass
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
@@ -802,9 +800,8 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     # RAWS (32, 2048)
     datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
     allrexp = np.array(rawdata['alldexp'])
-    allrerr = np.array(rawdata['allerr'])
     alldet = np.array(rawdata['alldet'])
-    allwaves = caldata['allwaves']
+    allwaves = caldata['allwaves'].copy()
 
     # CALIBRATION STEPS
     allscores = {'0 RAW': getscore(allrexp)}
@@ -862,22 +859,11 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
         plt.show()
         pass
 
-    isort = np.argsort(datatiming)
-    out['data']['TIME'] = datatiming[isort]
-    allrexp = allrexp[isort]
-    out['data']['EXP'] = allrexp
-    allrerr = allrerr[isort]
-    out['data']['EXPERR'] = allrerr
-    alldet = alldet[isort]
-    out['data']['DET'] = alldet
-    alldq = alldq[isort]
-    out['data']['EXPFLAG'] = alldq
-
     reffile = jwstreffiles(ext)
-    Tstar = fin['priors']['T*']
-    bbfunc = astrobb(Tstar * astropy.units.K)
 
     if 'NIRISS' in ext:
+        Tstar = fin['priors']['T*']
+        bbfunc = astrobb(Tstar * astropy.units.K)
         # NIRISS
         # reffile[0]: images of the 3 orders [296, 2088] +20 on each side
         # reffile[1]: calibrated wavelength, pixel XY, throughput for the 3 orders
@@ -914,111 +900,84 @@ def jwstcal(fin, clc, tim, ext, out, ps=None, verbose=False):
     elif 'NIRSPEC' in ext:
         all1d = []
         all1dwave = []
-        excld = []
-        if ps is None:
-            ps = 1
-            pass
-        if ps > 1:
-            with Pool(ps) as pool:
-                multiout = pool.map(
-                    starnirspeccal, list(zip(allrexp, allwaves))
-                )
-                pool.close()
-                pool.join()
+        all1dvalid = []
+        argsdict = {
+            'progbar': verbose,
+            'progsizemax': 35,
+            'lbllen': 15,
+            'proginprompt': True,
+        }
+        progbar = nerdclub.Progressbar(argsdict, '>-- WAVECAL', allrexp)
+        for it, thisexp in enumerate(allrexp):
+            if thisexp.shape != allwaves[it].shape:
+                # NRS1: DUDES...
+                # (32, 2048) versus (28, 1271)
+                bs = np.zeros(thisexp.shape) * np.nan
+                bs[:-4, -allwaves[it].shape[1] - 4 : -4] = allwaves[it]
+                refwave = bs
                 pass
-            excld, all1d, all1dwave = zip(*multiout)
-            pass
-        else:
-            argsdict = {
-                'progbar': verbose,
-                'progsizemax': 35,
-                'lbllen': 15,
-                'proginprompt': True,
-            }
-            progbar = nerdclub.Progressbar(argsdict, '>-- WAVECAL', allrexp)
-            for it, thisexp in enumerate(allrexp):
-                this1d = np.sum(thisexp, axis=0)
-                this1dwave = np.nanmedian(allwaves[it], axis=0)
-                this1d[this1d < 0] = np.nan
-                logthis1d = np.log10(this1d)
-                flood = []
-                stdflood = []
-                ws = 32
-                for i in np.arange(logthis1d.size):
-                    il = int(i - ws / 2)
-                    il = max(il, 0)
-                    iu = int(i + ws / 2)
-                    if iu >= logthis1d.size:
-                        iu = logthis1d.size - 1
-                    test = logthis1d[il:iu]
-                    select = (test > np.nanpercentile(test, 10)) & (
-                        test < np.nanpercentile(test, 90)
-                    )
-                    flood.append(np.nanmedian(test[select]))
-                    stdflood.append(np.nanstd(test[select]))
-                    pass
-                stdflood = np.array(stdflood)
-                stdflood[~np.isfinite(stdflood)] = np.nanmedian(stdflood)
-                ff = int(np.sqrt(ws))
-                s1 = (logthis1d - (np.array(flood) - ff * stdflood)) < 0
-                s2 = (logthis1d - (np.array(flood) + ff * stdflood)) > 0
-                select = s1 | s2
-                this1d[select | ~np.isfinite(flood)] = np.nan
-                excld.append(np.sum(select))
-                all1d.append(this1d)
-                all1dwave.append(this1dwave)
-                progbar.update()
+            else:
+                refwave = allwaves[it]
                 pass
-            progbar.close()
+            wct = nirspeccal(thisexp, refwave)
+            all1dvalid.append(wct[0])
+            all1d.append(wct[1])
+            all1dwave.append(wct[2])
+            progbar.update()
+            pass
+        progbar.close()
+        clean1D = cleanspec(all1d, all1dvalid, alldet)
+        if verbose:
+            plt.figure(figsize=(12, 9))
+            for w, s, m in zip(all1dwave, all1d, all1dvalid):
+                plt.plot(w[m], s[m])
+                pass
+            plt.figure(figsize=(12, 9))
+            for w, s, m in zip(all1dwave, clean1D, all1dvalid):
+                plt.plot(w[m], s[m])
+                pass
+            plt.show()
             pass
         out['STATUS'].append(True)
-        out['data']['EXCLNUM'] = excld
-        out['data']['IGNORED'] = np.array(excld) > int(len(all1d[0]) / 2)
+        out['data']['TIME'] = datatiming
+        out['data']['DET'] = alldet
+        out['data']['EXCLNUM'] = all1dvalid
+        out['data']['IGNORED'] = [
+            np.sum(x) < int(len(all1d[0]) / 2) for x in all1dvalid
+        ]
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
         pass
     return True
 
 
-def starnirspeccal(thoseargs):
-    '''
-    * trick because of the way map works
-    '''
-    return nirspeccal(*thoseargs)
+def cleanspec(all1d, all1dvalid, alldet):
+    out = np.array(all1d.copy())
+    valid = np.array(all1dvalid.copy())
+    out[~valid] = np.nan
+    for x in np.unique(alldet):
+        select = alldet == x
+        ref = np.nanmedian(out[select], axis=0)
+        refup = np.nanpercentile(out[select], 50 - 34, axis=0)
+        refdown = np.nanpercentile(out[select], 50 + 34, axis=0)
+        detset = out[select].copy()
+        detset[(out[select] > refup) | (out[select] < refdown)] = np.nan
+        stdsample = np.nanstd(detset, axis=0)
+        valid[select] = abs(out[select] - ref) < (3 * stdsample)
+        pass
+    out[~valid] = np.nan
+    return out
 
 
 def nirspeccal(thisexp, thosewaves):
     '''
-    NIRSPEC calibration - The cheap version
+    GMR: NIRSPEC wavelength calibration
+    Assumes lfer removed data
     '''
-    this1d = np.sum(thisexp, axis=0)
+    this1d = np.nansum(thisexp, axis=0)
     this1dwave = np.nanmedian(thosewaves, axis=0)
-    this1d[this1d < 0] = np.nan
-    logthis1d = np.log10(this1d)
-    flood = []
-    stdflood = []
-    ws = 32
-    for i in np.arange(logthis1d.size):
-        il = int(i - ws / 2)
-        il = max(il, 0)
-        iu = int(i + ws / 2)
-        if iu >= logthis1d.size:
-            iu = logthis1d.size - 1
-        test = logthis1d[il:iu]
-        select = (test > np.nanpercentile(test, 10)) & (
-            test < np.nanpercentile(test, 90)
-        )
-        flood.append(np.nanmedian(test[select]))
-        stdflood.append(np.nanstd(test[select]))
-        pass
-    stdflood = np.array(stdflood)
-    stdflood[~np.isfinite(stdflood)] = np.nanmedian(stdflood)
-    ff = int(np.sqrt(ws))
-    s1 = (logthis1d - (np.array(flood) - ff * stdflood)) < 0
-    s2 = (logthis1d - (np.array(flood) + ff * stdflood)) > 0
-    select = s1 | s2
-    this1d[select | ~np.isfinite(flood)] = np.nan
-    return (np.sum(select), this1d, this1dwave)
+    select = np.isfinite(this1d)
+    return (select, this1d, this1dwave)
 
 
 def jwstdqfiles(thisdet):

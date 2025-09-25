@@ -274,7 +274,6 @@ class Calibration(dawgie.Algorithm):
                         repr(self).split('.')[1],
                         fltr,
                         self.__out[fltrs.index(fltr)],
-                        ps,
                     )
                     if update:
                         svupdate.append(self.__out[fltrs.index(fltr)])
@@ -303,7 +302,7 @@ class Calibration(dawgie.Algorithm):
         )
 
     @staticmethod
-    def _calib(fin, cll, tim, tid, flttype, out, ps):
+    def _calib(fin, cll, tim, tid, flttype, out):
         '''Core code call'''
         log.info('--< DATA CALIBRATION: %s >--', flttype)
         caled = False
@@ -320,9 +319,7 @@ class Calibration(dawgie.Algorithm):
             caled = datcore.spitzercal(cll, out)
             pass
         if 'JWST' in flttype:
-            caled = datcore.jwstcal(
-                fin, cll, tim, flttype, out, ps=ps, verbose=False
-            )
+            caled = datcore.jwstcal(fin, cll, tim, flttype, out, verbose=False)
             pass
         return caled
 
