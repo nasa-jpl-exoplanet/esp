@@ -914,8 +914,8 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
             if thisexp.shape != allwaves[it].shape:
                 # NRS1: DUDES...
                 # (32, 2048) versus (28, 1271)
-                bs = np.zeros(thisexp.shape)*np.nan
-                bs[:-4, -allwaves[it].shape[1] - 4: -4] = allwaves[it]
+                bs = np.zeros(thisexp.shape) * np.nan
+                bs[:-4, -allwaves[it].shape[1] - 4 : -4] = allwaves[it]
                 refwave = bs
                 pass
             else:
@@ -944,7 +944,9 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         out['data']['TIME'] = datatiming
         out['data']['DET'] = alldet
         out['data']['EXCLNUM'] = all1dvalid
-        out['data']['IGNORED'] = [np.sum(x) < int(len(all1d[0]) / 2) for x in all1dvalid]
+        out['data']['IGNORED'] = [
+            np.sum(x) < int(len(all1d[0]) / 2) for x in all1dvalid
+        ]
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
         pass
@@ -958,12 +960,12 @@ def cleanspec(all1d, all1dvalid, alldet):
     for x in np.unique(alldet):
         select = alldet == x
         ref = np.nanmedian(out[select], axis=0)
-        refup = np.nanpercentile(out[select], 99, axis=0)
-        refdown = np.nanpercentile(out[select], 1, axis=0)
+        refup = np.nanpercentile(out[select], 50 - 34, axis=0)
+        refdown = np.nanpercentile(out[select], 50 + 34, axis=0)
         detset = out[select].copy()
         detset[(out[select] > refup) | (out[select] < refdown)] = np.nan
         stdsample = np.nanstd(detset, axis=0)
-        valid[select] = abs(out[select] - ref) < (3 * stdsample) 
+        valid[select] = abs(out[select] - ref) < (3 * stdsample)
         pass
     out[~valid] = np.nan
     return out
