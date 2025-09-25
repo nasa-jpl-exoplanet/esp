@@ -89,6 +89,8 @@ def crbmodel(
     #    # longer list currently used by Luke:
     #  PUT THIS INTO RUNTIME OPS!!
     #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
+    # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
+    # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
     if nlevels is None:
         nlevels = ctxt.nlevels
     if Hsmax is None:
@@ -174,30 +176,9 @@ def crbmodel(
             #  (this one gives a div-by-0 error)
             # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
             tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-            tea_species = [
-                'C2H2_g',
-                'CH4_g',
-                'CO2_g',
-                'CO_g',
-                'H2CO_g',
-                'H2O_g',
-                'H2_ref',
-                'H2S_g',
-                'HCN_g',
-                'N2O_g',
-                'N2_ref',
-                'NH3_g',
-                'NO_g',
-                'O2_ref',
-                'O3_g',
-                'OH_g',
-                'PH3_g',
-                'SO2_g',
-            ]
             mixratioarray = calcTEA(
                 tempCoeffs,
                 pressure,
-                tea_species,
                 metallicity=10.0 ** cheq['XtoH'],
                 C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
@@ -207,9 +188,10 @@ def crbmodel(
             mixratio = {}
             for molecule in mixratioarray:
                 mixratio[molecule] = np.log10(
-                    np.mean(10.0**mixratioarray[molecule]))
-            print('mixratio',mixratio)
-            print('mixratio',mixratio.keys())
+                    np.mean(10.0**mixratioarray[molecule])
+                )
+            print('mixratio', mixratio)
+            print('mixratio', mixratio.keys())
 
             mmw, fH2, fHe = getmmw(mixratio)
             print('TEA mmw, fH2, fHe', mmw, fH2, fHe)

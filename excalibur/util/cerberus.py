@@ -21,7 +21,7 @@ from excalibur.util.tea_code import makeheader
 def calcTEA(
     tp_coeffs,
     pressure,
-    species,
+    species=None,
     metallicity=1.0,
     C_O=None,
     N_O=None,
@@ -49,6 +49,28 @@ def calcTEA(
     -------
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
+    if species == None:
+        species = [
+            'C2H2_g',
+            'CH4_g',
+            'CO2_g',
+            'CO_g',
+            'H2CO_g',
+            'H2O_g',
+            'H2_ref',
+            'H2S_g',
+            'HCN_g',
+            'N2O_g',
+            'N2_ref',
+            'NH3_g',
+            'NO_g',
+            'O2_ref',
+            'O3_g',
+            'OH_g',
+            # 'PH3_g',
+            'SO2_g',
+        ]
+        # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
     input_species = species
 
     if filedir == 'default':

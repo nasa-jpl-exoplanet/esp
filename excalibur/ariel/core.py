@@ -71,34 +71,15 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     if useTEA:
         # log.error('TEA removed for now')
         tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-        tea_species = [
-            'C2H2_g',
-            'CH4_g',
-            'CO2_g',
-            'CO_g',
-            'H2CO_g',
-            'H2O_g',
-            'H2_ref',
-            'H2S_g',
-            'HCN_g',
-            'N2O_g',
-            'N2_ref',
-            'NH3_g',
-            'NO_g',
-            'O2_ref',
-            'O3_g',
-            'OH_g',
-            'PH3_g',
-            'SO2_g',
-        ]
         mixratioarray = crbutil.calcTEA(
-            tempCoeffs, pressureArray, tea_species, metallicity=10.0**X2Hr
+            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
         )
         # have to take the average! (same as done in crbce)
         mixratio = {}
         for molecule in mixratioarray:
             mixratio[molecule] = np.log10(
-                np.mean(10.0**mixratioarray[molecule]))
+                np.mean(10.0**mixratioarray[molecule])
+            )
         print('TEA:', mixratio)
 
         mmw, fH2, fHe = crbutil.getmmw(mixratio)
