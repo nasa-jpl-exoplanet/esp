@@ -47,8 +47,6 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
 
-from multiprocessing import Pool
-
 log = logging.getLogger(__name__)
 
 
