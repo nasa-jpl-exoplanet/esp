@@ -321,7 +321,7 @@ class Calibration(dawgie.Algorithm):
             pass
         if 'JWST' in flttype:
             caled = datcore.jwstcal(
-                fin, cll, tim, flttype, out, ps=ps, verbose=False
+                fin, cll, tim, flttype, out, verbose=False
             )
             pass
         return caled
