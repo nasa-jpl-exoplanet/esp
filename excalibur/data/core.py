@@ -969,8 +969,8 @@ def cleanspec(all1d, all1dvalid, alldet):
     for x in np.unique(alldet):
         select = alldet == x
         ref = np.nanmedian(out[select], axis=0)
-        refup = np.nanpercentile(out[select], 50 - 34, axis=0)
-        refdown = np.nanpercentile(out[select], 50 + 34, axis=0)
+        refup = np.nanpercentile(out[select], 50 + 34, axis=0)
+        refdown = np.nanpercentile(out[select], 50 - 34, axis=0)
         detset = out[select].copy()
         detset[(out[select] > refup) | (out[select] < refdown)] = np.nan
         stdsample = np.nanstd(detset, axis=0)
