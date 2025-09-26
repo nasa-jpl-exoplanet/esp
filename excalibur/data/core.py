@@ -859,8 +859,6 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         plt.show()
         pass
 
-<<<<<<< HEAD
-=======
     isort = np.argsort(datatiming)
     out['data']['TIME'] = datatiming[isort]
     allrexp = allrexp[isort]
@@ -872,7 +870,6 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
     alldq = alldq[isort]
     out['data']['EXPFLAG'] = alldq
 
->>>>>>> 576070e (internediate state)
     reffile = jwstreffiles(ext)
 
     if 'NIRISS' in ext:
@@ -952,7 +949,6 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
                 pass
             plt.show()
             pass
-
         out['STATUS'].append(True)
         out['data']['TIME'] = datatiming
         out['data']['DET'] = alldet

@@ -319,7 +319,13 @@ class Calibration(dawgie.Algorithm):
             caled = datcore.spitzercal(cll, out)
             pass
         if 'JWST' in flttype:
+<<<<<<< HEAD
             caled = datcore.jwstcal(fin, cll, tim, flttype, out, verbose=False)
+=======
+            caled = datcore.jwstcal(
+                fin, cll, tim, flttype, out, verbose=False
+            )
+>>>>>>> b0f5672 (Fixing data calibration multiprocess)
             pass
         return caled
 
