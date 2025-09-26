@@ -12,8 +12,7 @@ import logging
 
 import excalibur.system.core as syscore
 
-# from excalibur.util.cerberus import crbce, calcTEA, getmmw
-from excalibur.util.cerberus import crbce, getmmw
+from excalibur.util.cerberus import crbce, calcTEA, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
@@ -60,6 +59,9 @@ def crbmodel(
     '''
     G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
     radius solrad evenly log divided amongst nlevels steps
+    - TP profile
+    - VMR profile
+    - MMW profile
     '''
 
     if planet is None:
@@ -70,12 +72,28 @@ def crbmodel(
         knownspecies = ctxt.knownspecies
     if cialist is None:
         cialist = ctxt.cialist
-    else:
-        cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
+    # else:
+    #    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     if xmollist is None:
         xmollist = ctxt.xmollist
-    else:
-        xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # else:
+    #    xmollist = [
+    #        'TIO',
+    #        'H2O',
+    #        'H2CO',
+    #        'HCN',
+    #        'CO',
+    #        'CO2',
+    #        'NH3',
+    #        'CH4',
+    #        'C2H2',
+    #    ]
+    # this is passed in. why reset it here?
+    #    # longer list currently used by Luke:
+    #  PUT THIS INTO RUNTIME OPS!!
+    #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
+    # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
+    # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
     if nlevels is None:
         nlevels = ctxt.nlevels
     if Hsmax is None:
@@ -123,6 +141,8 @@ def crbmodel(
                 pass
             pass
         pass
+    else:
+        mxr = None
 
     ssc = syscore.ssconstants(mks=True)
     pgrid = np.arange(
@@ -135,8 +155,7 @@ def crbmodel(
     dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
     if not mixratio:
-        fH2 = None
-        fHe = None
+        # chemical equilibrium case
         if cheq is None:
             log.error('!!! >--< Neither mixratio nor cheq are defined')
             pass
@@ -148,38 +167,50 @@ def crbmodel(
                 X2Hr=cheq['XtoH'],
                 N2Or=cheq['NtoO'],
             )
-            pass
-        elif chemistry == 'TEA':
-            # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-            # species = ['H2O', 'CO', 'CO2']
-            log.error('HEY HOLD ON WITH CALCTEA in cerb/forward_model!')
-            # mixratio, fH2, fHe = calcTEA(
-            #     tempCoeffs,
-            #    pressure,
-            #    species,
-            #    metallicity=10.0 ** cheq['XtoH'],
-            #    C_O=0.55 * 10.0 ** cheq['CtoO'],
-            #    # N_O=?? * 10.0 ** cheq['NtoO'],
-            # )
-            mixratio, fH2, fHe = crbce(
-                pressure,
-                tpp,
-                C2Or=cheq['CtoO'],
-                X2Hr=cheq['XtoH'],
-                N2Or=cheq['NtoO'],
+            mmw, fH2, fHe = getmmw(
+                mixratio,
+                protosolar=False,
+                fH2=fH2,
+                fHe=fHe,
             )
-        else:
+            pass
+
+        elif chemistry == 'TEA':
+            #  (this one gives a div-by-0 error)
+            # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+            tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+            mixratioarray = calcTEA(
+                tempCoeffs,
+                pressure,
+                metallicity=10.0 ** cheq['XtoH'],
+                C_O=0.55 * 10.0 ** cheq['CtoO'],
+                # N_O=?? * 10.0 ** cheq['NtoO'],
+            )
+
+            # have to take the average! (same as done in crbce)
             mixratio = {}
+            for molecule in mixratioarray:
+                mixratio[molecule] = np.log10(
+                    np.mean(10.0 ** mixratioarray[molecule])
+                )
+            # print()
+            # print('mixratio in cerb', mixratio)
+            mmw, fH2, fHe = getmmw(mixratio)
+            # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
+        else:
+            fH2 = 0
+            fHe = 0
+            mixratio = {}
+            mmw = 1
             log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
             pass
-        mmw, fH2, fHe = getmmw(
-            mixratio,
-            protosolar=False,
-            fH2=fH2,
-            fHe=fHe,
-        )
+
+        mxr = mixratio
         pass
+
     else:
+        # DISEQ case
         mmw, fH2, fHe = getmmw(mxr)
         pass
     mmw = mmw * cst.m_p  # [kg]
@@ -275,7 +306,9 @@ def crbmodel(
         # adjust rp0 based on the cloudtop
         ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
         ctpdz = abs(
-            Hs / 2.0 * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+            Hs[cloudtopindex]
+            / 2.0
+            * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
         )
         rp0 += z[cloudtopindex] + ctpdz
     pass
@@ -439,45 +472,57 @@ def gettau(
             pass
         mlp = np.array(mlp)
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
-        # Fake use of xmollist due to changes in xslib v112
-        # THIS HAS TO BE FIXED
-        # if elem not in xmollist:
-        if not xmollist:
-            # HITEMP/HITRAN ROTHMAN ET AL. 2010 --------------------------------------
-            sigma, lsig = absorb(
-                xsecs[elem],
-                qtgrid[elem],
-                temp,
-                pressure,
-                mmr,
-                lbroadening,
-                lshifting,
-                wgrid,
-            )  # cm^2/mol
-            if True in (sigma < 0):
-                sigma[sigma < 0] = 0e0
+        if elem not in xsecs:
+            # TEA species might not have cross-sections calculated
+            if elem in ['H2', 'He']:
+                # ignore missing xsecs for molecules without strong features
                 pass
-            if True in ~np.isfinite(sigma):
-                sigma[~np.isfinite(sigma)] = 0e0
-                pass
-            sigma = sigma * 1e-4  # m^2/mol
-            pass
+            else:
+                log.error(
+                    'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                    elem,
+                )
         else:
-            # EXOMOL HILL ET AL. 2013 ------------------------------------------------
-            sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
-            # sigma.shape(n_waves, n_pressure)
-            if True in (sigma < 0):
-                sigma[sigma < 0] = 0e0
+            # Fake use of xmollist due to changes in xslib v112
+            # THIS HAS TO BE FIXED
+            # if elem not in xmollist:
+            if not xmollist:
+                # HITEMP/HITRAN ROTHMAN ET AL. 2010 --------------------------------------
+                sigma, lsig = absorb(
+                    xsecs[elem],
+                    qtgrid[elem],
+                    temp,
+                    pressure,
+                    mmr,
+                    lbroadening,
+                    lshifting,
+                    wgrid,
+                )  # cm^2/mol
+                if True in (sigma < 0):
+                    sigma[sigma < 0] = 0e0
+                    pass
+                if True in ~np.isfinite(sigma):
+                    sigma[~np.isfinite(sigma)] = 0e0
+                    pass
+                sigma = sigma * 1e-4  # m^2/mol
                 pass
-            if True in ~np.isfinite(sigma):
-                sigma[~np.isfinite(sigma)] = 0e0
+            else:
+                # EXOMOL HILL ET AL. 2013 ------------------------------------------------
+                sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+                # sigma.shape(n_waves, n_pressure)
+                if True in (sigma < 0):
+                    sigma[sigma < 0] = 0e0
+                    pass
+                if True in ~np.isfinite(sigma):
+                    sigma[~np.isfinite(sigma)] = 0e0
+                    pass
+                sigma = sigma * 1e-4  # m^2/mol
                 pass
-            sigma = sigma * 1e-4  # m^2/mol
+            # GMR: Array Broadcasting
+            # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
+            tau = tau + (rho * mmr * sigma).T
+            tau_by_molecule[elem] = (rho * mmr * sigma).T
             pass
-        # GMR: Array Broadcasting
-        # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
-        tau = tau + (rho * mmr * sigma).T
-        tau_by_molecule[elem] = (rho * mmr * sigma).T
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:

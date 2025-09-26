@@ -70,11 +70,14 @@
       <xs:enumeration value="C2"/>
       <xs:enumeration value="C2H2"/>
       <xs:enumeration value="C2H4"/>
+      <xs:enumeration value="C2H6"/>
       <xs:enumeration value="C3"/>
+      <xs:enumeration value="C3H8"/>
       <xs:enumeration value="CAO"/>
       <xs:enumeration value="CAOH"/>
       <xs:enumeration value="CH3"/>
       <xs:enumeration value="CH3CL"/>
+      <xs:enumeration value="CH3CHO"/>
       <xs:enumeration value="CH4"/>
       <xs:enumeration value="CN"/>
       <xs:enumeration value="CO"/>

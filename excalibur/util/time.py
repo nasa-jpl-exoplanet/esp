@@ -35,7 +35,9 @@ def time2z(
         )
         realf = np.sqrt(1e0 - ecc) * np.cos(float(E0) / 2e0)
         imagf = np.sqrt(1e0 + ecc) * np.sin(float(E0) / 2e0)
-        w = np.angle(np.complex(realf, imagf))
+        #  numpy has no attribute 'complex' error
+        # w = np.angle(np.complex(realf, imagf))
+        w = np.angle(complex(realf, imagf))
         if abs(ft0) < epsilon:
             w = np.pi / 2e0
             tperi = tknot

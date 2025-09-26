@@ -919,7 +919,7 @@ def targetlist_active():
         'CoRoT-6',
         'CoRoT-8',
         'CoRoT-9',
-        'CoRoTID 223977153',
+        'CoRoT-32',
         'EPIC 212297394',
         'EPIC 220674823',
         'EPIC 229004835',

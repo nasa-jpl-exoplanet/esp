@@ -25,7 +25,7 @@ from excalibur.cerberus.core import myxsecs
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
 # import os
-import sys
+# import sys
 
 # import pickle
 import numpy as np
@@ -65,29 +65,48 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     '''
     calculate the mean molecular weight and scale height
     '''
+
+    # INCLUDE C/O RATIO HERE????  ASDF
+
     if useTEA:
-        # tempCoeffs = [0, temperature, 0, 0, 0, 0, 0, 0, 0, 0]
-        # tempCoeffs = [0, temperature]
-        # species = ['H2O', 'CO', 'CO2']
-        log.error('TEA removed for now')
-        # mixratio, fH2, fHe = crbutil.calcTEA(
-        #     tempCoeffs, pressureArray, species, metallicity=10.0**X2Hr
-        # )
-        mixratio, fH2, fHe = crbutil.crbce(
-            pressureArray, temperature, X2Hr=X2Hr
+        # log.error('TEA removed for now')
+        tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+        mixratioarray = crbutil.calcTEA(
+            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
         )
+        # have to take the average! (same as done in crbce)
+        mixratio = {}
+        for molecule in mixratioarray:
+            mixratio[molecule] = np.log10(
+                np.mean(10.0 ** mixratioarray[molecule])
+            )
+        # print('TEA:', mixratio)
+
+        mmw, fH2, fHe = crbutil.getmmw(mixratio)
+        # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
+        # (uncomment to compare TEC vs TEA)
+        # mixratio, fH2, fHe = crbutil.crbce(
+        #    pressureArray, temperature, X2Hr=X2Hr
+        # )
+        # print('TEC:', mixratio, fH2, fHe)
+
     else:
         mixratio, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
+        mmw, fH2, fHe = crbutil.getmmw(
+            mixratio,
+            protosolar=False,
+            fH2=fH2,
+            fHe=fHe,
+        )
+    # print('mmw      (inside)', mmw, fH2, fHe)
 
     # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
     # assume solar C/O and N/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-
-    mmw, fH2, fHe = crbutil.getmmw(mixratio, protosolar=False, fH2=fH2, fHe=fHe)
-    # print('mmw      (inside)', mmw, fH2, fHe)
 
     mmw_kg = mmw * cst.m_p  # [kg]
     Hs = (
@@ -131,6 +150,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
         'cerberusTEANoclouds',
         'cerberuslowmmwNoclouds',
     ]
+
     if testTarget:
         atmosModels = [
             'cerberus',
@@ -292,6 +312,10 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     # print()
                     # print('starting Atmospheric Model:',atmosModel)
                     useTEA = bool('TEA' in atmosModel)
+                    if useTEA:
+                        chemistry = 'TEA'
+                    else:
+                        chemistry = 'TEC'
 
                     # ABUNDANCES
                     if 'lowmmw' in atmosModel:
@@ -333,6 +357,8 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             HoverRmax,
                             atmosModel,
                         )
+
+                    fluxDepth_by_molecule = {}
 
                     if 'cerberus' in atmosModel:
                         # CLOUD PARAMETERS
@@ -414,33 +440,28 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                                     existingPlanetLetter
                                 ]
 
-                        # cerbModel, cerbModel_by_molecule = make_cerberus_atmos(
                         fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
                             runtime_params,
                             wavelength_um,
                             model_params,
                             xslib,
                             planet_letter,
+                            chemistry=chemistry,
                         )
-
-                        # fluxDepth = cerbModel
-                        # fluxDepth_by_molecule = {}
-                        # for molecule, model in cerbModel_by_molecule.items():
-                        #    fluxDepth_by_molecule[molecule] = model
 
                     elif 'taurex' in atmosModel:
-                        sys.exit('ERROR: taurex no longer an option')
+                        log.error('ERROR: taurex no longer an option')
                     else:
-                        sys.exit('ERROR: unknown model')
+                        log.error('ERROR: unknown model')
 
-                    bads = np.where(np.isnan(fluxDepth))
-                    if len(bads[0]) > 0:
-                        print(
-                            '   bad fluxDepths:',
-                            len(bads[0]),
-                            'out of',
-                            len(fluxDepth),
-                        )
+                    # bads = np.where(np.isnan(fluxDepth))
+                    # if len(bads[0]) > 0:
+                    #    print(
+                    #        '   bad fluxDepths:',
+                    #        len(bads[0]),
+                    #        'out of',
+                    #        len(fluxDepth),
+                    #    )
 
                     # REBIN to the Ariel spectral resolution
                     wavelength_um_rebin = []

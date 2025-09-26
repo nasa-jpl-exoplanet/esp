@@ -17,6 +17,7 @@ def make_cerberus_atmos(
     model_params,
     xslib,
     planet_letter,
+    chemistry='TEC',
     mixratios=None,
 ):
     '''
@@ -69,6 +70,7 @@ def make_cerberus_atmos(
         hazeloc=float(hazeloc),
         hazethick=float(hazethick),
         hzlib=crbhzlib,
+        chemistry=chemistry,
         cheq=tceqdict,
         mixratio=mixratios,
         rp0=rp0,

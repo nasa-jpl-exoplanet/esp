@@ -168,6 +168,8 @@ def myxsecs(spc, runtime_params, out, verbose=False):
     # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
     # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
     # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
+    # alternate list used by Luke:
+    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4','C2H2', 'C2H6', 'C3H8', 'CH3CHO', 'SO2','H2S']
     knownspecies = runtime_params.knownspecies
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
@@ -709,20 +711,19 @@ def atmos(
             log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        # asdf   don't slow down HST fitting with TEA just yet
         modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
             # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
             'PHOTOCHEM': runtime_params.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
-            modparlbl['TEA'].remove('NtoO')
+            # modparlbl['TEA'].remove('NtoO')
         if not runtime_params.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
-            modparlbl['TEA'].remove('CtoO')
+            # modparlbl['TEA'].remove('CtoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -1872,8 +1873,11 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
 
             # limit results to just the TEC model?  No, not for HST/G141
             # but do verify that TEC exists at least
-            if 'TEC' not in atm[p]['MODELPARNAMES'].keys():
-                log.warning('>-- %s', 'TROUBLE: theres no TEC fit!?')
+            if (
+                'TEC' not in atm[p]['MODELPARNAMES'].keys()
+                and 'TEA' not in atm[p]['MODELPARNAMES'].keys()
+            ):
+                log.warning('>-- %s', 'TROUBLE: theres no TEC/TEA fit!?')
                 return False
 
             # there was a bug before where PHOTOCHEM was passed in for Ariel
