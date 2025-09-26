@@ -478,7 +478,10 @@ def gettau(
                 # ignore missing xsecs for molecules without strong features
                 pass
             else:
-                log.error('MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s', elem)
+                log.error(
+                    'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                    elem,
+                )
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED

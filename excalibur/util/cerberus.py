@@ -427,7 +427,7 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
     mixratio_metalsonly = mixratio
     if 'H2' in mixratio:
         protosolar = False
-        fH2 = 1.e-6 * 10.0 ** mixratio['H2']
+        fH2 = 1.0e-6 * 10.0 ** mixratio['H2']
         mixratio_metalsonly.pop('H2')
 
         if 'He' not in mixratio:
