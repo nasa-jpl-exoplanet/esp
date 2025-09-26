@@ -193,10 +193,10 @@ def crbmodel(
                 mixratio[molecule] = np.log10(
                     np.mean(10.0 ** mixratioarray[molecule])
                 )
-            print()
-            print('mixratio in cerb', mixratio)
+            # print()
+            # print('mixratio in cerb', mixratio)
             mmw, fH2, fHe = getmmw(mixratio)
-            print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+            # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
         else:
             fH2 = 0
@@ -474,7 +474,11 @@ def gettau(
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
-            log.warning('ERR: no cross-sections for molecule %s', elem)
+            if elem in ['H2', 'He']:
+                # ignore missing xsecs for molecules without strong features
+                pass
+            else:
+                log.error('MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s', elem)
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED
