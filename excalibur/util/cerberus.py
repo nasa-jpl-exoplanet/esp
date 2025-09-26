@@ -440,7 +440,7 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         else:
             fHe = 1e-6 * 10.0 ** mixratio['He']
             mixratio_metalsonly.pop('He')
-        print('fHe,fH2 from TEA:', fHe, fH2)
+        # print('fHe,fH2 from TEA:', fHe, fH2)
 
     for elem in mixratio_metalsonly:
         molsum = molsum + 10.0 ** (mixratio[elem] - 6.0)
