@@ -50,6 +50,7 @@ def calcTEA(
     mixratio as dict like {'H2O': 0.01, ...} in format used by crbfm. Mixing ratios used are the average value across the pressure grid.
     """
     if species is None:
+        # these names must match the naming scheme in proj/data/tea_files/gdata
         species = [
             'C2H2_g',
             'CH4_g',
@@ -60,6 +61,7 @@ def calcTEA(
             'H2_ref',
             'H2S_g',
             'HCN_g',
+            'He_ref',
             'N2O_g',
             'N2_ref',
             'NH3_g',
@@ -421,7 +423,22 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'CH3CHO': 44.0,
     }
 
-    for elem in mixratio:
+    # TEA abuncances include H and He; have to be separated to get metals
+    mixratio_metalsonly = mixratio
+    if 'H2' in mixratio:
+        protosolar = False
+        fH2 = 1.e-6 * 10.0 ** mixratio['H2']
+        mixratio_metalsonly.pop('H2')
+
+        if 'He' not in mixratio:
+            log.error('TEA abundance should include He as well as H2')
+            protosolar = True
+        else:
+            fHe = 1e-6 * 10.0 ** mixratio['He']
+            mixratio_metalsonly.pop('He')
+        print('fHe,fH2 from TEA:', fHe, fH2)
+
+    for elem in mixratio_metalsonly:
         molsum = molsum + 10.0 ** (mixratio[elem] - 6.0)
         mmw = mmw + 10.0 ** (mixratio[elem] - 6.0) * weights[elem]
         if verbose:
