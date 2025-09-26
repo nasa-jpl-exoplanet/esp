@@ -15,6 +15,10 @@ from excalibur.util.tea_code import makeatm
 from excalibur.util.tea_code import runatm
 from excalibur.util.tea_code import makeheader
 
+import logging
+
+log = logging.getLogger(__name__)
+
 # --------------------------------------------------------------------
 
 
