@@ -769,7 +769,7 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
+def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=-1):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
@@ -788,9 +788,9 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         if n.endswith('calints')
     ]
     out['data']['LOC'] = rawloc
-    if fastdev:
-        rawloc = rawloc[0:2]
-        calloc = calloc[0:2]
+    if fastdev > 0:
+        rawloc = rawloc[0:fastdev]
+        calloc = calloc[0:fastdev]
         pass
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
@@ -859,19 +859,7 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         plt.show()
         pass
 
-    isort = np.argsort(datatiming)
-    out['data']['TIME'] = datatiming[isort]
-    allrexp = allrexp[isort]
-    out['data']['EXP'] = allrexp
-    allrerr = alldq[isort]
-    out['data']['EXPERR'] = allrerr
-    alldet = alldet[isort]
-    out['data']['DET'] = alldet
-    alldq = alldq[isort]
-    out['data']['EXPFLAG'] = alldq
-
     reffile = jwstreffiles(ext)
-
     if 'NIRISS' in ext:
         Tstar = fin['priors']['T*']
         bbfunc = astrobb(Tstar * astropy.units.K)
@@ -929,6 +917,8 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
                 pass
             else:
                 refwave = allwaves[it]
+                refwave[:, :4] = np.nan
+                refwave[:, -4:] = np.nan
                 pass
             wct = nirspeccal(thisexp, refwave)
             all1dvalid.append(wct[0])
@@ -937,7 +927,8 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
             progbar.update()
             pass
         progbar.close()
-        clean1D = cleanspec(all1d, all1dvalid, alldet)
+
+        clean1D = cleanspec(all1d, all1dvalid, alldet, verbose=verbose)
         if verbose:
             plt.figure(figsize=(12, 9))
             for w, s, m in zip(all1dwave, all1d, all1dvalid):
@@ -949,7 +940,10 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
                 pass
             plt.show()
             pass
+
         out['STATUS'].append(True)
+        out['data']['DET'] = alldet
+        out['data']['EXP'] = allrexp
         out['data']['TIME'] = datatiming
         out['data']['DET'] = alldet
         out['data']['EXCLNUM'] = all1dvalid
@@ -958,25 +952,47 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         ]
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
+        out['data']['EXPFLAG'] = alldq
         pass
     return True
 
 
-def cleanspec(all1d, all1dvalid, alldet):
+def cleanspec(all1d, all1dvalid, alldet, verbose=False):
+    '''
+    GMR: Cleaning up
+    '''
     out = np.array(all1d.copy())
     valid = np.array(all1dvalid.copy())
     out[~valid] = np.nan
     for x in np.unique(alldet):
         select = alldet == x
-        ref = np.nanmedian(out[select], axis=0)
-        refup = np.nanpercentile(out[select], 50 + 34, axis=0)
-        refdown = np.nanpercentile(out[select], 50 - 34, axis=0)
+        refup = np.nanpercentile(out[select], 50 + 98 / 2, axis=0)
+        refdown = np.nanpercentile(out[select], 50 - 98 / 2, axis=0)
         detset = out[select].copy()
         detset[(out[select] > refup) | (out[select] < refdown)] = np.nan
         stdsample = np.nanstd(detset, axis=0)
-        valid[select] = abs(out[select] - ref) < (3 * stdsample)
+        detset = out[select].copy()
+        refspec = np.nanmedian(detset, axis=0)
+        thr = np.nanpercentile(np.diff(refspec), 95)
+        mask = [False]
+        mask.extend(abs(np.diff(refspec)) > 2 * thr)
+        refspec[np.array(mask)] = np.nan
+        detset[
+            (detset < (refspec - 3 * stdsample))
+            | (detset > (refspec + 3 * stdsample))
+        ] = np.nan
+        out[select] = detset
+        if verbose:
+            fig, ax = plt.subplots(figsize=(12, 9))
+            cax = ax.imshow(detset, aspect='auto', interpolation='none')
+            plt.title(x, fontsize=20)
+            plt.xticks(fontsize=16)
+            plt.yticks(fontsize=16)
+            cbar = fig.colorbar(cax)
+            cbar.ax.tick_params(labelsize=16)
+            plt.show()
+            pass
         pass
-    out[~valid] = np.nan
     return out
 
 
@@ -985,9 +1001,12 @@ def nirspeccal(thisexp, thosewaves):
     GMR: NIRSPEC wavelength calibration
     Assumes lfer removed data
     '''
+    # Dead pixels will answer that one.
+    # Need to kick them, we have enough channels
+    # No interpolation BS.
     this1d = np.nansum(thisexp, axis=0)
     this1dwave = np.nanmedian(thosewaves, axis=0)
-    select = np.isfinite(this1d)
+    select = np.isfinite(this1dwave)
     return (select, this1d, this1dwave)
 
 
@@ -1161,7 +1180,7 @@ def lfnoise(xps, flg, verbose=False):
     for i, _ in enumerate(xps):
         lfcorr = xps[i].copy()
         lfcorr[4:-4] = np.nan
-        lfr = np.nanmean(lfcorr, axis=0)
+        lfr = np.nanmedian(lfcorr, axis=0)
         select = ~np.isfinite(lfr)
         if np.sum(select):
             temp = flg[i]
