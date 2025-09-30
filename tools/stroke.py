@@ -1,5 +1,59 @@
 #! /usr/bin/env python
-'''intentionally cause the pipeline retrograde amnesia
+'''--- intentionally cause the pipeline retrograde amnesia ---
+
+The prime table is brain of the pipeline connecting all of the nodes, targets,
+and run ids to specific data. Removing references from the prime table means
+disassociating that run 12 for target GJ 1214 with '
+system.finalize.parameters.priors' from the data that was computed at that time.
+Bassically, the pipeline strokes causing retrograde amnesia. Just like strokes
+in us, there can be hidden and complicated side effects that accumulate over
+time causing systemic and/or catastrophic failure far into the future.
+
+Other database tables mentioned help in minimizing the prime table size and add
+to the potential side effects.
+
+
+There are three forms of retrograde amnesia:
+  1. remove targets
+  2. remove nodes - task.algorithm.state_vactor.value
+  3. remove duplicates - only useful on databases prior to dawgie 2.0.0
+
+1. Removing targets is straight forward. If a pipeline contained the target
+   names 'snafu' and 'foobar', then removing them would be done with
+   `stroke.py --targets snafu foobar`. These names will be removed from the
+   known target table and all references to them in the prime table will also
+   be removed.
+
+2. Removing nodes - computational elements like the bubbles in the dependency
+   graph - is more complicated because there is a natural globbing (wildcarding)
+   that takes place as well. Let us assume the pipeline contains four nodes:
+   system.finalize.parameters.priors, system.finalize.parameters.autofill,
+   system.finalize.madeup, and system.validate. Independent of their length,
+   they are all nodes. The take should be that fewer '.' means more information
+   is removed. So now lets look at what happens when we provide these nodes:
+ a. system.finalize.parameters.priors
+    All versions of system.finalize.parameters.priors are removed from the
+    value table and any references to them in the prime table.
+ b. system.finalize.parameters
+    It globs like `ls` would glob 'system.finalize.parameters.*'. All version of
+    system.finalize.parameters.priors and system.finalize.parameters.autofill
+    are removed from the values table and those references from the prime table.
+    All versions of system.finalize.parmeters are removed from state vector
+    table with those references being removed from the prime table.
+ c. system.finalize
+    All versions of 'autofill' and 'priors' are removed from the value table
+    with those references being remvoed from the prime table. All versions of
+    'parameters' and 'madeup' are removed from the state vector table with those
+    references being removed from the prime table. Finally, all versions of
+    system.finalize are removed from the algorithm table with those references
+    being removed from the prime table.
+ d. system
+    Everything is removed as stated in (c) and all versions of system,validate.
+    'system' is removed from the task table with all of those references from
+    the prime table.
+
+3. Make the prime table unique. It is required for dawgie < 2 before upgrading.
+   Otherwise this option is superfluous.
 '''
 
 import argparse
@@ -12,13 +66,39 @@ except ImportError:
     print('ERROR: it is best to be using a venv that has dawgie installed')
     print('       by installing esp/requirements.txt')
 
+def _resolve(cursor, name, parents, table):
+    if name and parents[0]:
+        cursor.execute(
+            f'SELECT pk FROM {table} WHERE name = %s AND {parents[0]} = ANY(%s);',
+            name,
+            parents[1]
+        )
+    elif name:
+        cursor.execute(f'SELECT pk FROM {table} WHERE name = %s;', name)
+    elif parents[1]:
+        cursor.execute(
+            f'SELECT pk FROM {table} WHERE {parents[0]} = ANY(%s);',
+            name,
+            parents[1]
+        )
+    else:
+        ValueError('name and parents were None or empty')
+
+    pks = cursor.fetchall()
+    if pks:
+        return pks
+    raise AttributeError(f'{name} could not be found in {table}')
+
 def cli():
     '''Command Line Interface'''
-    cl = argparse.ArgumentParser(description=__doc__)
+    cl = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     cl.add_argument ('--dry-run', action='store_true',
-                     help='do not do the actual deletions')
+                     help='do not actually delete the information')
     cl.add_argument ('--nodes', default=[], nargs='*',
-                     help='remove given nodes where the node is given in the form task.alg.sv.val. For instance, system.finalize.parameters.priors would remove all versions of priors. Shortening the name will remove all versions of everything under it as well. For instance, system.finalize would remove all versions of finalize and all of the state vectors and values below it.')
+                     help='remove given nodes.')
     cl.add_argument ('--targets', default=[], nargs='*',
                      help='remove given targets from memory')
     cl.add_argument ('--unique', action='store_true',
@@ -61,6 +141,47 @@ def confirm():
 
 def nodes (cursor, dry, todo:[str]):
     '''process all of the nodes'''
+    for node in todo:
+        tn,an,svn,vn = (node.split('.') + [None, None, None])[:4]
+        tids,aids,svids,vids = [],[],[],[]
+        parents = ['',[]]
+        for name,parent,pids,table in zip(
+                (tn, an, svn, vn),
+                ('', 'task_ID', 'alg_ID', 'sv_ID'),
+                (tids, aids, svids, vids),
+                ('Task', 'Algorithm', 'StateVector', 'Value'),
+        ):
+            parents[0] = parent
+            pids.append (_resolve (cursor, name, parents, table))
+            parents[1] = pids
+        cursor.execute('SELECT pk FROM Prime WHERE'
+                       'task_ID = ANY(%s) AND alg_ID = ANY(%s) AND '
+                       'sv_ID = ANY(%s) AND val_ID = ANY(%s);')
+        pks = cursor.fetchall()
+        print (f'INFO: For node {node}:')
+        print (f'        From {tn} removing' if an else
+               f'        Removing {sum(tids)} {tn}(s)')
+        print (f'        Form {an} removing' if svn else
+               (f'        Removing {sum(aids)} {an}(s)' if an else
+                f'        Removing {sum(aids)} algorithms'))
+        print (f'        Form {svn} removing' if vn else
+               (f'        Removing {sum(svids)} {svn}(s)' if svn else
+                f'        Removing {sum(svids)} state vectors'))
+        print (f'        Removing {sum(vids)} {vn}(s)' if an else
+               f'        Removing {sum(vids)} values')
+        print (f'        Removing from PRIME {sum(pks)} associated rows')
+
+        if pks and not dry:
+            sql = 'DELETE FROM {} WHERE pk = ANY(%s);'
+            cursor.execute(sql.format('Prime'), pks)
+            cursor.execute(sql.format('Value'), vids)
+            if not an:
+                cursor.execute(sql.format('Task'), tids)
+            if not svn:
+                cursor.execute(sql.format('Algorithm'), aids)
+            if not vn:
+                cursor.execute(sql.format('StateVector'), svids)
+            cursor.commit()
     pass
 
 def targets (cursor, dry, todo:[str]):
@@ -78,7 +199,7 @@ def targets (cursor, dry, todo:[str]):
         for m in missing:
             print (f'INFO: {m} is not in the database')
 
-    if tnids not dry:
+    if tnids and not dry:
         cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);')
         cursor.execute('DELETE FROM Prime WHERE tn_ID = ANY(%s);')
         cursor.commit()
