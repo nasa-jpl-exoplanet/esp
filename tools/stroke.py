@@ -66,12 +66,13 @@ except ImportError:
     print('ERROR: it is best to be using a venv that has dawgie installed')
     print('       by installing esp/requirements.txt')
 
+
 def _resolve(cursor, name, parents, table):
     if name and parents[0]:
         cursor.execute(
             f'SELECT pk FROM {table} WHERE name = %s AND {parents[0]} = ANY(%s);',
             name,
-            parents[1]
+            parents[1],
         )
     elif name:
         cursor.execute(f'SELECT pk FROM {table} WHERE name = %s;', name)
@@ -79,7 +80,7 @@ def _resolve(cursor, name, parents, table):
         cursor.execute(
             f'SELECT pk FROM {table} WHERE {parents[0]} = ANY(%s);',
             name,
-            parents[1]
+            parents[1],
         )
     else:
         ValueError('name and parents were None or empty')
@@ -89,25 +90,37 @@ def _resolve(cursor, name, parents, table):
         return pks
     raise AttributeError(f'{name} could not be found in {table}')
 
+
 def cli():
     '''Command Line Interface'''
     cl = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    cl.add_argument ('--dry-run', action='store_true',
-                     help='do not actually delete the information')
-    cl.add_argument ('--nodes', default=[], nargs='*',
-                     help='remove given nodes.')
-    cl.add_argument ('--targets', default=[], nargs='*',
-                     help='remove given targets from memory')
-    cl.add_argument ('--unique', action='store_true',
-                     help='remove any duplicate rows from the prime table keeping those with the largest primary key')
+    cl.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='do not actually delete the information',
+    )
+    cl.add_argument(
+        '--nodes', default=[], nargs='*', help='remove given nodes.'
+    )
+    cl.add_argument(
+        '--targets',
+        default=[],
+        nargs='*',
+        help='remove given targets from memory',
+    )
+    cl.add_argument(
+        '--unique',
+        action='store_true',
+        help='remove any duplicate rows from the prime table keeping those with the largest primary key',
+    )
     args = cl.parse_args()
     if not args.nodes and not args.targets and not args.unique:
-        print ('WARN: you did not as me to do anything')
+        print('WARN: you did not as me to do anything')
     else:
-        print (args)
+        print(args)
         confirm()
         connection = None
         cursor = None
@@ -116,7 +129,8 @@ def cli():
             cursor = dawgie.db.post._cur(connection)
             nodes(cursor, args.dry_run, args.nodes)
             target(cursor, args.dry_run, args.targets)
-            if args.unique: unique(cursor, args.dry_run)
+            if args.unique:
+                unique(cursor, args.dry_run)
         except:
             if cursor is not None:
                 cursor.rollback()
@@ -125,13 +139,14 @@ def cli():
                 connection.close()
             raise
 
+
 def confirm():
     '''check that some of the dawgie vars are defined in the environment'''
     passed = True
     for subname in ['DB_HOST', 'DB_IMPL', 'DB_NAME', 'DB_PATH', 'DB_PORT']:
         varname = 'DAWGIE_' + subname
         if varname not in os.environ:
-            print (f'ERROR: {varname} is not in your environment')
+            print(f'ERROR: {varname} is not in your environment')
             passed = False
     if not passed:
         raise AttributeError('Missing environment variables')
@@ -139,37 +154,58 @@ def confirm():
         raise ValueError('DAWGIE_DB_IMPL must be post')
     pass
 
-def nodes (cursor, dry, todo:[str]):
+
+def nodes(cursor, dry, todo: [str]):
     '''process all of the nodes'''
     for node in todo:
-        tn,an,svn,vn = (node.split('.') + [None, None, None])[:4]
-        tids,aids,svids,vids = [],[],[],[]
-        parents = ['',[]]
-        for name,parent,pids,table in zip(
-                (tn, an, svn, vn),
-                ('', 'task_ID', 'alg_ID', 'sv_ID'),
-                (tids, aids, svids, vids),
-                ('Task', 'Algorithm', 'StateVector', 'Value'),
+        tn, an, svn, vn = (node.split('.') + [None, None, None])[:4]
+        tids, aids, svids, vids = [], [], [], []
+        parents = ['', []]
+        for name, parent, pids, table in zip(
+            (tn, an, svn, vn),
+            ('', 'task_ID', 'alg_ID', 'sv_ID'),
+            (tids, aids, svids, vids),
+            ('Task', 'Algorithm', 'StateVector', 'Value'),
         ):
             parents[0] = parent
-            pids.append (_resolve (cursor, name, parents, table))
+            pids.append(_resolve(cursor, name, parents, table))
             parents[1] = pids
-        cursor.execute('SELECT pk FROM Prime WHERE'
-                       'task_ID = ANY(%s) AND alg_ID = ANY(%s) AND '
-                       'sv_ID = ANY(%s) AND val_ID = ANY(%s);')
+        cursor.execute(
+            'SELECT pk FROM Prime WHERE'
+            'task_ID = ANY(%s) AND alg_ID = ANY(%s) AND '
+            'sv_ID = ANY(%s) AND val_ID = ANY(%s);'
+        )
         pks = cursor.fetchall()
-        print (f'INFO: For node {node}:')
-        print (f'        From {tn} removing' if an else
-               f'        Removing {sum(tids)} {tn}(s)')
-        print (f'        Form {an} removing' if svn else
-               (f'        Removing {sum(aids)} {an}(s)' if an else
-                f'        Removing {sum(aids)} algorithms'))
-        print (f'        Form {svn} removing' if vn else
-               (f'        Removing {sum(svids)} {svn}(s)' if svn else
-                f'        Removing {sum(svids)} state vectors'))
-        print (f'        Removing {sum(vids)} {vn}(s)' if an else
-               f'        Removing {sum(vids)} values')
-        print (f'        Removing from PRIME {sum(pks)} associated rows')
+        print(f'INFO: For node {node}:')
+        print(
+            f'        From {tn} removing'
+            if an
+            else f'        Removing {sum(tids)} {tn}(s)'
+        )
+        print(
+            f'        Form {an} removing'
+            if svn
+            else (
+                f'        Removing {sum(aids)} {an}(s)'
+                if an
+                else f'        Removing {sum(aids)} algorithms'
+            )
+        )
+        print(
+            f'        Form {svn} removing'
+            if vn
+            else (
+                f'        Removing {sum(svids)} {svn}(s)'
+                if svn
+                else f'        Removing {sum(svids)} state vectors'
+            )
+        )
+        print(
+            f'        Removing {sum(vids)} {vn}(s)'
+            if an
+            else f'        Removing {sum(vids)} values'
+        )
+        print(f'        Removing from PRIME {sum(pks)} associated rows')
 
         if pks and not dry:
             sql = 'DELETE FROM {} WHERE pk = ANY(%s);'
@@ -184,20 +220,21 @@ def nodes (cursor, dry, todo:[str]):
             cursor.commit()
     pass
 
-def targets (cursor, dry, todo:[str]):
+
+def targets(cursor, dry, todo: [str]):
     '''process all of the targets'''
     for t in todo:
-        print (f'INFO: removing target {t}')
-    cursor.execute ('SELECT pk FROM Target WHERE name = ANY(%s);', todo)
+        print(f'INFO: removing target {t}')
+    cursor.execute('SELECT pk FROM Target WHERE name = ANY(%s);', todo)
     tnids = cursor.fetchall()
 
     if len(tnids) != len(todo):
         missing = todo.copy()
-        cursor.execute ('SELECT name FROM Target WHERE pk = ANY(%s);', tnids)
+        cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', tnids)
         for name in cursor.fetchall():
-            missing.remove (name)
+            missing.remove(name)
         for m in missing:
-            print (f'INFO: {m} is not in the database')
+            print(f'INFO: {m} is not in the database')
 
     if tnids and not dry:
         cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);')
@@ -205,9 +242,11 @@ def targets (cursor, dry, todo:[str]):
         cursor.commit()
     pass
 
+
 def unique(cursor, dry):
     '''remove duplicate rows in the primary table keeping the largest PK'''
     pass
+
 
 if __name__ == '__main__':
     cli()
