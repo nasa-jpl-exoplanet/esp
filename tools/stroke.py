@@ -61,7 +61,6 @@ import os
 
 try:
     import dawgie.db.post
-    import psycopg
 except ImportError:
     print('ERROR: it is best to be using a venv that has dawgie installed')
     print('       by installing esp/requirements.txt')
@@ -71,23 +70,21 @@ def _resolve(cursor, name, parents, table):
     if name and parents[0]:
         cursor.execute(
             f'SELECT pk FROM {table} WHERE name = %s AND {parents[0]} = ANY(%s);',
-            name,
-            parents[1],
+            [name, parents[1]],
         )
     elif name:
-        cursor.execute(f'SELECT pk FROM {table} WHERE name = %s;', name)
+        cursor.execute(f'SELECT pk FROM {table} WHERE name = %s;', [name])
     elif parents[1]:
         cursor.execute(
             f'SELECT pk FROM {table} WHERE {parents[0]} = ANY(%s);',
-            name,
-            parents[1],
+            [parents[1]],
         )
     else:
         ValueError('name and parents were None or empty')
 
     pks = cursor.fetchall()
     if pks:
-        return pks
+        return [pk[0] for pk in pks]
     raise AttributeError(f'{name} could not be found in {table}')
 
 
@@ -120,7 +117,7 @@ def cli():
     if not args.nodes and not args.targets and not args.unique:
         print('WARN: you did not as me to do anything')
     else:
-        print(args)
+        print(args)  # FIXME: just for debug
         confirm()
         connection = None
         cursor = None
@@ -128,17 +125,15 @@ def cli():
             connection = dawgie.db.post._conn()
             cursor = dawgie.db.post._cur(connection)
             nodes(cursor, args.dry_run, args.nodes)
-            target(cursor, args.dry_run, args.targets)
+            targets(cursor, args.dry_run, args.targets)
             if args.unique:
                 unique(cursor, args.dry_run)
-        except:
+        finally:
             if cursor is not None:
-                cursor.rollback()
                 cursor.close()
             if connection is not None:
+                connection.rollback()
                 connection.close()
-            raise
-
 
 def confirm():
     '''check that some of the dawgie vars are defined in the environment'''
@@ -168,55 +163,56 @@ def nodes(cursor, dry, todo: [str]):
             ('Task', 'Algorithm', 'StateVector', 'Value'),
         ):
             parents[0] = parent
-            pids.append(_resolve(cursor, name, parents, table))
+            pids.extend(_resolve(cursor, name, parents, table))
             parents[1] = pids
         cursor.execute(
-            'SELECT pk FROM Prime WHERE'
+            'SELECT pk FROM Prime WHERE '
             'task_ID = ANY(%s) AND alg_ID = ANY(%s) AND '
-            'sv_ID = ANY(%s) AND val_ID = ANY(%s);'
+            'sv_ID = ANY(%s) AND val_ID = ANY(%s);',
+            [tids, aids, svids, vids]
         )
-        pks = cursor.fetchall()
+        pks = [pk[0] for pk in cursor.fetchall()]
         print(f'INFO: For node {node}:')
         print(
             f'        From {tn} removing'
             if an
-            else f'        Removing {sum(tids)} {tn}(s)'
+            else f'        Removing {len(tids)} task: {tn}'
         )
         print(
             f'        Form {an} removing'
             if svn
             else (
-                f'        Removing {sum(aids)} {an}(s)'
+                f'        Removing {len(aids)} {an}(s)'
                 if an
-                else f'        Removing {sum(aids)} algorithms'
+                else f'        Removing {len(aids)} algorithms'
             )
         )
         print(
             f'        Form {svn} removing'
             if vn
             else (
-                f'        Removing {sum(svids)} {svn}(s)'
+                f'        Removing {len(svids)} {svn}(s)'
                 if svn
-                else f'        Removing {sum(svids)} state vectors'
+                else f'        Removing {len(svids)} state vectors'
             )
         )
         print(
-            f'        Removing {sum(vids)} {vn}(s)'
+            f'        Removing {len(vids)} {vn}(s)'
             if an
-            else f'        Removing {sum(vids)} values'
+            else f'        Removing {len(vids)} values'
         )
-        print(f'        Removing from PRIME {sum(pks)} associated rows')
+        print(f'        Removing from PRIME {len(pks)} associated rows')
 
         if pks and not dry:
             sql = 'DELETE FROM {} WHERE pk = ANY(%s);'
-            cursor.execute(sql.format('Prime'), pks)
-            cursor.execute(sql.format('Value'), vids)
+            cursor.execute(sql.format('Prime'), [pks])
+            cursor.execute(sql.format('Value'), [vids])
             if not an:
-                cursor.execute(sql.format('Task'), tids)
+                cursor.execute(sql.format('Task'), [tids])
             if not svn:
-                cursor.execute(sql.format('Algorithm'), aids)
+                cursor.execute(sql.format('Algorithm'), [aids])
             if not vn:
-                cursor.execute(sql.format('StateVector'), svids)
+                cursor.execute(sql.format('StateVector'), [svids])
             cursor.commit()
     pass
 
@@ -225,20 +221,22 @@ def targets(cursor, dry, todo: [str]):
     '''process all of the targets'''
     for t in todo:
         print(f'INFO: removing target {t}')
-    cursor.execute('SELECT pk FROM Target WHERE name = ANY(%s);', todo)
-    tnids = cursor.fetchall()
-
+    cursor.execute('SELECT pk FROM Target WHERE name = ANY(%s);', [todo])
+    tnids = [pk[0] for pk in cursor.fetchall()]
+    cursor.execute('SELECT pk from Prime WHERE tn_ID = ANY(%s);', [tnids])
+    pks = cursor.fetchall()
+    print(f'INFO: targets remove {len(pks)} in rows from Prime')
     if len(tnids) != len(todo):
         missing = todo.copy()
-        cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', tnids)
+        cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', [tnids])
         for name in cursor.fetchall():
             missing.remove(name)
         for m in missing:
             print(f'INFO: {m} is not in the database')
 
     if tnids and not dry:
-        cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);')
-        cursor.execute('DELETE FROM Prime WHERE tn_ID = ANY(%s);')
+        cursor.execute('DELETE FROM Prime WHERE tn_ID = ANY(%s);', [tnids])
+        cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);', [tnids])
         cursor.commit()
     pass
 
