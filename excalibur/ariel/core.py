@@ -720,20 +720,18 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     extra = (maxdepth - baseline) / 13
                     plt.ylim((baseline - extra, maxdepth + extra))
                     yrange = plt.ylim()
-                    if 1:
-                        plt.text(
-                            6.6,
-                            yrange[0] + (yrange[1] - yrange[0]) * (-0.11),
-                            'negligible contribution:',
-                            fontsize=8,
-                        )
-                    if 1:
-                        plt.text(
-                            6.6,
-                            yrange[0] + (yrange[1] - yrange[0]) * (-0.15),
-                            negligible_molecules,
-                            fontsize=8,
-                        )
+                    plt.text(
+                        6.9,
+                        yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
+                        'negligible contribution:',
+                        fontsize=8,
+                    )
+                    plt.text(
+                        6.8,
+                        yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
+                        negligible_molecules,
+                        fontsize=8,
+                    )
                     plt.xlim(0.0, 8.0)
                     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
