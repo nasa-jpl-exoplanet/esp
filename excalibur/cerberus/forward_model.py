@@ -115,29 +115,52 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    tpp = []
-    if not isinstance(temp, (list, np.ndarray)):
-        tpp = [temp]
+    # print('CRBMODEL temp', temp, type(temp))
+    if isinstance(temp, list):
+        tpp = np.array(temp)
+        pass
+    elif isinstance(temp, np.ndarray):
+        # print('lenchekc', len(temp))  # gives error: 'len of unsized object'
+        # print('lenchekc', temp.shape)  # gives: () (it's a 0-D array)
+        if temp.shape == ():
+            tpp = np.array([float(temp)] * nlevels)
+        else:
+            tpp = temp
+            pass
         pass
     else:
-        tpp.extend(temp)
+        if not isinstance(temp, (float, int)):
+            log.error('UNKNOWN TYPE for temperature - %s', type(temp))
+            pass
+        tpp = np.array([temp] * nlevels)
         pass
-    if len(tpp) != int(nlevels):
-        tpp = tpp * nlevels
-        pass
+    # verify that the temperature array has the right length (nlevels)
     if len(tpp) not in [int(nlevels)]:
         log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
         pass
-    tpp = np.array(tpp)
 
     if mixratio is not None:
         mxr = {}
-        for k in mixratio:
-            if not isinstance(mixratio[k], (list, np.ndarray)):
-                mxr[k] = np.array([mixratio[k]] * len(tpp))
+        for molecule in mixratio:
+            if isinstance(mixratio[molecule], list):
+                mxr[molecule] = mixratio[molecule]
+                pass
+            elif isinstance(mixratio[molecule], np.ndarray):
+                if mixratio[molecule].shape == ():
+                    mxr[molecule] = np.array([mixratio[molecule]] * len(tpp))
+                else:
+                    mxr[molecule] = mixratio[molecule]
+                    pass
                 pass
             else:
-                mxr[k] = mixratio[k]
+                if not isinstance(mixratio[molecule], (float, int)):
+                    log.error('UNKNOWN TYPE for mixratio - %s', type(mixratio[molecule]))
+                    pass
+                mxr[molecule] = np.array([mixratio[molecule]] * len(tpp))
+                pass
+            # verify that the mixratio array has the right length (nlevels)
+            if len(mxr[molecule]) not in [int(nlevels)]:
+                log.error('!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels', nlevels)
                 pass
             pass
         pass
@@ -457,20 +480,22 @@ def gettau(
     dlarray = dl - dl0
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
-        mlp = []
-        if not isinstance(mixratio[elem], (list, np.ndarray)):
-            mlp = [mixratio[elem]]
+        if isinstance(mixratio[elem], list):
+            mlp = np.array(mixratio[elem])
+            pass
+        elif isinstance(mixratio[elem], np.ndarray):
+            if mixratio[elem].shape == ():
+                mlp = np.array([float(mixratio[elem])] * len(pressure))
+            else:
+                mlp = mixratio[elem]
+                pass
             pass
         else:
-            mlp.extend(mixratio[elem])
-            pass
-        if len(mlp) != len(pressure):
-            mlp = mlp * len(pressure)
+            mlp = np.array([mixratio[elem]] * len(pressure))
             pass
         if len(mlp) not in [len(pressure)]:
             log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
             pass
-        mlp = np.array(mlp)
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
