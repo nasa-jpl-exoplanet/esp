@@ -608,16 +608,17 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     plt.ylabel(str('$(R_p/R_*)^2$ [%]'), fontsize=14)
 
                     # plot the true (model) spectrum - raw
-                    plt.plot(
-                        wavelength_um,
-                        fluxDepth,
-                        # color='palegoldenrod',ls='-',lw=0.1,
-                        color='palegoldenrod',
-                        ls='-',
-                        lw=1,
-                        zorder=1,
-                        label='truth raw',
-                    )
+                    # (this is for testing higher resolution cross-sections
+                    #  but currently raw and rebin are the same thing)
+                    # plt.plot(
+                    #    wavelength_um,
+                    #    fluxDepth,
+                    #    color='palegoldenrod',
+                    #    ls='-',
+                    #    lw=1,
+                    #    zorder=1,
+                    #    label='truth raw',
+                    # )
                     # plot the true (model) spectrum - binned
                     plt.plot(
                         wavelength_um_rebin,
@@ -626,8 +627,44 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         ls='-',
                         lw=1,
                         zorder=3,
-                        label='truth binned',
+                        # label='truth binned',
+                        label='truth',
                     )
+                    yrange = plt.ylim()
+                    # plot the simulated data points
+                    plt.scatter(
+                        wavelength_um_rebin,
+                        fluxDepth_observed,
+                        marker='o',
+                        s=20,
+                        color='None',
+                        edgecolor='k',
+                        zorder=4,
+                        label='sim data',
+                    )
+                    plt.errorbar(
+                        wavelength_um_rebin,
+                        fluxDepth_observed,
+                        yerr=uncertainties_percent,
+                        linestyle='None',
+                        lw=0.2,
+                        color='grey',
+                        zorder=2,
+                    )
+                    plt.ylim(yrange)
+
+                    # calculate the baseline and total range
+                    #  use this to omit molecules that are not contributing
+                    baseline = 666
+                    maxdepth = -666
+                    for imole, molecule in enumerate(molecules):
+                        baseline = np.min(np.append(
+                            baseline,
+                            fluxDepth_by_molecule_rebin[molecule]))
+                        maxdepth = np.max(np.append(
+                            maxdepth,
+                            fluxDepth_by_molecule_rebin[molecule]))
+                    negligible_molecules = ''
                     for imole, molecule in enumerate(molecules):
                         colorlist = [
                             'red',
@@ -650,40 +687,48 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             ':',
                             ':',
                             ':',
+                            '-.',
+                            '-.',
+                            '-.',
+                            '-.',
+                            '-.',
+                            '-.',
                         ]
-                        plt.plot(
-                            wavelength_um_rebin,
-                            fluxDepth_by_molecule_rebin[molecule],
-                            color=colorlist[imole % len(colorlist)],
-                            ls=stylelist[imole % len(stylelist)],
-                            lw=1,
-                            zorder=2,
-                            label=molecule,
-                        )
+                        feature_strength = (np.max(fluxDepth_by_molecule_rebin[molecule]) - baseline) / (maxdepth - baseline)
+                        # cut off anything less than 1% of maximum contribution
+                        if feature_strength < 0.01:
+                            # print('  dropped:', molecule, feature_strength)
+                            negligible_molecules += (' ' + molecule)
+                        else:
+                            # print(' OK:', molecule, feature_strength)
+                            plt.plot(
+                                wavelength_um_rebin,
+                                fluxDepth_by_molecule_rebin[molecule],
+                                color=colorlist[imole % len(colorlist)],
+                                ls=stylelist[imole % len(stylelist)],
+                                lw=1,
+                                zorder=2,
+                                label=molecule,
+                            )
+                    extra = (maxdepth - baseline) / 13
+                    plt.ylim((baseline - extra, maxdepth + extra))
                     yrange = plt.ylim()
-                    # plot the simulated data points
-                    plt.scatter(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        marker='o',
-                        s=20,
-                        color='None',
-                        edgecolor='k',
-                        zorder=4,
-                        label='simulated data',
-                    )
-                    plt.errorbar(
-                        wavelength_um_rebin,
-                        fluxDepth_observed,
-                        yerr=uncertainties_percent,
-                        linestyle='None',
-                        lw=0.2,
-                        color='grey',
-                        zorder=2,
-                    )
-                    plt.ylim(yrange)
+                    if 1:
+                        plt.text(
+                            6.6,
+                            yrange[0] + (yrange[1] - yrange[0]) * (-0.11),
+                            'negligible contribution:',
+                            fontsize=8,
+                        )
+                    if 1:
+                        plt.text(
+                            6.6, 
+                            yrange[0] + (yrange[1] - yrange[0]) * (-0.15),
+                            negligible_molecules,
+                            fontsize=8,
+                        )
                     plt.xlim(0.0, 8.0)
-                    plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.48))
+                    plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
                     # add a scale-height-normalized flux scale on the right axis
                     Hsscaling = out['data'][planet_letter][atmosModel]['Hs']
@@ -692,6 +737,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth_rebin, ax, myfig
                     )
 
+                    # option to save plot to disk
                     # plot_dir = (
                     #     excalibur.context['data_dir'] + '/ariel/savedplots'
                     # )
@@ -701,13 +747,12 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     #             '/ariel_' + atmosModel + 'Atmos_' +
                     #             target + '_' + planet_letter + '.png')
 
-                    # REDUNDANT SAVE - above saves to disk; below saves as state vector
-                    # plt.title('Ariel : '+target+' '+planet_letter, fontsize=16)
-
                     out['data'][planet_letter][atmosModel][
                         'plot_simspectrum'
                     ] = save_plot_tosv(myfig)
 
+                    if verbose:
+                        plt.show()
                     plt.close(myfig)
 
                     completed_at_least_one_planet = True
