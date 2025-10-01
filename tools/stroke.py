@@ -135,6 +135,7 @@ def cli():
                 connection.rollback()
                 connection.close()
 
+
 def confirm():
     '''check that some of the dawgie vars are defined in the environment'''
     passed = True
@@ -169,7 +170,7 @@ def nodes(cursor, dry, todo: [str]):
             'SELECT pk FROM Prime WHERE '
             'task_ID = ANY(%s) AND alg_ID = ANY(%s) AND '
             'sv_ID = ANY(%s) AND val_ID = ANY(%s);',
-            [tids, aids, svids, vids]
+            [tids, aids, svids, vids],
         )
         pks = [pk[0] for pk in cursor.fetchall()]
         print(f'INFO: For node {node}:')
@@ -243,16 +244,22 @@ def targets(cursor, dry, todo: [str]):
 
 def unique(cursor, dry):
     '''remove duplicate rows in the primary table keeping the largest PK'''
-    cursor.execute ('SELECT pk,COUNT(*) FROM Prime GROUP BY '
-                    'run_ID, tn_ID, task_ID, alg_ID, sv_ID, val_ID '
-                    'HAVING COUNT(*) > 1;')
+    cursor.execute(
+        'SELECT pk,COUNT(*) FROM Prime GROUP BY '
+        'run_ID, tn_ID, task_ID, alg_ID, sv_ID, val_ID '
+        'HAVING COUNT(*) > 1;'
+    )
     duplicates = cursor.fetchall()
-    total = sum(d[1]-1 for d in duplicates)
-    print (f'INFO: found {len(duplicates)} duplicate groups and a total of {total} extra entries(rows)')
+    total = sum(d[1] - 1 for d in duplicates)
+    print(
+        f'INFO: found {len(duplicates)} duplicate groups and a total of {total} extra entries(rows)'
+    )
     if not dry:
-        for group,_count in duplicates:
+        for group, _count in duplicates:
             group.sort()
-            cursor.execute('DELETE FROM Prime WHERE pk = ANY(%s);' group[:-1])
+            cursor.execute(
+                'DELETE FROM Prime WHERE pk = ANY(%s);', [group[:-1]]
+            )
         cursor.commit()
     pass
 
