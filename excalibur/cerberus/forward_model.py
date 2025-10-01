@@ -154,13 +154,19 @@ def crbmodel(
                 pass
             else:
                 if not isinstance(mixratio[molecule], (float, int)):
-                    log.error('UNKNOWN TYPE for mixratio - %s', type(mixratio[molecule]))
+                    log.error(
+                        'UNKNOWN TYPE for mixratio - %s',
+                        type(mixratio[molecule]),
+                    )
                     pass
                 mxr[molecule] = np.array([mixratio[molecule]] * len(tpp))
                 pass
             # verify that the mixratio array has the right length (nlevels)
             if len(mxr[molecule]) not in [int(nlevels)]:
-                log.error('!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels', nlevels)
+                log.error(
+                    '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
+                    nlevels,
+                )
                 pass
             pass
         pass

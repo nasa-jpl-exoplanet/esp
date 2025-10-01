@@ -658,12 +658,16 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                     baseline = 666
                     maxdepth = -666
                     for imole, molecule in enumerate(molecules):
-                        baseline = np.min(np.append(
-                            baseline,
-                            fluxDepth_by_molecule_rebin[molecule]))
-                        maxdepth = np.max(np.append(
-                            maxdepth,
-                            fluxDepth_by_molecule_rebin[molecule]))
+                        baseline = np.min(
+                            np.append(
+                                baseline, fluxDepth_by_molecule_rebin[molecule]
+                            )
+                        )
+                        maxdepth = np.max(
+                            np.append(
+                                maxdepth, fluxDepth_by_molecule_rebin[molecule]
+                            )
+                        )
                     negligible_molecules = ''
                     for imole, molecule in enumerate(molecules):
                         colorlist = [
@@ -694,11 +698,14 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                             '-.',
                             '-.',
                         ]
-                        feature_strength = (np.max(fluxDepth_by_molecule_rebin[molecule]) - baseline) / (maxdepth - baseline)
+                        feature_strength = (
+                            np.max(fluxDepth_by_molecule_rebin[molecule])
+                            - baseline
+                        ) / (maxdepth - baseline)
                         # cut off anything less than 1% of maximum contribution
                         if feature_strength < 0.01:
                             # print('  dropped:', molecule, feature_strength)
-                            negligible_molecules += (' ' + molecule)
+                            negligible_molecules += ' ' + molecule
                         else:
                             # print(' OK:', molecule, feature_strength)
                             plt.plot(
@@ -722,7 +729,7 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                         )
                     if 1:
                         plt.text(
-                            6.6, 
+                            6.6,
                             yrange[0] + (yrange[1] - yrange[0]) * (-0.15),
                             negligible_molecules,
                             fontsize=8,
