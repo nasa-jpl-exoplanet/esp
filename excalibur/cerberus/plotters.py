@@ -642,7 +642,9 @@ def plot_corner(
                 #  and maybe change the color to match the central panels
                 #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
                 # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
-                ax.axvline(paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12)
+                ax.axvline(
+                    paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12
+                )
 
     if savetodisk:
         plt.savefig(
