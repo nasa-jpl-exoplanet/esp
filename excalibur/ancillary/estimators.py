@@ -758,24 +758,29 @@ def st_COratio(priors, _ests):
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # from Table 2 in da Silva 2024
         est = 0.012 + 0.175 * priors['FEH*']
+        est = f'{est:.5f}'
     else:
         est = 'N/A'
     return est
+
 
 def st_NOratio(priors, _ests):
     '''st_NOratio ds'''
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # from Table 2 in da Silva 2024
         est = -0.068 + 0.578 * priors['FEH*']
+        est = f'{est:.5f}'
     else:
         est = 'N/A'
     return est
+
 
 def st_COratio_Nissen(priors, _ests):
     '''st_COratio_Nissen ds'''
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # this is equation 2 from Nissen 2013
         est = -0.002 + 0.22 * priors['FEH*']
+        est = f'{est:.5f}'
     else:
         est = 'N/A'
     return est
@@ -832,6 +837,8 @@ def pl_beta_rad(priors, _ests, pl):
     # so instead there's some comments here talking about stupid PEP3/dawgie crap
 
     # and don't forget the delete the whitespace on the blank lines here!
+
+    Beta = f'{Beta:.6f}'
 
     return Beta
 
@@ -900,6 +907,8 @@ def pl_TSM(priors, _ests, pl):
     # print('zfommax',zfommax)
     # print('zellem/kempton ratio',zfommax / TSM)
 
+    TSM = f'{TSM:.4f}'
+
     return TSM
 
 
@@ -967,6 +976,8 @@ def pl_ESM(priors, _ests, pl):
     # print('ESM factor3',Rp_cgs**2 / Rstar_cgs**2)
     # print('ESM factor4',1/ 10**(Kmag/5))
     # print('ESM',ESM)
+
+    ESM = f'{ESM:.4f}'
 
     return ESM
 
