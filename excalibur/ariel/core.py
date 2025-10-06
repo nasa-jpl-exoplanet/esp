@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,t00-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,too-many-arguments,too-many-positional-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
@@ -117,12 +117,12 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
 
 
 def simulate_spectra(
-        target,
-        system_dict,
-        ancil_dict,
-        runtime_params,
-        out,
-        verbose=False,
+    target,
+    system_dict,
+    ancil_dict,
+    runtime_params,
+    out,
+    verbose=False,
 ):
     '''
     Simulate Ariel spectra, adding noise based on the Ariel instrument model
@@ -300,6 +300,8 @@ def simulate_spectra(
                 # --> use ancil_dict <--
                 CtoOstar = ancil_dict['CO*']
                 NtoOstar = ancil_dict['NO*']
+                if CtoOstar:
+                    CtoOstar = NtoOstar
 
                 CtoO_planet_linear = randomCtoO_linear(
                     logCtoOaverage=runtime_params.CtoOaverage,
