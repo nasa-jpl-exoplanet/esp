@@ -36,7 +36,7 @@ class TensorShell(tnsrgraph.Op):
     def perform(
         self,
         node: tnsrgraph.Apply,
-        inputs: list[np.ndarray],
+        inputs: list[np.ndarray],  # maybe make this floats?
         output_storage: list[list[None]],
     ) -> None:
         output_storage[0][0] = np.asarray(LogLikelihood(inputs))
