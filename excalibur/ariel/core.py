@@ -116,7 +116,7 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     return mmw, Hs
 
 
-def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
+def simulate_spectra(target, system_dict, ancil_dict, runtime_params, out, verbose=False):
     '''
     Simulate Ariel spectra, adding noise based on the Ariel instrument model
     Mulitple spectra are now calculated, allowing a choice within cerberus.atmos fitting
@@ -287,6 +287,11 @@ def simulate_spectra(target, system_dict, runtime_params, out, verbose=False):
                 # make sure that the random C/O is fixed for each target planet
                 np.random.seed(intFromTarget + 12345)
                 # this is linear C/O, not dex
+
+                # option to use da Silva 2024 C/O trend as the baseline,
+                #  (before adding on some dispersion)
+                # --> use ancil_dict <--
+
                 CtoO_planet_linear = randomCtoO_linear(
                     logCtoOaverage=runtime_params.CtoOaverage,
                     logCtoOdispersion=runtime_params.CtoOdispersion,
