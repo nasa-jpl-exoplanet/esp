@@ -145,7 +145,7 @@ class SimSpectrum(dawgie.Algorithm):
                 _ = excalibur.lagger()
                 ds.update()
                 pass
-            elif valid:
+            elif sysvalid and ancvalid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for SELFTEST.{self.name()}'
                 )
