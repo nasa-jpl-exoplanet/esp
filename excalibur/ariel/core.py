@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements
+# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,t00-many-arguments,too-many-positional-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
@@ -298,6 +298,8 @@ def simulate_spectra(
                 # option to use da Silva 2024 C/O trend as the baseline,
                 #  (before adding on some dispersion)
                 # --> use ancil_dict <--
+                CtoOstar = ancil_dict['CO*']
+                NtoOstar = ancil_dict['NO*']
 
                 CtoO_planet_linear = randomCtoO_linear(
                     logCtoOaverage=runtime_params.CtoOaverage,
