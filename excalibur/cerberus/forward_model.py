@@ -115,24 +115,11 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    # print('CRBMODEL temp', temp, type(temp))
-    if isinstance(temp, list):
-        tpp = np.array(temp)
-        pass
-    elif isinstance(temp, np.ndarray):
-        # print('lenchekc', len(temp))  # gives error: 'len of unsized object'
-        # print('lenchekc', temp.shape)  # gives: () (it's a 0-D array)
-        if temp.shape == ():
-            tpp = np.array([float(temp)] * nlevels)
-        else:
-            tpp = temp
-            pass
-        pass
+    temp = np.array(temp)
+    if temp.ndim:
+        tpp = temp
     else:
-        if not isinstance(temp, (float, int)):
-            log.error('UNKNOWN TYPE for temperature - %s', type(temp))
-            pass
-        tpp = np.array([temp] * nlevels)
+        tpp = np.array([float(temp)] * nlevels)
         pass
     # verify that the temperature array has the right length (nlevels)
     if len(tpp) not in [int(nlevels)]:
