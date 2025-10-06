@@ -11,6 +11,8 @@ import excalibur.ariel.states as arielstates
 import excalibur.runtime.algorithms as rtalg
 import excalibur.system as sys
 import excalibur.system.algorithms as sysalg
+import excalibur.ancillary as anc
+import excalibur.ancillary.algorithms as ancalg
 
 from excalibur.util.checksv import checksv
 
@@ -29,6 +31,7 @@ class SimSpectrum(dawgie.Algorithm):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self.__rt = rtalg.Autofill()
         self.__system_finalize = sysalg.Finalize()
+        self.__ancillary_estimate = ancalg.Estimate()
         self.__out = arielstates.SimSpectrumSV('parameters')
         return
 
@@ -40,6 +43,7 @@ class SimSpectrum(dawgie.Algorithm):
         '''Input State Vectors: system.finalize'''
         return [
             dawgie.ALG_REF(sys.task, self.__system_finalize),
+            dawgie.ALG_REF(anc.task, self.__ancillary_estimate),
         ] + self.__rt.refs_for_validity()
 
     def state_vectors(self):
@@ -59,14 +63,17 @@ class SimSpectrum(dawgie.Algorithm):
             update = False
 
             system_dict = self.__system_finalize.sv_as_dict()['parameters']
-            valid, errstring = checksv(system_dict)
+            sysvalid, errstring = checksv(system_dict)
+
+            ancil_dict = self.__ancillary_estimate.sv_as_dict()['parameters']
+            ancvalid, errstring = checksv(ancil_dict)
 
             target = repr(self).split('.')[1]
             if target.startswith('test'):
-                valid = False
+                sysvalid = False
                 errstring = 'Do not run ariel-sim for test targets'
 
-            if valid:
+            if sysvalid and ancvalid:
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
                     tier=runtime['ariel_simspectrum_tier'].value(),
@@ -111,6 +118,7 @@ class SimSpectrum(dawgie.Algorithm):
                 update = self._sim_spectrum(
                     target,
                     system_dict,
+                    ancil_dict,
                     runtime_params,
                     self.__out,
                 )
@@ -120,17 +128,17 @@ class SimSpectrum(dawgie.Algorithm):
                 _ = excalibur.lagger()
                 ds.update()
                 pass
-            elif valid:
+            elif sysvalid and ancvalid:
                 raise dawgie.NoValidOutputDataError(
                     f'No output created for ARIEL.{self.name()}'
                 )
         return
 
     @staticmethod
-    def _sim_spectrum(target, system_dict, runtime_params, out):
+    def _sim_spectrum(target, system_dict, ancil_dict, runtime_params, out):
         '''Core code call'''
         filled = arielcore.simulate_spectra(
-            target, system_dict, runtime_params, out
+            target, system_dict, ancil_dict, runtime_params, out
         )
         return filled
 

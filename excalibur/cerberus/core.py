@@ -1439,24 +1439,7 @@ def atmos(
                         all_keys.append(key)
                 # print('allKeys', all_keys)
 
-                # param_values_median = (
-                #    tpr,
-                #    ctp,
-                #    hazescale,
-                #    hazeloc,
-                #    hazethick,
-                #    tceqdict,
-                #    mixratio,
-                # )
-                param_values_median = [
-                    666,
-                    666,
-                    666,
-                    666,
-                    666,
-                    {'XtoH': 666, 'CtoO': 666, 'NtoO': 666},
-                    {},
-                ]
+                param_values_median = None
                 plot_corner(
                     all_keys,
                     all_traces,
