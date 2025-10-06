@@ -129,24 +129,9 @@ def crbmodel(
     if mixratio is not None:
         mxr = {}
         for molecule in mixratio:
-            if isinstance(mixratio[molecule], list):
-                mxr[molecule] = mixratio[molecule]
-                pass
-            elif isinstance(mixratio[molecule], np.ndarray):
-                if mixratio[molecule].shape == ():
-                    mxr[molecule] = np.array([mixratio[molecule]] * len(tpp))
-                else:
-                    mxr[molecule] = mixratio[molecule]
-                    pass
-                pass
-            else:
-                if not isinstance(mixratio[molecule], (float, int)):
-                    log.error(
-                        'UNKNOWN TYPE for mixratio - %s',
-                        type(mixratio[molecule]),
-                    )
-                    pass
-                mxr[molecule] = np.array([mixratio[molecule]] * len(tpp))
+            mxr[molecule] = np.array(mixratio[molecule])
+            if not mxr[molecule].ndim:
+                mxr[molecule] = np.array([float(mxr[molecule])] * len(tpp))
                 pass
             # verify that the mixratio array has the right length (nlevels)
             if len(mxr[molecule]) not in [int(nlevels)]:
@@ -473,18 +458,9 @@ def gettau(
     dlarray = dl - dl0
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
-        if isinstance(mixratio[elem], list):
-            mlp = np.array(mixratio[elem])
-            pass
-        elif isinstance(mixratio[elem], np.ndarray):
-            if mixratio[elem].shape == ():
-                mlp = np.array([float(mixratio[elem])] * len(pressure))
-            else:
-                mlp = mixratio[elem]
-                pass
-            pass
-        else:
-            mlp = np.array([mixratio[elem]] * len(pressure))
+        mlp = np.array(mixratio[elem])
+        if not mlp.ndim:
+            mlp = np.array([float(mlp)] * len(pressure))
             pass
         if len(mlp) not in [len(pressure)]:
             log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
