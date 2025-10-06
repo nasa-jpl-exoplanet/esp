@@ -756,6 +756,24 @@ def pl_evapMassLoss(priors, _ests, pl):
 def st_COratio(priors, _ests):
     '''st_COratio ds'''
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
+        # from Table 2 in da Silva 2024
+        est = 0.012 + 0.175 * priors['FEH*']
+    else:
+        est = 'N/A'
+    return est
+
+def st_NOratio(priors, _ests):
+    '''st_NOratio ds'''
+    if 'FEH*' in priors.keys() and priors['FEH*'] != '':
+        # from Table 2 in da Silva 2024
+        est = -0.068 + 0.578 * priors['FEH*']
+    else:
+        est = 'N/A'
+    return est
+
+def st_COratio_Nissen(priors, _ests):
+    '''st_COratio_Nissen ds'''
+    if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # this is equation 2 from Nissen 2013
         est = -0.002 + 0.22 * priors['FEH*']
     else:
