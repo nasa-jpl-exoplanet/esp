@@ -207,13 +207,12 @@ def nodes(cursor, dry, todo: [str]):
             sql = 'DELETE FROM {} WHERE pk = ANY(%s);'
             cursor.execute(sql.format('Prime'), [pks])
             cursor.execute(sql.format('Value'), [vids])
-            if not an:
-                cursor.execute(sql.format('Task'), [tids])
-            if not svn:
-                cursor.execute(sql.format('Algorithm'), [aids])
             if not vn:
                 cursor.execute(sql.format('StateVector'), [svids])
-            cursor.commit()
+            if not svn:
+                cursor.execute(sql.format('Algorithm'), [aids])
+            if not an:
+                cursor.execute(sql.format('Task'), [tids])
     pass
 
 
