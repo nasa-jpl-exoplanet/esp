@@ -287,10 +287,8 @@ def unique(cursor, dry):
             allpks = []
             for group in duplicates.values():
                 group.sort()
-                allpks.extend (group[:-1])
-            cursor.execute(
-                'DELETE FROM Prime WHERE pk = ANY(%s);', [allpks]
-            )
+                allpks.extend(group[:-1])
+            cursor.execute('DELETE FROM Prime WHERE pk = ANY(%s);', [allpks])
 
 
 if __name__ == '__main__':
