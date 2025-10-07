@@ -244,10 +244,11 @@ def targets(cursor, dry, todo: [str]):
 
 def unique(cursor, dry):
     '''remove duplicate rows in the primary table keeping the largest PK'''
-    cursor.execute (
+    cursor.execute(
         'SELECT COUNT(*) FROM Prime GROUP BY '
         'run_ID, tn_ID, task_ID, alg_ID, sv_ID, val_ID '
-        'HAVING COUNT(*) > 1;')
+        'HAVING COUNT(*) > 1;'
+    )
     basis = cursor.fetchall()
     total = sum(b[-1] - 1 for b in basis)
     print(
@@ -268,11 +269,14 @@ def unique(cursor, dry):
         duplicates = {}
         for row in rows:
             key = row[1:]
-            if key not in duplicates: duplicates[key] = []
+            if key not in duplicates:
+                duplicates[key] = []
             duplicates[key].append(row[0])
         tot = sum(len(group) - 1 for group in duplicates.values())
         if len(duplicates) != len(basis):
-            print (f'ERROR: expected {len(basis)} groupings but resolved {len(duplicates)}')
+            print(
+                f'ERROR: expected {len(basis)} groupings but resolved {len(duplicates)}'
+            )
             return
         if total != tot:
             print(f'ERROR: expected {total} duplicates but found {tot}')
