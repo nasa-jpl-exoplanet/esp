@@ -278,7 +278,7 @@ def unique(cursor, dry):
             print(f'ERROR: expected {total} duplicates but found {tot}')
             return
         if not dry:
-            for group in duplicates:
+            for group in duplicates.values():
                 group.sort()
                 cursor.execute(
                     'DELETE FROM Prime WHERE pk = ANY(%s);', [group[:-1]]
