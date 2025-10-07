@@ -42,9 +42,23 @@ def getestimators():
         ),
         StEstimator(
             name='CO*',
-            units='log',
+            units='dex',
             descr='Stellar [C/O]',
             method=ancestor.st_COratio,
+            ref='da Silva 2024; Table 2 Eq.',
+        ),
+        StEstimator(
+            name='NO*',
+            units='dex',
+            descr='Stellar [N/O]',
+            method=ancestor.st_NOratio,
+            ref='da Silva 2024; Table 2 Eq.',
+        ),
+        StEstimator(
+            name='CO*_Nissen',
+            units='dex',
+            descr='Stellar [C/O]',
+            method=ancestor.st_COratio_Nissen,
             ref='Nissen 2013; Eq.2',
         ),
         StEstimator(

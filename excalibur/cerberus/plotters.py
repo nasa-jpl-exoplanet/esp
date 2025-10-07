@@ -454,35 +454,35 @@ def plot_corner(
     truthcolor = 'darkgreen'
     fitcolor = 'firebrick'
 
-    tpr, ctp, hazescale, hazeloc, hazethick, tceqdict, mixratio = (
-        modelParams_bestFit
-    )
-    # print('model param in corner plot',modelParams_bestFit)
-
     paramValues_bestFit = []
-    for param in allkeys:
-        if param == 'T':
-            paramValues_bestFit.append(tpr)
-        elif param == 'CTP':
-            paramValues_bestFit.append(ctp)
-        elif param == 'HScale':
-            paramValues_bestFit.append(hazescale)
-        elif param == 'HLoc':
-            paramValues_bestFit.append(hazeloc)
-        elif param == 'HThick':
-            paramValues_bestFit.append(hazethick)
-        elif param == '[X/H]':
-            paramValues_bestFit.append(tceqdict['XtoH'])
-        elif param == '[C/O]':
-            paramValues_bestFit.append(tceqdict['CtoO'])
-        elif param == '[N/O]':
-            paramValues_bestFit.append(tceqdict['NtoO'])
-        elif mixratio and param in mixratio:
-            paramValues_bestFit.append(mixratio[param])
-        else:
-            log.warning('--< ERROR: param not in list: %s >--', param)
+    if modelParams_bestFit:
+        tpr, ctp, hazescale, hazeloc, hazethick, tceqdict, mixratio = (
+            modelParams_bestFit
+        )
+        # print('model param in corner plot',modelParams_bestFit)
 
-    # print('best fit values in corner plot',paramValues_bestFit)
+        for param in allkeys:
+            if param == 'T':
+                paramValues_bestFit.append(tpr)
+            elif param == 'CTP':
+                paramValues_bestFit.append(ctp)
+            elif param == 'HScale':
+                paramValues_bestFit.append(hazescale)
+            elif param == 'HLoc':
+                paramValues_bestFit.append(hazeloc)
+            elif param == 'HThick':
+                paramValues_bestFit.append(hazethick)
+            elif param == '[X/H]':
+                paramValues_bestFit.append(tceqdict['XtoH'])
+            elif param == '[C/O]':
+                paramValues_bestFit.append(tceqdict['CtoO'])
+            elif param == '[N/O]':
+                paramValues_bestFit.append(tceqdict['NtoO'])
+            elif mixratio and param in mixratio:
+                paramValues_bestFit.append(mixratio[param])
+            else:
+                log.warning('--< ERROR: param not in list: %s >--', param)
+        # print('best fit values in corner plot',paramValues_bestFit)
 
     mcmcMedian = np.nanmedian(np.array(profiletraces), axis=1)
     # print(' params inside of corner plotting',allkeys)
@@ -604,39 +604,47 @@ def plot_corner(
             # skipping the first one on the y side (it's a histo, not a 2-D plot)
             ax = axes[i + 1, 0]
             ax.set_ylabel(allkeys[i + 1], fontsize=14)
-        #  draw a point and crosshair for the medians in each subpanel
-        for yi in range(ndim):
-            for xi in range(yi):
-                ax = axes[yi, xi]
-                # ax.axvline(mcmcMedian[xi], color=fitcolor)
-                # ax.axhline(mcmcMedian[yi], color=fitcolor)
-                # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
-                ax.axvline(paramValues_bestFit[xi], color=fitcolor)
-                ax.axhline(paramValues_bestFit[yi], color=fitcolor)
-                ax.plot(
-                    paramValues_bestFit[xi],
-                    paramValues_bestFit[yi],
-                    marker='s',
-                    c=fitcolor,
-                )
-        for i in range(ndim):
-            ax = axes[i, i]
-            # draw light-colored vertical lines in each hisogram for the prior
-            #  drop this. adds clutter and is redundant with the vsPrior plot following
-            # ax.axvline(priorlo[i] + 0.5*priorspan[i], color='grey', zorder=1)
-            # ax.axvline(priorlo[i] + 0.16*priorspan[i], color='grey', zorder=1, ls='--')
-            # ax.axvline(priorlo[i] + 0.84*priorspan[i], color='grey', zorder=1, ls='--')
+        # draw a point and crosshair for the best fit in each subpanel
+        # the best fit is not defined for the debug call inside atmos, so skip
+        if paramValues_bestFit:
+            print('troot', truth_params)
+            print('allkeys', allkeys)
+            print('ndim', ndim)
+            print('paramvals', paramValues_bestFit)
+            for yi in range(ndim):
+                for xi in range(yi):
+                    ax = axes[yi, xi]
+                    # ax.axvline(mcmcMedian[xi], color=fitcolor)
+                    # ax.axhline(mcmcMedian[yi], color=fitcolor)
+                    # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
+                    ax.axvline(paramValues_bestFit[xi], color=fitcolor)
+                    ax.axhline(paramValues_bestFit[yi], color=fitcolor)
+                    ax.plot(
+                        paramValues_bestFit[xi],
+                        paramValues_bestFit[yi],
+                        marker='s',
+                        c=fitcolor,
+                    )
+            for i in range(ndim):
+                ax = axes[i, i]
+                # draw light-colored vertical lines in each hisogram for the prior
+                #  drop this. adds clutter and is redundant with the vsPrior plot following
+                # ax.axvline(priorlo[i] + 0.5*priorspan[i], color='grey', zorder=1)
+                # ax.axvline(priorlo[i] + 0.16*priorspan[i], color='grey', zorder=1, ls='--')
+                # ax.axvline(priorlo[i] + 0.84*priorspan[i], color='grey', zorder=1, ls='--')
 
-            # darken the lines for the fit results
-            # ax.axvline(mcmcMedian[i], color='k', lw=2, zorder=2)
-            # ax.axvline(lo[i], color='k', lw=2, zorder=2, ls='--')
-            # ax.axvline(hi[i], color='k', lw=2, zorder=2, ls='--')
-            # actually the fit result lines are o.k. as is, except all three are dashed
-            #  make the median fit a solid line
-            #  and maybe change the color to match the central panels
-            #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
-            # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
-            ax.axvline(paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12)
+                # darken the lines for the fit results
+                # ax.axvline(mcmcMedian[i], color='k', lw=2, zorder=2)
+                # ax.axvline(lo[i], color='k', lw=2, zorder=2, ls='--')
+                # ax.axvline(hi[i], color='k', lw=2, zorder=2, ls='--')
+                # actually the fit result lines are o.k. as is, except all three are dashed
+                #  make the median fit a solid line
+                #  and maybe change the color to match the central panels
+                #  hmm, it's not covering up the dashed line; increase lw and maybe zorder
+                # ax.axvline(mcmcMedian[i], color=fitcolor, lw=2, zorder=12)
+                ax.axvline(
+                    paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12
+                )
 
     if savetodisk:
         plt.savefig(

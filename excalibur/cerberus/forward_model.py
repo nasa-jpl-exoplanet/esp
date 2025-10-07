@@ -115,29 +115,30 @@ def crbmodel(
     if hzlib is None:
         hzlib = ctxt.hzlib
 
-    tpp = []
-    if not isinstance(temp, (list, np.ndarray)):
-        tpp = [temp]
-        pass
+    temp = np.array(temp)
+    if temp.ndim:
+        tpp = temp
     else:
-        tpp.extend(temp)
+        tpp = np.array([float(temp)] * nlevels)
         pass
-    if len(tpp) != int(nlevels):
-        tpp = tpp * nlevels
-        pass
+    # verify that the temperature array has the right length (nlevels)
     if len(tpp) not in [int(nlevels)]:
         log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
         pass
-    tpp = np.array(tpp)
 
     if mixratio is not None:
         mxr = {}
-        for k in mixratio:
-            if not isinstance(mixratio[k], (list, np.ndarray)):
-                mxr[k] = np.array([mixratio[k]] * len(tpp))
+        for molecule in mixratio:
+            mxr[molecule] = np.array(mixratio[molecule])
+            if not mxr[molecule].ndim:
+                mxr[molecule] = np.array([float(mxr[molecule])] * len(tpp))
                 pass
-            else:
-                mxr[k] = mixratio[k]
+            # verify that the mixratio array has the right length (nlevels)
+            if len(mxr[molecule]) not in [int(nlevels)]:
+                log.error(
+                    '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
+                    nlevels,
+                )
                 pass
             pass
         pass
@@ -457,20 +458,13 @@ def gettau(
     dlarray = dl - dl0
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
-        mlp = []
-        if not isinstance(mixratio[elem], (list, np.ndarray)):
-            mlp = [mixratio[elem]]
-            pass
-        else:
-            mlp.extend(mixratio[elem])
-            pass
-        if len(mlp) != len(pressure):
-            mlp = mlp * len(pressure)
+        mlp = np.array(mixratio[elem])
+        if not mlp.ndim:
+            mlp = np.array([float(mlp)] * len(pressure))
             pass
         if len(mlp) not in [len(pressure)]:
             log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
             pass
-        mlp = np.array(mlp)
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
