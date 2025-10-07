@@ -229,7 +229,7 @@ def targets(cursor, dry, todo: [str]):
     if len(tnids) != len(todo):
         missing = todo.copy()
         cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', [tnids])
-        for name in cursor.fetchall():
+        for (name,) in cursor.fetchall():
             missing.remove(name)
         for m in missing:
             print(f'INFO: {m} is not in the database')
@@ -237,8 +237,6 @@ def targets(cursor, dry, todo: [str]):
     if tnids and not dry:
         cursor.execute('DELETE FROM Prime WHERE tn_ID = ANY(%s);', [tnids])
         cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);', [tnids])
-        cursor.commit()
-    pass
 
 
 def unique(cursor, dry):
