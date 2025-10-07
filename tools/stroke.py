@@ -284,14 +284,13 @@ def unique(cursor, dry):
             return
         if not dry:
             print('INFO:   Deleting rows from Prime')
+            allpks = []
             for group in duplicates.values():
                 group.sort()
-                cursor.execute(
-                    'DELETE FROM Prime WHERE pk = ANY(%s);', [group[:-1]]
-                )
-            print('INFO:   Commit deletions')
-            cursor.commit()
-            print('INFO:   Done')
+                allpks.extend (group[:-1])
+            cursor.execute(
+                'DELETE FROM Prime WHERE pk = ANY(%s);', [allpks]
+            )
 
 
 if __name__ == '__main__':
