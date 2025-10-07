@@ -117,7 +117,6 @@ def cli():
     if not args.nodes and not args.targets and not args.unique:
         print('WARN: you did not as me to do anything')
     else:
-        print(args)  # FIXME: just for debug
         confirm()
         connection = None
         cursor = None
@@ -226,7 +225,8 @@ def targets(cursor, dry, todo: [str]):
     tnids = [pk[0] for pk in cursor.fetchall()]
     cursor.execute('SELECT pk from Prime WHERE tn_ID = ANY(%s);', [tnids])
     pks = cursor.fetchall()
-    print(f'INFO: targets remove {len(pks)} in rows from Prime')
+    if pks:
+        print(f'INFO: targets remove {len(pks)} rows from Prime')
     if len(tnids) != len(todo):
         missing = todo.copy()
         cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', [tnids])
@@ -258,7 +258,8 @@ def unique(cursor, dry):
         cursor.execute(
             'SELECT pk, run_ID, task_ID, tn_ID, alg_ID, sv_ID, val_ID '
             'FROM ( '
-            'SELECT pk, run_ID, task_ID, tn_ID, alg_ID, sv_ID, val_ID, COUNT(*)  '
+            'SELECT pk, run_ID, task_ID, tn_ID, alg_ID, sv_ID, val_ID, '
+            'COUNT(*) '
             'OVER (PARTITION BY run_ID, task_ID, tn_ID, alg_ID, sv_ID, val_ID) '
             'AS occurs '
             'FROM prime) '
@@ -282,12 +283,15 @@ def unique(cursor, dry):
             print(f'ERROR: expected {total} duplicates but found {tot}')
             return
         if not dry:
+            print('INFO:   Deleting rows from Prime')
             for group in duplicates.values():
                 group.sort()
                 cursor.execute(
                     'DELETE FROM Prime WHERE pk = ANY(%s);', [group[:-1]]
                 )
+            print('INFO:   Commit deletions')
             cursor.commit()
+            print('INFO:   Done')
 
 
 if __name__ == '__main__':
