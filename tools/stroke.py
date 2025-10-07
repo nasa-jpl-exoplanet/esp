@@ -227,9 +227,9 @@ def targets(cursor, dry, todo: [str]):
     if pks:
         print(f'INFO: targets remove {len(pks)} rows from Prime')
     if len(tnids) != len(todo):
-      for name, in cursor.fetchall():
         missing = todo.copy()
         cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', [tnids])
+        for name, in cursor.fetchall():
             missing.remove(name)
         for m in missing:
             print(f'INFO: {m} is not in the database')
