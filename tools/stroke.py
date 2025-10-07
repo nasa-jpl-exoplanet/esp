@@ -237,8 +237,6 @@ def targets(cursor, dry, todo: [str]):
     if tnids and not dry:
         cursor.execute('DELETE FROM Prime WHERE tn_ID = ANY(%s);', [tnids])
         cursor.execute('DELETE FROM Target WHERE pk = ANY(%s);', [tnids])
-        cursor.commit()
-    pass
 
 
 def unique(cursor, dry):
