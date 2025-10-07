@@ -229,7 +229,7 @@ def targets(cursor, dry, todo: [str]):
     if len(tnids) != len(todo):
         missing = todo.copy()
         cursor.execute('SELECT name FROM Target WHERE pk = ANY(%s);', [tnids])
-        for name, in cursor.fetchall():
+        for (name,) in cursor.fetchall():
             missing.remove(name)
         for m in missing:
             print(f'INFO: {m} is not in the database')
