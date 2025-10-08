@@ -164,7 +164,6 @@ def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
         out['nexsciFulltable'].append(line)
 
     out['STATUS'].append(True)
-    ds.update()
     return
 
 
