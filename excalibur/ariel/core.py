@@ -143,6 +143,7 @@ def simulate_spectra(
     sscmks = syscore.ssconstants(mks=True)
 
     system_params = system_dict['priors']
+    ancil_params = ancil_dict['data']
 
     # maybe save/read the xslib file from disk.
     # for debugging at least, since it's a lot faster that way
@@ -297,9 +298,8 @@ def simulate_spectra(
 
                 # option to use da Silva 2024 C/O trend as the baseline,
                 #  (before adding on some dispersion)
-                # --> use ancil_dict <--
-                CtoOstar = ancil_dict['CO*']
-                NtoOstar = ancil_dict['NO*']
+                CtoOstar = ancil_params['CO*']
+                NtoOstar = ancil_params['NO*']
                 if CtoOstar:
                     CtoOstar = NtoOstar
 
