@@ -1,6 +1,6 @@
 astropy
 astroquery
-dawgie==2.0.0
+dawgie==2.0.1-rc04
 h5py
 joblib
 ldtk
