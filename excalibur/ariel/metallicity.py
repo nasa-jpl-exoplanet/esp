@@ -66,9 +66,9 @@ def massMetalRelation(logmetStar, Mp, thorngren=False, chachan=False):
 
         # ignores Zstar!?
         logmet = np.log10(Zplanet / Zsun)
-        print('logmet1', Mp, logmet)
+        # print('logmet1', Mp, logmet)
         logmet = logmetStar + np.log10(2.6 / Mp + 3.3)
-        print('logmet2', Mp, logmet)
+        # print('logmet2', Mp, logmet)
 
     elif thorngren:
         # mass-metallicity relation from Thorngren et al 2016
