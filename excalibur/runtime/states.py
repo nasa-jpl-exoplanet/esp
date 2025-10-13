@@ -161,6 +161,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
+        self['ariel_simspectrum_CtoOdaSilva'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
@@ -348,6 +349,7 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
+        self['ariel_simspectrum_CtoOdaSilva'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
@@ -453,6 +455,7 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_randomseed',
             'ariel_simspectrum_SNRadjustment',
             'ariel_simspectrum_metallicityDispersion',
+            'ariel_simspectrum_CtoOdaSilva',
             'ariel_simspectrum_CtoOaverage',
             'ariel_simspectrum_CtoOdispersion',
             'cerberus_atmos_sliceSampler',

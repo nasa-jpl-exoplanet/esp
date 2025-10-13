@@ -84,6 +84,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_chachanMassMetals',
         'ariel_simspectrum_includeMetallicityDispersion',
         'ariel_simspectrum_metallicityDispersion',
+        'ariel_simspectrum_CtoOdaSilva',
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
         'selftest_Nrepeats',
