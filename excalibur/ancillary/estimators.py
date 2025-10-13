@@ -264,7 +264,8 @@ def pl_metals_thorngren(priors, _ests, pl):
     # print('Mp,metallicity old',priors[pl]['mass'],metallicity)
 
     metallicity = massMetalRelation(
-        logmetStar, priors[pl]['mass'],
+        logmetStar,
+        priors[pl]['mass'],
         thorngren=True,
     )
     # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
@@ -281,7 +282,8 @@ def pl_metals_chachan(priors, _ests, pl):
     logmetStar = priors['FEH*']
 
     metallicity = massMetalRelation(
-        logmetStar, priors[pl]['mass'],
+        logmetStar,
+        priors[pl]['mass'],
         chachan=True,
     )
     # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
