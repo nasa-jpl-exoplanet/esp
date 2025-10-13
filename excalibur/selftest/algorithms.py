@@ -104,6 +104,9 @@ class SimSpectrum(dawgie.Algorithm):
                     thorngrenMassMetals=runtime[
                         'ariel_simspectrum_thorngrenMassMetals'
                     ],
+                    chachanMassMetals=runtime[
+                        'ariel_simspectrum_chachanMassMetals'
+                    ],
                     includeMetallicityDispersion=runtime[
                         'ariel_simspectrum_includeMetallicityDispersion'
                     ],
