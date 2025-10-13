@@ -81,6 +81,7 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_SNRadjustment',
         'ariel_simspectrum_randomCloudProperties',
         'ariel_simspectrum_thorngrenMassMetals',
+        'ariel_simspectrum_chachanMassMetals',
         'ariel_simspectrum_includeMetallicityDispersion',
         'ariel_simspectrum_metallicityDispersion',
         'ariel_simspectrum_CtoOaverage',

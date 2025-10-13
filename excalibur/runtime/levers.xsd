@@ -228,6 +228,8 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.thorngrenMassMetals"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="ariel.simspectrum.chachanMassMetals"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="ariel.simspectrum.tier"
                   type="xs:integer" use="required"/>
     <xs:attribute name="ariel.simspectrum.randomseed"

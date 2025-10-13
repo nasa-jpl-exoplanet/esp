@@ -152,6 +152,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['system_validate_selectMostRecent'] = BoolValue()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
@@ -340,6 +341,7 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
         self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
@@ -446,6 +448,7 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
+            'ariel_simspectrum_chachanMassMetals',
             'ariel_simspectrum_tier',
             'ariel_simspectrum_randomseed',
             'ariel_simspectrum_SNRadjustment',
