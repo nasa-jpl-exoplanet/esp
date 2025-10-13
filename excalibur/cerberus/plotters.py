@@ -1515,27 +1515,28 @@ def plot_mass_vs_metals(
 
     # plot the underlying distribution (only if this is a simulation)
     # actually, also plot Thorngren relationship for real HST data
-    massesThorngren = np.logspace(-5, 3, 100)
-    metalsThorngren = massMetalRelation(0, massesThorngren, thorngren=True)
-    if 'sim' in filt:
-        ax.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-            # label='true relationship')
+    # and also include the newer Chachan relationship
+    massesAnalytic = np.logspace(-5, 3, 100)
+    metalsThorngren = massMetalRelation(0, massesAnalytic, thorngren=True)
+    metalsChachan = massMetalRelation(0, massesAnalytic, chachan=True)
+    # if 'sim' in filt:
+    #     label='true relationship')
+    ax.plot(
+        massesAnalytic,
+        metalsThorngren,
+        'k:',
+        lw=1,
+        zorder=1,
+        label='Thorngren+ 2016',
         )
-    else:
-        ax.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-        )
+    ax.plot(
+        massesAnalytic,
+        metalsChachan,
+        'k--',
+        lw=1,
+        zorder=1,
+        label='Chachan+ 2025',
+    )
 
     # plot a linear fit to the data
     if onlyFitAbove10MEarth:
