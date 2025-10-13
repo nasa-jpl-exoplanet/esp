@@ -42,6 +42,7 @@ ArielParams = namedtuple(
         'randomSeed',
         'randomCloudProperties',
         'thorngrenMassMetals',
+        'chachanMassMetals',
         'includeMetallicityDispersion',
         'metallicityDispersion',
         'CtoOaverage',
@@ -277,6 +278,7 @@ def simulate_spectra(
                         metallicity_star_dex,
                         M_p,
                         thorngren=runtime_params.thorngrenMassMetals,
+                        chachan=runtime_params.chachanMassMetals,
                         dispersion=runtime_params.metallicityDispersion,
                     )
                 else:
@@ -284,11 +286,13 @@ def simulate_spectra(
                         metallicity_star_dex,
                         M_p,
                         thorngren=runtime_params.thorngrenMassMetals,
+                        chachan=runtime_params.chachanMassMetals,
                     )
                 # print('metallicity_star_dex',metallicity_star_dex)
                 # print('metallicity_planet_dex',metallicity_planet_dex)
                 # metallicity_planet_dex_nonrandom = massMetalRelation(metallicity_star_dex, M_p,
                 #              thorngren=runtime_params.thorngrenMassMetals)
+                #              chachan=runtime_params.chachanMassMetals)
                 # print('metallicity_planet_dex (non random)',metallicity_planet_dex_nonrandom)
                 # print('planet mass',M_p)
 
