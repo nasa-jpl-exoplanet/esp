@@ -152,7 +152,7 @@ class HEstimator(PlEstimator):
             name='H',
             descr='Atmospheric scale height (CBE)',
             units='km',
-            ref='Thorngren metallicity',
+            ref='Chachan metallicity',
         )
 
     def run(self, priors, ests, pl):
@@ -184,7 +184,7 @@ class HEstimator(PlEstimator):
         else:
             g = 10.0 ** float(priors[pl]['logg'])
 
-        mmw = pl_mmw(priors, ests, pl)
+        mmw = pl_mmw_chachan(priors, ests, pl)
 
         H = sscmks['Rgas'] * eqtemp / mmw / g
 
@@ -246,8 +246,8 @@ class HmaxEstimator(PlEstimator):
         return round(H, 3)
 
 
-def pl_metals(priors, _ests, pl):
-    '''pl_metals ds'''
+def pl_metals_thorngren(priors, _ests, pl):
+    '''pl_metals_thorngren ds'''
     if priors[pl]['mass'] == '':  # abort for targets without mass estimates
         # print('no mass for this planet')
         return None
@@ -264,16 +264,45 @@ def pl_metals(priors, _ests, pl):
     # print('Mp,metallicity old',priors[pl]['mass'],metallicity)
 
     metallicity = massMetalRelation(
-        logmetStar, priors[pl]['mass'], thorngren=True
+        logmetStar, priors[pl]['mass'],
+        thorngren=True,
     )
     # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
 
     return round(metallicity, 4)
 
 
-def pl_mmw(priors, _ests, pl):
+def pl_metals_chachan(priors, _ests, pl):
+    '''pl_metals_chachan ds'''
+    if priors[pl]['mass'] == '':  # abort for targets without mass estimates
+        # print('no mass for this planet')
+        return None
+
+    logmetStar = priors['FEH*']
+
+    metallicity = massMetalRelation(
+        logmetStar, priors[pl]['mass'],
+        chachan=True,
+    )
+    # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
+
+    return round(metallicity, 4)
+
+
+def pl_mmw_thorngren(priors, _ests, pl):
     '''pl_mmw ds'''
-    metallicity = pl_metals(priors, _ests, pl)
+    metallicity = pl_metals_thorngren(priors, _ests, pl)
+    if metallicity is None:
+        return None
+
+    (a, b, c) = (2.274, 0.02671737, 2.195719)
+    mmw = a + b * np.exp(c * metallicity)
+    return round(mmw, 5)
+
+
+def pl_mmw_chachan(priors, _ests, pl):
+    '''pl_mmw ds'''
+    metallicity = pl_metals_chachan(priors, _ests, pl)
     if metallicity is None:
         return None
 
@@ -313,7 +342,7 @@ def pl_modulation(priors, _ests, pl):
     #             (priors[pl]['rp']*sscmks['Rjup'])**2
     g = 10.0 ** float(priors[pl]['logg'])
 
-    mmw = pl_mmw(priors, _ests, pl)
+    mmw = pl_mmw_chachan(priors, _ests, pl)
 
     H = sscmks['Rgas'] * eqtemp / mmw / g
 
