@@ -113,9 +113,7 @@ class SimSpectrum(dawgie.Algorithm):
                     metallicityDispersion=runtime[
                         'ariel_simspectrum_metallicityDispersion'
                     ].value(),
-                    CtoOdaSilva=runtime[
-                        'ariel_simspectrum_CtoOdaSilva'
-                    ],
+                    CtoOdaSilva=runtime['ariel_simspectrum_CtoOdaSilva'],
                     CtoOaverage=runtime[
                         'ariel_simspectrum_CtoOaverage'
                     ].value(),

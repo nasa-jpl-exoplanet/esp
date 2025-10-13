@@ -15,13 +15,16 @@ log = logging.getLogger(__name__)
 # ______________________________________________________
 
 
-def massMetalRelationDisp(logmetStar, Mp,
-                          thorngren=False, chachan=False, dispersion=0.3):
+def massMetalRelationDisp(
+    logmetStar, Mp, thorngren=False, chachan=False, dispersion=0.3
+):
     '''
     Add some realistic scatter to the mass-metallicity relation
     (not that we know reality)
     '''
-    logmet = massMetalRelation(logmetStar, Mp, thorngren=thorngren, chachan=chachan)
+    logmet = massMetalRelation(
+        logmetStar, Mp, thorngren=thorngren, chachan=chachan
+    )
 
     logmet += np.random.normal(scale=dispersion)
 
@@ -50,21 +53,22 @@ def massMetalRelation(logmetStar, Mp, thorngren=False, chachan=False):
         # mass-metallicity relation from Chachan et al 2025
         Mcore = 14.7  # -1.6+1.8 Earth masses
         fZ = 0.09  # +-0.01
-
         Zsun = 0.014
 
         sscmks = syscore.ssconstants(cgs=True)
         Mp_Earths = Mp * sscmks['Mjup'] / sscmks['Mearth']
-        if Mp_Earths < Mcore:
-            M_Z = Mp_Earths
-        else:
-            M_Z = Mcore + fZ * (Mp_Earths - Mcore)
+
+        M_Z = np.minimum(Mp_Earths, Mcore + fZ * (Mp_Earths - Mcore))
+
         # this isn't quite right. should be ratio with hydrogen
         #  (but then it would go to infinite)
         Zplanet = M_Z / Mp_Earths
 
         # ignores Zstar!?
         logmet = np.log10(Zplanet / Zsun)
+        print('logmet1', Mp, logmet)
+        logmet = logmetStar + np.log10(2.6 / Mp + 3.3)
+        print('logmet2', Mp, logmet)
 
     elif thorngren:
         # mass-metallicity relation from Thorngren et al 2016
