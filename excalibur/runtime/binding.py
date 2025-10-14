@@ -1,7 +1,7 @@
 # ./excalibur/runtime/binding.py
 # -*- coding: utf-8 -*-
 # PyXB bindings for NM:e92452c8d3e28a9e27abfc9994d2007779e7f4c9
-# Generated 2025-10-13 15:00:08.826869 by PyXB version 1.3.3 using Python 3.12.3.final.0
+# Generated 2025-10-14 09:21:49.238018 by PyXB version 1.3.3 using Python 3.12.3.final.0
 # Namespace AbsentNamespace0
 
 from __future__ import unicode_literals
@@ -14,7 +14,7 @@ import pyxb.utils.domutils
 import sys
 import pyxb.utils.sal as _six
 # Unique identifier for bindings created at the same time
-_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:fbd44f95-a87f-11f0-9e4c-0cc47aaa0c06')
+_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:e2bdb8f7-a919-11f0-8c99-0cc47aaa0c06')
 
 # Version of PyXB used to generate the bindings
 _PyXBVersion = '1.3.3'
