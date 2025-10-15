@@ -1515,27 +1515,32 @@ def plot_mass_vs_metals(
 
     # plot the underlying distribution (only if this is a simulation)
     # actually, also plot Thorngren relationship for real HST data
-    massesThorngren = np.logspace(-5, 3, 100)
-    metalsThorngren = massMetalRelation(0, massesThorngren, thorngren=True)
-    if 'sim' in filt:
-        ax.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-            # label='true relationship')
-        )
-    else:
-        ax.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-        )
+    # and also include the newer Chachan relationship
+    massesAnalytic = np.logspace(-5, 3, 100)
+    metalsThorngren = massMetalRelation(0, massesAnalytic, thorngren=True)
+    metalsChachan = massMetalRelation(0, massesAnalytic, chachan=True)
+    # if 'sim' in filt:
+    #     label='true relationship')
+    ax.plot(
+        massesAnalytic,
+        metalsThorngren,
+        'k:',
+        lw=1,
+        zorder=1,
+        label='Thorngren+ 2016',
+    )
+    ax.plot(
+        massesAnalytic,
+        metalsChachan,
+        'k--',
+        lw=1,
+        zorder=1,
+        label='Chachan+ 2025',
+    )
+
+    # some trouble with a 0+-0 point. make sure uncertainty is not zero
+    metals_fiterr = np.array(metals_fiterr)
+    metals_fiterr[np.where(metals_fiterr <= 0)] = 666
 
     # plot a linear fit to the data
     if onlyFitAbove10MEarth:
@@ -1543,8 +1548,8 @@ def plot_mass_vs_metals(
         masses_noSmallOnes = np.array(masses)[limitedMasses]
         metals_noSmallOnes = np.array(metals_fit)[limitedMasses]
         metalserr_noSmallOnes = np.array(metals_fiterr)[limitedMasses]
-        # print('# of planet masses',len(masses))
-        # print('# of planet masses >10MEarth',len(masses_noSmallOnes))
+        # print('# of planet masses', len(masses))
+        # print('# of planet masses >10MEarth', len(masses_noSmallOnes))
         polynomialCoeffs, covariance = np.polyfit(
             np.log10(masses_noSmallOnes),
             metals_noSmallOnes,
@@ -1727,26 +1732,22 @@ def plot_mass_vs_metals(
 
     # plot the underlying distribution (only if this is a simulation)
     # actually, also plot Thorngren relationship for real HST data
-    if 'sim' in filt:
-        # ax2.plot(massesThorngren,metalsThorngren, 'k:', lw=1, zorder=1, label='true relationship')
-        #  careful here. 'true relation' might imply that all planets fall on that dotted line
-        ax2.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-        )
-    else:
-        ax2.plot(
-            massesThorngren,
-            metalsThorngren,
-            'k:',
-            lw=1,
-            zorder=1,
-            label='Thorngren+ 2016',
-        )
+    ax2.plot(
+        massesAnalytic,
+        metalsThorngren,
+        'k:',
+        lw=1,
+        zorder=1,
+        label='Thorngren+ 2016',
+    )
+    ax2.plot(
+        massesAnalytic,
+        metalsChachan,
+        'k--',
+        lw=1,
+        zorder=1,
+        label='Chachan+ 2025',
+    )
 
     # plot a linear fit to the data
     if onlyFitAbove10MEarth:

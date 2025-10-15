@@ -4,6 +4,7 @@
 # pylint: disable=invalid-name
 
 # -- IMPORTS -- ------------------------------------------------------
+import excalibur.system.core as syscore
 import numpy as np
 import logging
 
@@ -14,12 +15,16 @@ log = logging.getLogger(__name__)
 # ______________________________________________________
 
 
-def massMetalRelationDisp(logmetStar, Mp, thorngren=False, dispersion=0.3):
+def massMetalRelationDisp(
+    logmetStar, Mp, thorngren=False, chachan=False, dispersion=0.3
+):
     '''
     Add some realistic scatter to the mass-metallicity relation
     (not that we know reality)
     '''
-    logmet = massMetalRelation(logmetStar, Mp, thorngren=thorngren)
+    logmet = massMetalRelation(
+        logmetStar, Mp, thorngren=thorngren, chachan=chachan
+    )
 
     logmet += np.random.normal(scale=dispersion)
 
@@ -29,33 +34,58 @@ def massMetalRelationDisp(logmetStar, Mp, thorngren=False, dispersion=0.3):
 # ______________________________________________________
 
 
-def massMetalRelation(logmetStar, Mp, thorngren=False):
+def massMetalRelation(logmetStar, Mp, thorngren=False, chachan=False):
     '''
-    Assume an inverse-linear relationship between planet mass and metallicity
-    Include a limit on metallicity of +2.0 dex, relative to the parent star
-    The planet mass (Mp) is in Jupiter masses
+    Calculate an assumed planet metallicity based on its mass
+     default option: FINESSE linear relationship
+     thorngren option: Thorngren 2016 relationship
+     chachan option: Chachan 2025 relationship
+    Planet mass (Mp) is in Jupiter masses
     '''
 
-    # Mp = 1Jup gives met = 0.5 dex
-    # Mp = 10/318 = 10Earths gives met = +2 dex
-    # Mp = 1/318 = 1Earth would give met = +3 dex, but capped at +2 dex
+    if logmetStar == '':
+        log.warning(
+            '--< Star metallicity missing in Ariel-sim : add to overwriter.py >--'
+        )
+        logmetStar = 0
 
-    if thorngren:
+    if chachan:
+        # mass-metallicity relation from Chachan et al 2025
+        Mcore = 14.7  # -1.6+1.8 Earth masses
+        fZ = 0.09  # +-0.01
+        Zsun = 0.014
+
+        sscmks = syscore.ssconstants(cgs=True)
+        Mp_Earths = Mp * sscmks['Mjup'] / sscmks['Mearth']
+
+        M_Z = np.minimum(Mp_Earths, Mcore + fZ * (Mp_Earths - Mcore))
+
+        # this isn't quite right. should be ratio with hydrogen
+        #  (but then it would go to infinite)
+        Zplanet = M_Z / Mp_Earths
+
+        # ignores Zstar!?
+        logmet = np.log10(Zplanet / Zsun)
+        # print('logmet1', Mp, logmet)
+        logmet = logmetStar + np.log10(2.6 / Mp + 3.3)
+        # print('logmet2', Mp, logmet)
+
+    elif thorngren:
         # mass-metallicity relation from Thorngren et al 2016
         slope = -0.45
         # metallicity for Jupiter mass (trend value; Jupiter itself is lower)
         intercept = np.log10(9.7)
 
-        if logmetStar == '':
-            log.warning(
-                '--< Star metallicity missing in Ariel-sim : add to overwriter.py >--'
-            )
-            logmet = intercept + slope * np.log10(Mp)
-        else:
-            logmet = logmetStar + intercept + slope * np.log10(Mp)
+        logmet = logmetStar + intercept + slope * np.log10(Mp)
 
     else:
-        # mass-metallicity relation from FINESSE proposal (Fortney motivated)
+        #   mass-metallicity relation from FINESSE proposal (Fortney motivated)
+        # Assume an inverse-linear relationship between planet mass and metallicity
+        # Include a limit on metallicity of +2.0 dex, relative to the parent star
+        #  Mp = 1Jup gives met = 0.5 dex
+        #  Mp = 10/318 = 10Earths gives met = +2 dex
+        #  Mp = 1/318 = 1Earth would give met = +3 dex, but capped at +2 dex
+
         slope = -1.0
         maxMetal = 2.0
         # Mpivot = 1.   # (earth units)
@@ -64,6 +94,7 @@ def massMetalRelation(logmetStar, Mp, thorngren=False):
         intercept = 0.5  # metallicity for Jupiter mass
 
         logmet = logmetStar + intercept + slope * np.log10(Mp)
+
         # change so that it can handle an array of masses (from cerberus/plotting)
         if isinstance(Mp, float):
             logmet = min(maxMetal, logmet)

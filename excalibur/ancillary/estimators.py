@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-branches,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-branches,too-many-positional-arguments,too-many-lines
 
 # -- IMPORTS -- ------------------------------------------------------
 import excalibur.system.core as syscore
@@ -139,7 +139,7 @@ class TeqEstimator(PlEstimator):
             priors['R*'] * sscmks['Rsun/AU'] / (2.0 * priors[pl]['sma'])
         )
 
-        return eqtemp
+        return round(eqtemp, 3)
 
 
 class HEstimator(PlEstimator):
@@ -152,7 +152,7 @@ class HEstimator(PlEstimator):
             name='H',
             descr='Atmospheric scale height (CBE)',
             units='km',
-            ref='Thorngren metallicity',
+            ref='Chachan metallicity',
         )
 
     def run(self, priors, ests, pl):
@@ -184,12 +184,14 @@ class HEstimator(PlEstimator):
         else:
             g = 10.0 ** float(priors[pl]['logg'])
 
-        mmw = pl_mmw(priors, ests, pl)
+        mmw = pl_mmw_chachan(priors, ests, pl)
 
         H = sscmks['Rgas'] * eqtemp / mmw / g
 
         # convert cm to km
-        return H / 1.0e5
+        H = H / 1.0e5
+
+        return round(H, 3)
 
 
 class HmaxEstimator(PlEstimator):
@@ -239,11 +241,13 @@ class HmaxEstimator(PlEstimator):
         H = sscmks['Rgas'] * eqtemp / mmw / g
 
         # convert cm to km
-        return H / 1.0e5
+        H = H / 1.0e5
+
+        return round(H, 3)
 
 
-def pl_metals(priors, _ests, pl):
-    '''pl_metals ds'''
+def pl_metals_thorngren(priors, _ests, pl):
+    '''pl_metals_thorngren ds'''
     if priors[pl]['mass'] == '':  # abort for targets without mass estimates
         # print('no mass for this planet')
         return None
@@ -260,22 +264,53 @@ def pl_metals(priors, _ests, pl):
     # print('Mp,metallicity old',priors[pl]['mass'],metallicity)
 
     metallicity = massMetalRelation(
-        logmetStar, priors[pl]['mass'], thorngren=True
+        logmetStar,
+        priors[pl]['mass'],
+        thorngren=True,
     )
     # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
 
-    return metallicity
+    return round(metallicity, 4)
 
 
-def pl_mmw(priors, _ests, pl):
+def pl_metals_chachan(priors, _ests, pl):
+    '''pl_metals_chachan ds'''
+    if priors[pl]['mass'] == '':  # abort for targets without mass estimates
+        # print('no mass for this planet')
+        return None
+
+    logmetStar = priors['FEH*']
+
+    metallicity = massMetalRelation(
+        logmetStar,
+        priors[pl]['mass'],
+        chachan=True,
+    )
+    # print('Mp,metallicity new',priors[pl]['mass'],metallicity)
+
+    return round(metallicity, 4)
+
+
+def pl_mmw_thorngren(priors, _ests, pl):
     '''pl_mmw ds'''
-    metallicity = pl_metals(priors, _ests, pl)
+    metallicity = pl_metals_thorngren(priors, _ests, pl)
     if metallicity is None:
         return None
 
     (a, b, c) = (2.274, 0.02671737, 2.195719)
     mmw = a + b * np.exp(c * metallicity)
-    return mmw
+    return round(mmw, 5)
+
+
+def pl_mmw_chachan(priors, _ests, pl):
+    '''pl_mmw ds'''
+    metallicity = pl_metals_chachan(priors, _ests, pl)
+    if metallicity is None:
+        return None
+
+    (a, b, c) = (2.274, 0.02671737, 2.195719)
+    mmw = a + b * np.exp(c * metallicity)
+    return round(mmw, 5)
 
 
 def pl_mmwmin(_priors, _ests, _pl):
@@ -309,7 +344,7 @@ def pl_modulation(priors, _ests, pl):
     #             (priors[pl]['rp']*sscmks['Rjup'])**2
     g = 10.0 ** float(priors[pl]['logg'])
 
-    mmw = pl_mmw(priors, _ests, pl)
+    mmw = pl_mmw_chachan(priors, _ests, pl)
 
     H = sscmks['Rgas'] * eqtemp / mmw / g
 
@@ -404,7 +439,7 @@ def pl_ZFOM(priors, _ests, pl):
     ZFOM = modulation / 10 ** (Hmag / 5)
 
     # normalization to make it scaled similar to TSM
-    return ZFOM * 1.0e8
+    return round(ZFOM * 1.0e8, 5)
 
 
 def pl_ZFOMmax(priors, _ests, pl):
@@ -438,7 +473,7 @@ def pl_ZFOMmax(priors, _ests, pl):
     # print('ZFOMmax',ZFOMmax*1.e8)
 
     # normalization to make it scaled similar to TSM
-    return ZFOMmax * 1.0e8
+    return round(ZFOMmax * 1.0e8, 5)
 
 
 def pl_density(priors, _ests, pl):
@@ -455,7 +490,8 @@ def pl_density(priors, _ests, pl):
     # now convert from Jupiter masses per Jupiter radii to g/cm^3
     conversion = sscmks['Mjup'] / (sscmks['Rjup'] ** 3)
     density = density * conversion
-    return density
+
+    return round(density, 5)
 
 
 def st_luminosity(priors, _ests):
@@ -480,6 +516,7 @@ def st_luminosity(priors, _ests):
         else:
             est = priors['R*'] ** 2 * (priors['T*'] / Tsun) ** 4
             # est_ref = 'from R_star & T_star'
+            est = round(est, 5)
     return est  # ,est_ref
 
 
@@ -508,7 +545,7 @@ def pl_insolation(priors, ests, pl):
     # apply eccentricity correction
     insolation *= math.sqrt(1 / (1 - priors[pl]['ecc'] ** 2))
 
-    return insolation
+    return round(insolation, 4)
 
 
 def st_rotationPeriod(priors, _ests):
@@ -545,7 +582,7 @@ def st_rotationPeriod(priors, _ests):
         # applies for 55 Cnc, GJ 9827, GJ 97658
         Prot = 25 * (Age / 4.6) ** 0.5
 
-    return Prot
+    return round(Prot, 4)
 
 
 def st_coronalTemp(priors, _ests):
@@ -621,7 +658,7 @@ def pl_windVelocity(priors, ests, pl):
 
     # convert cm/s to km/s
     windVelocity = v * v_crit / 1.0e5
-    return windVelocity
+    return round(windVelocity, 4)
 
 
 def pl_windDensity(priors, ests, pl):
@@ -646,7 +683,6 @@ def pl_windDensity(priors, ests, pl):
         return 'missing P_rot'
 
     windDensity *= (18.9 / Prot) ** 0.6
-
     return windDensity
 
 
@@ -676,7 +712,8 @@ def pl_windMassLoss(priors, ests, pl):
     )
 
     # convert to Jupiter masses per gigayear
-    return massLossRate / sscmks['Mjup'] * 3.16e7 * 1.0e9
+    mdotJupUnits = massLossRate / sscmks['Mjup'] * 3.16e7 * 1.0e9
+    return mdotJupUnits
 
 
 # X-ray flux based on stellar age and spectral type (T_* actually)
@@ -703,7 +740,7 @@ def Lxray(priors):
     else:  # G and F stars
         L_X = 10.0 ** (28.3 + 0.5 * (10.0 - logAge))
 
-    return L_X
+    return round(L_X, 5)
 
 
 def pl_evapMassLoss(priors, _ests, pl):
@@ -750,7 +787,9 @@ def pl_evapMassLoss(priors, _ests, pl):
     )
 
     # convert to Jupiter masses per gigayear
-    return massLossRate / sscmks['Mjup'] * 3.16e7 * 1.0e9
+    mdotJupUnits = massLossRate / sscmks['Mjup'] * 3.16e7 * 1.0e9
+
+    return mdotJupUnits
 
 
 def st_COratio(priors, _ests):
@@ -758,7 +797,7 @@ def st_COratio(priors, _ests):
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # from Table 2 in da Silva 2024
         est = 0.012 + 0.175 * priors['FEH*']
-        est = f'{est:.5f}'
+        est = round(est, 5)
     else:
         est = 'N/A'
     return est
@@ -769,7 +808,7 @@ def st_NOratio(priors, _ests):
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # from Table 2 in da Silva 2024
         est = -0.068 + 0.578 * priors['FEH*']
-        est = f'{est:.5f}'
+        est = round(est, 5)
     else:
         est = 'N/A'
     return est
@@ -780,7 +819,7 @@ def st_COratio_Nissen(priors, _ests):
     if 'FEH*' in priors.keys() and priors['FEH*'] != '':
         # this is equation 2 from Nissen 2013
         est = -0.002 + 0.22 * priors['FEH*']
-        est = f'{est:.5f}'
+        est = round(est, 5)
     else:
         est = 'N/A'
     return est
@@ -838,9 +877,7 @@ def pl_beta_rad(priors, _ests, pl):
 
     # and don't forget the delete the whitespace on the blank lines here!
 
-    Beta = f'{Beta:.6f}'
-
-    return Beta
+    return round(Beta, 6)
 
 
 def pl_TSM(priors, _ests, pl):
@@ -907,9 +944,7 @@ def pl_TSM(priors, _ests, pl):
     # print('zfommax',zfommax)
     # print('zellem/kempton ratio',zfommax / TSM)
 
-    TSM = f'{TSM:.4f}'
-
-    return TSM
+    return round(TSM, 4)
 
 
 def pl_ESM(priors, _ests, pl):
@@ -977,9 +1012,7 @@ def pl_ESM(priors, _ests, pl):
     # print('ESM factor4',1/ 10**(Kmag/5))
     # print('ESM',ESM)
 
-    ESM = f'{ESM:.4f}'
-
-    return ESM
+    return round(ESM, 4)
 
 
 # --------------------------- ----------------------------------------
