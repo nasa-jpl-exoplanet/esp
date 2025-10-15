@@ -152,6 +152,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['system_validate_selectMostRecent'] = BoolValue()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
@@ -160,6 +161,7 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
+        self['ariel_simspectrum_CtoOdaSilva'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
@@ -340,12 +342,14 @@ class StatusSV(dawgie.StateVector):
         self['ariel_simspectrum_includeMetallicityDispersion'] = BoolValue()
         self['ariel_simspectrum_randomCloudProperties'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
+        self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
         self['ariel_simspectrum_tier'] = excalibur.ValueScalar()
         self['ariel_simspectrum_randomseed'] = excalibur.ValueScalar()
         self['ariel_simspectrum_SNRadjustment'] = excalibur.ValueScalar()
         self['ariel_simspectrum_metallicityDispersion'] = (
             excalibur.ValueScalar()
         )
+        self['ariel_simspectrum_CtoOdaSilva'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOaverage'] = excalibur.ValueScalar()
         self['ariel_simspectrum_CtoOdispersion'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
@@ -446,10 +450,12 @@ class StatusSV(dawgie.StateVector):
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
+            'ariel_simspectrum_chachanMassMetals',
             'ariel_simspectrum_tier',
             'ariel_simspectrum_randomseed',
             'ariel_simspectrum_SNRadjustment',
             'ariel_simspectrum_metallicityDispersion',
+            'ariel_simspectrum_CtoOdaSilva',
             'ariel_simspectrum_CtoOaverage',
             'ariel_simspectrum_CtoOdispersion',
             'cerberus_atmos_sliceSampler',

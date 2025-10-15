@@ -42,8 +42,10 @@ ArielParams = namedtuple(
         'randomSeed',
         'randomCloudProperties',
         'thorngrenMassMetals',
+        'chachanMassMetals',
         'includeMetallicityDispersion',
         'metallicityDispersion',
+        'CtoOdaSilva',
         'CtoOaverage',
         'CtoOdispersion',
         'knownspecies',
@@ -143,6 +145,7 @@ def simulate_spectra(
     sscmks = syscore.ssconstants(mks=True)
 
     system_params = system_dict['priors']
+    ancil_params = ancil_dict['data']
 
     # maybe save/read the xslib file from disk.
     # for debugging at least, since it's a lot faster that way
@@ -165,6 +168,8 @@ def simulate_spectra(
             'cerberusNoclouds',
             'cerberusTEANoclouds',
         ]
+
+    solarCtoO = 0.54951
 
     out['data']['models'] = atmosModels
     # save target,planet names, for plotting (in states.py)
@@ -276,6 +281,7 @@ def simulate_spectra(
                         metallicity_star_dex,
                         M_p,
                         thorngren=runtime_params.thorngrenMassMetals,
+                        chachan=runtime_params.chachanMassMetals,
                         dispersion=runtime_params.metallicityDispersion,
                     )
                 else:
@@ -283,11 +289,13 @@ def simulate_spectra(
                         metallicity_star_dex,
                         M_p,
                         thorngren=runtime_params.thorngrenMassMetals,
+                        chachan=runtime_params.chachanMassMetals,
                     )
                 # print('metallicity_star_dex',metallicity_star_dex)
                 # print('metallicity_planet_dex',metallicity_planet_dex)
                 # metallicity_planet_dex_nonrandom = massMetalRelation(metallicity_star_dex, M_p,
                 #              thorngren=runtime_params.thorngrenMassMetals)
+                #              chachan=runtime_params.chachanMassMetals)
                 # print('metallicity_planet_dex (non random)',metallicity_planet_dex_nonrandom)
                 # print('planet mass',M_p)
 
@@ -297,17 +305,24 @@ def simulate_spectra(
 
                 # option to use da Silva 2024 C/O trend as the baseline,
                 #  (before adding on some dispersion)
-                # --> use ancil_dict <--
-                CtoOstar = ancil_dict['CO*']
-                NtoOstar = ancil_dict['NO*']
-                if CtoOstar:
-                    CtoOstar = NtoOstar
-
-                CtoO_planet_linear = randomCtoO_linear(
-                    logCtoOaverage=runtime_params.CtoOaverage,
-                    logCtoOdispersion=runtime_params.CtoOdispersion,
-                )
-                # print('CtoO_planet_linear',CtoO_planet_linear)
+                if runtime_params.CtoOdaSilva:
+                    CtoOstar = ancil_params['CO*']
+                    CtoO_planet_linear = randomCtoO_linear(
+                        logCtoOaverage=CtoOstar + np.log10(solarCtoO),
+                        logCtoOdispersion=runtime_params.CtoOdispersion,
+                    )
+                    # oldCtoO_planet_linear = randomCtoO_linear(
+                    #    logCtoOaverage=runtime_params.CtoOaverage,
+                    #    logCtoOdispersion=runtime_params.CtoOdispersion,
+                    # )
+                    # print('CtoO_planet_linear new,old',
+                    #      CtoO_planet_linear,oldCtoO_planet_linear)
+                else:
+                    CtoO_planet_linear = randomCtoO_linear(
+                        logCtoOaverage=runtime_params.CtoOaverage,
+                        logCtoOdispersion=runtime_params.CtoOdispersion,
+                    )
+                    # print('CtoO_planet_linear',CtoO_planet_linear)
 
                 # Load the instrument model and rescale based on #-of-transits
                 uncertainties = ariel_instrument['noise']
@@ -338,6 +353,7 @@ def simulate_spectra(
                         # print(' - using a low mmw')
                         model_params['metallicity'] = 0.0  # dex
                         model_params['C/O'] = 0.0  # [C/O] (relative to solar)
+                        model_params['N/O'] = 0.0  # [N/O] (relative to solar)
                     else:
                         model_params['metallicity*'] = metallicity_star_dex
                         # model_params['metallicity'] = metallicity_star_dex + metallicity_planet_dex
@@ -352,9 +368,13 @@ def simulate_spectra(
                         #  (0.54951 is the default in ACEChemistry, so it actually has no effect)
                         # actually, let's consider a distribution of C/O, as done for FINESSE
                         model_params['C/O'] = np.log10(
-                            CtoO_planet_linear / 0.54951
+                            CtoO_planet_linear / solarCtoO
                         )
                         # print('C/O model param',model_params['C/O'])
+                        if runtime_params.CtoOdaSilva:
+                            model_params['N/O'] = ancil_params['NO*']
+                        else:
+                            model_params['N/O'] = 0
 
                     # check whether this planet+metallicity combo is convergent/bound atmosphere
                     _, Hs = calc_mmw_Hs(
