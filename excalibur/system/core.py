@@ -980,29 +980,37 @@ def write_spreadsheet(svname, aspects, targetlists, st_keys, pl_keys, exts):
             for planet_letter in data['planets']:
                 outfile.write(trgt + ',')
                 outfile.write(planet_letter + ',')
-
                 for key in st_keys:
-                    outfile.write(str(data[key]) + ',')
+                    if key in data:
+                        outfile.write(str(data[key]) + ',')
+                    else:
+                        outfile.write(',')
                     for ext in exts:
-                        if (
-                            key + ext != 'stellar_type_units'
-                            and key + ext != 'T_corona_ref'
-                            and key + ext != 'spTyp_units'
+                        if key + ext not in (
+                            'stellar_type_units',
+                            'T_corona_ref',
+                            'spTyp_units',
                         ):
-                            outfile.write(
-                                str(data[key + ext]).replace(',', ';') + ','
-                            )
-
+                            if key in data:
+                                outfile.write(
+                                    str(data[key + ext]).replace(',', ';') + ','
+                                )
+                            else:
+                                outfile.write(',')
                 for key in pl_keys:
-                    outfile.write(str(data[planet_letter][key]) + ',')
-                    for ext in exts:
-                        outfile.write(
-                            str(data[planet_letter][key + ext]).replace(
-                                ',', ';'
+                    if key in data[planet_letter]:
+                        outfile.write(str(data[planet_letter][key]) + ',')
+                        for ext in exts:
+                            outfile.write(
+                                str(data[planet_letter][key + ext]).replace(
+                                    ',', ';'
+                                )
+                                + ','
                             )
-                            + ','
-                        )
-
+                    else:
+                        outfile.write(',')
+                        for ext in exts:
+                            outfile.write(',')
                 outfile.write('\n')
 
     return
