@@ -1917,7 +1917,9 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
                 keepers = np.where(profile_trace == 1)
                 # don't do profiling if it excludes every single walker
                 if len(keepers[0]) == 0:
-                    log.warning('--< Profiling removes everything! %s >--', trgt)
+                    log.warning(
+                        '--< Profiling removes everything! %s >--', trgt
+                    )
                     keepers = np.where(profile_trace == 0)
                 profiled_traces = []
                 for key in atm[p][model_name]['MCTRACE']:
