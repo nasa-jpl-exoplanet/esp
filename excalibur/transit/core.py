@@ -302,7 +302,9 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
     # TEMPLATES
     wavetemplate = []
     for thisdet in np.unique(cal['data']['DET']):
-        if verbose: log.warning('>-- %s', thisdet)
+        if verbose:
+            log.warning('>-- %s', thisdet)
+            pass
         select = np.array([d in [thisdet] for d in cal['data']['DET']])
         wavetemplate.append(np.mean(wave[select], axis=0))
         pass
@@ -345,7 +347,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
             )
             template = np.array(template)
             wavet = np.array(wavet)
-            #template[template > 1] = np.nan
+            # template[template > 1] = np.nan
             allwavet.append(wavet)
             alltemplates.append(template)
             pass

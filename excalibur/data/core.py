@@ -142,11 +142,11 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
             for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
             if n.endswith('uncal')
         ]
-        callocnames = [
-            (loc, n.split('_calints')[0])
-            for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
-            if n.endswith('calints')
-        ]
+        # callocnames = [
+        #    (loc, n.split('_calints')[0])
+        #    for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        #    if n.endswith('calints')
+        # ]
         if fastdev > 0:
             rawlocnames = rawlocnames[0:fastdev]
             pass
@@ -588,7 +588,9 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 log.warning('>-- Planet: %s', p)
                 log.warning('--< Transit: %s', str(out['data'][p]['transit']))
                 log.warning('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-                log.warning('--< Phase Curve: %s', str(out['data'][p]['phasecurve']))
+                log.warning(
+                    '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
+                )
                 pass
             if (
                 out['data'][p]['transit']
