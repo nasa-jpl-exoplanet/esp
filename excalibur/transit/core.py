@@ -298,33 +298,20 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
     ssc = syscore.ssconstants()
     spectra = np.array(cal['data']['SPECTRUM'])
     wave = np.array(cal['data']['WAVE'])
-    wavelen = []
+
+    # TEMPLATES
     wavetemplate = []
-    for w in wave:
-        if len(w) not in wavelen:
-            wavelen.append(len(w))
-            wavetemplate.append(w)
-            pass
+    for thisdet in np.unique(cal['data']['DET']):
+        if verbose: log.warning('>-- %s', thisdet)
+        select = np.array([d in [thisdet] for d in cal['data']['DET']])
+        wavetemplate.append(np.mean(wave[select], axis=0))
         pass
-    newspectra = []
-    newwave = []
-    alllen = []
-    for s, w in zip(spectra, wave):
-        newspectra.append(s)
-        neww = w
-        if len(w) != len(s):
-            neww = wavetemplate[wavelen.index(len(s))]
-        newwave.append(neww)
-        alllen.append(len(s))
-        pass
-    spectra = np.array(newspectra)
-    wave = np.array(newwave)
+
     events = [
         pnet
         for pnet in tme['data'].keys()
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
-    import pdb; pdb.set_trace()
     for p in events:
         if verbose:
             log.warning('>-- Planet: %s', p)
@@ -342,16 +329,15 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         uniqlen = []
         allwavet = []
         alltemplates = []
-        for thislen in set(alllen):
-            uniqlen.append(thislen)
-            select = np.array(alllen) == thislen
+        for thisdet in np.unique(cal['data']['DET']):
+            select = np.array([d in [thisdet] for d in cal['data']['DET']])
             soot = abs(z[select]) > (1e0 + 2e0 * rpors)
             wavet, template = tplbuild(
                 spectra[select][soot],
                 wave[select][soot],
                 [
-                    np.min([np.min(w) for w in wave[select]]),
-                    np.max([np.max(w) for w in wave[select]]),
+                    np.nanmin([np.nanmin(w) for w in wave[select]]),
+                    np.nanmax([np.nanmax(w) for w in wave[select]]),
                 ],
                 np.diff(wave[select][0]),
                 medest=True,
@@ -359,10 +345,12 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
             )
             template = np.array(template)
             wavet = np.array(wavet)
-            template[template > 1] = np.nan
+            #template[template > 1] = np.nan
             allwavet.append(wavet)
             alltemplates.append(template)
             pass
+        # BREAK POINT CODE IS GONNA CRASH HERE
+        # NORM
         allnorms = []
         allnwaves = []
         for ws, s in zip(wave, spectra):

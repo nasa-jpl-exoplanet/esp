@@ -289,7 +289,8 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
         ]
         for p in timingplist:
             out['data'][p] = {}
-            if 'JWST' in ext:  # JWST --------------------------------
+            # -- JWST -- ---------------------------------------------
+            if 'JWST' in ext:
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 tmjd = priors[p]['t0']
                 if tmjd > 2400000.5:
@@ -355,7 +356,9 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
                 pass
-            elif 'Spitzer' in ext:  # SPITZER ------------------------
+            # ---------- ---------------------------------------------
+            # -- SPITZER -- ------------------------------------------
+            elif 'Spitzer' in ext:
                 out['data'][p]['transit'] = []
                 out['data'][p]['eclipse'] = []
                 out['data'][p]['phasecurve'] = []
@@ -417,7 +420,9 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 visto = np.floor(tphase)
                 out['STATUS'].append(True)
                 pass
-            elif 'HST' in ext:  # HST --------------------------------
+            # ------------- ------------------------------------------
+            # -- HST -- ----------------------------------------------
+            elif 'HST' in ext:
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 tmjd = priors[p]['t0']
                 if tmjd > 2400000.5:
@@ -578,6 +583,7 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
                 pass
+            # --------- ----------------------------------------------
             if verbose:
                 log.warning('>-- Planet: %s', p)
                 log.warning('--< Transit: %s', str(out['data'][p]['transit']))
@@ -914,6 +920,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         for thisrefX, thisrefS in zip(refX, refS):
             orderme = np.argsort(thisrefX)
             TMX.append(itp.CubicSpline(thisrefX[orderme], thisrefS[orderme]))
+            pass
         # STOP TEST JWST
         _ = YY
         _ = XX
