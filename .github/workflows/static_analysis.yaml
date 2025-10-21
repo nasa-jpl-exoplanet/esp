@@ -6,8 +6,8 @@ jobs:
     name: Coding Style
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'
@@ -22,8 +22,8 @@ jobs:
     name: Code Quality
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'
@@ -40,8 +40,8 @@ jobs:
     name: Code Security
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'
@@ -56,8 +56,8 @@ jobs:
     name: Deployment (pypi) Compliance
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'
@@ -72,8 +72,8 @@ jobs:
     name: DAWGIE Compliance
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'
@@ -91,8 +91,8 @@ jobs:
     name: Docker Version Verification
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           architecture: 'x64'
           python-version: '3.12'

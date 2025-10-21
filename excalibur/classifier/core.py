@@ -8,9 +8,6 @@ import os
 import dawgie
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import torch
 import logging
 
 import excalibur
@@ -30,35 +27,6 @@ def lc_resid_classification(transit_whitelight, ext, out):
     A. Arora
     Classify the shape of an exoplanet's light curve residual
     '''
-
-    def get_img(x, y):
-        '''
-        Returns image representation of scatter plot
-        '''
-        px = 1 / plt.rcParams['figure.dpi']  # pixel in inches
-        plt.subplots(figsize=(350 * px, 270 * px))
-        plt.plot(x, y, '.', color='black')
-        y_lim = max(y, abs(min(y)))
-        x_lim = max(x, abs(min(x)))
-        if 'Spitzer' in ext:
-            plt.ylim(-2 * y_lim, 2 * y_lim)
-            plt.xlim(-x_lim, x_lim)
-        else:
-            plt.ylim(-2.5 * y_lim, 2.5 * y_lim)
-            if x_lim <= 4:
-                plt.xlim(-4, 4)
-            else:
-                plt.xlim(-x_lim, x_lim)
-        plt.axis('off')
-        fig = plt.gcf()
-        plt.close()
-        canvas = FigureCanvas(fig)
-        canvas.draw()
-        width, height = fig.get_size_inches() * fig.get_dpi()
-        img = np.frombuffer(canvas.tostring_argb(), dtype='uint8').reshape(
-            int(height), int(width), 3
-        )
-        return img / 255
 
     for planet in transit_whitelight['data']:
         if 'Spitzer' in ext:
@@ -91,21 +59,8 @@ def lc_resid_classification(transit_whitelight, ext, out):
             if 'Spitzer' not in ext
             else whitelight
         )
-        magicdir = excalibur.context['data_dir']
 
-        if 'Spitzer' in ext:
-            mdl = torch.load(
-                magicdir + '/classifier_models/spitzer_lc_model.pt'
-            )
-        else:
-            mdl = torch.load(magicdir + '/classifier_models/hubble_lc_model.pt')
-        mdl.eval()
-
-        img = get_img(sep, (wl_flat - model))
-        img = np.transpose([img], (0, 3, 1, 2))
-        train_img = torch.from_numpy(img)
-        output = mdl(train_img.float())
-        pred = torch.max(output.data, 1)[1].tolist()[0]
+        pred = 0  # fake bad torch result
 
         flags = {
             0: 'yellow',
