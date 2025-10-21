@@ -14,6 +14,7 @@ pyvo
 PyXB-CTC==1.3.3  # since code checks, just lock the version
 service_identity # for twisted with TLS (optionally loaded so must do it here)
 scipy
+sympy
                  # classifier is disable so maybe we can live without torch??
 #torch            # 6 GB monstrosity
 ultranest
