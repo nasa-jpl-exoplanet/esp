@@ -2,6 +2,8 @@
 
 import excalibur.classifier.bot as clsbot
 
+# Do not enable this module until you find the blame commit that creates this
+# comment and put back all of the torch elements that were removed
 DAWGIE_IGNORE = True
 
 
