@@ -6,7 +6,7 @@
 # pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 # GMR: I m out of juice for that
 # pylint: disable=cell-var-from-loop
-#  these should all be fixed now (as in cerberus)
+# these should all be fixed now (as in cerberus)
 # abstract-method,arguments-differ,arguments-renamed
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -289,7 +289,7 @@ def normversion():
     return dawgie.VERSION(1, 1, 9)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
     '''
     JWST spectra normalization
     '''
@@ -298,63 +298,48 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
     ssc = syscore.ssconstants()
     spectra = np.array(cal['data']['SPECTRUM'])
     wave = np.array(cal['data']['WAVE'])
-    # TEST
-    # spectra = spectra[:10]
-    # wave = wave[:10]
-    # END TEST
-    wavelen = []
+
+    # TEMPLATES
     wavetemplate = []
-    for w in wave:
-        if len(w) not in wavelen:
-            wavelen.append(len(w))
-            wavetemplate.append(w)
+    for thisdet in np.unique(cal['data']['DET']):
+        if verbose:
+            log.warning('>-- %s', thisdet)
             pass
+        select = np.array([d in [thisdet] for d in cal['data']['DET']])
+        wavetemplate.append(np.mean(wave[select], axis=0))
         pass
-    newspectra = []
-    newwave = []
-    alllen = []
-    for s, w in zip(spectra, wave):
-        newspectra.append(s)
-        neww = w
-        if len(w) != len(s):
-            neww = wavetemplate[wavelen.index(len(s))]
-        newwave.append(neww)
-        alllen.append(len(s))
-        pass
-    spectra = np.array(newspectra)
-    wave = np.array(newwave)
+
     events = [
         pnet
         for pnet in tme['data'].keys()
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     for p in events:
-        log.info('>-- Planet: %s', p)
+        if verbose:
+            log.warning('>-- Planet: %s', p)
+            pass
         out['data'][p] = {}
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
         if mttref > 2400000.5:
             mttref -= 2400000.5
+            pass
         ignore = np.array(tme['data'][p]['ignore']) | np.array(
             cal['data']['IGNORED']
         )
         z = tme['data'][p]['z']
-        # TEST
-        # z = z[:10]
-        # END TEST
         uniqlen = []
         allwavet = []
         alltemplates = []
-        for thislen in set(alllen):
-            uniqlen.append(thislen)
-            select = np.array(alllen) == thislen
+        for thisdet in np.unique(cal['data']['DET']):
+            select = np.array([d in [thisdet] for d in cal['data']['DET']])
             soot = abs(z[select]) > (1e0 + 2e0 * rpors)
             wavet, template = tplbuild(
                 spectra[select][soot],
                 wave[select][soot],
                 [
-                    np.min([np.min(w) for w in wave[select]]),
-                    np.max([np.max(w) for w in wave[select]]),
+                    np.nanmin([np.nanmin(w) for w in wave[select]]),
+                    np.nanmax([np.nanmax(w) for w in wave[select]]),
                 ],
                 np.diff(wave[select][0]),
                 medest=True,
@@ -362,10 +347,12 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
             )
             template = np.array(template)
             wavet = np.array(wavet)
-            template[template > 1] = np.nan
+            # template[template > 1] = np.nan
             allwavet.append(wavet)
             alltemplates.append(template)
             pass
+        # BREAK POINT CODE IS GONNA CRASH HERE
+        # NORM
         allnorms = []
         allnwaves = []
         for ws, s in zip(wave, spectra):
@@ -387,6 +374,13 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, debug=False):
         out['data'][p]['phase'] = tme['data'][p]['phase']
         out['data'][p]['wavet'] = allwavet
         out['data'][p]['template'] = alltemplates
+        if verbose:
+            plt.figure(figsize=(12, 9))
+            for w, s in zip(allnwaves, allnorms):
+                plt.plot(w, s)
+                pass
+            plt.show()
+            pass
         pass
     _ = ext
     out['STATUS'].append(True)

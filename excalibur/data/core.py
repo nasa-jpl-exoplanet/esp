@@ -114,7 +114,7 @@ def timingversion():
     return dawgie.VERSION(1, 3, 0)
 
 
-def timing(force, ext, clc, out):
+def timing(force, ext, clc, out, fastdev=-1, verbose=False):
     '''
     Uses system orbital parameters to guide the dataset towards
     transit, eclipse or phasecurve tasks
@@ -136,28 +136,57 @@ def timing(force, ext, clc, out):
         alldinm = []  # Flatten integration number
         alldtms = []  # Flatten times
         alldidr = []  # Flatten integration durations
-        for loc in sorted(clc['LOC']):
+        # RAW VERSUS CALIBRATED LISTS
+        rawlocnames = [
+            (loc, n.split('_uncal')[0])
+            for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+            if n.endswith('uncal')
+        ]
+        # callocnames = [
+        #    (loc, n.split('_calints')[0])
+        #    for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+        #    if n.endswith('calints')
+        # ]
+        if fastdev > 0:
+            rawlocnames = rawlocnames[0:fastdev]
+            pass
+        rawloc = [rln[0] for rln in rawlocnames]
+        calloc = [
+            loc
+            for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
+            if n.endswith('calints')
+        ]
+        if fastdev > 0:
+            rawloc = rawloc[0:fastdev]
+            calloc = calloc[0:fastdev]
+            pass
+        for loc in calloc:
             fullloc = os.path.join(dbs, loc)
             with pyfits.open(fullloc) as hdulist:
                 for hdu in hdulist:
                     if 'PRIMARY' in hdu.name:
                         pass
                     elif "INT_TIMES" in hdu.name:
-                        alldinm.extend(hdu.data['integration_number'])
-                        alldtms.extend(hdu.data['int_mid_MJD_UTC'])
+                        fitsdata = hdu.data[:].copy()
+                        alldinm.extend(fitsdata['integration_number'])
+                        alldtms.extend(fitsdata['int_mid_MJD_UTC'])
                         alldidr.extend(
-                            hdu.data['int_end_MJD_UTC']
-                            - hdu.data['int_start_MJD_UTC']
+                            fitsdata['int_end_MJD_UTC']
+                            - fitsdata['int_start_MJD_UTC']
                         )
+                        del hdu.data
                         pass
                     pass
                 pass
             pass
-        isort = np.argsort(alldtms)
-        data['ISORTEXP'].extend(isort)
-        data['TIME'].extend(np.array(alldtms)[isort])  # [MJD-UTC]
-        data['EXPLEN'].extend(np.array(alldidr)[isort])  # [days]
-        data['LOC'].extend(sorted(clc['LOC']))
+        out['data']['RAWLOC'] = rawloc
+        out['data']['CALLOC'] = calloc
+        data['TIME'].extend(alldtms)  # [MJD-UTC]
+        out['data']['TIME'] = np.array(alldtms)  # [MJD-UTC]
+        data['EXPLEN'].extend(alldidr)  # [days]
+        out['data']['EXPLEN'] = np.array(alldidr)  # [days]
+        data['ISORTEXP'].extend(alldtms)
+        out['data']['ISORTEXP'] = np.argsort(alldtms)
         pass
     elif 'Spitzer' in ext:
         for loc in sorted(clc['LOC']):
@@ -244,26 +273,29 @@ def timing(force, ext, clc, out):
         pass
     data['IGNORED'] = [False] * len(data['TIME'])
     time = np.array(data['TIME'].copy())
-    ignore = np.array(data['IGNORED'].copy())
+    ign = np.array(data['IGNORED'].copy())
     exposlen = np.array(data['EXPLEN'].copy())
     scanangle = np.array(data['SCANANGLE'].copy())
     ordt = np.argsort(time)
     exlto = exposlen.copy()[ordt]
     tmeto = time.copy()[ordt]
-    ignto = ignore.copy()[ordt]
+    ignto = ign.copy()[ordt]
     if 'HST' in ext:
         scato = scanangle.copy()[ordt]
+        pass
     if tmeto.size > 1:
         timingplist = [
             p for p in priors['planets'] if p not in force['pignore']
         ]
         for p in timingplist:
             out['data'][p] = {}
-            if 'JWST' in ext:  # JWST --------------------------------
+            # -- JWST -- ---------------------------------------------
+            if 'JWST' in ext:
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 tmjd = priors[p]['t0']
                 if tmjd > 2400000.5:
                     tmjd -= 2400000.5
+                    pass
                 z, phase = time2z(
                     time,
                     priors[p]['inc'],
@@ -281,6 +313,7 @@ def timing(force, ext, clc, out):
                 wherev = np.where(np.diff(phsto) < 0)[0]
                 for index in wherev:
                     visto[index + 1 :] += 1
+                    pass
                 # TRANSIT VISIT PHASECURVE
                 out['data'][p]['transit'] = []
                 out['data'][p]['eclipse'] = []
@@ -314,16 +347,18 @@ def timing(force, ext, clc, out):
                         pass
                     pass
                 vis[ordt] = visto.astype(int)
-                ignore[ordt] = ignto
+                ign[ordt] = ignto
                 out['data'][p]['wherev'] = wherev
                 out['data'][p]['visits'] = vis
                 out['data'][p]['z'] = z
                 out['data'][p]['phase'] = phase
                 out['data'][p]['ordt'] = ordt
-                out['data'][p]['ignore'] = ignore
+                out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
                 pass
-            elif 'Spitzer' in ext:  # SPITZER ------------------------
+            # ---------- ---------------------------------------------
+            # -- SPITZER -- ------------------------------------------
+            elif 'Spitzer' in ext:
                 out['data'][p]['transit'] = []
                 out['data'][p]['eclipse'] = []
                 out['data'][p]['phasecurve'] = []
@@ -385,7 +420,9 @@ def timing(force, ext, clc, out):
                 visto = np.floor(tphase)
                 out['STATUS'].append(True)
                 pass
-            elif 'HST' in ext:  # HST --------------------------------
+            # ------------- ------------------------------------------
+            # -- HST -- ----------------------------------------------
+            elif 'HST' in ext:
                 smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
                 tmjd = priors[p]['t0']
                 if tmjd > 2400000.5:
@@ -407,8 +444,10 @@ def timing(force, ext, clc, out):
                 cftfail = tmetod > 3 * thrs
                 if True in cftfail:
                     thro = np.percentile(tmetod[cftfail], 75)
+                    pass
                 else:
                     thro = 0
+                    pass
                 # THRESHOLDS
                 rbtthr = 25e-1 * thrs  # HAT-P-11
                 vstthr = 3e0 * thro
@@ -420,6 +459,7 @@ def timing(force, ext, clc, out):
                 vis = np.ones(tmetod.size)
                 for index in wherev:
                     visto[index:] += 1
+                    pass
                 # DOUBLE SCAN VISIT RE NUMBERING
                 dvisto = visto.copy()
                 for v in set(visto):
@@ -440,11 +480,13 @@ def timing(force, ext, clc, out):
                     selv = visto == v
                     if len(~ignto[selv]) < 4:
                         ignto[selv] = True
+                        pass
                     else:
                         select = np.where(tmetod[selv] > rbtthr)[0]
                         incorb = orbto[selv]
                         for indice in select:
                             incorb[indice:] = incorb[indice:] + 1
+                            pass
                         orbto[selv] = incorb
                         for o in set(orbto[selv]):
                             selo = orbto[selv] == o
@@ -521,11 +563,12 @@ def timing(force, ext, clc, out):
                         pass
                     if pcconde and pccondt:
                         out['data'][p]['phasecurve'].append(int(v))
+                        pass
                     pass
                 vis[ordt] = visto.astype(int)
                 orb[ordt] = orbto.astype(int)
                 dvis[ordt] = dvisto.astype(int)
-                ignore[ordt] = ignto
+                ign[ordt] = ignto
                 out['data'][p]['tmetod'] = tmetod
                 out['data'][p]['whereo'] = whereo
                 out['data'][p]['wherev'] = wherev
@@ -537,13 +580,18 @@ def timing(force, ext, clc, out):
                 out['data'][p]['z'] = z
                 out['data'][p]['phase'] = phase
                 out['data'][p]['ordt'] = ordt
-                out['data'][p]['ignore'] = ignore
+                out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
                 pass
-            log.info('>-- Planet: %s', p)
-            log.info('--< Transit: %s', str(out['data'][p]['transit']))
-            log.info('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-            log.info('--< Phase Curve: %s', str(out['data'][p]['phasecurve']))
+            # --------- ----------------------------------------------
+            if verbose:
+                log.warning('>-- Planet: %s', p)
+                log.warning('--< Transit: %s', str(out['data'][p]['transit']))
+                log.warning('--< Eclipse: %s', str(out['data'][p]['eclipse']))
+                log.warning(
+                    '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
+                )
+                pass
             if (
                 out['data'][p]['transit']
                 or out['data'][p]['eclipse']
@@ -769,29 +817,13 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
+def jwstcal(fin, tim, ext, out, verbose=False):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
-    # TEMP CI
-    _ = tim
-    # RAW VERSUS CALIBRATED LISTS
-    rawloc = [
-        loc
-        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
-        if n.endswith('uncal')
-    ]
-    calloc = [
-        loc
-        for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
-        if n.endswith('calints')
-    ]
-    out['data']['LOC'] = rawloc
-    if fastdev:
-        rawloc = rawloc[0:2]
-        calloc = calloc[0:2]
-        pass
+    rawloc = tim['data']['RAWLOC']
+    calloc = tim['data']['CALLOC']
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
@@ -860,7 +892,6 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         pass
 
     reffile = jwstreffiles(ext)
-
     if 'NIRISS' in ext:
         Tstar = fin['priors']['T*']
         bbfunc = astrobb(Tstar * astropy.units.K)
@@ -891,6 +922,7 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         for thisrefX, thisrefS in zip(refX, refS):
             orderme = np.argsort(thisrefX)
             TMX.append(itp.CubicSpline(thisrefX[orderme], thisrefS[orderme]))
+            pass
         # STOP TEST JWST
         _ = YY
         _ = XX
@@ -918,6 +950,8 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
                 pass
             else:
                 refwave = allwaves[it]
+                refwave[:, :4] = np.nan
+                refwave[:, -4:] = np.nan
                 pass
             wct = nirspeccal(thisexp, refwave)
             all1dvalid.append(wct[0])
@@ -926,7 +960,8 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
             progbar.update()
             pass
         progbar.close()
-        clean1D = cleanspec(all1d, all1dvalid, alldet)
+
+        clean1D = cleanspec(all1d, all1dvalid, alldet, verbose=verbose)
         if verbose:
             plt.figure(figsize=(12, 9))
             for w, s, m in zip(all1dwave, all1d, all1dvalid):
@@ -938,7 +973,10 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
                 pass
             plt.show()
             pass
+
         out['STATUS'].append(True)
+        out['data']['DET'] = alldet
+        out['data']['EXP'] = allrexp
         out['data']['TIME'] = datatiming
         out['data']['DET'] = alldet
         out['data']['EXCLNUM'] = all1dvalid
@@ -947,25 +985,47 @@ def jwstcal(fin, clc, tim, ext, out, verbose=False, fastdev=False):
         ]
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
+        out['data']['EXPFLAG'] = alldq
         pass
     return True
 
 
-def cleanspec(all1d, all1dvalid, alldet):
+def cleanspec(all1d, all1dvalid, alldet, verbose=False):
+    '''
+    GMR: Cleaning up
+    '''
     out = np.array(all1d.copy())
     valid = np.array(all1dvalid.copy())
     out[~valid] = np.nan
     for x in np.unique(alldet):
         select = alldet == x
-        ref = np.nanmedian(out[select], axis=0)
-        refup = np.nanpercentile(out[select], 50 - 34, axis=0)
-        refdown = np.nanpercentile(out[select], 50 + 34, axis=0)
+        refup = np.nanpercentile(out[select], 50 + 98 / 2, axis=0)
+        refdown = np.nanpercentile(out[select], 50 - 98 / 2, axis=0)
         detset = out[select].copy()
         detset[(out[select] > refup) | (out[select] < refdown)] = np.nan
         stdsample = np.nanstd(detset, axis=0)
-        valid[select] = abs(out[select] - ref) < (3 * stdsample)
+        detset = out[select].copy()
+        refspec = np.nanmedian(detset, axis=0)
+        thr = np.nanpercentile(np.diff(refspec), 95)
+        mask = [False]
+        mask.extend(abs(np.diff(refspec)) > 2 * thr)
+        refspec[np.array(mask)] = np.nan
+        detset[
+            (detset < (refspec - 3 * stdsample))
+            | (detset > (refspec + 3 * stdsample))
+        ] = np.nan
+        out[select] = detset
+        if verbose:
+            fig, ax = plt.subplots(figsize=(12, 9))
+            cax = ax.imshow(detset, aspect='auto', interpolation='none')
+            plt.title(x, fontsize=20)
+            plt.xticks(fontsize=16)
+            plt.yticks(fontsize=16)
+            cbar = fig.colorbar(cax)
+            cbar.ax.tick_params(labelsize=16)
+            plt.show()
+            pass
         pass
-    out[~valid] = np.nan
     return out
 
 
@@ -974,9 +1034,12 @@ def nirspeccal(thisexp, thosewaves):
     GMR: NIRSPEC wavelength calibration
     Assumes lfer removed data
     '''
+    # Dead pixels will answer that one.
+    # Need to kick them, we have enough channels
+    # No interpolation BS.
     this1d = np.nansum(thisexp, axis=0)
     this1dwave = np.nanmedian(thosewaves, axis=0)
-    select = np.isfinite(this1d)
+    select = np.isfinite(this1dwave)
     return (select, this1d, this1dwave)
 
 
@@ -1150,7 +1213,7 @@ def lfnoise(xps, flg, verbose=False):
     for i, _ in enumerate(xps):
         lfcorr = xps[i].copy()
         lfcorr[4:-4] = np.nan
-        lfr = np.nanmean(lfcorr, axis=0)
+        lfr = np.nanmedian(lfcorr, axis=0)
         select = ~np.isfinite(lfr)
         if np.sum(select):
             temp = flg[i]
@@ -1285,14 +1348,14 @@ def scancal(
     for index, nm in enumerate(data['LOC']):
         maskedexp = []
         masks = []
-        ignore = False
+        ign = False
         for dd, ff in zip(data['EXP'][index], data['EXPFLAG'][index]):
             select = ff > 0
             if np.sum(select) > 0:
                 dd[select] = np.nan
                 if np.all(~np.isfinite(dd)):
                     data['TRIAL'][index] = 'Empty Subexposure'
-                    ignore = True
+                    ign = True
                     pass
                 else:
                     maskedexp.append(dd)
@@ -1302,15 +1365,15 @@ def scancal(
             mm = np.isfinite(dd)
             masks.append(mm)
             pass
-        if ignore:
+        if ign:
             maskedexp = data['EXP'][index].copy()
         data['MEXP'][index] = maskedexp
         data['MASK'][index] = masks
-        data['IGNORED'][index] = ignore
+        data['IGNORED'][index] = ign
         pass
     # ALL FLOOD LEVELS -------------------------------------------------------------------
     for index, nm in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         # MINKOWSKI ----------------------------------------------------------------------
         psdiff = np.diff(data['MEXP'][index][::-1].copy(), axis=0)
         floatsw = data['SCANLENGTH'][index] / arcsec2pix
@@ -1322,9 +1385,9 @@ def scancal(
             scanwpi = np.round(floatsw / (len(psdiff) - 1))
         if scanwpi < 1:
             data['TRIAL'][index] = 'Subexposure Scan Length < 1 Pixel'
-            ignore = True
+            ign = True
             pass
-        if not ignore:
+        if not ign:
             targetn = 0
             if tid in ['XO-2', 'HAT-P-1']:
                 targetn = -1
@@ -1361,7 +1424,7 @@ def scancal(
     data['FLOODLVL'] = allfloodlvl
     # ALL LIMITS  ------------------------------------------------------------------------
     for index, nm in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         # MINKOWSKI FLOOD LEVEL ----------------------------------------------------------
         psdiff = np.diff(data['MEXP'][index][::-1].copy(), axis=0)
         floatsw = data['SCANLENGTH'][index] / arcsec2pix
@@ -1373,9 +1436,9 @@ def scancal(
             scanwpi = np.round(floatsw / (len(psdiff) - 1))
         if scanwpi < 1:
             data['TRIAL'][index] = 'Subexposure Scan Length < 1 Pixel'
-            ignore = True
+            ign = True
             pass
-        if not ignore:
+        if not ign:
             targetn = 0
             if tid in ['XO-2', 'HAT-P-1']:
                 targetn = -1
@@ -1413,11 +1476,11 @@ def scancal(
                     maxlocs.append(lmx)
                     pass
                 pass
-            ignore = ignore or not (
+            ign = ign or not (
                 (np.any(np.isfinite(minlocs)))
                 and (np.any(np.isfinite(maxlocs)))
             )
-            if not ignore:
+            if not ign:
                 minl = np.nanmin(minlocs)
                 maxl = np.nanmax(maxlocs)
                 # CONTAMINATION FROM ANOTHER SOURCE IN THE UPPER FRAME -------------------
@@ -1465,7 +1528,7 @@ def scancal(
     ovszspc = False
     # BACKGROUND SUB AND ISOLATE ---------------------------------------------------------
     for index, nm in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         psdiff = np.diff(data['MEXP'][index][::-1].copy(), axis=0)
         psminsel = np.array(data['MIN'][index]) < 0
         if True in psminsel:
@@ -1474,7 +1537,7 @@ def scancal(
             psmin = np.nanmin(data['MIN'][index])
         minl = data['UP'][index]
         maxl = data['DOWN'][index]
-        if not ignore:
+        if not ign:
             # BACKGROUND SUBTRACTION -----------------------------------------------------
             for eachdiff in psdiff:
                 background = []
@@ -1538,7 +1601,7 @@ def scancal(
                 thispstamp[:, int(maxx) :] = np.nan
                 if ((maxx - minx) < spectrace) and not ovszspc:
                     data['TRIAL'][index] = 'Could Not Find Full Spectrum'
-                    ignore = True
+                    ign = True
                     pass
                 pstamperr = np.array(data['EXPERR'][index].copy())
                 select = ~np.isfinite(pstamperr)
@@ -1554,7 +1617,7 @@ def scancal(
                 thispstamp = np.sum(np.diff(garbage, axis=0), axis=0)
                 pstamperr = thispstamp * np.nan
                 data['TRIAL'][index] = 'Could Not Find X Edges'
-                ignore = True
+                ign = True
                 pass
             pass
         else:
@@ -1564,11 +1627,11 @@ def scancal(
             if len(data['TRIAL'][index]) < 1:
                 data['TRIAL'][index] = 'Could Not Find Y Edges'
                 pass
-            ignore = True
+            ign = True
             pass
         data['MEXP'][index] = thispstamp
         data['TIME'][index] = np.nanmean(data['TIME'][index].copy())
-        data['IGNORED'][index] = ignore
+        data['IGNORED'][index] = ign
         data['EXPERR'][index] = pstamperr
         if debug:
             log.info('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
@@ -1579,7 +1642,7 @@ def scancal(
             if not os.path.exists('TEST/' + tid):
                 os.mkdir('TEST/' + tid)
             plt.figure()
-            plt.title('Index: ' + str(index) + ' Ignored=' + str(ignore))
+            plt.title('Index: ' + str(index) + ' Ignored=' + str(ign))
             plt.imshow(thispstamp)
             plt.colorbar()
             plt.savefig('TEST/' + tid + '/' + nm + '.png')
@@ -1600,8 +1663,8 @@ def scancal(
             data['IGNORED'][index] = True
             data['TRIAL'][index] = 'Empty Frame'
             pass
-        ignore = data['IGNORED'][index]
-        if not ignore:
+        ign = data['IGNORED'][index]
+        if not ign:
             frame = data['MEXP'][index].copy()
             frame = [line for line in frame if not np.all(~np.isfinite(line))]
             # OVERSIZED MASK -------------------------------------------------------------
@@ -1725,8 +1788,8 @@ def scancal(
     data['BACKGROUND'] = [np.nan] * len(data['LOC'])
     spectralindex = []
     for index, loc in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
-        if not ignore:
+        ign = data['IGNORED'][index]
+        if not ign:
             spectrum = data['SPECTRUM'][index].copy()
             cutoff = np.nanmax(spectrum) / scaleco
             finitespec = spectrum[np.isfinite(spectrum)]
@@ -1749,8 +1812,8 @@ def scancal(
         pass
     siv = np.nanmedian(spectralindex)
     for index, loc in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
-        if not ignore:
+        ign = data['IGNORED'][index]
+        if not ign:
             spectrum = data['SPECTRUM'][index].copy()
             cutoff = np.nanmax(spectrum) / scaleco
             finitespec = spectrum[np.isfinite(spectrum)]
@@ -1770,14 +1833,14 @@ def scancal(
             )
             if (disp < ldisp) or (disp > udisp):
                 data['TRIAL'][index] = 'Dispersion Out Of Bounds'
-                ignore = True
+                ign = True
                 pass
             if (abs(disp - disper) < 1e-7) and not ovszspc:
                 data['TRIAL'][index] = 'Dispersion Fit Failure'
-                ignore = True
+                ign = True
                 pass
             pass
-        if not ignore:
+        if not ign:
             liref = itp.interp1d(
                 wavett * 1e-4, tt, bounds_error=False, fill_value=np.nan
             )
@@ -1791,15 +1854,15 @@ def scancal(
             pass
         else:
             data['WAVE'][index] = (data['SPECTRUM'][index]) * np.nan
-        data['IGNORED'][index] = ignore
+        data['IGNORED'][index] = ign
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
     log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
-    for index, ignore in enumerate(allignore):
-        if ignore:
+    for index, ign in enumerate(allignore):
+        if ign:
             log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
@@ -2360,7 +2423,7 @@ def starecal(
     data['TRIAL'] = [''] * len(data['LOC'])
     # FLOOD LEVEL STABILIZATION --------------------------------------
     for index in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index[0]]
+        ign = data['IGNORED'][index[0]]
         # ISOLATE SCAN Y ---------------------------------------------
         sampramp = np.array(data['MEXP'][index[0]]).copy()
         for sutr in sampramp:
@@ -2384,7 +2447,7 @@ def starecal(
     data['FLOODLVL'] = list(allfloodlvl)
     # DATA CUBE ------------------------------------------------------
     for index, nm in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         # ISOLATE SCAN Y ---------------------------------------------
         sampramp = np.array(data['MEXP'][index]).copy()
         for sutr in sampramp:
@@ -2412,10 +2475,10 @@ def starecal(
             minlocs.append(lmn)
             maxlocs.append(lmx)
             pass
-        ignore = ignore or not (
+        ign = ign or not (
             (np.any(np.isfinite(minlocs))) and (np.any(np.isfinite(maxlocs)))
         )
-        if not ignore:
+        if not ign:
             minl = np.nanmin(minlocs)
             maxl = np.nanmax(maxlocs)
             minl -= 12
@@ -2462,7 +2525,7 @@ def starecal(
                 thispstamp = np.sum(np.diff(garbage, axis=0), axis=0)
                 pstamperr = thispstamp * np.nan
                 data['TRIAL'][index] = 'Could Not Find X Edges'
-                ignore = True
+                ign = True
                 pass
             pass
         else:
@@ -2470,11 +2533,11 @@ def starecal(
             thispstamp = np.sum(np.diff(garbage, axis=0), axis=0)
             pstamperr = thispstamp * np.nan
             data['TRIAL'][index] = 'Could Not Find Y Edges'
-            ignore = True
+            ign = True
             pass
         data['MEXP'][index] = thispstamp
         data['TIME'][index] = np.nanmax(data['TIME'][index].copy())
-        data['IGNORED'][index] = ignore
+        data['IGNORED'][index] = ign
         data['EXPERR'][index] = pstamperr
         log.info('>-- %s / %s', str(index), str(len(data['LOC']) - 1))
         # PLOTS ------------------------------------------------------
@@ -2484,7 +2547,7 @@ def starecal(
             if not os.path.exists('TEST/' + tid):
                 os.mkdir('TEST/' + tid)
             plt.figure()
-            plt.title('Ignored = ' + str(ignore))
+            plt.title('Ignored = ' + str(ign))
             plt.imshow(thispstamp)
             plt.colorbar()
             plt.savefig('TEST/' + tid + '/' + nm + '.png')
@@ -2501,8 +2564,8 @@ def starecal(
             data['IGNORED'][index] = True
             data['TRIAL'][index] = 'Empty Frame'
             pass
-        ignore = data['IGNORED'][index]
-        if not ignore:
+        ign = data['IGNORED'][index]
+        if not ign:
             frame = data['MEXP'][index].copy()
             spectrum = []
             specerr = []
@@ -2539,7 +2602,7 @@ def starecal(
     data['SHIFT'] = [np.nan] * len(data['LOC'])
     spectralindex = []
     for index, loc in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         ovszspc = False
         if data['TRUNCSPEC'][index]:
             ovszspc = True
@@ -2549,7 +2612,7 @@ def starecal(
             wavett = wavett[select]
             tt = tt[select]
             pass
-        if not ignore:
+        if not ign:
             spectrum = data['SPECTRUM'][index].copy()
             cutoff = np.nanmax(spectrum) / scaleco
             spectrum[spectrum < cutoff] = np.nan
@@ -2563,7 +2626,7 @@ def starecal(
         pass
     siv = np.nanmedian(spectralindex)
     for index, loc in enumerate(data['LOC']):
-        ignore = data['IGNORED'][index]
+        ign = data['IGNORED'][index]
         ovszspc = False
         if data['TRUNCSPEC'][index]:
             ovszspc = True
@@ -2573,7 +2636,7 @@ def starecal(
             wavett = wavett[select]
             tt = tt[select]
             pass
-        if not ignore:
+        if not ign:
             spectrum = data['SPECTRUM'][index].copy()
             cutoff = np.nanmax(spectrum) / scaleco
             spectrum[spectrum < cutoff] = np.nan
@@ -2592,7 +2655,7 @@ def starecal(
             pass
         else:
             data['WAVE'][index] = (data['SPECTRUM'][index]) * np.nan
-        data['IGNORED'][index] = ignore
+        data['IGNORED'][index] = ign
         pass
     allignore = data['IGNORED']
     allculprits = data['TRIAL']
@@ -2753,7 +2816,7 @@ def stiscal_G750L(_fin, clc, tim, tid, flttype, out):
         visitignore[visitexplength != ref] = True
         data['IGNORED'][select] = visitignore
         pass
-    for index, ignore in enumerate(data['IGNORED']):
+    for index, ign in enumerate(data['IGNORED']):
         # SELECT DATE AND TIME OF THE EXPOSURE FOR FLAT FRINGE SELECTION
         frame = data['MEXP'][index].copy()
         dateobs_exp = data['ALLDATEOBS'][index]
@@ -2834,7 +2897,7 @@ def stiscal_G750L(_fin, clc, tim, tid, flttype, out):
             pass
         allframe = np.array(allframe_list)
         # APPLY FLAT FRINGE
-        if not ignore:
+        if not ign:
             find_spec = np.where(allframe == np.max(allframe))
             spec_idx = find_spec[0][0]
             spec_idx_up = spec_idx + 4
@@ -3038,8 +3101,8 @@ def stiscal_G750L(_fin, clc, tim, tid, flttype, out):
     log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
-    for index, ignore in enumerate(allignore):
-        if ignore:
+    for index, ign in enumerate(allignore):
+        if ign:
             log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
@@ -3184,7 +3247,7 @@ def stiscal_G430L(fin, clc, tim, tid, flttype, out):
         data['IGNORED'][select] = visitignore
         pass
     # COSMIC RAYS REJECTION - MEDIAN FILTER + SIGMA CLIPPING
-    for index, ignore in enumerate(data['IGNORED']):
+    for index, ign in enumerate(data['IGNORED']):
         # COSMIC RAY REJECTION IN THE 2D IMAGE
         frame = data['MEXP'][index].copy()
         img_cr = frame.copy()
@@ -3204,7 +3267,7 @@ def stiscal_G430L(fin, clc, tim, tid, flttype, out):
             allframe_list.append(line2)
             pass
         allframe = np.array(allframe_list)
-        if not ignore:
+        if not ign:
             data['SPECTRUM'][index] = np.nansum(allframe, axis=0)
             data['SPECERR'][index] = np.sqrt(np.nansum(allframe, axis=0))
             data['PHT2CNT'][index] = [np.nan] * len(frame[0])
@@ -3462,8 +3525,8 @@ def stiscal_G430L(fin, clc, tim, tid, flttype, out):
     log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
-    for index, ignore in enumerate(allignore):
-        if ignore:
+    for index, ign in enumerate(allignore):
+        if ign:
             log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
@@ -3619,7 +3682,7 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
         data['IGNORED'][select] = visitignore
         pass
     # COSMIC RAYS REJECTION - MEDIAN FILTER + SIGMA CLIPPING
-    for index, ignore in enumerate(data['IGNORED']):
+    for index, ign in enumerate(data['IGNORED']):
         if 'G430L' in flttype:
             frame = data['MEXP'][index].copy()
             img_cr = frame.copy()
@@ -3641,7 +3704,7 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
             allframe = np.array(allframe_list)
 
         # FLAT FRINGE G750L
-    for index, ignore in enumerate(data['IGNORED']):
+    for index, ign in enumerate(data['IGNORED']):
         if 'G750L' in flttype:
             # SELECT DATE AND TIME OF THE EXPOSURE FOR FLAT FRINGE SELECTION
             frame = data['MEXP'][index].copy()
@@ -3721,7 +3784,7 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
                 pass
             allframe = np.array(allframe_list)
             # APPLY FLAT FRINGE
-            if not ignore:
+            if not ign:
                 find_spec = np.where(allframe == np.max(allframe))
                 spec_idx = find_spec[0][0]
                 spec_idx_up = spec_idx + 4
@@ -3746,7 +3809,7 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
                 pass
             pass
         if 'G430' in flttype:
-            if not ignore:
+            if not ign:
                 data['SPECTRUM'][index] = np.nansum(allframe, axis=0)
                 data['SPECERR'][index] = np.sqrt(np.nansum(allframe, axis=0))
                 data['PHT2CNT'][index] = [np.nan] * len(frame[0])
@@ -4012,8 +4075,8 @@ def stiscal_unified(fin, clc, tim, tid, flttype, out):
     log.info(
         '>-- IGNORED: %s / %s', str(np.nansum(allignore)), str(len(allignore))
     )
-    for index, ignore in enumerate(allignore):
-        if ignore:
+    for index, ign in enumerate(allignore):
+        if ign:
             log.info('>-- %s: %s', str(index), str(allculprits[index]))
         pass
     data.pop('EXP', None)
