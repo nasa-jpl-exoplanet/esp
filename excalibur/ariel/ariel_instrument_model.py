@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------- ---------------------------------------
-def load_ariel_instrument(target, tier):
+def load_ariel_instrument(target, runtime_params):
     '''
     Load in the output from ArielRad - uncertainty as a function of wavelength
 
@@ -28,6 +28,11 @@ def load_ariel_instrument(target, tier):
     H_mag brightness is already taken into account, but
      number of observed transits is not taken into account.
     '''
+
+    tier = runtime_params.tier
+    arielRad_version = runtime_params.arielRad
+    thorngren = runtime_params.thorngrenMassMetals
+    chachan = runtime_params.chachanMassMetals
 
     noise_model_dir = excalibur.context['data_dir'] + '/ariel/'
 
@@ -40,13 +45,16 @@ def load_ariel_instrument(target, tier):
     # 'mmwThorngren' means mmw comes from our mass-metallicity relation
     # noise_model_filenames = ['arielRad_14aug2024_mmwThorngren.h5']
 
+    if thorngren or chachan:
+        mmwModel = '_mmwThorngren'
+    else:
+        mmwModel = '_mmwFixed'
+
     # uh oh, arielrad is crashing, with too many files open
     #  have to split the file into two parts
-    # noise_model_filenames = ['arielRad_29oct2024_mmwFixed-part1.h5',
-    #                         'arielRad_29oct2024_mmwFixed-part2.h5']
     noise_model_filenames = [
-        'arielRad_29oct2024_mmwThorngren-part1.h5',
-        'arielRad_29oct2024_mmwThorngren-part2.h5',
+        'arielRad_' + arielRad_version + mmwModel + '-part1.h5',
+        'arielRad_' + arielRad_version + mmwModel + '-part2.h5',
     ]
 
     ariel_instrument = None
