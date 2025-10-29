@@ -1462,6 +1462,476 @@ def targetlist():
     TOI-6255 :
     TOI-6894 :
     GJ 341 :
+    BD+20 594 :
+    BD-14 3065 A :
+    CoRoT-20 :
+    CoRoT-32 :
+    EPIC 201595106 :
+    EPIC 206024342 :
+    EPIC 212587672 :
+    EPIC 212624936 :
+    EPIC 212737443 :
+    K2-282 :
+    GJ 341 :
+    HAT-P-63 :
+    HATS-66 :
+    HIP 56998 :
+    HD 114082 :
+    HD 135694 :
+    HD 158259 :
+    HD 21520 :
+    HD 224018 :
+    HD 25463 :
+    HD 35843 :
+    HD 56414 :
+    HD 6061 :
+    HD 73344 :
+    HD 77946 :
+    HIP 8152 :
+    IRAS 04125+2902 :
+    K2-101 :
+    K2-118 :
+    K2-119 :
+    K2-123 :
+    K2-13 :
+    K2-137 :
+    K2-147 :
+    K2-149 :
+    K2-15 :
+    K2-150 :
+    K2-156 :
+    K2-16 :
+    K2-183 :
+    K2-185 :
+    K2-187 :
+    K2-202 :
+    K2-205 :
+    K2-207 :
+    K2-209 :
+    K2-214 :
+    K2-215 :
+    K2-218 :
+    K2-231 :
+    K2-243 :
+    K2-244 :
+    K2-249 :
+    K2-251 :
+    K2-252 :
+    K2-258 :
+    K2-263 :
+    K2-278 :
+    K2-279 :
+    K2-290 :
+    K2-318 :
+    K2-319 :
+    K2-322 :
+    K2-323 :
+    K2-324 :
+    K2-330 :
+    K2-337 :
+    K2-345 :
+    K2-349 :
+    K2-350 :
+    K2-355 :
+    K2-356 :
+    K2-358 :
+    K2-373 :
+    K2-382 :
+    K2-384 :
+    K2-385 :
+    K2-386 :
+    K2-4 :
+    K2-400 :
+    K2-402 :
+    K2-414 :
+    K2-42 :
+    K2-48 :
+    K2-50 :
+    K2-54 :
+    K2-57 :
+    K2-59 :
+    K2-6 :
+    K2-61 :
+    K2-63 :
+    K2-64 :
+    K2-69 :
+    K2-7 :
+    K2-72 :
+    K2-74 :
+    K2-83 :
+    K2-85 :
+    K2-88 :
+    K2-91 :
+    KIC 3558849 :
+    KOI-7892 :
+    KOI-134 :
+    KOI-142 :
+    KOI-1783 :
+    Kepler-968 :
+    KOI-7913 A :
+    Kepler-100 :
+    Kepler-106 :
+    Kepler-112 :
+    Kepler-113 :
+    Kepler-114 :
+    Kepler-116 :
+    Kepler-1171 :
+    Kepler-119 :
+    Kepler-122 :
+    Kepler-130 :
+    Kepler-131 :
+    Kepler-1311 :
+    Kepler-1312 :
+    Kepler-1313 :
+    Kepler-1326 :
+    Kepler-134 :
+    Kepler-138 :
+    Kepler-139 :
+    Kepler-142 :
+    Kepler-1442 :
+    Kepler-146 :
+    Kepler-149 :
+    Kepler-1518 :
+    Kepler-152 :
+    Kepler-1521 :
+    Kepler-153 :
+    Kepler-155 :
+    Kepler-161 :
+    Kepler-162 :
+    Kepler-1643 :
+    Kepler-1661 :
+    Kepler-1665 :
+    Kepler-1672 :
+    Kepler-1676 :
+    Kepler-170 :
+    Kepler-1709 :
+    Kepler-1710 :
+    Kepler-1712 :
+    Kepler-1714 :
+    Kepler-1715 :
+    Kepler-1716 :
+    Kepler-1718 :
+    Kepler-1719 :
+    Kepler-1725 :
+    Kepler-1726 :
+    Kepler-1731 :
+    Kepler-1746 :
+    Kepler-1755 :
+    Kepler-1769 :
+    Kepler-1771 :
+    Kepler-1772 :
+    Kepler-1782 :
+    Kepler-1791 :
+    Kepler-1832 :
+    Kepler-186 :
+    Kepler-1868 :
+    Kepler-1869 :
+    Kepler-1870 :
+    Kepler-192 :
+    Kepler-1929 :
+    Kepler-1935 :
+    Kepler-1939 :
+    Kepler-199 :
+    Kepler-1990 :
+    Kepler-202 :
+    Kepler-203 :
+    Kepler-207 :
+    Kepler-21 :
+    Kepler-210 :
+    Kepler-220 :
+    Kepler-221 :
+    Kepler-261 :
+    Kepler-310 :
+    Kepler-314 :
+    Kepler-318 :
+    Kepler-319 :
+    Kepler-324 :
+    Kepler-350 :
+    Kepler-36 :
+    Kepler-410 A :
+    Kepler-414 :
+    Kepler-433 :
+    Kepler-449 :
+    Kepler-453 :
+    Kepler-461 :
+    Kepler-462 :
+    Kepler-465 :
+    Kepler-471 :
+    Kepler-477 :
+    Kepler-478 :
+    Kepler-479 :
+    Kepler-480 :
+    Kepler-484 :
+    Kepler-499 :
+    Kepler-50 :
+    Kepler-506 :
+    Kepler-509 :
+    Kepler-510 :
+    Kepler-516 :
+    Kepler-517 :
+    Kepler-519 :
+    Kepler-522 :
+    Kepler-538 :
+    Kepler-560 :
+    Kepler-569 :
+    Kepler-572 :
+    Kepler-617 :
+    Kepler-622 :
+    Kepler-643 :
+    Kepler-65 :
+    Kepler-652 :
+    Kepler-69 :
+    Kepler-732 :
+    Kepler-753 :
+    Kepler-783 :
+    Kepler-8 :
+    Kepler-803 :
+    Kepler-820 :
+    Kepler-880 :
+    Kepler-901 :
+    Kepler-949 :
+    Kepler-95 :
+    Kepler-959 :
+    Kepler-971 :
+    Kepler-974 :
+    Kepler-98 :
+    NGTS-27 :
+    NGTS-30 :
+    NGTS-31 :
+    NGTS-32 :
+    NGTS-33 :
+    Ross 176 :
+    TIC 139270665 :
+    TIC 365102760 :
+    TIC 393818343 :
+    TIC 434398831 :
+    TIC 46432937 :
+    TIC 88785435 :
+    TOI-1011 :
+    TOI-1117 :
+    TOI-1173 :
+    TOI-1174 :
+    TOI-1180 :
+    TOI-1184 :
+    TOI-1199 :
+    TOI-1203 :
+    TOI-1224 :
+    TOI-1238 :
+    TOI-1244 :
+    TOI-1248 :
+    TOI-1249 :
+    TOI-1269 :
+    TOI-1273 :
+    TOI-1279 :
+    TOI-128 :
+    TOI-1294 :
+    TOI-1295 :
+    TOI-1301 :
+    TOI-1346 :
+    TOI-1347 :
+    TOI-1386 :
+    TOI-1410 :
+    TOI-1437 :
+    TOI-1438 :
+    TOI-1439 :
+    TOI-1443 :
+    TOI-1448 :
+    TOI-1450 A :
+    TOI-1451 :
+    TOI-1453 :
+    TOI-1467 :
+    TOI-1472 :
+    TOI-1630 :
+    TOI-1659 :
+    TOI-1669 :
+    TOI-1683 :
+    TOI-1691 :
+    TOI-1716 :
+    TOI-1723 :
+    TOI-1739 :
+    TOI-1742 :
+    TOI-1743 :
+    TOI-1744 :
+    TOI-1749 :
+    TOI-1751 :
+    TOI-1753 :
+    TOI-1758 :
+    TOI-1768 :
+    TOI-1772 :
+    TOI-1775 :
+    TOI-1776 :
+    TOI-1777 :
+    TOI-1782 :
+    TOI-1794 :
+    TOI-1798 :
+    TOI-1799 :
+    TOI-1803 :
+    TOI-1806 :
+    TOI-1823 :
+    TOI-1824 :
+    TOI-1836 :
+    TOI-1846 :
+    TOI-1855 :
+    TOI-1883 :
+    TOI-1898 :
+    TOI-2005 :
+    TOI-2015 :
+    TOI-2019 :
+    TOI-2031 A :
+    TOI-2068 :
+    TOI-2088 :
+    TOI-2107 :
+    TOI-2128 :
+    TOI-2169 A :
+    TOI-2211 :
+    TOI-2266 :
+    TOI-2274 :
+    TOI-2295 :
+    TOI-2322 :
+    TOI-2328 :
+    TOI-2346 :
+    TOI-2368 :
+    TOI-2374 :
+    TOI-2379 :
+    TOI-238 :
+    TOI-2382 :
+    TOI-2384 :
+    TOI-2407 :
+    TOI-2420 :
+    TOI-2447 :
+    TOI-2449 :
+    TOI-2458 :
+    TOI-2485 :
+    TOI-2529 :
+    TOI-2537 :
+    TOI-2545 :
+    TOI-2580 :
+    TOI-260 :
+    TOI-261 :
+    TOI-2714 :
+    TOI-2719 :
+    TOI-2768 :
+    TOI-286 :
+    TOI-2876 :
+    TOI-2886 :
+    TOI-2969 :
+    TOI-2981 :
+    TOI-2986 :
+    TOI-2989 :
+    TOI-2992 :
+    TOI-3071 :
+    TOI-3135 :
+    TOI-3160 A :
+    TOI-329 :
+    TOI-3321 :
+    TOI-3353 :
+    TOI-3464 :
+    TOI-3474 :
+    TOI-3486 :
+    TOI-3493 :
+    TOI-3523 A :
+    TOI-3568 :
+    TOI-3593 :
+    TOI-3682 :
+    TOI-3837 :
+    TOI-3856 :
+    TOI-3877 :
+    TOI-3894 :
+    TOI-3919 :
+    TOI-3980 :
+    TOI-406 :
+    TOI-4153 :
+    TOI-4155 :
+    TOI-4214 :
+    TOI-4364 :
+    TOI-4379 :
+    TOI-4438 :
+    TOI-4443 :
+    TOI-4465 :
+    TOI-4487 A :
+    TOI-4495 :
+    TOI-4504 :
+    TOI-4515 :
+    TOI-4527 :
+    TOI-4602 :
+    TOI-4638 :
+    TOI-4734 :
+    TOI-4773 :
+    TOI-4794 :
+    TOI-480 :
+    TOI-4914 :
+    TOI-4961 :
+    TOI-4994 :
+    TOI-5005 :
+    TOI-5027 :
+    TOI-5076 :
+    TOI-5082 :
+    TOI-5108 :
+    TOI-5110 :
+    TOI-512 :
+    TOI-5143 :
+    TOI-5153 :
+    TOI-5174 :
+    TOI-5181 A :
+    TOI-5210 :
+    TOI-5232 :
+    TOI-5238 :
+    TOI-5300 :
+    TOI-5301 :
+    TOI-5319 :
+    TOI-5322 :
+    TOI-5340 :
+    TOI-5350 :
+    TOI-5386 A :
+    TOI-5388 :
+    TOI-5573 :
+    TOI-558 :
+    TOI-5592 :
+    TOI-5713 :
+    TOI-5720 :
+    TOI-5726 :
+    TOI-5786 :
+    TOI-5795 :
+    TOI-5800 :
+    TOI-5817 :
+    TOI-6000 :
+    TOI-6002 :
+    TOI-6016 :
+    TOI-6029 :
+    TOI-6034 :
+    TOI-6038 A :
+    TOI-6054 :
+    TOI-6109 :
+    TOI-6130 :
+    TOI-6223 :
+    TOI-6255 :
+    TOI-6303 :
+    TOI-6324 :
+    TOI-6330 :
+    TOI-6478 :
+    TOI-654 :
+    TOI-6628 :
+    TOI-663 :
+    TOI-6651 :
+    TOI-669 :
+    TOI-6695 :
+    TOI-7041 :
+    TOI-715 :
+    TOI-757 :
+    TOI-762 A :
+    TOI-815 :
+    TOI-871 :
+    TOI-880 :
+    TOI-907 :
+    WASP-102 :
+    WASP-116 :
+    WASP-149 :
+    WASP-154 :
+    WASP-155 :
+    WASP-188 :
+    WASP-194 :
+    WASP-195 :
+    WASP-197 :
     '''
     # BD+05 4868   BD+05 4868 A
     # HD 12572     HIP 9618
@@ -2858,6 +3328,476 @@ def targetondisk():
     TOI-2120 : TOI2120
     TOI-782 : TOI782
     TOI-260 : TOI260
+    BD+20 594 : BD20594
+    BD-14 3065 A : BD143065A
+    CoRoT-20 : CoRoT20
+    CoRoT-32 : CoRoT32
+    EPIC 201595106 : EPIC201595106
+    EPIC 206024342 : EPIC206024342
+    EPIC 212587672 : EPIC212587672
+    EPIC 212624936 : EPIC212624936
+    EPIC 212737443 : EPIC212737443
+    K2-282 : K2282
+    GJ 341 : GJ341
+    HAT-P-63 : HATP63
+    HATS-66 : HATS66
+    HIP 56998 : HIP56998
+    HD 114082 : HD114082
+    HD 135694 : HD135694
+    HD 158259 : HD158259
+    HD 21520 : HD21520
+    HD 224018 : HD224018
+    HD 25463 : HD25463
+    HD 35843 : HD35843
+    HD 56414 : HD56414
+    HD 6061 : HD6061
+    HD 73344 : HD73344
+    HD 77946 : HD77946
+    HIP 8152 : HIP8152
+    IRAS 04125+2902 : IRAS041252902
+    K2-101 : K2101
+    K2-118 : K2118
+    K2-119 : K2119
+    K2-123 : K2123
+    K2-13 : K213
+    K2-137 : K2137
+    K2-147 : K2147
+    K2-149 : K2149
+    K2-15 : K215
+    K2-150 : K2150
+    K2-156 : K2156
+    K2-16 : K216
+    K2-183 : K2183
+    K2-185 : K2185
+    K2-187 : K2187
+    K2-202 : K2202
+    K2-205 : K2205
+    K2-207 : K2207
+    K2-209 : K2209
+    K2-214 : K2214
+    K2-215 : K2215
+    K2-218 : K2218
+    K2-231 : K2231
+    K2-243 : K2243
+    K2-244 : K2244
+    K2-249 : K2249
+    K2-251 : K2251
+    K2-252 : K2252
+    K2-258 : K2258
+    K2-263 : K2263
+    K2-278 : K2278
+    K2-279 : K2279
+    K2-290 : K2290
+    K2-318 : K2318
+    K2-319 : K2319
+    K2-322 : K2322
+    K2-323 : K2323
+    K2-324 : K2324
+    K2-330 : K2330
+    K2-337 : K2337
+    K2-345 : K2345
+    K2-349 : K2349
+    K2-350 : K2350
+    K2-355 : K2355
+    K2-356 : K2356
+    K2-358 : K2358
+    K2-373 : K2373
+    K2-382 : K2382
+    K2-384 : K2384
+    K2-385 : K2385
+    K2-386 : K2386
+    K2-4 : K24
+    K2-400 : K2400
+    K2-402 : K2402
+    K2-414 : K2414
+    K2-42 : K242
+    K2-48 : K248
+    K2-50 : K250
+    K2-54 : K254
+    K2-57 : K257
+    K2-59 : K259
+    K2-6 : K26
+    K2-61 : K261
+    K2-63 : K263
+    K2-64 : K264
+    K2-69 : K269
+    K2-7 : K27
+    K2-72 : K272
+    K2-74 : K274
+    K2-83 : K283
+    K2-85 : K285
+    K2-88 : K288
+    K2-91 : K291
+    KIC 3558849 : KIC3558849
+    KOI-7892 : KOI7892
+    KOI-134 : KOI134
+    KOI-142 : KOI142
+    KOI-1783 : KOI1783
+    Kepler-968 : Kepler968
+    KOI-7913 A : KOI7913A
+    Kepler-100 : Kepler100
+    Kepler-106 : Kepler106
+    Kepler-112 : Kepler112
+    Kepler-113 : Kepler113
+    Kepler-114 : Kepler114
+    Kepler-116 : Kepler116
+    Kepler-1171 : Kepler1171
+    Kepler-119 : Kepler119
+    Kepler-122 : Kepler122
+    Kepler-130 : Kepler130
+    Kepler-131 : Kepler131
+    Kepler-1311 : Kepler1311
+    Kepler-1312 : Kepler1312
+    Kepler-1313 : Kepler1313
+    Kepler-1326 : Kepler1326
+    Kepler-134 : Kepler134
+    Kepler-138 : Kepler138
+    Kepler-139 : Kepler139
+    Kepler-142 : Kepler142
+    Kepler-1442 : Kepler1442
+    Kepler-146 : Kepler146
+    Kepler-149 : Kepler149
+    Kepler-1518 : Kepler1518
+    Kepler-152 : Kepler152
+    Kepler-1521 : Kepler1521
+    Kepler-153 : Kepler153
+    Kepler-155 : Kepler155
+    Kepler-161 : Kepler161
+    Kepler-162 : Kepler162
+    Kepler-1643 : Kepler1643
+    Kepler-1661 : Kepler1661
+    Kepler-1665 : Kepler1665
+    Kepler-1672 : Kepler1672
+    Kepler-1676 : Kepler1676
+    Kepler-170 : Kepler170
+    Kepler-1709 : Kepler1709
+    Kepler-1710 : Kepler1710
+    Kepler-1712 : Kepler1712
+    Kepler-1714 : Kepler1714
+    Kepler-1715 : Kepler1715
+    Kepler-1716 : Kepler1716
+    Kepler-1718 : Kepler1718
+    Kepler-1719 : Kepler1719
+    Kepler-1725 : Kepler1725
+    Kepler-1726 : Kepler1726
+    Kepler-1731 : Kepler1731
+    Kepler-1746 : Kepler1746
+    Kepler-1755 : Kepler1755
+    Kepler-1769 : Kepler1769
+    Kepler-1771 : Kepler1771
+    Kepler-1772 : Kepler1772
+    Kepler-1782 : Kepler1782
+    Kepler-1791 : Kepler1791
+    Kepler-1832 : Kepler1832
+    Kepler-186 : Kepler186
+    Kepler-1868 : Kepler1868
+    Kepler-1869 : Kepler1869
+    Kepler-1870 : Kepler1870
+    Kepler-192 : Kepler192
+    Kepler-1929 : Kepler1929
+    Kepler-1935 : Kepler1935
+    Kepler-1939 : Kepler1939
+    Kepler-199 : Kepler199
+    Kepler-1990 : Kepler1990
+    Kepler-202 : Kepler202
+    Kepler-203 : Kepler203
+    Kepler-207 : Kepler207
+    Kepler-21 : Kepler21
+    Kepler-210 : Kepler210
+    Kepler-220 : Kepler220
+    Kepler-221 : Kepler221
+    Kepler-261 : Kepler261
+    Kepler-310 : Kepler310
+    Kepler-314 : Kepler314
+    Kepler-318 : Kepler318
+    Kepler-319 : Kepler319
+    Kepler-324 : Kepler324
+    Kepler-350 : Kepler350
+    Kepler-36 : Kepler36
+    Kepler-410 A : Kepler410A
+    Kepler-414 : Kepler414
+    Kepler-433 : Kepler433
+    Kepler-449 : Kepler449
+    Kepler-453 : Kepler453
+    Kepler-461 : Kepler461
+    Kepler-462 : Kepler462
+    Kepler-465 : Kepler465
+    Kepler-471 : Kepler471
+    Kepler-477 : Kepler477
+    Kepler-478 : Kepler478
+    Kepler-479 : Kepler479
+    Kepler-480 : Kepler480
+    Kepler-484 : Kepler484
+    Kepler-499 : Kepler499
+    Kepler-50 : Kepler50
+    Kepler-506 : Kepler506
+    Kepler-509 : Kepler509
+    Kepler-510 : Kepler510
+    Kepler-516 : Kepler516
+    Kepler-517 : Kepler517
+    Kepler-519 : Kepler519
+    Kepler-522 : Kepler522
+    Kepler-538 : Kepler538
+    Kepler-560 : Kepler560
+    Kepler-569 : Kepler569
+    Kepler-572 : Kepler572
+    Kepler-617 : Kepler617
+    Kepler-622 : Kepler622
+    Kepler-643 : Kepler643
+    Kepler-65 : Kepler65
+    Kepler-652 : Kepler652
+    Kepler-69 : Kepler69
+    Kepler-732 : Kepler732
+    Kepler-753 : Kepler753
+    Kepler-783 : Kepler783
+    Kepler-8 : Kepler8
+    Kepler-803 : Kepler803
+    Kepler-820 : Kepler820
+    Kepler-880 : Kepler880
+    Kepler-901 : Kepler901
+    Kepler-949 : Kepler949
+    Kepler-95 : Kepler95
+    Kepler-959 : Kepler959
+    Kepler-971 : Kepler971
+    Kepler-974 : Kepler974
+    Kepler-98 : Kepler98
+    NGTS-27 : NGTS27
+    NGTS-30 : NGTS30
+    NGTS-31 : NGTS31
+    NGTS-32 : NGTS32
+    NGTS-33 : NGTS33
+    Ross 176 : Ross176
+    TIC 139270665 : TIC139270665
+    TIC 365102760 : TIC365102760
+    TIC 393818343 : TIC393818343
+    TIC 434398831 : TIC434398831
+    TIC 46432937 : TIC46432937
+    TIC 88785435 : TIC88785435
+    TOI-1011 : TOI1011
+    TOI-1117 : TOI1117
+    TOI-1173 : TOI1173
+    TOI-1174 : TOI1174
+    TOI-1180 : TOI1180
+    TOI-1184 : TOI1184
+    TOI-1199 : TOI1199
+    TOI-1203 : TOI1203
+    TOI-1224 : TOI1224
+    TOI-1238 : TOI1238
+    TOI-1244 : TOI1244
+    TOI-1248 : TOI1248
+    TOI-1249 : TOI1249
+    TOI-1269 : TOI1269
+    TOI-1273 : TOI1273
+    TOI-1279 : TOI1279
+    TOI-128 : TOI128
+    TOI-1294 : TOI1294
+    TOI-1295 : TOI1295
+    TOI-1301 : TOI1301
+    TOI-1346 : TOI1346
+    TOI-1347 : TOI1347
+    TOI-1386 : TOI1386
+    TOI-1410 : TOI1410
+    TOI-1437 : TOI1437
+    TOI-1438 : TOI1438
+    TOI-1439 : TOI1439
+    TOI-1443 : TOI1443
+    TOI-1448 : TOI1448
+    TOI-1450 A : TOI1450A
+    TOI-1451 : TOI1451
+    TOI-1453 : TOI1453
+    TOI-1467 : TOI1467
+    TOI-1472 : TOI1472
+    TOI-1630 : TOI1630
+    TOI-1659 : TOI1659
+    TOI-1669 : TOI1669
+    TOI-1683 : TOI1683
+    TOI-1691 : TOI1691
+    TOI-1716 : TOI1716
+    TOI-1723 : TOI1723
+    TOI-1739 : TOI1739
+    TOI-1742 : TOI1742
+    TOI-1743 : TOI1743
+    TOI-1744 : TOI1744
+    TOI-1749 : TOI1749
+    TOI-1751 : TOI1751
+    TOI-1753 : TOI1753
+    TOI-1758 : TOI1758
+    TOI-1768 : TOI1768
+    TOI-1772 : TOI1772
+    TOI-1775 : TOI1775
+    TOI-1776 : TOI1776
+    TOI-1777 : TOI1777
+    TOI-1782 : TOI1782
+    TOI-1794 : TOI1794
+    TOI-1798 : TOI1798
+    TOI-1799 : TOI1799
+    TOI-1803 : TOI1803
+    TOI-1806 : TOI1806
+    TOI-1823 : TOI1823
+    TOI-1824 : TOI1824
+    TOI-1836 : TOI1836
+    TOI-1846 : TOI1846
+    TOI-1855 : TOI1855
+    TOI-1883 : TOI1883
+    TOI-1898 : TOI1898
+    TOI-2005 : TOI2005
+    TOI-2015 : TOI2015
+    TOI-2019 : TOI2019
+    TOI-2031 A : TOI2031A
+    TOI-2068 : TOI2068
+    TOI-2088 : TOI2088
+    TOI-2107 : TOI2107
+    TOI-2128 : TOI2128
+    TOI-2169 A : TOI2169A
+    TOI-2211 : TOI2211
+    TOI-2266 : TOI2266
+    TOI-2274 : TOI2274
+    TOI-2295 : TOI2295
+    TOI-2322 : TOI2322
+    TOI-2328 : TOI2328
+    TOI-2346 : TOI2346
+    TOI-2368 : TOI2368
+    TOI-2374 : TOI2374
+    TOI-2379 : TOI2379
+    TOI-238 : TOI238
+    TOI-2382 : TOI2382
+    TOI-2384 : TOI2384
+    TOI-2407 : TOI2407
+    TOI-2420 : TOI2420
+    TOI-2447 : TOI2447
+    TOI-2449 : TOI2449
+    TOI-2458 : TOI2458
+    TOI-2485 : TOI2485
+    TOI-2529 : TOI2529
+    TOI-2537 : TOI2537
+    TOI-2545 : TOI2545
+    TOI-2580 : TOI2580
+    TOI-260 : TOI260
+    TOI-261 : TOI261
+    TOI-2714 : TOI2714
+    TOI-2719 : TOI2719
+    TOI-2768 : TOI2768
+    TOI-286 : TOI286
+    TOI-2876 : TOI2876
+    TOI-2886 : TOI2886
+    TOI-2969 : TOI2969
+    TOI-2981 : TOI2981
+    TOI-2986 : TOI2986
+    TOI-2989 : TOI2989
+    TOI-2992 : TOI2992
+    TOI-3071 : TOI3071
+    TOI-3135 : TOI3135
+    TOI-3160 A : TOI3160A
+    TOI-329 : TOI329
+    TOI-3321 : TOI3321
+    TOI-3353 : TOI3353
+    TOI-3464 : TOI3464
+    TOI-3474 : TOI3474
+    TOI-3486 : TOI3486
+    TOI-3493 : TOI3493
+    TOI-3523 A : TOI3523A
+    TOI-3568 : TOI3568
+    TOI-3593 : TOI3593
+    TOI-3682 : TOI3682
+    TOI-3837 : TOI3837
+    TOI-3856 : TOI3856
+    TOI-3877 : TOI3877
+    TOI-3894 : TOI3894
+    TOI-3919 : TOI3919
+    TOI-3980 : TOI3980
+    TOI-406 : TOI406
+    TOI-4153 : TOI4153
+    TOI-4155 : TOI4155
+    TOI-4214 : TOI4214
+    TOI-4364 : TOI4364
+    TOI-4379 : TOI4379
+    TOI-4438 : TOI4438
+    TOI-4443 : TOI4443
+    TOI-4465 : TOI4465
+    TOI-4487 A : TOI4487A
+    TOI-4495 : TOI4495
+    TOI-4504 : TOI4504
+    TOI-4515 : TOI4515
+    TOI-4527 : TOI4527
+    TOI-4602 : TOI4602
+    TOI-4638 : TOI4638
+    TOI-4734 : TOI4734
+    TOI-4773 : TOI4773
+    TOI-4794 : TOI4794
+    TOI-480 : TOI480
+    TOI-4914 : TOI4914
+    TOI-4961 : TOI4961
+    TOI-4994 : TOI4994
+    TOI-5005 : TOI5005
+    TOI-5027 : TOI5027
+    TOI-5076 : TOI5076
+    TOI-5082 : TOI5082
+    TOI-5108 : TOI5108
+    TOI-5110 : TOI5110
+    TOI-512 : TOI512
+    TOI-5143 : TOI5143
+    TOI-5153 : TOI5153
+    TOI-5174 : TOI5174
+    TOI-5181 A : TOI5181A
+    TOI-5210 : TOI5210
+    TOI-5232 : TOI5232
+    TOI-5238 : TOI5238
+    TOI-5300 : TOI5300
+    TOI-5301 : TOI5301
+    TOI-5319 : TOI5319
+    TOI-5322 : TOI5322
+    TOI-5340 : TOI5340
+    TOI-5350 : TOI5350
+    TOI-5386 A : TOI5386A
+    TOI-5388 : TOI5388
+    TOI-5573 : TOI5573
+    TOI-558 : TOI558
+    TOI-5592 : TOI5592
+    TOI-5713 : TOI5713
+    TOI-5720 : TOI5720
+    TOI-5726 : TOI5726
+    TOI-5786 : TOI5786
+    TOI-5795 : TOI5795
+    TOI-5800 : TOI5800
+    TOI-5817 : TOI5817
+    TOI-6000 : TOI6000
+    TOI-6002 : TOI6002
+    TOI-6016 : TOI6016
+    TOI-6029 : TOI6029
+    TOI-6034 : TOI6034
+    TOI-6038 A : TOI6038A
+    TOI-6054 : TOI6054
+    TOI-6109 : TOI6109
+    TOI-6130 : TOI6130
+    TOI-6223 : TOI6223
+    TOI-6255 : TOI6255
+    TOI-6303 : TOI6303
+    TOI-6324 : TOI6324
+    TOI-6330 : TOI6330
+    TOI-6478 : TOI6478
+    TOI-654 : TOI654
+    TOI-6628 : TOI6628
+    TOI-663 : TOI663
+    TOI-6651 : TOI6651
+    TOI-669 : TOI669
+    TOI-6695 : TOI6695
+    TOI-7041 : TOI7041
+    TOI-715 : TOI715
+    TOI-757 : TOI757
+    TOI-762 A : TOI762A
+    TOI-815 : TOI815
+    TOI-871 : TOI871
+    TOI-880 : TOI880
+    TOI-907 : TOI907
+    WASP-102 : WASP102
+    WASP-116 : WASP116
+    WASP-149 : WASP149
+    WASP-154 : WASP154
+    WASP-155 : WASP155
+    WASP-188 : WASP188
+    WASP-194 : WASP194
+    WASP-195 : WASP195
+    WASP-197 : WASP197
     '''
     return
 
