@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 #  no-member is for "Instance of HiLoValue has no _hi"
-# pylint: disable=no-member,method-hidden,invalid-name,
+# pylint: disable=no-member,method-hidden,invalid-name,too-many-statements
 
 import dawgie
 import excalibur
