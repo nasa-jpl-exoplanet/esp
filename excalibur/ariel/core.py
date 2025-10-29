@@ -212,11 +212,13 @@ def simulate_spectra(
         if testTarget:
             # for now, use HD 209458 SNR for test cases.  RECONSIDER THIS CHOICE LATER
             ariel_instrument = load_ariel_instrument(
-                'HD 209458 b', runtime_params,
+                'HD 209458 b',
+                runtime_params,
             )
         else:
             ariel_instrument = load_ariel_instrument(
-                target + ' ' + planet_letter, runtime_params,
+                target + ' ' + planet_letter,
+                runtime_params,
             )
 
         if ariel_instrument:
