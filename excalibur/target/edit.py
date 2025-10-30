@@ -1486,7 +1486,7 @@ def targetlist():
     HD 73344 :
     HD 77946 :
     HIP 8152 :
-    IRAS 04125+2902 :
+    TOI-6983 : IRAS 04125+2902
     K2-101 :
     K2-118 :
     K2-119 :
@@ -1931,18 +1931,5 @@ def targetlist():
     WASP-197 :
     testJup :
     '''
-    # BD+05 4868   BD+05 4868 A
-    # HD 12572     HIP 9618
-    # LP-890-9     rename LP 890-9
-    # TOI-2031        TOI-2031.01 candidate, so not in main table
-    # TOI-2431        TOI-2431.01 candidate, so not in main table
-    # TOI-6255     ok
-    # TOI-6894     ok
-    # TYC-7052-1753-1 TOI-2490.01 candidate, so not in main table
-
-    # these two JWST targets are not yet listed in the Exoplanet Archive composite table:
-    #  6/21/25 first one is ok now!  (2025 paper)  no HIP name though
-    # GJ 341 : HIP 45908  (12/16/24 still listed as a candidate planet)
-    # GJ 1008 : HIP 1532  (12/16/24 OK this one is there now, as TOI-260)
 
     return
