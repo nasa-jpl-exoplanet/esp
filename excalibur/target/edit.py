@@ -1455,7 +1455,6 @@ def targetlist():
     TOI-2120 :
     TOI-782 :
     TOI-260 :
-    testJup :
     BD+05 4868 : BD+05 4868 A
     HD 12572 : HIP 9618
     LP 890-9 :
@@ -1472,7 +1471,6 @@ def targetlist():
     EPIC 212624936 :
     EPIC 212737443 :
     K2-282 :
-    GJ 341 :
     HAT-P-63 :
     HATS-66 :
     HIP 56998 :
@@ -1904,7 +1902,6 @@ def targetlist():
     TOI-6109 :
     TOI-6130 :
     TOI-6223 :
-    TOI-6255 :
     TOI-6303 :
     TOI-6324 :
     TOI-6330 :
@@ -1932,6 +1929,7 @@ def targetlist():
     WASP-194 :
     WASP-195 :
     WASP-197 :
+    testJup :
     '''
     # BD+05 4868   BD+05 4868 A
     # HD 12572     HIP 9618
@@ -2121,10 +2119,10 @@ def targetondisk():
     TOI-270 : TOI270
     TOI-700 : TOI700
     TOI-849 : TOI849
-    TRAPPIST-1 : TRAPPIST1
     TrES-1 : TRES1
     TrES-2 : TRES2
     TrES-3 : TRES3
+    TRAPPIST-1 : TRAPPIST1
     WASP-1 : WASP1
     WASP-10 : WASP10
     WASP-100 : WASP100
@@ -2583,11 +2581,9 @@ def targetondisk():
     WASP-144 : WASP144
     Kepler-51 : KEPLER51
     WD 1856+534 : WD1856534
-    GJ 341 : GJ341
     GJ 4102 : GJ4102
     HD 80606 : HD80606
     GJ 4332 : GJ4332
-    GJ 1008 : GJ1008
     LTT 5972 : LTT5972
     GJ 3090 : GJ3090
     GJ 806 : GJ806
@@ -3328,6 +3324,12 @@ def targetondisk():
     TOI-2120 : TOI2120
     TOI-782 : TOI782
     TOI-260 : TOI260
+    BD+05 4868 : BD054868A
+    HD 12572 : HIP9618
+    LP 890-9 : LP8909
+    TOI-6255 : TOI6255
+    TOI-6894 : TOI6894
+    GJ 341 : GJ341
     BD+20 594 : BD20594
     BD-14 3065 A : BD143065A
     CoRoT-20 : CoRoT20
@@ -3338,7 +3340,6 @@ def targetondisk():
     EPIC 212624936 : EPIC212624936
     EPIC 212737443 : EPIC212737443
     K2-282 : K2282
-    GJ 341 : GJ341
     HAT-P-63 : HATP63
     HATS-66 : HATS66
     HIP 56998 : HIP56998
@@ -3433,134 +3434,134 @@ def targetondisk():
     KOI-134 : KOI134
     KOI-142 : KOI142
     KOI-1783 : KOI1783
-    Kepler-968 : Kepler968
+    Kepler-968 : KEPLER968
     KOI-7913 A : KOI7913A
-    Kepler-100 : Kepler100
-    Kepler-106 : Kepler106
-    Kepler-112 : Kepler112
-    Kepler-113 : Kepler113
-    Kepler-114 : Kepler114
-    Kepler-116 : Kepler116
-    Kepler-1171 : Kepler1171
-    Kepler-119 : Kepler119
-    Kepler-122 : Kepler122
-    Kepler-130 : Kepler130
-    Kepler-131 : Kepler131
-    Kepler-1311 : Kepler1311
-    Kepler-1312 : Kepler1312
-    Kepler-1313 : Kepler1313
-    Kepler-1326 : Kepler1326
-    Kepler-134 : Kepler134
-    Kepler-138 : Kepler138
-    Kepler-139 : Kepler139
-    Kepler-142 : Kepler142
-    Kepler-1442 : Kepler1442
-    Kepler-146 : Kepler146
-    Kepler-149 : Kepler149
-    Kepler-1518 : Kepler1518
-    Kepler-152 : Kepler152
-    Kepler-1521 : Kepler1521
-    Kepler-153 : Kepler153
-    Kepler-155 : Kepler155
-    Kepler-161 : Kepler161
-    Kepler-162 : Kepler162
-    Kepler-1643 : Kepler1643
-    Kepler-1661 : Kepler1661
-    Kepler-1665 : Kepler1665
-    Kepler-1672 : Kepler1672
-    Kepler-1676 : Kepler1676
-    Kepler-170 : Kepler170
-    Kepler-1709 : Kepler1709
-    Kepler-1710 : Kepler1710
-    Kepler-1712 : Kepler1712
-    Kepler-1714 : Kepler1714
-    Kepler-1715 : Kepler1715
-    Kepler-1716 : Kepler1716
-    Kepler-1718 : Kepler1718
-    Kepler-1719 : Kepler1719
-    Kepler-1725 : Kepler1725
-    Kepler-1726 : Kepler1726
-    Kepler-1731 : Kepler1731
-    Kepler-1746 : Kepler1746
-    Kepler-1755 : Kepler1755
-    Kepler-1769 : Kepler1769
-    Kepler-1771 : Kepler1771
-    Kepler-1772 : Kepler1772
-    Kepler-1782 : Kepler1782
-    Kepler-1791 : Kepler1791
-    Kepler-1832 : Kepler1832
-    Kepler-186 : Kepler186
-    Kepler-1868 : Kepler1868
-    Kepler-1869 : Kepler1869
-    Kepler-1870 : Kepler1870
-    Kepler-192 : Kepler192
-    Kepler-1929 : Kepler1929
-    Kepler-1935 : Kepler1935
-    Kepler-1939 : Kepler1939
-    Kepler-199 : Kepler199
-    Kepler-1990 : Kepler1990
-    Kepler-202 : Kepler202
-    Kepler-203 : Kepler203
-    Kepler-207 : Kepler207
-    Kepler-21 : Kepler21
-    Kepler-210 : Kepler210
-    Kepler-220 : Kepler220
-    Kepler-221 : Kepler221
-    Kepler-261 : Kepler261
-    Kepler-310 : Kepler310
-    Kepler-314 : Kepler314
-    Kepler-318 : Kepler318
-    Kepler-319 : Kepler319
-    Kepler-324 : Kepler324
-    Kepler-350 : Kepler350
-    Kepler-36 : Kepler36
-    Kepler-410 A : Kepler410A
-    Kepler-414 : Kepler414
-    Kepler-433 : Kepler433
-    Kepler-449 : Kepler449
-    Kepler-453 : Kepler453
-    Kepler-461 : Kepler461
-    Kepler-462 : Kepler462
-    Kepler-465 : Kepler465
-    Kepler-471 : Kepler471
-    Kepler-477 : Kepler477
-    Kepler-478 : Kepler478
-    Kepler-479 : Kepler479
-    Kepler-480 : Kepler480
-    Kepler-484 : Kepler484
-    Kepler-499 : Kepler499
-    Kepler-50 : Kepler50
-    Kepler-506 : Kepler506
-    Kepler-509 : Kepler509
-    Kepler-510 : Kepler510
-    Kepler-516 : Kepler516
-    Kepler-517 : Kepler517
-    Kepler-519 : Kepler519
-    Kepler-522 : Kepler522
-    Kepler-538 : Kepler538
-    Kepler-560 : Kepler560
-    Kepler-569 : Kepler569
-    Kepler-572 : Kepler572
-    Kepler-617 : Kepler617
-    Kepler-622 : Kepler622
-    Kepler-643 : Kepler643
-    Kepler-65 : Kepler65
-    Kepler-652 : Kepler652
-    Kepler-69 : Kepler69
-    Kepler-732 : Kepler732
-    Kepler-753 : Kepler753
-    Kepler-783 : Kepler783
-    Kepler-8 : Kepler8
-    Kepler-803 : Kepler803
-    Kepler-820 : Kepler820
-    Kepler-880 : Kepler880
-    Kepler-901 : Kepler901
-    Kepler-949 : Kepler949
-    Kepler-95 : Kepler95
-    Kepler-959 : Kepler959
-    Kepler-971 : Kepler971
-    Kepler-974 : Kepler974
-    Kepler-98 : Kepler98
+    Kepler-100 : KEPLER100
+    Kepler-106 : KEPLER106
+    Kepler-112 : KEPLER112
+    Kepler-113 : KEPLER113
+    Kepler-114 : KEPLER114
+    Kepler-116 : KEPLER116
+    Kepler-1171 : KEPLER1171
+    Kepler-119 : KEPLER119
+    Kepler-122 : KEPLER122
+    Kepler-130 : KEPLER130
+    Kepler-131 : KEPLER131
+    Kepler-1311 : KEPLER1311
+    Kepler-1312 : KEPLER1312
+    Kepler-1313 : KEPLER1313
+    Kepler-1326 : KEPLER1326
+    Kepler-134 : KEPLER134
+    Kepler-138 : KEPLER138
+    Kepler-139 : KEPLER139
+    Kepler-142 : KEPLER142
+    Kepler-1442 : KEPLER1442
+    Kepler-146 : KEPLER146
+    Kepler-149 : KEPLER149
+    Kepler-1518 : KEPLER1518
+    Kepler-152 : KEPLER152
+    Kepler-1521 : KEPLER1521
+    Kepler-153 : KEPLER153
+    Kepler-155 : KEPLER155
+    Kepler-161 : KEPLER161
+    Kepler-162 : KEPLER162
+    Kepler-1643 : KEPLER1643
+    Kepler-1661 : KEPLER1661
+    Kepler-1665 : KEPLER1665
+    Kepler-1672 : KEPLER1672
+    Kepler-1676 : KEPLER1676
+    Kepler-170 : KEPLER170
+    Kepler-1709 : KEPLER1709
+    Kepler-1710 : KEPLER1710
+    Kepler-1712 : KEPLER1712
+    Kepler-1714 : KEPLER1714
+    Kepler-1715 : KEPLER1715
+    Kepler-1716 : KEPLER1716
+    Kepler-1718 : KEPLER1718
+    Kepler-1719 : KEPLER1719
+    Kepler-1725 : KEPLER1725
+    Kepler-1726 : KEPLER1726
+    Kepler-1731 : KEPLER1731
+    Kepler-1746 : KEPLER1746
+    Kepler-1755 : KEPLER1755
+    Kepler-1769 : KEPLER1769
+    Kepler-1771 : KEPLER1771
+    Kepler-1772 : KEPLER1772
+    Kepler-1782 : KEPLER1782
+    Kepler-1791 : KEPLER1791
+    Kepler-1832 : KEPLER1832
+    Kepler-186 : KEPLER186
+    Kepler-1868 : KEPLER1868
+    Kepler-1869 : KEPLER1869
+    Kepler-1870 : KEPLER1870
+    Kepler-192 : KEPLER192
+    Kepler-1929 : KEPLER1929
+    Kepler-1935 : KEPLER1935
+    Kepler-1939 : KEPLER1939
+    Kepler-199 : KEPLER199
+    Kepler-1990 : KEPLER1990
+    Kepler-202 : KEPLER202
+    Kepler-203 : KEPLER203
+    Kepler-207 : KEPLER207
+    Kepler-21 : KEPLER21
+    Kepler-210 : KEPLER210
+    Kepler-220 : KEPLER220
+    Kepler-221 : KEPLER221
+    Kepler-261 : KEPLER261
+    Kepler-310 : KEPLER310
+    Kepler-314 : KEPLER314
+    Kepler-318 : KEPLER318
+    Kepler-319 : KEPLER319
+    Kepler-324 : KEPLER324
+    Kepler-350 : KEPLER350
+    Kepler-36 : KEPLER36
+    Kepler-410 A : KEPLER410A
+    Kepler-414 : KEPLER414
+    Kepler-433 : KEPLER433
+    Kepler-449 : KEPLER449
+    Kepler-453 : KEPLER453
+    Kepler-461 : KEPLER461
+    Kepler-462 : KEPLER462
+    Kepler-465 : KEPLER465
+    Kepler-471 : KEPLER471
+    Kepler-477 : KEPLER477
+    Kepler-478 : KEPLER478
+    Kepler-479 : KEPLER479
+    Kepler-480 : KEPLER480
+    Kepler-484 : KEPLER484
+    Kepler-499 : KEPLER499
+    Kepler-50 : KEPLER50
+    Kepler-506 : KEPLER506
+    Kepler-509 : KEPLER509
+    Kepler-510 : KEPLER510
+    Kepler-516 : KEPLER516
+    Kepler-517 : KEPLER517
+    Kepler-519 : KEPLER519
+    Kepler-522 : KEPLER522
+    Kepler-538 : KEPLER538
+    Kepler-560 : KEPLER560
+    Kepler-569 : KEPLER569
+    Kepler-572 : KEPLER572
+    Kepler-617 : KEPLER617
+    Kepler-622 : KEPLER622
+    Kepler-643 : KEPLER643
+    Kepler-65 : KEPLER65
+    Kepler-652 : KEPLER652
+    Kepler-69 : KEPLER69
+    Kepler-732 : KEPLER732
+    Kepler-753 : KEPLER753
+    Kepler-783 : KEPLER783
+    Kepler-8 : KEPLER8
+    Kepler-803 : KEPLER803
+    Kepler-820 : KEPLER820
+    Kepler-880 : KEPLER880
+    Kepler-901 : KEPLER901
+    Kepler-949 : KEPLER949
+    Kepler-95 : KEPLER95
+    Kepler-959 : KEPLER959
+    Kepler-971 : KEPLER971
+    Kepler-974 : KEPLER974
+    Kepler-98 : KEPLER98
     NGTS-27 : NGTS27
     NGTS-30 : NGTS30
     NGTS-31 : NGTS31
@@ -3770,7 +3771,6 @@ def targetondisk():
     TOI-6109 : TOI6109
     TOI-6130 : TOI6130
     TOI-6223 : TOI6223
-    TOI-6255 : TOI6255
     TOI-6303 : TOI6303
     TOI-6324 : TOI6324
     TOI-6330 : TOI6330
