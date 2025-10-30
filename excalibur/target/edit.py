@@ -27,53 +27,6 @@ def createversion():
     return dawgie.VERSION(1, 8, 1)
 
 
-# (NOTES FROM ADDITIONAL OF 500-some NEW TARGETS. Oct 2024)
-
-# EPIC 205950854 is K2-168
-# removed it from here and from run scripts
-# ah wait this is a really weird one.  b is K2-168 but c is EPIC
-#  (the Archive and POMA both use this odd mixmatch)
-# If we just use K2-168, do we get 'c'?  yes, we're good!
-#  (download table names do not match the main table names)
-#  (that also explains how TOI-784 is in main table, but HD 307842 in download table)
-#
-# LHS 475 is GJ 4102
-# LHS 475 : LHS475
-# removed it from here and from run scripts
-#
-# HD 3167 : HD3167   is K2-96
-# removed it from here and from run scripts
-#
-# Kepler-460 is KIC 5437945
-#  this is another weird one (like K2-168 above) with two star names
-#  Kepler-460 c but KIC 5437945 b  yikes
-
-# WD 1856+534 is WD 1856   that's a bad name. let's switch it
-#  removed these older ones:
-# WD 1856 : WD 1856+534
-# WD 1856 : WD1856
-
-# TIC 172900988 is TIC 172900988 Aa
-#  that's not a great name.  let's just use that as an Exoplanet Archive alias
-#
-# GJ 12 is Gliese 12
-#  SIMBAD doesn't even list that name. just use it as an Exoplanet Archive alias
-#
-# TOI-784 is HD 307842 in the Archive
-#  keep the TOI name  (arg! the aliases are only updated by target.create)
-
-# oof there's a batch that work for target() but crash on system()
-# they are all listed as false positives on the Exoplanet Archive
-#  (let Jenn Burt know about these)
-# all removed from scripts
-# Kepler-488
-# Kepler-494
-# Kepler-628
-# Kepler-706
-# Kepler-807
-# 4/7/25: also Kepler-470 and K2-399 (based on Sept.2024 paper)
-
-
 # ------------ -------------------------------------------------------
 # -- TARGET LIST -- --------------------------------------------------
 # FIRST COL HAS TO BE SOLVABLE BY
