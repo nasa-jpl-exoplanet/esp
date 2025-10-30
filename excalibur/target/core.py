@@ -1394,8 +1394,8 @@ def disk(selfstart, out, diskloc, dbs):
         parsedstr = t.split(':')
         parsedstr = [tt.strip() for tt in parsedstr]
         if parsedstr[0] in target_id:
-            folders = parsedstr[0].replace('-','').replace('+','')
-            folders = folders.replace(' ','').upper()
+            folders = parsedstr[0].replace('-', '').replace('+', '')
+            folders = folders.replace(' ', '').upper()
             folders = folders.split(',')
             folders = [f.strip() for f in folders]
             locations = [os.path.join(diskloc, fold) for fold in folders]
