@@ -607,10 +607,6 @@ def plot_corner(
         # draw a point and crosshair for the best fit in each subpanel
         # the best fit is not defined for the debug call inside atmos, so skip
         if paramValues_bestFit:
-            print('troot', truth_params)
-            print('allkeys', allkeys)
-            print('ndim', ndim)
-            print('paramvals', paramValues_bestFit)
             for yi in range(ndim):
                 for xi in range(yi):
                     ax = axes[yi, xi]
