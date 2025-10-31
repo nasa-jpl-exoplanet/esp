@@ -77,6 +77,7 @@ class SimSpectrum(dawgie.Algorithm):
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = arielcore.ArielParams(
                     tier=runtime['ariel_simspectrum_tier'].value(),
+                    arielRad=runtime['ariel_simspectrum_arielRad'].value(),
                     SNRfactor=runtime[
                         'ariel_simspectrum_SNRadjustment'
                     ].value(),

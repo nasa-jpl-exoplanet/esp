@@ -38,6 +38,7 @@ ArielParams = namedtuple(
     'ariel_params_from_runtime',
     [
         'tier',
+        'arielRad',
         'SNRfactor',
         'randomSeed',
         'randomCloudProperties',
@@ -210,10 +211,14 @@ def simulate_spectra(
         # there is a separate SNR file for each planet
         if testTarget:
             # for now, use HD 209458 SNR for test cases.  RECONSIDER THIS CHOICE LATER
-            ariel_instrument = load_ariel_instrument('HD 209458 b', tier)
+            ariel_instrument = load_ariel_instrument(
+                'HD 209458 b',
+                runtime_params,
+            )
         else:
             ariel_instrument = load_ariel_instrument(
-                target + ' ' + planet_letter, tier
+                target + ' ' + planet_letter,
+                runtime_params,
             )
 
         if ariel_instrument:

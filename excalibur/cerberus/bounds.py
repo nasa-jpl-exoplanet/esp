@@ -145,9 +145,9 @@ def get_profile_limits_hstg141():
     limits['WASP-63 b'] = [['T', 2000, '<']]
     # limits['WASP-69 b'] = [['T',2000,'<'],  # no effect
     limits['WASP-69 b'] = [['HThick', 5, '<'], ['HScale', -0.4, '<']]
-    limits['WASP-74 b'] = [
-        ['T', 2000, '<']
-    ]  # very interesting T cutoff for DISEQ. why? and CH4.  doesn't seem like the T profiling is really necessary though
+    # very interesting T cutoff for DISEQ. why? and CH4.  (not done anymore)
+    # doesn't seem like the T profiling is really necessary though
+    limits['WASP-74 b'] = [['T', 2000, '<']]
     limits['WASP-76 b'] = [['T', 2500, '<']]
     limits['WASP-79 b'] = [['T', 2500, '<']]
     # limits['WASP-80 b'] = [['T',1500,'<']]

@@ -1760,6 +1760,9 @@ def targetlist_JWST():
         'LTT 3780',  # added Aug.2025
         'TOI-1130',  # added Aug.2025
         'TOI-1231',  # added Aug.2025
+        'TOI-125',  # added Oct.2025
+        'TOI-1468',  # added Oct.2025
+        'TOI-4010',  # added Oct.2025
         'TOI-561',  # added Aug.2025
         'TOI-824',  # added Aug.2025
         'WASP-47',  # added Aug.2025

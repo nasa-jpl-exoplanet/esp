@@ -1,7 +1,7 @@
 '''cerberus algorithms ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -25,6 +25,8 @@ import excalibur.ariel.algorithms as arielalg
 import excalibur.cerberus.core as crbcore
 import excalibur.cerberus.states as crbstates
 from excalibur.util.checksv import checksv
+
+from excalibur.target.targetlists import get_target_lists
 
 from importlib import import_module as fetch  # avoid cicular dependencies
 
@@ -67,6 +69,8 @@ class XSLib(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        target = repr(self).split('.')[1]
+
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
@@ -87,31 +91,40 @@ class XSLib(dawgie.Algorithm):
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
-            if vspc:
-                log.info('--< CERBERUS XSLIB: %s >--', fltr)
+            runtime = self.__rt.sv_as_dict()['status']
+            runtime_params = crbcore.CerbXSlibParams(
+                knownspecies=runtime[
+                    'cerberus_crbmodel_HITEMPmolecules'
+                ].molecules,
+                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                lshifting=runtime['cerberus_crbmodel_lshifting'],
+            )
 
-                runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = crbcore.CerbXSlibParams(
-                    knownspecies=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
-                )
+            # for Ariel targets, option to only do the actually Tier-2 targets
+            targetlistcheck = True
+            if (
+                fltr == 'Ariel-sim'
+                and runtime['cerberus_arielsample_tier'].value() == 2
+            ):
+                alltargetlists = get_target_lists()
+                targetlist = alltargetlists['ariel_Nov2024_2years']
+                if target not in targetlist:
+                    targetlistcheck = False
 
+            if vspc and targetlistcheck:
+                log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
                 update = self._xslib(sv, runtime_params, fltrs.index(fltr))
             else:
-                errstr = [m for m in [sspc] if m is not None]
-                self._failure(errstr[0])
+                if targetlistcheck:
+                    errstr = [m for m in [sspc] if m is not None]
+                else:
+                    errstr = ['not in the Ariel target list']
+                self._failure(errstr[0], target)
 
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
@@ -134,9 +147,9 @@ class XSLib(dawgie.Algorithm):
         return cs
 
     @staticmethod
-    def _failure(errstr):
+    def _failure(errstr, target):
         '''Failure log'''
-        log.warning('--< CERBERUS XSLIB: %s >--', errstr)
+        log.warning('--< CERBERUS XSLIB: %s  %s >--', errstr, target)
         return
 
     pass
@@ -180,9 +193,40 @@ class Atmos(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        target = repr(self).split('.')[1]
+
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         if sfin:
             sfin = 'Missing system params!'
+
+        runtime = self.__rt.sv_as_dict()['status']
+        runtime_params = crbcore.CerbAtmosParams(
+            MCMC_chain_length=runtime['cerberus_steps'].value(),
+            MCMC_chains=runtime['cerberus_chains'].value(),
+            MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
+            fitCloudParameters=runtime['cerberus_atmos_fitCloudParameters'],
+            cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
+            fitT=runtime['cerberus_atmos_fitT'],
+            fitCtoO=runtime['cerberus_atmos_fitCtoO'],
+            fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+            fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
+            knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+            cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+            xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+            nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+            solrad=runtime['cerberus_crbmodel_solrad'].value(),
+            Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+            lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+            lshifting=runtime['cerberus_crbmodel_lshifting'],
+            isothermal=runtime['cerberus_crbmodel_isothermal'],
+            boundTeq=runtime['cerberus_atmos_bounds_Teq'],
+            boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+            boundCTP=runtime['cerberus_atmos_bounds_CTP'],
+            boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
+            boundHScale=runtime['cerberus_atmos_bounds_HScale'],
+            boundHThick=runtime['cerberus_atmos_bounds_HThick'],
+        )
+
         svupdate = []
         # just one filter, while debugging:
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:
@@ -212,46 +256,19 @@ class Atmos(dawgie.Algorithm):
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
-            if vfin and vxsl and vspc:
-                log.info('--< CERBERUS ATMOS: %s >--', fltr)
+            # for Ariel targets, option to only do the actually Tier-2 targets
+            targetlistcheck = True
+            if (
+                fltr == 'Ariel-sim'
+                and runtime['cerberus_arielsample_tier'].value() == 2
+            ):
+                alltargetlists = get_target_lists()
+                targetlist = alltargetlists['ariel_Nov2024_2years']
+                if target not in targetlist:
+                    targetlistcheck = False
 
-                runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = crbcore.CerbAtmosParams(
-                    MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    MCMC_chains=runtime['cerberus_chains'].value(),
-                    MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-                    fitCloudParameters=runtime[
-                        'cerberus_atmos_fitCloudParameters'
-                    ],
-                    cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                    fitT=runtime['cerberus_atmos_fitT'],
-                    fitCtoO=runtime['cerberus_atmos_fitCtoO'],
-                    fitNtoO=runtime['cerberus_atmos_fitNtoO'],
-                    fitmolecules=runtime[
-                        'cerberus_crbmodel_fitmolecules'
-                    ].molecules,
-                    knownspecies=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
-                    isothermal=runtime['cerberus_crbmodel_isothermal'],
-                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                )
+            if vfin and vxsl and vspc and targetlistcheck:
+                log.info('--< CERBERUS ATMOS: %s  %s >--', fltr, target)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
@@ -262,8 +279,11 @@ class Atmos(dawgie.Algorithm):
                     fltr,
                 )
             else:
-                errstr = [m for m in [sfin, sspc, sxsl] if m is not None]
-                self._failure(errstr[0])
+                if targetlistcheck:
+                    errstr = [m for m in [sfin, sspc, sxsl] if m is not None]
+                else:
+                    errstr = ['not in the Ariel target list']
+                self._failure(errstr[0], target)
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
         self.__out = svupdate
@@ -304,9 +324,9 @@ class Atmos(dawgie.Algorithm):
         return am
 
     @staticmethod
-    def _failure(errstr):
+    def _failure(errstr, target):
         '''Failure log'''
-        log.warning('--< CERBERUS ATMOS: %s >--', errstr)
+        log.warning('--< CERBERUS ATMOS: %s  %s >--', errstr, target)
         return
 
     pass
@@ -352,12 +372,34 @@ class Results(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        target = repr(self).split('.')[1]
+
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         vanc, sanc = checksv(self.__anc.sv_as_dict()['parameters'])
 
         update = False
         if vfin and vanc:
+            runtime = self.__rt.sv_as_dict()['status']
+            runtime_params = crbcore.CerbResultsParams(
+                nrandomwalkers=runtime[
+                    'cerberus_results_nrandomwalkers'
+                ].value(),
+                randomseed=runtime['cerberus_results_randomseed'].value(),
+                knownspecies=runtime[
+                    'cerberus_crbmodel_HITEMPmolecules'
+                ].molecules,
+                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                solrad=runtime['cerberus_crbmodel_solrad'].value(),
+                cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
+                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
+                lshifting=runtime['cerberus_crbmodel_lshifting'],
+                isothermal=runtime['cerberus_crbmodel_isothermal'],
+            )
+
             # available_filters = self.__xsl.sv_as_dict().keys()
             # available_filters = self.__atm.sv_as_dict().keys()
             # print('available_filters',available_filters)
@@ -375,36 +417,20 @@ class Results(dawgie.Algorithm):
 
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
-                if vxsl and vatm:
-                    log.info('--< CERBERUS RESULTS: %s >--', fltr)
 
-                    runtime = self.__rt.sv_as_dict()['status']
-                    runtime_params = crbcore.CerbResultsParams(
-                        nrandomwalkers=runtime[
-                            'cerberus_results_nrandomwalkers'
-                        ].value(),
-                        randomseed=runtime[
-                            'cerberus_results_randomseed'
-                        ].value(),
-                        knownspecies=runtime[
-                            'cerberus_crbmodel_HITEMPmolecules'
-                        ].molecules,
-                        cialist=runtime[
-                            'cerberus_crbmodel_HITRANmolecules'
-                        ].molecules,
-                        xmollist=runtime[
-                            'cerberus_crbmodel_EXOMOLmolecules'
-                        ].molecules,
-                        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                        solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                        cornerBins=runtime[
-                            'cerberus_plotters_cornerBins'
-                        ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
-                        isothermal=runtime['cerberus_crbmodel_isothermal'],
-                    )
+                # for Ariel targets, option to only do the actually Tier-2 targets
+                targetlistcheck = True
+                if (
+                    fltr == 'Ariel-sim'
+                    and runtime['cerberus_arielsample_tier'].value() == 2
+                ):
+                    alltargetlists = get_target_lists()
+                    targetlist = alltargetlists['ariel_Nov2024_2years']
+                    if target not in targetlist:
+                        targetlistcheck = False
+
+                if vxsl and vatm and targetlistcheck:
+                    log.info('--< CERBERUS RESULTS: %s  %s >--', fltr, target)
 
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
@@ -419,11 +445,14 @@ class Results(dawgie.Algorithm):
                     if update:
                         svupdate.append(self.__out[fltrs.index(fltr)])
                 else:
-                    errstr = [m for m in [sxsl, satm] if m is not None]
-                    self._failure(errstr[0])
+                    if targetlistcheck:
+                        errstr = [m for m in [sxsl, satm] if m is not None]
+                    else:
+                        errstr = ['not in the Ariel target list']
+                    self._failure(errstr[0], target)
         else:
             errstr = [m for m in [sanc, sfin] if m is not None]
-            self._failure(errstr[0])
+            self._failure(errstr[0], target)
 
         self.__out = svupdate
         if self.__out:
@@ -452,9 +481,9 @@ class Results(dawgie.Algorithm):
         return resout
 
     @staticmethod
-    def _failure(errstr):
+    def _failure(errstr, target):
         '''Failure log'''
-        log.warning('--< CERBERUS RESULTS: %s >--', errstr)
+        log.warning('--< CERBERUS RESULTS: %s  %s >--', errstr, target)
         return
 
     pass
