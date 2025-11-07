@@ -11,6 +11,9 @@ import os
 import pickle
 import requests
 
+from . import email
+from . import perform
+
 from datetime import datetime
 from datetime import timedelta
 
@@ -19,7 +22,7 @@ from urllib.parse import urlparse
 
 def check(args):
     fn = f'/tmp/{urlparse(args.url).netloc}.fsm.pkl'
-    response = request.get(urljoin(args.url, 'app/pl/status'))
+    response = requests.get(urljoin(args.url, 'app/pl/status'))
     response.raise_for_status()
     current = response.json()
     reset = False
@@ -39,18 +42,22 @@ def check(args):
         # have we surpased the desired wait time
         duration = datetime.now() - previous['when']
         if duration.total_seconds() > args.threshold:
+            previous['when'] = datetime.now() + timedelta(days=1000)
             if current['status'] == 'active' and current['name'] == 'loading':
                 msg = f'''
  The pipeline is stuck in "loading" for {duration.total_seconds()} seconds. Restarting the pipeline does not make sense because there are probably messages in /proj/sdp/data/logs/ops.log that will indicate why it has not finished loading. A pipeline restart should result in the same condition. Hence, you need to read the logs, fix the bug, and then restart the pipeline either through a github.com merge or manually.
                 '''
-                previous['when'] = datetime.now() + timedelta(days=1000)
             else:
                 msg = f'''
- It has been {duration.total_seconds()} seconds since first detected the change to status "{current['status']}" and state "{current['name']}". The duration {duration.total_seconds()} seconds is greater than the desired threshold {args.threshold} seconds given to me. It now requires that I restart the pipeline.
+ It has been {duration.total_seconds()} seconds since first detected the change to status "{current['status']}" and state "{current['name']}". The duration {duration.total_seconds()} seconds is greater than the desired threshold {args.threshold} seconds given to me. Restarting the pipeline now.
             '''
                 reset = True
-            # send the email
-            # reset the pipeline
+            email.send (args, msg)
+            if reset:
+                perform.reboot()
+        # save new previous
+        with open(fn, 'bw') as file:
+            pickle.dump(previous, file)
         return 1
     if os.path.isfile(fn):
         os.unlink(fn)

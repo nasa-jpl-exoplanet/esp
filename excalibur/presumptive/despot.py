@@ -24,7 +24,7 @@ def tyrannize():
     ap.add_argument('-e', '--emails',
                     required=True,
                     type=str,
-                    help='email addresses to notify in a ; delimited string')
+                    help='email addresses to notify in a , delimited string')
     ap.add_argument('-u', '--url',
                     default='https://excalibur.jpl.nasa.gov:8080',
                     type=_url,
