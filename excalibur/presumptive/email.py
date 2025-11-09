@@ -1,10 +1,10 @@
-'''utility to send emails to a given list of people (tested)
-'''
+'''utility to send emails to a given list of people (tested)'''
 
 from email.message import EmailMessage
 from smtplib import SMTP
 
-def send(args, msg:str):
+
+def send(args, msg: str):
     em = EmailMessage()
     em.set_content(msg)
     em['Subject'] = 'ALERT: excalibur pipeline trouble'

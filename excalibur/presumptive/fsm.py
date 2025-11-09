@@ -20,9 +20,10 @@ from datetime import timedelta
 from urllib.parse import urljoin
 from urllib.parse import urlparse
 
+
 def check(args):
     fn = f'/tmp/{urlparse(args.url).netloc}.fsm.pkl'
-    response = requests.get(urljoin(args.url, 'app/pl/status'))
+    response = requests.get(urljoin(args.url, 'app/pl/status'), timeout=90)
     response.raise_for_status()
     current = response.json()
     reset = False
@@ -35,8 +36,10 @@ def check(args):
             previous = current.copy()
             previous['when'] = datetime.now()
         # if there is a change in state from the previous, reset the timer
-        if current['status'] != previous['status'] or \
-           current['name'] != previous['name']:
+        if (
+            current['status'] != previous['status']
+            or current['name'] != previous['name']
+        ):
             previous = current.copy()
             previous['when'] = datetime.now()
         # have we surpased the desired wait time
@@ -52,7 +55,7 @@ def check(args):
  It has been {duration.total_seconds()} seconds since first detected the change to status "{current['status']}" and state "{current['name']}". The duration {duration.total_seconds()} seconds is greater than the desired threshold {args.threshold} seconds given to me. Restarting the pipeline now.
             '''
                 reset = True
-            email.send (args, msg)
+            email.send(args, msg)
             if reset:
                 perform.reboot()
         # save new previous
@@ -62,4 +65,3 @@ def check(args):
     if os.path.isfile(fn):
         os.unlink(fn)
     return 0
-    pass
