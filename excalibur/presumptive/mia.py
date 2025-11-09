@@ -56,7 +56,7 @@ def worker(args):
                 email.send(
                     args,
                     f'''
- Some {total - alive} workers have gone AWOL or refusing reincarnation. Please check the docker  compose file because this should not happen. If it cannot be corrected in the docker compose, then expand my abilities to bring those responsible under control.
+ Some {total - alive} workers are refusing reincarnation. Please check the docker  compose file because this should not happen. Will attempt to repatriate it.
                 ''',
                 )
                 perform.repatriation()
@@ -71,7 +71,15 @@ def worker(args):
                     )
                     perform.reset()
                 else:
-                    perform.repatriation()
+                    fallen = perform.fallen()
+                    if fallen:
+                        email.send(
+                            args,
+                            f'''
+ The pipeline is reporting {alive - total - fallen} undead workers and {fallen} workers. Attempting to repatriate the fallen.
+                            ''',
+                        )
+                        perform.repatriation()
             pass
         else:
             with open(fn, 'bw') as file:

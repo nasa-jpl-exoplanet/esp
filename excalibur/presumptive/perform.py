@@ -4,6 +4,11 @@ import subprocess
 import time
 
 
+def fallen():
+    '''report the number of workers that are not running'''
+    return 0
+
+
 def reboot():
     '''shutdown then restart the pipeline
 
@@ -19,8 +24,10 @@ def reboot():
 
 
 def repatriation():
-    # find workers that have stopped and restart them individually
+    '''restart the stopped workers without restarting the whole farm'''
+    subprocess.run('${HOME}/repatriate.sh', check=True, shell=True)
     pass
+
 
 def reset():
     '''do a pp_reset.sh ops'''

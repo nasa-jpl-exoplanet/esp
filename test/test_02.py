@@ -48,15 +48,16 @@ def mock_subprocess_run(*cmd, check=False, shell=False, **kwds):
     unittest.TestCase().assertTrue(shell)
     unittest.TestCase().assertFalse(kwds)
     print('executed command:', ' '.join(cmd))
-    PERFORMED[0] = True
+    PERFORMED[0] += 1
 
 
 class ValidateDespotism(unittest.TestCase):
     def setUp(self):
-        PERFORMED[0] = False
+        PERFORMED[0] = 0
         RESPONSE[0] = {}
-        if os.path.exists(f'/tmp/{fn()}.fsm.pkl'):
-            os.unlink(f'/tmp/{fn()}.fsm.pkl')
+        for section in ['fsm', 'mia']:
+            if os.path.exists(f'/tmp/{fn()}.{section}.pkl'):
+                os.unlink(f'/tmp/{fn()}.{section}.pkl')
 
     @patch(
         'excalibur.presumptive.fsm.requests.get', side_effect=mock_request_get
@@ -186,3 +187,77 @@ class ValidateDespotism(unittest.TestCase):
         self.assertEqual(0, retval)
         self.assertFalse(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
         self.assertFalse(PERFORMED[0])
+
+    @patch(
+        'excalibur.presumptive.mia.requests.get', side_effect=mock_request_get
+    )
+    @patch('excalibur.presumptive.mia.email.send', side_effect=mock_email_send)
+    @patch(
+        'excalibur.presumptive.mia.perform.subprocess.run',
+        side_effect=mock_subprocess_run,
+    )
+    def test_worker_fallen(self, mock_run, mock_email, mock_get):
+        RESPONSE[0] = {
+            'busy': ['a b c', 'b b c', 'c b c'],
+            'idle': '11',
+        }
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertFalse(PERFORMED[0])
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertTrue(PERFORMED[0])
+
+    @patch(
+        'excalibur.presumptive.mia.requests.get', side_effect=mock_request_get
+    )
+    @patch('excalibur.presumptive.mia.email.send', side_effect=mock_email_send)
+    @patch(
+        'excalibur.presumptive.mia.perform.subprocess.run',
+        side_effect=mock_subprocess_run,
+    )
+    def test_worker_fallen_with_change(self, mock_run, mock_email, mock_get):
+        RESPONSE[0] = {
+            'busy': ['a b c', 'b b c', 'c b c'],
+            'idle': '11',
+        }
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertFalse(PERFORMED[0])
+        RESPONSE[0] = {
+            'busy': ['a b c', 'b b c'],
+            'idle': '11',
+        }
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertFalse(PERFORMED[0])
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertTrue(PERFORMED[0])
+
+    @patch(
+        'excalibur.presumptive.mia.requests.get', side_effect=mock_request_get
+    )
+    @patch('excalibur.presumptive.mia.email.send', side_effect=mock_email_send)
+    @patch(
+        'excalibur.presumptive.mia.perform.subprocess.run',
+        side_effect=mock_subprocess_run,
+    )
+    def test_worker_undead(self, mock_run, mock_email, mock_get):
+        RESPONSE[0] = {
+            'busy': ['a b c', 'b b c', 'c b c'],
+            'idle': '15',
+        }
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertFalse(PERFORMED[0])
+        retval = mia.worker(ARGS)
+        self.assertEqual(1, retval)
+        self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertTrue(PERFORMED[0])
