@@ -168,3 +168,21 @@ class ValidateDespotism(unittest.TestCase):
         self.assertEqual(0, retval)
         self.assertFalse(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
         self.assertFalse(PERFORMED[0])
+
+    @patch(
+        'excalibur.presumptive.mia.requests.get', side_effect=mock_request_get
+    )
+    @patch('excalibur.presumptive.mia.email.send', side_effect=mock_email_send)
+    @patch(
+        'excalibur.presumptive.mia.perform.subprocess.run',
+        side_effect=mock_subprocess_run,
+    )
+    def test_worker_all_present(self, mock_run, mock_email, mock_get):
+        RESPONSE[0] = {
+            'busy': ['a b c', 'b b c', 'c b c', 'd b c'],
+            'idle': '11',
+        }
+        retval = mia.worker(ARGS)
+        self.assertEqual(0, retval)
+        self.assertFalse(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
+        self.assertFalse(PERFORMED[0])

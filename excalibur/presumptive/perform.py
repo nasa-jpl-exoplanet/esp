@@ -18,6 +18,10 @@ def reboot():
     subprocess.run('${HOME}/run_ops.sh', check=True, shell=True)
 
 
+def repatriation():
+    # find workers that have stopped and restart them individually
+    pass
+
 def reset():
     '''do a pp_reset.sh ops'''
     subprocess.run(

@@ -59,6 +59,7 @@ def worker(args):
  Some {total - alive} workers have gone AWOL or refusing reincarnation. Please check the docker  compose file because this should not happen. If it cannot be corrected in the docker compose, then expand my abilities to bring those responsible under control.
                 ''',
                 )
+                perform.repatriation()
             else:
                 # have undead workers that are both idle and supposedly working
                 if current['idle'] == total:
@@ -69,6 +70,8 @@ def worker(args):
                     ''',
                     )
                     perform.reset()
+                else:
+                    perform.repatriation()
             pass
         else:
             with open(fn, 'bw') as file:
