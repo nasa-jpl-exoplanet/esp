@@ -45,7 +45,9 @@ def worker(args):
     response.raise_for_status()
     current = response.json()
     current['idle'] = int(current['idle'])
-    current['busy'] = sorted(task.split()[0] for task in current['busy'])
+    current['busy'] = sorted(
+        task.split('duration')[0].strip() for task in current['busy']
+    )
     alive = current['idle'] + len(current['busy'])
     if alive != total:
         previous = {}

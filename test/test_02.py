@@ -12,9 +12,9 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 NS = collections.namedtuple(
-    'NS', ['email', 'url', 'threshold', 'nodes', 'replicas']
+    'NS', ['ca_path', 'email', 'url', 'threshold', 'nodes', 'replicas']
 )
-ARGS = NS('t@x.y', 'https://excalibur.jpl.nasa.gov:8080', 3, [1, 2, 3], 5)
+ARGS = NS(None, 't@x.y', 'https://excalibur.jpl.nasa.gov:8080', 3, [1, 2, 3], 5)
 PERFORMED = [False]
 RESPONSE = [{}]
 
@@ -23,10 +23,10 @@ def fn():
     return urlparse(ARGS.url).netloc
 
 
-def mock_request_get(url, **_kwds):
+def mock_request_get(url, **kwds):
     mock_response = unittest.mock.Mock()
     path = urlparse(url).path
-    unittest.TestCase().assertTrue('timeoout' in kwds)
+    unittest.TestCase().assertTrue('timeout' in kwds)
     unittest.TestCase().assertTrue('verify' in kwds)
     if path in ['/app/pl/state', '/app/schedule/crew']:
         mock_response.status_code = 200
