@@ -45,13 +45,17 @@ def mock_email_send(args, msg):
     print(msg)  # generally do not care but when errors can see the output
 
 
-def mock_subprocess_run(*cmd, check=False, shell=False, **kwds):
+def mock_subprocess_run(
+    *cmd, capture_output=False, check=False, shell=False, **kwds
+):
     unittest.TestCase().assertTrue(check)
     unittest.TestCase().assertTrue(shell)
     unittest.TestCase().assertFalse(kwds)
     print('executed command:', ' '.join(cmd))
     PERFORMED[0] += 1
-
+    mock_response = unittest.mock.Mock()
+    mock_response.stdout = b'abcd\n'
+    return mock_response
 
 class ValidateDespotism(unittest.TestCase):
     def setUp(self):

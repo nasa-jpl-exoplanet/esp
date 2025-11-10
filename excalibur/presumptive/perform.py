@@ -4,9 +4,23 @@ import subprocess
 import time
 
 
-def fallen():
+def fallen(nodes):
     '''report the number of workers that are not running'''
-    return 0
+    cmd = 'docker ps -aq --filter "name=ops-workers*" --filter "status=exited"'
+    count = 0
+    downed = []
+    for node in nodes:
+        result = subprocess.run(
+            f'ssh -o ConnectTimeout=60 mentor{node} {cmd}',
+            capture_output=True,
+            check=True,
+            shell=True,
+        )
+        ids = result.stdout.decode('utf-8').strip().split()
+        count += len(ids)
+        if ids:
+            downed.append(node)
+    return count, downed
 
 
 def reboot():
@@ -23,9 +37,16 @@ def reboot():
     subprocess.run('${HOME}/run_ops.sh', check=True, shell=True)
 
 
-def repatriation():
+def repatriation(nodes):
     '''restart the stopped workers without restarting the whole farm'''
-    subprocess.run('${HOME}/repatriate.sh', check=True, shell=True)
+    cmd = 'docker ps -aq --filter "name=ops-workers*" --filter "status=exited"'
+    cmd = f'docker rm $({cmd}) && ${{HOME}}/run_workers.sh'
+    for node in nodes:
+        subprocess.run(
+            f'ssh -o ConnectTimeout=60 mentor{node} {cmd}',
+            check=True,
+            shell=True,
+        )
     pass
 
 
