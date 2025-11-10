@@ -1,12 +1,22 @@
 '''monitors the pipeline and corrects the system when it sees problems'''
 
 import argparse
+import os
 import sys
 
 from urllib.parse import urlparse
 
 from . import fsm
 from . import mia
+
+
+def _file(arg: str):
+    if arg is not None:
+        if not os.path.isfile(arg):
+            raise argparse.ArgumentTypeError(
+                f'Path "{arg}" is not a valid file'
+            )
+    return arg
 
 
 def _url(arg: str):
@@ -23,6 +33,14 @@ def _url(arg: str):
 
 def tyrannize():
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_arugment(
+        '-ca',
+        '--ca-path',
+        default=None,
+        required=False,
+        type=_file,
+        help='path to the CA cerficates file for this machine',
+    )
     ap.add_argument(
         '-e',
         '--emails',

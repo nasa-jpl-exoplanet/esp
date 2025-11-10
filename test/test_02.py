@@ -26,6 +26,8 @@ def fn():
 def mock_request_get(url, **_kwds):
     mock_response = unittest.mock.Mock()
     path = urlparse(url).path
+    unittest.TestCase().assertTrue('timeoout' in kwds)
+    unittest.TestCase().assertTrue('verify' in kwds)
     if path in ['/app/pl/state', '/app/schedule/crew']:
         mock_response.status_code = 200
         mock_response.json.return_value = RESPONSE[0]

@@ -23,7 +23,9 @@ from urllib.parse import urlparse
 
 def check(args):
     fn = f'/tmp/{urlparse(args.url).netloc}.fsm.pkl'
-    response = requests.get(urljoin(args.url, 'app/pl/state'), timeout=90)
+    response = requests.get(
+        urljoin(args.url, 'app/pl/state'), timeout=90, verify=args.ca_path
+    )
     response.raise_for_status()
     current = response.json()
     reset = False

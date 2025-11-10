@@ -39,7 +39,9 @@ def worker(args):
     '''
     fn = f'/tmp/{urlparse(args.url).netloc}.mia.pkl'
     total = len(args.nodes) * args.replicas
-    response = requests.get(urljoin(args.url, 'app/schedule/crew'), timeout=90)
+    response = requests.get(
+        urljoin(args.url, 'app/schedule/crew'), timeout=90, verify=args.ca_path
+    )
     response.raise_for_status()
     current = response.json()
     current['idle'] = int(current['idle'])
