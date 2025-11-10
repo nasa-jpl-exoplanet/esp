@@ -51,7 +51,9 @@ jobs:
           pip install -r requirements.txt
           pip install -r .github/workflows/requirements.txt
       - name: bandit
-        run: bandit -f json -b .github/workflows/bandit_baseline.json -r excalibur
+        run: |
+          bandit -f json -b .github/workflows/bandit_baseline.json -r excalibur
+          bandit -f json -o .github/workflows/bandit_full.json -r excalibur || exit 0
   Delivery:
     name: Deployment (pypi) Compliance
     runs-on: ubuntu-24.04
