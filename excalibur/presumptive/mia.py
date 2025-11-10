@@ -20,13 +20,13 @@ def farm(args):
     '''
     wid = perform.worker_id()
     fallow = list(
-        filter(lambda node, wid=wid: wid == perform.worker_id(node), args.nodes)
+        filter(lambda node, wid=wid: wid != perform.worker_id(node), args.nodes)
     )
     if fallow:
         email.send(
             args,
             f'''
-Found {len(fallow)} fallow farms on mentor(s) {' '.join(fallow)}. Going to retrench the workers.
+Found {len(fallow)} fallow farms on mentor(s) {' '.join(f'mentor{n}' for n in fallow)}. Going to retrench the workers.
             ''',
         )
         for node in fallow:
