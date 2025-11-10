@@ -33,7 +33,7 @@ def _url(arg: str):
 
 def tyrannize():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_arugment(
+    ap.add_argument(
         '-ca',
         '--ca-path',
         default=None,
