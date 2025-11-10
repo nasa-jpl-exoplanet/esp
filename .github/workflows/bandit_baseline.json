@@ -1,17 +1,17 @@
 {
   "errors": [],
-  "generated_at": "2025-08-10T16:18:30Z",
+  "generated_at": "2025-11-10T21:32:49Z",
   "metrics": {
     "_totals": {
-      "CONFIDENCE.HIGH": 11,
+      "CONFIDENCE.HIGH": 24,
       "CONFIDENCE.LOW": 1,
-      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.MEDIUM": 2,
       "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 7,
-      "SEVERITY.MEDIUM": 5,
+      "SEVERITY.HIGH": 5,
+      "SEVERITY.LOW": 16,
+      "SEVERITY.MEDIUM": 6,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 41171,
+      "loc": 43514,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -89,7 +89,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 249,
+      "loc": 277,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -102,7 +102,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 638,
+      "loc": 681,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -154,7 +154,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 118,
+      "loc": 130,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -167,7 +167,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 126,
+      "loc": 134,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -206,7 +206,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 456,
+      "loc": 530,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -219,7 +219,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 59,
+      "loc": 60,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -232,7 +232,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 57,
+      "loc": 73,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -284,7 +284,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 511,
+      "loc": 529,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -310,7 +310,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 225,
+      "loc": 223,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -323,7 +323,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 2456,
+      "loc": 2452,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -349,7 +349,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1059,
+      "loc": 1141,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -362,7 +362,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1470,
+      "loc": 1475,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -432,15 +432,15 @@
       "skipped_tests": 0
     },
     "excalibur/classifier/core.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 524,
+      "loc": 481,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -454,6 +454,58 @@
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 442,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/console/__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 16,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/console/algorithms.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 34,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/console/bot.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 9,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/console/states.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 533,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -492,7 +544,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 273,
+      "loc": 270,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -518,7 +570,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 3541,
+      "loc": 3886,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -531,7 +583,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 259,
+      "loc": 274,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -584,58 +636,6 @@
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 9,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "excalibur/metrics/__init__.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 16,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "excalibur/metrics/algorithms.py": {
-      "CONFIDENCE.HIGH": 2,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 1,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 59,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "excalibur/metrics/bot.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 9,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "excalibur/metrics/states.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 152,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -717,6 +717,84 @@
       "nosec": 0,
       "skipped_tests": 0
     },
+    "excalibur/presumptive/__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 4,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/presumptive/despot.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 93,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/presumptive/email.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 12,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/presumptive/fsm.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 58,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/presumptive/mia.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 95,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/presumptive/perform.py": {
+      "CONFIDENCE.HIGH": 13,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 5,
+      "SEVERITY.LOW": 8,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 65,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
     "excalibur/runtime/__init__.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
@@ -765,7 +843,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1260,
+      "loc": 1306,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -791,7 +869,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 156,
+      "loc": 164,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -804,7 +882,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 447,
+      "loc": 471,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -843,7 +921,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 545,
+      "loc": 554,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -986,7 +1064,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 776,
+      "loc": 789,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -999,7 +1077,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 820,
+      "loc": 927,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1077,7 +1155,7 @@
       "SEVERITY.LOW": 5,
       "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1337,
+      "loc": 1391,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1090,7 +1168,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 2774,
+      "loc": 1866,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1142,7 +1220,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4297,
+      "loc": 4313,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1207,7 +1285,7 @@
       "SEVERITY.LOW": 1,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 4393,
+      "loc": 4389,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1363,7 +1441,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 154,
+      "loc": 354,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1432,6 +1510,19 @@
       "nosec": 0,
       "skipped_tests": 0
     },
+    "excalibur/util/nerdclub.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 101,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
     "excalibur/util/plotters.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
@@ -1455,6 +1546,123 @@
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 18,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/format.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 411,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/iterate.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 160,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/lagrange.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 128,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/lambdacorr.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 155,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/makeatm.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 59,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/makeheader.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 196,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/readconf.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 84,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/runatm.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 130,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "excalibur/util/tea_code/updated_balance.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 76,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -1487,49 +1695,7 @@
   },
   "results": [
     {
-      "code": "96         if 'Spitzer' in ext:\n97             mdl = torch.load(\n98                 magicdir + '/classifier_models/spitzer_lc_model.pt'\n99             )\n100         else:\n",
-      "col_offset": 18,
-      "end_col_offset": 13,
-      "filename": "excalibur/classifier/core.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 97,
-      "line_range": [
-        97,
-        98,
-        99
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
-    },
-    {
-      "code": "100         else:\n101             mdl = torch.load(magicdir + '/classifier_models/hubble_lc_model.pt')\n102         mdl.eval()\n",
-      "col_offset": 18,
-      "end_col_offset": 80,
-      "filename": "excalibur/classifier/core.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 101,
-      "line_range": [
-        101
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
-    },
-    {
-      "code": "3701     # GMR: seems this query was formatted in a very specific way, I might have broken it\n3702     query = f\"\"\"\n3703     SELECT basic.OID, ra, dec, main_id, pmra, pmdec\n3704     FROM basic JOIN ident ON oidref = oid\n3705     WHERE id = '{target}';\n3706     \"\"\"\n3707 \n",
+      "code": "4097     # GMR: seems this query was formatted in a very specific way, I might have broken it\n4098     query = f\"\"\"\n4099     SELECT basic.OID, ra, dec, main_id, pmra, pmdec\n4100     FROM basic JOIN ident ON oidref = oid\n4101     WHERE id = '{target}';\n4102     \"\"\"\n4103 \n",
       "col_offset": 16,
       "end_col_offset": 16,
       "filename": "excalibur/data/core.py",
@@ -1540,23 +1706,23 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 3702,
+      "line_number": 4098,
       "line_range": [
-        3702,
-        3703,
-        3704,
-        3705,
-        3706
+        4098,
+        4099,
+        4100,
+        4101,
+        4102
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html",
       "test_id": "B608",
       "test_name": "hardcoded_sql_expressions"
     },
     {
-      "code": "8 import os\n9 import pickle\n10 \n",
+      "code": "10 import os\n11 import pickle\n12 import requests\n",
       "col_offset": 0,
       "end_col_offset": 13,
-      "filename": "excalibur/metrics/algorithms.py",
+      "filename": "excalibur/presumptive/fsm.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 502,
@@ -1564,19 +1730,39 @@
       },
       "issue_severity": "LOW",
       "issue_text": "Consider possible security implications associated with pickle module.",
-      "line_number": 9,
+      "line_number": 11,
       "line_range": [
-        9
+        11
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle",
       "test_id": "B403",
       "test_name": "blacklist"
     },
     {
-      "code": "28             with open(self._fn, 'br') as file:\n29                 known = pickle.load(file)\n30             result = [states.CpuAndMem(name, []) for name in known]\n",
-      "col_offset": 24,
-      "end_col_offset": 41,
-      "filename": "excalibur/metrics/algorithms.py",
+      "code": "24 def check(args):\n25     fn = f'/tmp/{urlparse(args.url).netloc}.fsm.pkl'\n26     response = requests.get(\n",
+      "col_offset": 11,
+      "end_col_offset": 16,
+      "filename": "excalibur/presumptive/fsm.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 377,
+        "link": "https://cwe.mitre.org/data/definitions/377.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Probable insecure usage of temp file/directory.",
+      "line_number": 25,
+      "line_range": [
+        25
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html",
+      "test_id": "B108",
+      "test_name": "hardcoded_tmp_directory"
+    },
+    {
+      "code": "35             with open(fn, 'br') as file:\n36                 previous = pickle.load(file)\n37         else:\n",
+      "col_offset": 27,
+      "end_col_offset": 44,
+      "filename": "excalibur/presumptive/fsm.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 502,
@@ -1584,13 +1770,352 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
-      "line_number": 29,
+      "line_number": 36,
       "line_range": [
-        29
+        36
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle",
       "test_id": "B301",
       "test_name": "blacklist"
+    },
+    {
+      "code": "3 import os\n4 import pickle\n5 import requests\n",
+      "col_offset": 0,
+      "end_col_offset": 13,
+      "filename": "excalibur/presumptive/mia.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 502,
+        "link": "https://cwe.mitre.org/data/definitions/502.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with pickle module.",
+      "line_number": 4,
+      "line_range": [
+        4
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle",
+      "test_id": "B403",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "53     '''\n54     fn = f'/tmp/{urlparse(args.url).netloc}.mia.pkl'\n55     total = len(args.nodes) * args.replicas\n",
+      "col_offset": 11,
+      "end_col_offset": 16,
+      "filename": "excalibur/presumptive/mia.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 377,
+        "link": "https://cwe.mitre.org/data/definitions/377.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Probable insecure usage of temp file/directory.",
+      "line_number": 54,
+      "line_range": [
+        54
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html",
+      "test_id": "B108",
+      "test_name": "hardcoded_tmp_directory"
+    },
+    {
+      "code": "69             with open(fn, 'br') as file:\n70                 previous = pickle.load(file)\n71         if current == previous:\n",
+      "col_offset": 27,
+      "end_col_offset": 44,
+      "filename": "excalibur/presumptive/mia.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 502,
+        "link": "https://cwe.mitre.org/data/definitions/502.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.",
+      "line_number": 70,
+      "line_range": [
+        70
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle",
+      "test_id": "B301",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "2 \n3 import subprocess\n4 import time\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 3,
+      "line_range": [
+        3
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "16             check=True,\n17             shell=True,\n18         )\n19         ids = result.stdout.decode('utf-8').strip().split()\n20         count += len(ids)\n21         if ids:\n22             downed.append(node)\n23     return count, downed\n",
+      "col_offset": 17,
+      "end_col_offset": 9,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "line_number": 17,
+      "line_range": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "33     '''\n34     subprocess.run('${HOME}/farm.sh down', check=True, shell=True)\n35     subprocess.run('${HOME}/stop_ops.sh', check=True, shell=True)\n",
+      "col_offset": 4,
+      "end_col_offset": 66,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 34,
+      "line_range": [
+        34
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "33     '''\n34     subprocess.run('${HOME}/farm.sh down', check=True, shell=True)\n35     subprocess.run('${HOME}/stop_ops.sh', check=True, shell=True)\n",
+      "col_offset": 4,
+      "end_col_offset": 66,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call with shell=True seems safe, but may be changed in the future, consider rewriting without shell",
+      "line_number": 34,
+      "line_range": [
+        34
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "34     subprocess.run('${HOME}/farm.sh down', check=True, shell=True)\n35     subprocess.run('${HOME}/stop_ops.sh', check=True, shell=True)\n36     time.sleep(5)  # paranoia\n",
+      "col_offset": 4,
+      "end_col_offset": 65,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 35,
+      "line_range": [
+        35
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "34     subprocess.run('${HOME}/farm.sh down', check=True, shell=True)\n35     subprocess.run('${HOME}/stop_ops.sh', check=True, shell=True)\n36     time.sleep(5)  # paranoia\n",
+      "col_offset": 4,
+      "end_col_offset": 65,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call with shell=True seems safe, but may be changed in the future, consider rewriting without shell",
+      "line_number": 35,
+      "line_range": [
+        35
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "36     time.sleep(5)  # paranoia\n37     subprocess.run('${HOME}/run_ops.sh', check=True, shell=True)\n38 \n",
+      "col_offset": 4,
+      "end_col_offset": 64,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Starting a process with a partial executable path",
+      "line_number": 37,
+      "line_range": [
+        37
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html",
+      "test_id": "B607",
+      "test_name": "start_process_with_partial_path"
+    },
+    {
+      "code": "36     time.sleep(5)  # paranoia\n37     subprocess.run('${HOME}/run_ops.sh', check=True, shell=True)\n38 \n",
+      "col_offset": 4,
+      "end_col_offset": 64,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call with shell=True seems safe, but may be changed in the future, consider rewriting without shell",
+      "line_number": 37,
+      "line_range": [
+        37
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "47             check=True,\n48             shell=True,\n49         )\n50     pass\n51 \n52 \n53 def reset():\n",
+      "col_offset": 8,
+      "end_col_offset": 9,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "line_number": 48,
+      "line_range": [
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "55     subprocess.run(\n56         '/proj/sdp/ops/ae/tools/pp_reset.sh ops', check=True, shell=True\n57     )\n58 \n59 \n",
+      "col_offset": 4,
+      "end_col_offset": 5,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call with shell=True seems safe, but may be changed in the future, consider rewriting without shell",
+      "line_number": 56,
+      "line_range": [
+        55,
+        56,
+        57
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "64         check=True,\n65         shell=True,\n66     )\n67     subprocess.run(\n68         f'ssh -o ConnectTimeout=60 mentor{node} \"${{HOME}}/run_workers.sh\"',\n69         check=True,\n70         shell=True,\n",
+      "col_offset": 4,
+      "end_col_offset": 5,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "line_number": 65,
+      "line_range": [
+        62,
+        63,
+        64,
+        65,
+        66
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "69         check=True,\n70         shell=True,\n71     )\n72 \n73 \n74 def worker_id(node=None):\n75     cmd = 'docker images -q esp/worker'\n",
+      "col_offset": 4,
+      "end_col_offset": 5,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "line_number": 70,
+      "line_range": [
+        67,
+        68,
+        69,
+        70,
+        71
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
+    },
+    {
+      "code": "77         cmd = f'ssh -o ConnectTimeout=60 mentor{node} \"{cmd}\"'\n78     result = subprocess.run(cmd, capture_output=True, check=True, shell=True)\n79     return result.stdout.decode('utf-8').strip()\n",
+      "col_offset": 13,
+      "end_col_offset": 77,
+      "filename": "excalibur/presumptive/perform.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "HIGH",
+      "issue_text": "subprocess call with shell=True identified, security issue.",
+      "line_number": 78,
+      "line_range": [
+        78
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html",
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true"
     },
     {
       "code": "13 import tempfile\n14 import subprocess\n15 \n",
@@ -1613,7 +2138,7 @@
       "test_name": "blacklist"
     },
     {
-      "code": "60         '''__enter__ ds'''\n61         self.req = urlrequest.urlopen(self.thisurl)\n62         return self.req.read()\n",
+      "code": "61         '''__enter__ ds'''\n62         self.req = urlrequest.urlopen(self.thisurl)\n63         return self.req.read()\n",
       "col_offset": 19,
       "end_col_offset": 51,
       "filename": "excalibur/target/core.py",
@@ -1624,16 +2149,16 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
-      "line_number": 61,
+      "line_number": 62,
       "line_range": [
-        61
+        62
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b310-urllib-urlopen",
       "test_id": "B310",
       "test_name": "blacklist"
     },
     {
-      "code": "1441             }\n1442             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1443             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n",
+      "code": "1489             }\n1490             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1491             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n",
       "col_offset": 16,
       "end_col_offset": 67,
       "filename": "excalibur/target/core.py",
@@ -1644,16 +2169,16 @@
       },
       "issue_severity": "LOW",
       "issue_text": "Starting a process with a partial executable path",
-      "line_number": 1442,
+      "line_number": 1490,
       "line_range": [
-        1442
+        1490
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html",
       "test_id": "B607",
       "test_name": "start_process_with_partial_path"
     },
     {
-      "code": "1441             }\n1442             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1443             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n",
+      "code": "1489             }\n1490             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1491             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n",
       "col_offset": 16,
       "end_col_offset": 67,
       "filename": "excalibur/target/core.py",
@@ -1664,16 +2189,16 @@
       },
       "issue_severity": "LOW",
       "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 1442,
+      "line_number": 1490,
       "line_range": [
-        1442
+        1490
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b603_subprocess_without_shell_equals_true.html",
       "test_id": "B603",
       "test_name": "subprocess_without_shell_equals_true"
     },
     {
-      "code": "1442             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1443             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n1444             m = m.decode('utf-8').split(' ')\n",
+      "code": "1490             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1491             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n1492             m = m.decode('utf-8').split(' ')\n",
       "col_offset": 16,
       "end_col_offset": 68,
       "filename": "excalibur/target/core.py",
@@ -1684,16 +2209,16 @@
       },
       "issue_severity": "LOW",
       "issue_text": "Starting a process with a partial executable path",
-      "line_number": 1443,
+      "line_number": 1491,
       "line_range": [
-        1443
+        1491
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html",
       "test_id": "B607",
       "test_name": "start_process_with_partial_path"
     },
     {
-      "code": "1442             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1443             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n1444             m = m.decode('utf-8').split(' ')\n",
+      "code": "1490             m = subprocess.check_output(['md5sum', '-b', fitsfile])\n1491             s = subprocess.check_output(['sha1sum', '-b', fitsfile])\n1492             m = m.decode('utf-8').split(' ')\n",
       "col_offset": 16,
       "end_col_offset": 68,
       "filename": "excalibur/target/core.py",
@@ -1704,16 +2229,16 @@
       },
       "issue_severity": "LOW",
       "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 1443,
+      "line_number": 1491,
       "line_range": [
-        1443
+        1491
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b603_subprocess_without_shell_equals_true.html",
       "test_id": "B603",
       "test_name": "subprocess_without_shell_equals_true"
     },
     {
-      "code": "2294             fit = gaussian_kde(distribution, bw_method=bw_adjust)(interval)\n2295             samples = random.choices(interval, fit, k=num_samples)\n2296             return samples, interval, fit\n",
+      "code": "2288             fit = gaussian_kde(distribution, bw_method=bw_adjust)(interval)\n2289             samples = random.choices(interval, fit, k=num_samples)\n2290             return samples, interval, fit\n",
       "col_offset": 22,
       "end_col_offset": 66,
       "filename": "excalibur/transit/core.py",
@@ -1724,9 +2249,9 @@
       },
       "issue_severity": "LOW",
       "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
-      "line_number": 2295,
+      "line_number": 2289,
       "line_range": [
-        2295
+        2289
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random",
       "test_id": "B311",

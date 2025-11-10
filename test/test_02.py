@@ -57,6 +57,7 @@ def mock_subprocess_run(
     mock_response.stdout = b'abcd\n'
     return mock_response
 
+
 class ValidateDespotism(unittest.TestCase):
     def setUp(self):
         PERFORMED[0] = 0
