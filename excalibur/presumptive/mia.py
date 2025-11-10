@@ -11,14 +11,28 @@ from urllib.parse import urljoin
 from urllib.parse import urlparse
 
 
-def farm(_args):
+def farm(args):
     '''check that all farms have presented the correct workers
 
     Go to each node and determine what the ID of the current worker. Compare
     the remote IDs to the ops worker (the on mentor0 where it is built). If
     they are not the versions, then perform retrenchment on that node.
     '''
-    pass
+    wid = perform.worker_id()
+    fallow = list(
+        filter(lambda node, wid=wid: wid == perform.worker_id(node), args.nodes)
+    )
+    if fallow:
+        email.send(
+            args,
+            f'''
+Found {len(fallow)} fallow farms on mentor(s) {' '.join(fallow)}. Going to retrench the workers.
+            ''',
+        )
+        for node in fallow:
+            perform.retrenchment(node)
+        return 1
+    return 0
 
 
 def worker(args):

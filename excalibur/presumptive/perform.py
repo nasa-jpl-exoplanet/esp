@@ -36,11 +36,23 @@ def reset():
     )
 
 
-def retrenchment(deploy=False):
+def retrenchment(node):
     '''try to bring back all of the workers'''
-    subprocess.run('${HOME}/farm.sh down', check=True, shell=True)
-    time.sleep(5)  # paranoia
-    if deploy:
-        subprocess.run('${HOME}/deploy.sh', check=True, shell=True)
-        time.sleep(5)  # paranoia
-    subprocess.run('${HOME}/farm.sh up', check=True, shell=True)
+    subprocess.run(
+        f'ssh -o ConnectTimeout=60 mentor{node} "${{HOME}}/deploy.sh 1"',
+        check=True,
+        shell=True,
+    )
+    subprocess.run(
+        f'ssh -o ConnectTimeout=60 mentor{node} "${{HOME}}/run_workers.sh"',
+        check=True,
+        shell=True,
+    )
+
+
+def worker_id(node=None):
+    cmd = 'docker images -q esp/worker'
+    if node:
+        cmd = f'ssh -o ConnectTimeout=60 mentor{node} "{cmd}"'
+    result = subprocess.run(cmd, capture_output=True, check=True, shell=True)
+    return result.stdout.decode('utf-8').strip()
