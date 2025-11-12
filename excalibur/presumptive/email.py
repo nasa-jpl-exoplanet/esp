@@ -5,6 +5,7 @@ from smtplib import SMTP
 
 
 def send(args, msg: str):
+    print(msg)  # log this to the diaray.wannabe.despot
     em = EmailMessage()
     em.set_content(msg)
     em['Subject'] = 'ALERT: excalibur pipeline trouble'
