@@ -142,7 +142,6 @@ def targetlist():
     Kepler-125 :
     Kepler-126 :
     Kepler-127 :
-    Kepler-13 :
     Kepler-1339 :
     Kepler-138 :
     Kepler-14 :
