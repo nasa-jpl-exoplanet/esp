@@ -8,6 +8,7 @@
 import os
 import glob
 import logging
+import pickle
 
 import dawgie
 import dawgie.context
@@ -824,19 +825,34 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
+    with open(
+        os.path.join(dawgie.context.data_stg, 'jwst_file_lists.pkl'), 'br'
+    ) as file:
+        pickle.dump({'dbs': dbs, 'rawloc': rawloc, 'calloc': calloc}, file)
+    log.critical(
+        'extract data lists with %d rawloc and %d calloc',
+        len(rawloc),
+        len(calloc),
+    )
+
     # DATASET
+    log.critical('reading raw')
     rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
+    log.critical('reading cal')
     caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
     # NRS1 STSCI clips ref.pixels and detector plate (28, 1271)
     # NRS2 STSCI (32, 2048)
     # RAWS (32, 2048)
+    log.critical('extract timing and other information')
     datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
     allrexp = np.array(rawdata['alldexp'])
     alldet = np.array(rawdata['alldet'])
     allwaves = caldata['allwaves'].copy()
 
     # CALIBRATION STEPS
+    log.critical('start cal steps')
     allscores = {'0 RAW': getscore(allrexp)}
+    log.critical('step 1: alldq')
     # 1 - Data quality initialization
     alldq = np.array(rawdata['alldq'])
     for i, _ in enumerate(alldq):
@@ -854,6 +870,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # Useless. Either the NL files are reliable or they re not.
     # There s no saturation for a detector. Only non linearities.
     # 2.1 - Superbias
+    log.critical('step 2.1: superbias')
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
     )
@@ -861,6 +878,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     alldq = np.array(rawdata['alldq'])
     allscores['2 SB'] = getscore(allrexp * alldq)
     # 2.2 - Linearity correction
+    log.critical('step 2.2: linearity correction')
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, nl=True, alldq=alldq, verbose=verbose
     )
@@ -870,12 +888,14 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # 2.3 - Persistence correction [IM]
     # 2.4 - Dark subtraction [IM]
     # 3 - Reference pixel correction [Exposure Low Freq Noise]
+    log.critical('step 3: pixel correction')
     allrexp = lfnoise(allrexp, alldq, verbose=verbose)
     allscores['4 LFN'] = getscore(allrexp * alldq)
     out['data']['SCORES'] = allscores
     # 4 - Jump detection [that is a joke when we have 2, 3 or 4 groups...]
 
     if verbose:
+        log.critical('doing verbose output')
         scores = [out['data']['SCORES'][k] for k in out['data']['SCORES']]
         labels = out['data']['SCORES'].keys()
         plt.figure(figsize=(12, 9))
@@ -890,7 +910,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         plt.ylabel('DN', fontsize=20)
         plt.show()
         pass
-
+    log.critical('step 4: jump detection')
     reffile = jwstreffiles(ext)
     if 'NIRISS' in ext:
         Tstar = fin['priors']['T*']
