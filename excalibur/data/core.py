@@ -6,9 +6,9 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
+import gc
 import glob
 import logging
-import pickle
 
 import dawgie
 import dawgie.context
@@ -825,10 +825,6 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
-    with open(
-        os.path.join(dawgie.context.data_stg, 'jwst_file_lists.pkl'), 'bw'
-    ) as file:
-        pickle.dump({'dbs': dbs, 'rawloc': rawloc, 'calloc': calloc}, file)
     log.critical(
         'extract data lists with %d rawloc and %d calloc',
         len(rawloc),
@@ -871,6 +867,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # There s no saturation for a detector. Only non linearities.
     # 2.1 - Superbias
     log.critical('step 2.1: superbias')
+    rawdata = None
+    gc.collect()
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
     )
