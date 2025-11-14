@@ -6,6 +6,7 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
+import gc
 import glob
 import logging
 
@@ -862,6 +863,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # There s no saturation for a detector. Only non linearities.
     # 2.1 - Superbias
     log.critical('step 2.1: superbias')
+    rawdata = None
+    gc.collect()
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
     )
