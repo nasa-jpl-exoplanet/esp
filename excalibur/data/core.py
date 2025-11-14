@@ -826,7 +826,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
     with open(
-        os.path.join(dawgie.context.data_stg, 'jwst_file_lists.pkl'), 'br'
+        os.path.join(dawgie.context.data_stg, 'jwst_file_lists.pkl'), 'bw'
     ) as file:
         pickle.dump({'dbs': dbs, 'rawloc': rawloc, 'calloc': calloc}, file)
     log.critical(
