@@ -776,8 +776,7 @@ def readfitsdata(
                     )
                     pass
                 elif 'SCI' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldexp'].extend(fitsdata)
                     out['allunits'].extend(
                         [hdu.header['BUNIT']] * len(fitsdata)
@@ -786,26 +785,23 @@ def readfitsdata(
                     pass
                 # <-- L2b data only
                 elif 'ERR' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['allerr'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif 'DQ' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldq'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif ('WAVELENGTH' in hdu.name) and nints:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['allwaves'].extend(nints * [fitsdata])
                     del hdu.data
                     pass
                 # -->
                 elif 'INT_TIMES' in hdu.name:
-                    fitsdata = hdu.data[:].copy()
+                    fitsdata = np.copy(hdu.data)
                     out['alltiming'].extend(fitsdata)
                     del hdu.data
                     pass
