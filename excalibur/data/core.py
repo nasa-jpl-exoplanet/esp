@@ -776,8 +776,7 @@ def readfitsdata(
                     )
                     pass
                 elif 'SCI' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldexp'].extend(fitsdata)
                     out['allunits'].extend(
                         [hdu.header['BUNIT']] * len(fitsdata)
@@ -786,26 +785,23 @@ def readfitsdata(
                     pass
                 # <-- L2b data only
                 elif 'ERR' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['allerr'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif 'DQ' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldq'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif ('WAVELENGTH' in hdu.name) and nints:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['allwaves'].extend(nints * [fitsdata])
                     del hdu.data
                     pass
                 # -->
                 elif 'INT_TIMES' in hdu.name:
-                    fitsdata = hdu.data[:].copy()
+                    fitsdata = np.copy(hdu.data)
                     out['alltiming'].extend(fitsdata)
                     del hdu.data
                     pass
@@ -815,6 +811,8 @@ def readfitsdata(
     if raws:
         out = rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
         pass
+    
+    log.critial('Size of %s after loading %d', 'raw' if raws else 'cal', objsize(out))
     return out
 
 
@@ -867,8 +865,6 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # There s no saturation for a detector. Only non linearities.
     # 2.1 - Superbias
     log.critical('step 2.1: superbias')
-    rawdata = None
-    gc.collect()
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
     )
