@@ -6,7 +6,6 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
-import gc
 import glob
 import logging
 
@@ -811,8 +810,6 @@ def readfitsdata(
     if raws:
         out = rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
         pass
-    
-    log.critial('Size of %s after loading %d', 'raw' if raws else 'cal', objsize(out))
     return out
 
 
