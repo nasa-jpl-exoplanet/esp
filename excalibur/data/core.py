@@ -873,6 +873,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     allscores['2 SB'] = getscore(allrexp * alldq)
     # 2.2 - Linearity correction
     log.critical('step 2.2: linearity correction')
+    rawdata = None
+    gc.collect()
     rawdata = readfitsdata(
         rawloc, dbs, raws=True, sb=True, nl=True, alldq=alldq, verbose=verbose
     )
