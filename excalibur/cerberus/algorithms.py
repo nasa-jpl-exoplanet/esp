@@ -1,7 +1,7 @@
 '''cerberus algorithms ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -107,6 +107,7 @@ class XSLib(dawgie.Algorithm):
 
             # for Ariel targets, option to only do the actually Tier-2 targets
             targetlistcheck = True
+            only_these_planets = []
             if (
                 fltr == 'Ariel-sim'
                 and runtime['cerberus_arielsample_tier'].value() == 2
@@ -116,9 +117,20 @@ class XSLib(dawgie.Algorithm):
                 if target not in targetlist:
                     targetlistcheck = False
 
+                if targetlistcheck:
+                    planetlist = alltargetlists[
+                        'ariel_Nov2024_2years_withPlanetletters'
+                    ]
+                    for planet in planetlist:
+                        if planet.startswith(target + ' '):
+                            only_these_planets.append(planet[-1])
+                # print('only these planets', only_these_planets)
+
             if vspc and targetlistcheck:
                 log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
-                update = self._xslib(sv, runtime_params, fltrs.index(fltr))
+                update = self._xslib(
+                    sv, runtime_params, only_these_planets, fltrs.index(fltr)
+                )
             else:
                 if targetlistcheck:
                     errstr = [m for m in [sspc] if m is not None]
@@ -139,10 +151,14 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, runtime_params, index):
+    def _xslib(self, spc, runtime_params, only_these_planets, index):
         '''Core code call'''
         cs = crbcore.myxsecs(
-            spc, runtime_params, self.__out[index], verbose=False
+            spc,
+            runtime_params,
+            self.__out[index],
+            only_these_planets=only_these_planets,
+            verbose=False,
         )
         return cs
 
@@ -258,6 +274,7 @@ class Atmos(dawgie.Algorithm):
 
             # for Ariel targets, option to only do the actually Tier-2 targets
             targetlistcheck = True
+            only_these_planets = []
             if (
                 fltr == 'Ariel-sim'
                 and runtime['cerberus_arielsample_tier'].value() == 2
@@ -267,6 +284,15 @@ class Atmos(dawgie.Algorithm):
                 if target not in targetlist:
                     targetlistcheck = False
 
+                if targetlistcheck:
+                    planetlist = alltargetlists[
+                        'ariel_Nov2024_2years_withPlanetletters'
+                    ]
+                    for planet in planetlist:
+                        if planet.startswith(target + ' '):
+                            only_these_planets.append(planet[-1])
+                # print('only these planets', only_these_planets)
+
             if vfin and vxsl and vspc and targetlistcheck:
                 log.info('--< CERBERUS ATMOS: %s  %s >--', fltr, target)
 
@@ -275,6 +301,7 @@ class Atmos(dawgie.Algorithm):
                     self.__xsl.sv_as_dict()[fltr],
                     sv,
                     runtime_params,
+                    only_these_planets,
                     fltrs.index(fltr),
                     fltr,
                 )
@@ -297,7 +324,9 @@ class Atmos(dawgie.Algorithm):
             )
         return
 
-    def _atmos(self, fin, xsl, spc, runtime_params, index, fltr):
+    def _atmos(
+        self, fin, xsl, spc, runtime_params, only_these_planets, index, fltr
+    ):
         '''Core code call'''
 
         mcmc_chains = runtime_params.MCMC_chains
@@ -317,6 +346,7 @@ class Atmos(dawgie.Algorithm):
             runtime_params,
             self.__out[index],
             fltr,
+            only_these_planets=only_these_planets,
             Nchains=mcmc_chains,
             chainlen=mcmc_chain_length,
             verbose=False,
@@ -420,6 +450,7 @@ class Results(dawgie.Algorithm):
 
                 # for Ariel targets, option to only do the actually Tier-2 targets
                 targetlistcheck = True
+                only_these_planets = []
                 if (
                     fltr == 'Ariel-sim'
                     and runtime['cerberus_arielsample_tier'].value() == 2
@@ -429,6 +460,15 @@ class Results(dawgie.Algorithm):
                     if target not in targetlist:
                         targetlistcheck = False
 
+                    if targetlistcheck:
+                        planetlist = alltargetlists[
+                            'ariel_Nov2024_2years_withPlanetletters'
+                        ]
+                        for planet in planetlist:
+                            if planet.startswith(target + ' '):
+                                only_these_planets.append(planet[-1])
+                    # print('only these planets', only_these_planets)
+
                 if vxsl and vatm and targetlistcheck:
                     log.info('--< CERBERUS RESULTS: %s  %s >--', fltr, target)
 
@@ -436,6 +476,7 @@ class Results(dawgie.Algorithm):
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
                         runtime_params,
+                        only_these_planets,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -465,7 +506,18 @@ class Results(dawgie.Algorithm):
             )
         return
 
-    def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
+    def _results(
+        self,
+        trgt,
+        fltr,
+        runtime_params,
+        only_these_planets,
+        fin,
+        ancil,
+        xsl,
+        atm,
+        index,
+    ):
         '''Core code call'''
         resout = crbcore.results(
             trgt,
@@ -476,6 +528,7 @@ class Results(dawgie.Algorithm):
             xsl,
             atm,
             self.__out[index],
+            only_these_planets=only_these_planets,
             verbose=False,
         )
         return resout
@@ -569,8 +622,7 @@ class Analysis(dawgie.Analyzer):
                 # print('runtime old2 way',runtime2)
 
                 runtime_params = crbcore.CerbAnalysisParams(
-                    # tier=runtime['ariel_simspectrum_tier'].value(),
-                    tier=2,
+                    tier=runtime['ariel_simspectrum_tier'].value(),
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],

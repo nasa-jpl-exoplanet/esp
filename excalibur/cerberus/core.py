@@ -160,7 +160,7 @@ def myxsecsversion():
 # GMR: Should be in the param list
 
 
-def myxsecs(spc, runtime_params, out, verbose=False):
+def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
@@ -183,7 +183,14 @@ def myxsecs(spc, runtime_params, out, verbose=False):
             if (
                 'WB' in spc['data'][p].keys()
             ):  # make sure it has a spectrum (Kepler-37e bug)
-                planet_letters.append(p)
+                if not only_these_planets or p in only_these_planets:
+                    planet_letters.append(p)
+                else:
+                    log.info(
+                        '--< CERBERUS.XSLIB: skipping non-tier2 planet %s %s >--',
+                        spc['data']['target'],
+                        p,
+                    )
             else:
                 log.info(
                     '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
@@ -661,6 +668,7 @@ def atmos(
     runtime_params,
     out,
     ext,
+    only_these_planets=None,
     hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
     singlemod=None,
     Nchains=4,
@@ -756,6 +764,12 @@ def atmos(
         if len(p) == 1 and 'WB' not in spc['data'][p].keys():
             log.warning(
                 '--< CERBERUS.ATMOS: wavelength grid is missing for %s %s >--',
+                spc['data']['target'],
+                p,
+            )
+        elif len(p) == 1 and only_these_planets and p not in only_these_planets:
+            log.info(
+                '--< CERBERUS.ATMOS: skipping non-tier2 planet %s %s >--',
                 spc['data']['target'],
                 p,
             )
@@ -1810,7 +1824,18 @@ def resultsversion():
 
 
 # ------------------------------ -------------------------------------
-def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
+def results(
+    trgt,
+    filt,
+    runtime_params,
+    fin,
+    anc,
+    xsl,
+    atm,
+    out,
+    only_these_planets=None,
+    verbose=False,
+):
     '''
     Plot out the results from atmos()
     trgt [INPUT]: target name
@@ -1844,7 +1869,14 @@ def results(trgt, filt, runtime_params, fin, anc, xsl, atm, out, verbose=False):
         # (some planets are skipped, because they have an unbound atmosphere)
         if verbose:
             print('atmkeys', atm.keys())
-        if p not in atm.keys():
+
+        if only_these_planets and p not in only_these_planets:
+            log.info(
+                '--< CERBERUS.RESULTS: skipping non-tier2 planet %s %s >--',
+                trgt,
+                p,
+            )
+        elif p not in atm.keys():
             log.warning(
                 '>-- CERBERUS.RESULTS: this planet is missing cerb fit: %s %s',
                 trgt,
