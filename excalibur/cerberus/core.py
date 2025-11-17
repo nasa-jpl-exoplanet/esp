@@ -160,7 +160,7 @@ def myxsecsversion():
 # GMR: Should be in the param list
 
 
-def myxsecs(spc, runtime_params, out, only_these_planets=[], verbose=False):
+def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
@@ -668,7 +668,7 @@ def atmos(
     runtime_params,
     out,
     ext,
-    only_these_planets=[],
+    only_these_planets=None,
     hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
     singlemod=None,
     Nchains=4,
@@ -1833,7 +1833,7 @@ def results(
     xsl,
     atm,
     out,
-    only_these_planets=[],
+    only_these_planets=None,
     verbose=False,
 ):
     '''
