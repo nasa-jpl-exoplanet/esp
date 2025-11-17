@@ -1,7 +1,7 @@
 '''cerberus algorithms ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
