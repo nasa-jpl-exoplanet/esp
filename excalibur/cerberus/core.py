@@ -822,7 +822,7 @@ def atmos(
             # bottom line:
             #  use the same Teq as in ariel-sim, otherwise truth/retrieved won't match
             if ext == 'Ariel-sim':
-                eqtemp = input_data['model_params']['Teq']
+                eqtemp = float(input_data['model_params']['Teq'])
             else:
                 # (real data doesn't have any 'model_params' defined)
                 # eqtemp = orbp['T*']*np.sqrt(orbp['R*']*ssc['Rsun/AU']/(2.*orbp[p]['sma']))
