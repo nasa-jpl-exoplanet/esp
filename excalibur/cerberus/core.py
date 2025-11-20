@@ -2163,7 +2163,7 @@ def results(
 
                 # print('median fmc',np.nanmedian(fmc))
                 fmc = np.zeros(transitdata['depth'].size)
-                fmc, _, _ = crbmodel(
+                fmc = crbmodel(
                     float(tpr),
                     float(ctp),
                     hazescale=float(hazescale),
@@ -2196,7 +2196,7 @@ def results(
                 )
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
-                fmc_profiled, _, _ = crbmodel(
+                fmc_profiled = crbmodel(
                     float(tpr_profiled),
                     float(ctp_profiled),
                     hazescale=float(hazescale_profiled),
@@ -2309,7 +2309,7 @@ def results(
                         mixratio['H2CO'] = float(mdp[4])
 
                     fmcrand = np.zeros(transitdata['depth'].size)
-                    fmcrand, _, _ = crbmodel(
+                    fmcrand = crbmodel(
                         float(tpr),
                         float(ctp),
                         hazescale=float(hazescale),
