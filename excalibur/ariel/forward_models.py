@@ -63,7 +63,7 @@ def make_cerberus_atmos(
     # print('haze lib',crbhzlib)
 
     # CERBERUS FORWARD MODEL
-    fmc, fmc_by_molecule = crbmodel(
+    fmc, fmc_by_molecule, _ = crbmodel(
         float(Teq),
         float(ctp),
         hazescale=float(hazescale),
