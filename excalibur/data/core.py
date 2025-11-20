@@ -627,7 +627,9 @@ def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
             progbar = nerdclub.Progressbar(argsdict, '>-- SB', raws['alldexp'])
             pass
         for i in range(len(raws['alldexp'])):
-            sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i], iexist)
+            sbmap = jwstsbfiles(
+                raws['alldet'][i], raws['allgrating'][i], iexist
+            )
             raws['alldexp'][i] = raws['alldexp'][i] - sbmap
             allsb.append(sbmap)
             if nl:
@@ -732,7 +734,14 @@ def getscore(expts):
 
 
 def readfitsdata(
-        loclist, dbs, iexist, raws=False, sb=False, nl=False, alldq=None, verbose=False
+    loclist,
+    dbs,
+    iexist,
+    raws=False,
+    sb=False,
+    nl=False,
+    alldq=None,
+    verbose=False,
 ):
     '''
     G. ROUDIER: Creates a dictionnary of time series of
@@ -772,17 +781,14 @@ def readfitsdata(
                 out['allread'].extend(nints * [hdu.header['READPATT']])
                 # (X,Y)
                 out['allstartpix'].extend(
-                    nints
-                    * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
+                    nints * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
                 )
                 pass
             # SCI, DQ and ERR are massaged in rampfits
             elif 'SCI' in hdu.name:
                 fitsdata = np.copy(hdu.data)
                 out['alldexp'].extend(fitsdata)
-                out['allunits'].extend(
-                    [hdu.header['BUNIT']] * len(fitsdata)
-                )
+                out['allunits'].extend([hdu.header['BUNIT']] * len(fitsdata))
                 del hdu.data
                 pass
             # <-- L2b data only
@@ -861,7 +867,14 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     allscores['2 SB'] = getscore(allrexp * alldq)
     # 2.2 - Linearity correction
     rawdata = readfitsdata(
-        rawloc, dbs, iexist, raws=True, sb=True, nl=True, alldq=alldq, verbose=verbose
+        rawloc,
+        dbs,
+        iexist,
+        raws=True,
+        sb=True,
+        nl=True,
+        alldq=alldq,
+        verbose=verbose,
     )
     allrexp = np.array(rawdata['alldexp'])
     alldq = np.array(rawdata['alldq'])
