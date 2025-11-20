@@ -609,8 +609,6 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
     '''
     G. ROUDIER: Ramp fits
     '''
-    out = raws.copy()
-    alldexp = raws['alldexp'].copy()
     allsb = []
     alldqnl = []
     if sb:
@@ -621,17 +619,35 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
             'proginprompt': True,
         }
         if nl:
-            progbar = nerdclub.Progressbar(argsdict, '>-- SB + NL', alldexp)
+            progbar = nerdclub.Progressbar(
+                argsdict, '>-- SB + NL', raws['alldexp']
+            )
             pass
         else:
-            progbar = nerdclub.Progressbar(argsdict, '>-- SB', alldexp)
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB', raws['alldexp'])
             pass
+        prevsbmap = jwstsbfiles(raws['alldet'][0], raws['allgrating'][0])
+        prevdet = raws['alldet'][0]
+        prevgrat = raws['allgrating'][0]
+        prevnlmap = jwstnlfiles(raws['alldet'][0])
         for i in range(len(raws['alldexp'])):
-            sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i])
-            alldexp[i] = raws['alldexp'][i] - sbmap
+            if (raws['alldet'][i] != prevdet) or (
+                raws['allgrating'][i] != prevgrat
+            ):
+                sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i])
+                pass
+            else:
+                sbmap = prevsbmap
+                pass
+            raws['alldexp'][i] = raws['alldexp'][i] - sbmap
             allsb.append(sbmap)
             if nl:
-                nlmap = jwstnlfiles(raws['alldet'][i])
+                if raws['alldet'][i] != prevdet:
+                    nlmap = jwstnlfiles(raws['alldet'][i])
+                    pass
+                else:
+                    nlmap = prevnlmap
+                    pass
                 domain = raws['allstartpix'][i]
                 coeffs = [
                     n[
@@ -649,11 +665,18 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
                     )
                 )
                 powers = np.arange(len(coeffs))
-                alldexp[i] = np.sum(
-                    [c * (alldexp[i] ** p) for c, p in zip(coeffs, powers)],
+                raws['alldexp'][i] = np.sum(
+                    [
+                        c * (raws['alldexp'][i] ** p)
+                        for c, p in zip(coeffs, powers)
+                    ],
                     axis=0,
                 )
+                prevnlmap = nlmap
                 pass
+            prevsbmap = sbmap
+            prevdet = raws['alldet'][i]
+            prevgrat = raws['allgrating'][i]
             progbar.update()
             pass
         progbar.close()
@@ -673,33 +696,29 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
     # TFORM6  = 'D       '
     # TTYPE7  = 'int_end_BJD_TDB'
     # TFORM7  = 'D       '
-    exposures = []
-    err = []
-    dq = []  # valid data flag
-
     argsdict = {
         'progbar': verbose,
         'progsizemax': 35,
         'lbllen': 15,
         'proginprompt': True,
     }
-    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', alldexp)
-    for i, _ in enumerate(alldexp):
+    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', raws['alldexp'])
+    for i, _ in enumerate(raws['alldexp']):
+        f0shape = raws['alldexp'][i][0].shape
         # VECTORIAL FIT
-        dramps = [r.flatten() for r in alldexp[i]]
+        dramps = [r.flatten() for r in raws['alldexp'][i]]
         # TIMESTAMPS
         deltat = (
             (raws['alltiming'][i][-1] - raws['alltiming'][i][-3]) * 24e0 * 36e2
         ) / (
-            1e0 * len(alldexp[i])
+            1e0 * len(raws['alldexp'][i])
         )  # [s]
         xfit = deltat * np.arange(len(dramps))
         # LINFIT
         fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
-        exposures.append(fitresult[0][0].reshape(alldexp[i][0].shape))
-        cov = fitresult[1][0, 0].reshape(alldexp[i][0].shape)
-        err.append(np.sqrt(abs(cov)))
-        dqmap = np.bool(err[-1])  # zero error means trouble
+        raws['alldexp'][i] = fitresult[0][0].reshape(f0shape)
+        raws['allerr'].append(np.sqrt(abs(fitresult[1][0, 0].reshape(f0shape))))
+        dqmap = np.bool(raws['allerr'][-1])  # zero error means trouble
         dqmap = dqmap.astype(float)  # pylint: disable=E1101
         if sb:
             thrplus = np.nanpercentile(allsb[i], 50 + 68 / 2)
@@ -716,14 +735,11 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
                 pass
             pass
         dqmap[dqmap < 1] = np.nan
-        dq.append(dqmap)
+        raws['alldq'].append(dqmap)
         progbar.update()
         pass
     progbar.close()
-    out['alldexp'] = exposures
-    out['allerr'] = err
-    out['alldq'] = dq
-    return out
+    return
 
 
 def getscore(expts):
@@ -774,9 +790,9 @@ def readfitsdata(
                         * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
                     )
                     pass
+                # SCI, DQ and ERR are massaged in rampfits
                 elif 'SCI' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldexp'].extend(fitsdata)
                     out['allunits'].extend(
                         [hdu.header['BUNIT']] * len(fitsdata)
@@ -785,26 +801,23 @@ def readfitsdata(
                     pass
                 # <-- L2b data only
                 elif 'ERR' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['allerr'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif 'DQ' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = np.copy(hdu.data)
                     out['alldq'].extend(fitsdata)
                     del hdu.data
                     pass
                 elif ('WAVELENGTH' in hdu.name) and nints:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = hdu.data
                     out['allwaves'].extend(nints * [fitsdata])
                     del hdu.data
                     pass
                 # -->
                 elif 'INT_TIMES' in hdu.name:
-                    fitsdata = hdu.data[:].copy()
+                    fitsdata = hdu.data
                     out['alltiming'].extend(fitsdata)
                     del hdu.data
                     pass
@@ -812,7 +825,7 @@ def readfitsdata(
             pass
         pass
     if raws:
-        out = rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
+        rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
         pass
     return out
 
@@ -1066,8 +1079,7 @@ def jwstdqfiles(thisdet):
         mask = []
         for hdu in prfhdul:
             if hdu.data is not None:
-                fitsdata = np.empty(hdu.data.shape)
-                fitsdata[:] = hdu.data[:]
+                fitsdata = hdu.data
                 mask.append(fitsdata)
                 del hdu.data
                 pass
@@ -1099,7 +1111,7 @@ def jwstsbfiles(thisdet, thisgrating):
         sb = []
         for hdu in prfhdul:
             if hdu.data is not None:
-                fitsdata = hdu.data[:].copy()
+                fitsdata = hdu.data
                 sb.append(fitsdata)
                 del hdu.data
                 pass
@@ -1130,7 +1142,7 @@ def jwstnlfiles(thisdet):
         nl = []
         for hdu in prfhdul:
             if hdu.data is not None:
-                fitsdata = hdu.data[:].copy()
+                fitsdata = hdu.data
                 nl.append(fitsdata)
                 del hdu.data
                 pass
@@ -1172,8 +1184,7 @@ def jwstreffiles(thisext):
             orders = []
             for hdu in prfhdul:
                 if hdu.data is not None:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = hdu.data
                     orders.append(fitsdata)
                     del hdu.data
                     pass
@@ -1186,8 +1197,7 @@ def jwstreffiles(thisext):
             waves = []
             for hdu in prfhdul:
                 if hdu.data is not None:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
+                    fitsdata = hdu.data
                     waves.append(fitsdata)
                     del hdu.data
                     pass
