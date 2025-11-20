@@ -89,13 +89,14 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
         # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
         # (uncomment to compare TEC vs TEA)
-        # mixratio, fH2, fHe = crbutil.crbce(
+        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
         #    pressureArray, temperature, X2Hr=X2Hr
         # )
         # print('TEC:', mixratio, fH2, fHe)
 
     else:
-        mixratio, fH2, fHe = crbutil.crbce(
+        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
+        mixratio, _, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
         mmw, fH2, fHe = crbutil.getmmw(
