@@ -7,8 +7,8 @@
 # import excalibur
 import excalibur.system.core as syscore
 from excalibur.cerberus.core import hazelib
-from excalibur.cerberus.forward_model import crbmodel
-
+# from excalibur.cerberus.forward_model import crbmodel
+from excalibur.cerberus.forward_model import crbFM
 
 # ----------------------------------------------------------------------------------------------
 def make_cerberus_atmos(
@@ -63,7 +63,7 @@ def make_cerberus_atmos(
     # print('haze lib',crbhzlib)
 
     # CERBERUS FORWARD MODEL
-    fmc, fmc_by_molecule, _ = crbmodel(
+    fmc = crbFM().crbmodel(
         float(Teq),
         float(ctp),
         hazescale=float(hazescale),
@@ -90,4 +90,4 @@ def make_cerberus_atmos(
         break_down_by_molecule=True,
     )
 
-    return fmc, fmc_by_molecule
+    return fmc.spectrum, fmc.breakdown_by_molecule
