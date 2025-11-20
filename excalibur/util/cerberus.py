@@ -341,13 +341,10 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     ACpAO = nX / nXsolar / nH * solar['nO'] * (1.0 + Cfactor * solCtO)
     ACtAO = Cfactor * solCtO * (solar['nO'] ** 2) * ((nX / nXsolar / nH) ** 2)
     BCO = ACpAO + AH2 - np.sqrt((ACpAO + AH2) ** 2 - 4.0 * ACtAO)
-    # <--
-    # GMR: We should be prepared for T-P profile change that later
-    # -->
-    nCO = np.mean(BCO * pH2 / p)
-    nCH4 = np.mean((2.0 * nX / nXsolar / nH * solar['nC'] - BCO) * (pH2 / p))
-    nH2O = np.mean((2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p))
-    # nH2O = ((2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p))
+
+    nCOprofile = BCO * pH2 / p
+    nCH4profile = (2.0 * nX / nXsolar / nH * solar['nC'] - BCO) * (pH2 / p)
+    nH2Oprofile = (2.0 * nX / nXsolar / nH * solar['nO'] - BCO) * (pH2 / p)
 
     a2 = 8.16413e5
     b2 = -2.9109e4
@@ -363,14 +360,14 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     # take absolute value, just to be sure that there's never a negative value
     BN2 = AN + AH2 - np.sqrt(np.abs((AN + AH2) ** 2.0 - (AN) ** 2.0))
     BNH3 = 2.0 * (AN - BN2)
-    nN2 = np.nanmean(BN2 * pH2 / p)
-    nNH3 = np.nanmean(BNH3 * pH2 / p)
+    nN2profile = BN2 * pH2 / p
+    nNH3profile = BNH3 * pH2 / p
 
-    nCO = np.max([nCO, 1e-16])
-    nCH4 = np.max([nCH4, 1e-16])
-    nH2O = np.max([nH2O, 1e-16])
-    nN2 = np.max([nN2, 1e-16])
-    nNH3 = np.max([nNH3, 1e-16])
+    nCO = np.max([np.nanmean(nCOprofile), 1e-16])
+    nCH4 = np.max([np.nanmean(nCH4profile), 1e-16])
+    nH2O = np.max([np.nanmean(nH2Oprofile), 1e-16])
+    nN2 = np.max([np.nanmean(nN2profile), 1e-16])
+    nNH3 = np.max([np.nanmean(nNH3profile), 1e-16])
 
     # make sure that the sum of all mixing ratios does not exceed 1
     #  ok actually it's working great. no problems here (molecules are 60-75%)
@@ -385,8 +382,15 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         'N2': np.log10(nN2) + 6.0,
         'CO': np.log10(nCO) + 6.0,
     }
+    mixratioprofiles = {
+        'H2O': np.log10(nH2Oprofile) + 6.0,
+        'CH4': np.log10(nCH4profile) + 6.0,
+        'NH3': np.log10(nNH3profile) + 6.0,
+        'N2': np.log10(nN2profile) + 6.0,
+        'CO': np.log10(nCOprofile) + 6.0,
+    }
     # print('mixratio', mixratio)
-    return mixratio, nH2, nHe
+    return mixratio, mixratioprofiles, nH2, nHe
 
 
 # -------------------- -----------------------------------------------
