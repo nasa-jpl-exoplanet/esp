@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
-from deprecated import deprecated
+
+# from deprecated import deprecated
 
 import excalibur.system.core as syscore
 
@@ -427,9 +428,9 @@ class crbFM:
         return self.__moleculeProfiles
 
 
-@deprecated(
-    'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
-)
+# @deprecated(
+#     'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
+# )
 def crbmodel(temp, cloudtp, **kwargs):
     log.info('use crbFM class to get additional saved results from crbmodel')
     return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum
