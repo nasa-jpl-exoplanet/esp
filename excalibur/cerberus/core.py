@@ -2334,7 +2334,7 @@ def results(
                         Hsmax=runtime_params.Hsmax,
                         solrad=runtime_params.solrad,
                     )
-                    spectrumrand = fmcrand.spectrum 
+                    spectrumrand = fmcrand.spectrum
                     # add offset to match data (i.e. modify Rp)
                     okPart = np.where(np.isfinite(transitdata['depth']))
                     patmos_modelrand = spectrumrand[okPart] + np.average(
