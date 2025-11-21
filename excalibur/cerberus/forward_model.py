@@ -1041,7 +1041,8 @@ def offcerberus(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1053,7 +1054,8 @@ def offcerberus(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
     cond_G141 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G141-SCAN'
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
@@ -1085,7 +1087,8 @@ def offcerberus1(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1097,7 +1100,8 @@ def offcerberus1(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1126,7 +1130,8 @@ def offcerberus2(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1138,7 +1143,8 @@ def offcerberus2(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1168,7 +1174,8 @@ def offcerberus3(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1180,7 +1187,8 @@ def offcerberus3(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1209,7 +1217,8 @@ def offcerberus4(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1221,7 +1230,8 @@ def offcerberus4(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1248,7 +1258,8 @@ def offcerberus5(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1260,7 +1271,8 @@ def offcerberus5(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
@@ -1289,7 +1301,8 @@ def offcerberus6(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1301,7 +1314,8 @@ def offcerberus6(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1328,7 +1342,8 @@ def offcerberus7(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1340,7 +1355,8 @@ def offcerberus7(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1367,7 +1383,8 @@ def offcerberus8(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
@@ -1379,7 +1396,8 @@ def offcerberus8(*crbinputs):
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        ).spectrum
+        )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
