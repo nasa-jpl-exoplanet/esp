@@ -1000,8 +1000,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         out['data']['EXPFLAG'] = alldq
         pass
     # I know it is useless but I feel bad
-    for k in iexist:
-        iexist[k].close()
+    for it in iexist.items():
+        it[1].close()
         pass
     return True
 
