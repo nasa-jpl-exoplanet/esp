@@ -411,15 +411,19 @@ class crbFM:
     @property
     def spectrum(self):
         return self.__spectrum
+
     @property
     def breakdown_by_molecule(self):
         return self.__breakdown_by_molecule
+
     @property
     def pressureGrid(self):
         return self.__pressureGrid
+
     @property
     def moleculeProfiles(self):
         return self.__moleculeProfiles
+
 
 @deprecated('replace crbmodel() with crbFM().crbmodel() and use .spectrum method')
 def crbmodel(temp, cloudtp, **kwargs):
