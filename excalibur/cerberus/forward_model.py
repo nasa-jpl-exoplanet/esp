@@ -897,7 +897,7 @@ def cloudyfmcerberus(*crbinputs):
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
         # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             ctp,
             hazescale=hazescale,
@@ -910,7 +910,7 @@ def cloudyfmcerberus(*crbinputs):
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = mdp[index]
 
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             ctp,
             hazescale=hazescale,
@@ -918,7 +918,7 @@ def cloudyfmcerberus(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
-
+    fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup]
 
     if len(ctxt.mcmcsig) > 0:
@@ -973,7 +973,7 @@ def clearfmcerberus(*crbinputs):
 
         # print('calculating forward model XtoH =', tceqdict['XtoH'])
 
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             float(ctp),
             hazescale=float(hazescale),
@@ -986,7 +986,7 @@ def clearfmcerberus(*crbinputs):
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = mdp[index]
             pass
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             float(ctp),
             hazescale=float(hazescale),
@@ -994,7 +994,7 @@ def clearfmcerberus(*crbinputs):
             hazethick=float(hazethick),
             mixratio=mixratio,
         )
-
+    fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup]
 
     # (no need for isfinite check; that's what cleanup does already)
@@ -1025,26 +1025,26 @@ def offcerberus(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
     cond_G141 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G141-SCAN'
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
@@ -1069,26 +1069,26 @@ def offcerberus1(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1110,26 +1110,26 @@ def offcerberus2(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1152,26 +1152,26 @@ def offcerberus3(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1193,26 +1193,26 @@ def offcerberus4(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1232,26 +1232,26 @@ def offcerberus5(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
@@ -1273,26 +1273,26 @@ def offcerberus6(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1312,26 +1312,26 @@ def offcerberus7(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1351,26 +1351,26 @@ def offcerberus8(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             cheq=tceqdict,
-        )
+        ).spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
             hazeloc=hazeloc,
             hazethick=hazethick,
             mixratio=mixratio,
-        )
+        ).spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
