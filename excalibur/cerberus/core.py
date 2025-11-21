@@ -16,7 +16,7 @@ from excalibur.cerberus.fmcontext import ctxtupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
-    crbmodel,
+    crbFM,
     clearfmcerberus,
     cloudyfmcerberus,
     offcerberus,
@@ -822,7 +822,7 @@ def atmos(
             # bottom line:
             #  use the same Teq as in ariel-sim, otherwise truth/retrieved won't match
             if ext == 'Ariel-sim':
-                eqtemp = input_data['model_params']['Teq']
+                eqtemp = float(input_data['model_params']['Teq'])
             else:
                 # (real data doesn't have any 'model_params' defined)
                 # eqtemp = orbp['T*']*np.sqrt(orbp['R*']*ssc['Rsun/AU']/(2.*orbp[p]['sma']))
@@ -2163,7 +2163,7 @@ def results(
 
                 # print('median fmc',np.nanmedian(fmc))
                 fmc = np.zeros(transitdata['depth'].size)
-                fmc = crbmodel(
+                fmc = crbFM().crbmodel(
                     float(tpr),
                     float(ctp),
                     hazescale=float(hazescale),
@@ -2187,16 +2187,17 @@ def results(
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
                 )
+                spectrum = fmc.spectrum
 
                 # add offset to match data (i.e. modify Rp)
                 okPart = np.where(np.isfinite(transitdata['depth']))
-                patmos_model = fmc[okPart] + np.average(
-                    (transitdata['depth'][okPart] - fmc[okPart]),
+                patmos_model = spectrum[okPart] + np.average(
+                    (transitdata['depth'][okPart] - spectrum[okPart]),
                     weights=1 / transitdata['error'][okPart] ** 2,
                 )
 
                 fmc_profiled = np.zeros(transitdata['depth'].size)
-                fmc_profiled = crbmodel(
+                fmc_profiled = crbFM().crbmodel(
                     float(tpr_profiled),
                     float(ctp_profiled),
                     hazescale=float(hazescale_profiled),
@@ -2220,10 +2221,11 @@ def results(
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
                 )
+                spectrum_profiled = fmc_profiled.spectrum
                 # add offset to match data (i.e. modify Rp)
                 okPart = np.where(np.isfinite(transitdata['depth']))
-                patmos_model_profiled = fmc_profiled[okPart] + np.average(
-                    (transitdata['depth'][okPart] - fmc_profiled[okPart]),
+                patmos_model_profiled = spectrum_profiled[okPart] + np.average(
+                    (transitdata['depth'][okPart] - spectrum_profiled[okPart]),
                     weights=1 / transitdata['error'][okPart] ** 2,
                 )
 
@@ -2253,7 +2255,7 @@ def results(
                 chi2best = chi2model
                 patmos_best_fit = patmos_model
                 param_values_best_fit = param_values_profiled
-                fmcarray = []
+                spectrumarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
                 for _ in range(runtime_params.nrandomwalkers):
@@ -2308,8 +2310,7 @@ def results(
                         mixratio['CO2'] = float(mdp[3])
                         mixratio['H2CO'] = float(mdp[4])
 
-                    fmcrand = np.zeros(transitdata['depth'].size)
-                    fmcrand = crbmodel(
+                    fmcrand = crbFM().crbmodel(
                         float(tpr),
                         float(ctp),
                         hazescale=float(hazescale),
@@ -2333,13 +2334,14 @@ def results(
                         Hsmax=runtime_params.Hsmax,
                         solrad=runtime_params.solrad,
                     )
+                    spectrumrand = fmcrand.spectrum
                     # add offset to match data (i.e. modify Rp)
                     okPart = np.where(np.isfinite(transitdata['depth']))
-                    patmos_modelrand = fmcrand[okPart] + np.average(
-                        (transitdata['depth'][okPart] - fmcrand[okPart]),
+                    patmos_modelrand = spectrumrand[okPart] + np.average(
+                        (transitdata['depth'][okPart] - spectrumrand[okPart]),
                         weights=1 / transitdata['error'][okPart] ** 2,
                     )
-                    fmcarray.append(patmos_modelrand)
+                    spectrumarray.append(patmos_modelrand)
 
                     # check to see if this model is the best one
                     offsets_modelrand = (
@@ -2377,7 +2379,7 @@ def results(
                         patmos_model,
                         patmos_model_profiled,
                         patmos_best_fit,
-                        fmcarray,
+                        spectrumarray,
                         truth_spectrum,
                         fin['priors'],
                         anc['data'][p],

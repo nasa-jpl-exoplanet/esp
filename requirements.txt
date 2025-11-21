@@ -1,6 +1,7 @@
 astropy
 astroquery
 dawgie==2.0.1
+deprecated
 h5py
 joblib
 ldtk

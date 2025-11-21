@@ -74,28 +74,30 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     if useTEA:
         # log.error('TEA removed for now')
         tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-        mixratioarray = crbutil.calcTEA(
+        mixratioprofiles = crbutil.calcTEA(
             tempCoeffs, pressureArray, metallicity=10.0**X2Hr
         )
         # have to take the average! (same as done in crbce)
         mixratio = {}
-        for molecule in mixratioarray:
+        for molecule in mixratioprofiles:
             mixratio[molecule] = np.log10(
-                np.mean(10.0 ** mixratioarray[molecule])
+                np.mean(10.0 ** mixratioprofiles[molecule])
             )
-        # print('TEA:', mixratio)
 
         mmw, fH2, fHe = crbutil.getmmw(mixratio)
-        # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
         # (uncomment to compare TEC vs TEA)
-        # mixratio, fH2, fHe = crbutil.crbce(
+        # print('TEA:', mixratio, fH2, fHe)
+        # print('TEA: water profile', mixratioprofiles['H2O'])
+        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
         #    pressureArray, temperature, X2Hr=X2Hr
         # )
         # print('TEC:', mixratio, fH2, fHe)
+        # print('TEC: water profile', mixratioprofiles['H2O'])
 
     else:
-        mixratio, fH2, fHe = crbutil.crbce(
+        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
+        mixratio, _, fH2, fHe = crbutil.crbce(
             pressureArray, temperature, X2Hr=X2Hr
         )
         mmw, fH2, fHe = crbutil.getmmw(
