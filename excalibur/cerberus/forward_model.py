@@ -34,36 +34,36 @@ class crbFM:
         self.__pressureGrid = np.empty(0)
 
     def crbmodel(
-            self,
-            temp,
-            cloudtp,
-            cheq=None,
-            mixratio=None,
-            hazescale=0.0,
-            hazethick=1.0,
-            hazeslope=-4.0,
-            hazeloc=None,
-            hazeprof='AVERAGE',
-            hzlib=None,
-            chemistry='TEC',
-            planet=None,
-            rp0=None,
-            orbp=None,
-            wgrid=None,
-            xsecs=None,
-            qtgrid=None,
-            lbroadening=None,
-            lshifting=None,
-            knownspecies=None,
-            cialist=None,
-            xmollist=None,
-            nlevels=None,
-            Hsmax=None,
-            solrad=None,
-            break_down_by_molecule=False,
-            logx=False,
-            verbose=False,
-            debug=False,
+        self,
+        temp,
+        cloudtp,
+        cheq=None,
+        mixratio=None,
+        hazescale=0.0,
+        hazethick=1.0,
+        hazeslope=-4.0,
+        hazeloc=None,
+        hazeprof='AVERAGE',
+        hzlib=None,
+        chemistry='TEC',
+        planet=None,
+        rp0=None,
+        orbp=None,
+        wgrid=None,
+        xsecs=None,
+        qtgrid=None,
+        lbroadening=None,
+        lshifting=None,
+        knownspecies=None,
+        cialist=None,
+        xmollist=None,
+        nlevels=None,
+        Hsmax=None,
+        solrad=None,
+        break_down_by_molecule=False,
+        logx=False,
+        verbose=False,
+        debug=False,
     ):
         '''
         G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
@@ -131,7 +131,9 @@ class crbFM:
             pass
         # verify that the temperature array has the right length (nlevels)
         if len(tpp) not in [int(nlevels)]:
-            log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
+            log.error(
+                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
+            )
             pass
 
         if mixratio is not None:
@@ -425,7 +427,9 @@ class crbFM:
         return self.__moleculeProfiles
 
 
-@deprecated('replace crbmodel() with crbFM().crbmodel() and use .spectrum method')
+@deprecated(
+    'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
+)
 def crbmodel(temp, cloudtp, **kwargs):
     log.info('use crbFM class to get additional saved results from crbmodel')
     return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum
