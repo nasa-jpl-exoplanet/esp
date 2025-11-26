@@ -1970,6 +1970,17 @@ def ppar():
         'dist_units': '[pc]',
         'dist_ref': 'Gaia EDR3',
     }
+    #  1 is missing star mass
+    #   actually TESS input catalog (Stassun 2019 and Paegert 2021)
+    #    coincidentally has it as 1.000, same as our default value
+    #   other vizier refs have it as 0.939 and 0.948
+    overwrite['EPIC 212624936'] = {
+        'M*': 1.000,
+        'M*_uperr': 0.25,
+        'M*_lowerr': -0.25,
+        'M*_ref': 'Staussun et al. 2019',
+    }
+    # ~50 are missing transit duration. update analytically?
 
     return overwrite
 
