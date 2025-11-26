@@ -1947,6 +1947,30 @@ def ppar():
     overwrite['L 98-59']['b']['teq_uperr'] = teq_uperr_derived[0]
     overwrite['L 98-59']['b']['teq_ref'] = teq_ref_derived[0]
 
+    # nov.2025 addition of 450 new systems from the Archive
+    #  3 are missing distances
+    overwrite['Kepler-1676'] = {
+        'dist': (1000.0 / 1.1204),
+        'dist_uperr': 50.,
+        'dist_lowerr': -50.,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+    overwrite['Kepler-477'] = {
+        'dist': (1000.0 / 2.1511),
+        'dist_uperr': 5.,
+        'dist_lowerr': -5.,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+    overwrite['Kepler-478'] = {
+        'dist': (1000.0 / 1.3568),
+        'dist_uperr': 200.,
+        'dist_lowerr': -200.,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+
     return overwrite
 
 
