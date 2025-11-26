@@ -45,7 +45,9 @@ def load_ariel_instrument(target, runtime_params):
     # 'mmwThorngren' means mmw comes from our mass-metallicity relation
     # noise_model_filenames = ['arielRad_14aug2024_mmwThorngren.h5']
 
-    if thorngren or chachan:
+    if chachan:
+        mmwModel = '_mmwChachan'
+    elif thorngren:
         mmwModel = '_mmwThorngren'
     else:
         mmwModel = '_mmwFixed'
@@ -56,6 +58,7 @@ def load_ariel_instrument(target, runtime_params):
         'arielRad_' + arielRad_version + mmwModel + '-part1.h5',
         'arielRad_' + arielRad_version + mmwModel + '-part2.h5',
     ]
+    # print('FILENAMES:',noise_model_filenames)
 
     ariel_instrument = None
     for noise_model_filename in noise_model_filenames:
@@ -167,6 +170,10 @@ def load_ariel_instrument(target, runtime_params):
                         #                noiseSpectrum['LeftBinEdge'].value),
                         'noise': noiseSpectrum['NoiseOnTransitFloor'].value,
                     }
+                    # print('NUMBER OF VISITS', nVisits)
+                    # print('noisespectrum median,stdev',
+                    #      np.median(noiseSpectrum['NoiseOnTransitFloor']),
+                    #      np.std(noiseSpectrum['NoiseOnTransitFloor']))
 
                     for iwave in range(len(ariel_instrument['wavelow']) - 1):
                         # multiply by number slightly above 1 to deal with numerical precision error
