@@ -253,13 +253,6 @@ def simulate_spectra(
                 )
             )
             pressure = pgrid[::-1]
-            # Assume solar metallicity here but then below use each model's metallicity
-            mmwsolar, Hs = calc_mmw_Hs(
-                pressure, eqtemp, model_params['logg'], useTEA=False
-            )
-            # this is used for plot scaling
-            Hssolar = Hs / (model_params['R*'] * sscmks['Rsun'])
-            # print('mmw hs (solar)', mmwsolar, Hs, Hssolar)
 
             # planet metallicity is from an assumed mass-metallicity relation
             #  with scatter included
@@ -369,7 +362,7 @@ def simulate_spectra(
                         model_params['N/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
-                _, Hs = calc_mmw_Hs(
+                mmw, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
                     model_params['logg'],
@@ -528,7 +521,7 @@ def simulate_spectra(
                 # print ('Nan check on rebin',np.isnan(np.max(fluxDepth_rebin)))
 
                 # ADD OBSERVATIONAL NOISE TO THE TRUE SPECTRUM
-                # set the random seed for the instrument noise to be fixed for each planet
+                # set the random seed so instrument noise is fixed for each planet
                 np.random.seed(intFromTarget + 1234567)
                 fluxDepth_observed = fluxDepth_rebin + np.random.normal(
                     scale=uncertainties
@@ -538,45 +531,28 @@ def simulate_spectra(
                 # if planet_letter not in out['data'].keys():
                 #    out['data'][planet_letter] = {}
 
-                # careful - ES and ESerr are supposed to be radii, not transit depth
+                # careful - ES and ESerr are supposed to be radii, not transit dept
                 #  need to take a sqrt of them
                 # careful2 - watch out for sqrt of negative numbers
                 signedSqrt = np.sign(fluxDepth_observed) * np.sqrt(
                     np.abs(fluxDepth_observed)
                 )
-                # move WB location down a level; it should be independent of atmosModel
+                # move WB location down a level (it is independent of atmosModel)
                 out['data'][planet_letter]['WB'] = wavelength_um_rebin
                 out['data'][planet_letter][atmosModel] = {
                     # 'WB':wavelength_um_rebin,
                     'ES': signedSqrt,
                     'ESerr': 0.5 * uncertainties / signedSqrt,
                 }
-                # 'ES':np.sqrt(fluxDepth_observed),
-                # 'ESerr':0.5 * uncertainties / np.sqrt(fluxDepth_observed)}
 
                 # cerberus also wants the scale height, to normalize the spectrum
-                #  keep Hs as it's own param (not inside of system_ or model_param)
-                #  it has to be this way to match the formatting for regular spectra itk
+                #  keep Hs as it's own param (not inside of system_ or model_param
+                #   so that it matches the formatting for regular spectra itk)
+                #
+                # rescale the scale height, for scaling plot axes
+                Hs_forplot = Hs / (model_params['R*'] * sscmks['Rsun'])
+                out['data'][planet_letter][atmosModel]['Hs'] = Hs_forplot
 
-                # redo the chemsitry/mmw calculation for this metallicity
-                # print('metallicity [X/H]dex:', model_params['metallicity'])
-                print('Hs before', Hs)
-                mmwnow, Hs = calc_mmw_Hs(
-                    pressure,
-                    eqtemp,
-                    model_params['logg'],
-                    X2Hr=model_params['metallicity'],
-                    useTEA=useTEA,
-                )
-                print('lower mmw,Hs new method', mmwnow, Hs)
-
-                print(' using hssolar?', Hssolar * mmwsolar / mmwnow)
-                exit()
-
-                out['data'][planet_letter][atmosModel]['Hs'] = (
-                    Hssolar * mmwsolar / mmwnow
-                )
-                # print('Hs calculation',Hssolar,mmwsolar,mmwnow)
                 # save the true spectrum (both raw and binned)
                 out['data'][planet_letter][atmosModel]['true_spectrum'] = {
                     'fluxDepth': fluxDepth_rebin,
@@ -637,8 +613,8 @@ def simulate_spectra(
                 plt.ylabel(str('$(R_p/R_*)^2$ [%]'), fontsize=14)
 
                 # plot the true (model) spectrum - raw
-                # (this is for testing higher resolution cross-sections
-                #  but currently raw and rebin are the same thing)
+                #  (this is for testing higher resolution cross-sections
+                #   but currently raw and rebin are the same thing)
                 # plt.plot(
                 #    wavelength_um,
                 #    fluxDepth,
@@ -728,8 +704,7 @@ def simulate_spectra(
                         '-.',
                     ]
                     feature_strength = (
-                        np.max(fluxDepth_by_molecule_rebin[molecule])
-                        - baseline
+                        np.max(fluxDepth_by_molecule_rebin[molecule]) - baseline
                     ) / (maxdepth - baseline)
                     # cut off anything less than 1% of maximum contribution
                     if feature_strength < 0.01:
@@ -795,9 +770,7 @@ def simulate_spectra(
     if completed_at_least_one_planet:
         out['STATUS'].append(True)
 
-    return True
-    # which option to use here? should blank spectrum create a new RUNID?
-    # return out['STATUS'][-1]
+    return out['STATUS'][-1]
 
 
 # ------------------------- ------------------------------------------
