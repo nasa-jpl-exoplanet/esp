@@ -1951,22 +1951,22 @@ def ppar():
     #  3 are missing distances
     overwrite['Kepler-1676'] = {
         'dist': (1000.0 / 1.1204),
-        'dist_uperr': 50.,
-        'dist_lowerr': -50.,
+        'dist_uperr': 50.0,
+        'dist_lowerr': -50.0,
         'dist_units': '[pc]',
         'dist_ref': 'Gaia EDR3',
     }
     overwrite['Kepler-477'] = {
         'dist': (1000.0 / 2.1511),
-        'dist_uperr': 5.,
-        'dist_lowerr': -5.,
+        'dist_uperr': 5.0,
+        'dist_lowerr': -5.0,
         'dist_units': '[pc]',
         'dist_ref': 'Gaia EDR3',
     }
     overwrite['Kepler-478'] = {
         'dist': (1000.0 / 1.3568),
-        'dist_uperr': 200.,
-        'dist_lowerr': -200.,
+        'dist_uperr': 200.0,
+        'dist_lowerr': -200.0,
         'dist_units': '[pc]',
         'dist_ref': 'Gaia EDR3',
     }

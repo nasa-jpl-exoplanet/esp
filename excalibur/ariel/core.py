@@ -423,9 +423,7 @@ def simulate_spectra(
                                 'HLoc',
                                 'HThick',
                             ]:
-                                model_params[paramName] = cloudParams[
-                                    paramName
-                                ]
+                                model_params[paramName] = cloudParams[paramName]
                         else:
                             # median values from Estrela et al 2022, Table 2 (TEC column)
                             cloudParams = fixedCloudParameters()
@@ -435,9 +433,7 @@ def simulate_spectra(
                                 'HLoc',
                                 'HThick',
                             ]:
-                                model_params[paramName] = cloudParams[
-                                    paramName
-                                ]
+                                model_params[paramName] = cloudParams[paramName]
 
                     if 'R' in atmosModel:
                         iwave1 = atmosModel.index('R')
@@ -465,14 +461,13 @@ def simulate_spectra(
                             pass
                         else:
                             # print('XSLIB TRANSFERRED TO NEW PLANETLETTER')
-                            existingPlanetLetter = list(
-                                xslib['data'].keys()
-                            )[-1]
+                            existingPlanetLetter = list(xslib['data'].keys())[
+                                -1
+                            ]
                             # print('existingPlanetLetter',existingPlanetLetter)
                             xslib['data'][planet_letter] = xslib['data'][
                                 existingPlanetLetter
                             ]
-
                     fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
                         runtime_params,
                         wavelength_um,
@@ -508,12 +503,9 @@ def simulate_spectra(
                     ariel_instrument['wavehigh'],
                 ):
                     thisWaveBin = np.where(
-                        (wavelength_um >= wavelow)
-                        & (wavelength_um <= wavehigh)
+                        (wavelength_um >= wavelow) & (wavelength_um <= wavehigh)
                     )
-                    fluxDepth_rebin.append(
-                        np.average(fluxDepth[thisWaveBin])
-                    )
+                    fluxDepth_rebin.append(np.average(fluxDepth[thisWaveBin]))
                     wavelength_um_rebin.append(
                         np.average(wavelength_um[thisWaveBin])
                     )
@@ -568,7 +560,7 @@ def simulate_spectra(
 
                 # redo the chemsitry/mmw calculation for this metallicity
                 # print('metallicity [X/H]dex:', model_params['metallicity'])
-                print('Hs before',Hs)
+                print('Hs before', Hs)
                 mmwnow, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
@@ -578,7 +570,7 @@ def simulate_spectra(
                 )
                 print('lower mmw,Hs new method', mmwnow, Hs)
 
-                print(' using hssolar?',Hssolar * mmwsolar / mmwnow)
+                print(' using hssolar?', Hssolar * mmwsolar / mmwnow)
                 exit()
 
                 out['data'][planet_letter][atmosModel]['Hs'] = (
@@ -789,9 +781,9 @@ def simulate_spectra(
                 #             '/ariel_' + atmosModel + 'Atmos_' +
                 #             target + '_' + planet_letter + '.png')
 
-                out['data'][planet_letter][atmosModel][
-                    'plot_simspectrum'
-                ] = save_plot_tosv(myfig)
+                out['data'][planet_letter][atmosModel]['plot_simspectrum'] = (
+                    save_plot_tosv(myfig)
+                )
 
                 if verbose:
                     plt.show()
