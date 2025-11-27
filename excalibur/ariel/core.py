@@ -22,7 +22,11 @@ from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.ariel_instrument_model import load_ariel_instrument
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
-from excalibur.ariel.plotters import plot_spectrum, plot_spectrum_topmolecules, plot_depthprobed
+from excalibur.ariel.plotters import (
+    plot_spectrum,
+    plot_spectrum_topmolecules,
+    plot_depthprobed,
+)
 
 # import os
 # import sys
@@ -326,7 +330,7 @@ def simulate_spectra(
             for atmosModel in atmosModels:
                 if verbose:
                     print()
-                    print('starting Atmospheric Model:',atmosModel)
+                    print('starting Atmospheric Model:', atmosModel)
                 useTEA = bool('TEA' in atmosModel)
                 if useTEA:
                     chemistry = 'TEA'
@@ -594,7 +598,26 @@ def simulate_spectra(
                     fluxDepth_by_molecule_rebin[molecule] = (
                         fluxDepth_by_molecule_rebin[molecule] * 100
                     )
-                out['data'][planet_letter][atmosModel]['plot_simspectrum'] = plot_spectrum(
+                out['data'][planet_letter][atmosModel]['plot_simspectrum'] = (
+                    plot_spectrum(
+                        target,
+                        planet_letter,
+                        tier,
+                        visits,
+                        wavelength_um_rebin,
+                        fluxDepth_rebin,
+                        fluxDepth_observed,
+                        uncertainties_percent,
+                        molecules,
+                        fluxDepth_by_molecule_rebin,
+                        out['data'][planet_letter][atmosModel]['Hs'],
+                        atmosModel,
+                        verbose=verbose,
+                    )
+                )
+                out['data'][planet_letter][atmosModel][
+                    'plot_simspectrum_topmolecules'
+                ] = plot_spectrum_topmolecules(
                     target,
                     planet_letter,
                     tier,
@@ -609,35 +632,22 @@ def simulate_spectra(
                     atmosModel,
                     verbose=verbose,
                 )
-                out['data'][planet_letter][atmosModel]['plot_simspectrum_topmolecules'] = plot_spectrum_topmolecules(
-                    target,
-                    planet_letter,
-                    tier,
-                    visits,
-                    wavelength_um_rebin,
-                    fluxDepth_rebin,
-                    fluxDepth_observed,
-                    uncertainties_percent,
-                    molecules,
-                    fluxDepth_by_molecule_rebin,
-                    out['data'][planet_letter][atmosModel]['Hs'],
-                    atmosModel,
-                    verbose=verbose,
-                )
-                out['data'][planet_letter][atmosModel]['plot_depthprobed'] = plot_depthprobed(
-                    target,
-                    planet_letter,
-                    tier,
-                    visits,
-                    wavelength_um_rebin,
-                    fluxDepth_rebin,
-                    fluxDepth_observed,
-                    uncertainties_percent,
-                    molecules,
-                    fluxDepth_by_molecule_rebin,
-                    out['data'][planet_letter][atmosModel]['Hs'],
-                    atmosModel,
-                    verbose=verbose,
+                out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (
+                    plot_depthprobed(
+                        target,
+                        planet_letter,
+                        tier,
+                        visits,
+                        wavelength_um_rebin,
+                        fluxDepth_rebin,
+                        fluxDepth_observed,
+                        uncertainties_percent,
+                        molecules,
+                        fluxDepth_by_molecule_rebin,
+                        out['data'][planet_letter][atmosModel]['Hs'],
+                        atmosModel,
+                        verbose=verbose,
+                    )
                 )
 
                 completed_at_least_one_planet = True
