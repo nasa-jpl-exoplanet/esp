@@ -465,7 +465,7 @@ def simulate_spectra(
                             xslib['data'][planet_letter] = xslib['data'][
                                 existingPlanetLetter
                             ]
-                    fluxDepth, fluxDepth_by_molecule = make_cerberus_atmos(
+                    fluxDepth, fluxDepth_by_molecule, pressures, opticalDepthProfiles = make_cerberus_atmos(
                         runtime_params,
                         wavelength_um,
                         model_params,
@@ -473,7 +473,10 @@ def simulate_spectra(
                         planet_letter,
                         chemistry=chemistry,
                     )
-
+                    # pressures should be the same thing as pressure
+                    if np.any(pressures != pressure):
+                        print('ERROR: pressure grids dont match!')
+                    
                 elif 'taurex' in atmosModel:
                     log.error('ERROR: taurex no longer an option')
                 else:
@@ -639,13 +642,9 @@ def simulate_spectra(
                         tier,
                         visits,
                         wavelength_um_rebin,
-                        fluxDepth_rebin,
-                        fluxDepth_observed,
-                        uncertainties_percent,
-                        molecules,
-                        fluxDepth_by_molecule_rebin,
-                        out['data'][planet_letter][atmosModel]['Hs'],
-                        atmosModel,
+                        pressure,
+                        opticalDepthProfiles,
+                        # molecules,
                         verbose=verbose,
                     )
                 )
