@@ -2709,9 +2709,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                 ['T', '[X/H]', '[C/O]', '[N/O]', 'Mp'],
                             ):
                                 if trueparam in truth_params:
-                                    true_value = atmos_fit['data'][
+                                    true_value = float(atmos_fit['data'][
                                         planet_letter
-                                    ]['TRUTH_MODELPARAMS'][trueparam]
+                                    ]['TRUTH_MODELPARAMS'][trueparam])
                                     # (metallicity and C/O do not have to be converted to log-solar)
                                     # if trueparam=='metallicity':
                                     #    true_value = np.log10(true_value)
