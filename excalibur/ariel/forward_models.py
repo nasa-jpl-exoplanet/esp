@@ -92,4 +92,9 @@ def make_cerberus_atmos(
         break_down_by_molecule=True,
     )
 
-    return fmc.spectrum, fmc.breakdown_by_molecule, fmc.pressureGrid, fmc.opticalDepthProfiles
+    return (
+        fmc.spectrum,
+        fmc.breakdown_by_molecule,
+        fmc.pressureGrid,
+        fmc.opticalDepthProfiles,
+    )

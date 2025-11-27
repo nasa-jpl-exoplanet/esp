@@ -13,6 +13,7 @@ from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
 # ------------------------- ------------------------------------------
 
+
 def plot_spectrum(
     target,
     planet_letter,
@@ -283,20 +284,27 @@ def plot_spectrum_topmolecules(
     ]
 
     dominantMolecule_byWavelength = []
-    print('molecules',molecules)
+    print('molecules', molecules)
     for iwave in range(len(wavelength_um_rebin)):
-        print('wave',iwave,wavelength_um_rebin[iwave])
-        print('  len check',len(fluxDepth_by_molecule_rebin['H2O']))
-        fluxesThisWavelength = np.array([fluxDepth_by_molecule_rebin[molecule][iwave] for molecule in molecules])
-        print(' fluxes',fluxesThisWavelength)
-        wheremax = np.where(fluxesThisWavelength==np.max(fluxesThisWavelength))
+        print('wave', iwave, wavelength_um_rebin[iwave])
+        print('  len check', len(fluxDepth_by_molecule_rebin['H2O']))
+        fluxesThisWavelength = np.array(
+            [
+                fluxDepth_by_molecule_rebin[molecule][iwave]
+                for molecule in molecules
+            ]
+        )
+        print(' fluxes', fluxesThisWavelength)
+        wheremax = np.where(
+            fluxesThisWavelength == np.max(fluxesThisWavelength)
+        )[0]
         print(' where max', wheremax)
         # print(' index',fluxesThisWavelength.index(wheremax))
-        dominantMolecule_byWavelength.append(molecules[np.where(fluxesThisWavelength==np.max(fluxesThisWavelength))])
+        dominantMolecule_byWavelength.append(np.array(molecules)[wheremax])
     print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
-    
+
     # feature_strength = fluxDepth_by_molecule_rebin[molecule]
-    #plt.plot(
+    # plt.plot(
     #    wavelength_um_rebin,
     #    fluxDepth_by_molecule_rebin[molecule],
     #    color=colorlist[imole % len(colorlist)],
@@ -304,18 +312,18 @@ def plot_spectrum_topmolecules(
     #    lw=1,
     #    zorder=2,
     #    label=molecule,
-    #)
+    # )
 
-    #extra = (maxdepth - baseline) / 13
-    #plt.ylim((baseline - extra, maxdepth + extra))
-    #yrange = plt.ylim()
-    #plt.text(
+    # extra = (maxdepth - baseline) / 13
+    # plt.ylim((baseline - extra, maxdepth + extra))
+    # yrange = plt.ylim()
+    # plt.text(
     #    6.8,
     #    yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
     #    negligible_molecules,
     #    fontsize=8,
-    #)
-    #plt.xlim(0.0, 8.0)
+    # )
+    # plt.xlim(0.0, 8.0)
     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
@@ -373,7 +381,9 @@ def plot_depthprobed(
     plt.ylabel('Pressure [bar]', fontsize=14)
 
     plt.contour(
-        wavelength_um, pressure, opticalDepthProfiles,
+        wavelength_um,
+        pressure,
+        opticalDepthProfiles,
     )
 
     savedFigure = save_plot_tosv(myfig)

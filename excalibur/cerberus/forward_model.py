@@ -245,7 +245,7 @@ class crbFM:
         z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
-        tau, tau_by_molecule, wtau = gettau(            
+        tau, tau_by_molecule, wtau = gettau(
             xsecs,
             qtgrid,
             tpp,
