@@ -2794,6 +2794,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 prior_ranges,
                 filt,
                 saveDir=save_dir,
+                verbose=verbose,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
             fit_t_plot = plotarray[0]
@@ -2811,6 +2812,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 prior_ranges,
                 filt,
                 saveDir=save_dir,
+                verbose=verbose,
             )
             fit_t_plot = plotarray[0]
             fit_metalplot = plotarray[1]
@@ -2828,6 +2830,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             prior_ranges,
             filt,
             saveDir=save_dir,
+            verbose=verbose,
         )
 
         # save the analysis as .csv file? (in /proj/data/spreadsheets/)
