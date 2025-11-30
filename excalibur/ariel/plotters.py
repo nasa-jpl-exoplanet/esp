@@ -19,12 +19,12 @@ def plot_spectrum(
     planet_letter,
     tier,
     visits,
-    wavelength_um_rebin,
-    fluxDepth_rebin,
+    wavelength_um,
+    fluxDepth,
     fluxDepth_observed,
     uncertainties_percent,
     molecules,
-    fluxDepth_by_molecule_rebin,
+    fluxDepth_by_molecule,
     Hsscaling,
     atmosModel,
     verbose=False,
@@ -50,8 +50,8 @@ def plot_spectrum(
     #  (this is for testing higher resolution cross-sections
     #   but currently raw and rebin are the same thing)
     # plt.plot(
-    #    wavelength_um,
-    #    fluxDepth,
+    #    wavelength_um_raw,
+    #    fluxDepth_raw,
     #    color='palegoldenrod',
     #    ls='-',
     #    lw=1,
@@ -60,8 +60,8 @@ def plot_spectrum(
     # )
     # plot the true (model) spectrum - binned
     plt.plot(
-        wavelength_um_rebin,
-        fluxDepth_rebin,
+        wavelength_um,
+        fluxDepth,
         color='k',
         ls='-',
         lw=1,
@@ -72,7 +72,7 @@ def plot_spectrum(
     yrange = plt.ylim()
     # plot the simulated data points
     plt.scatter(
-        wavelength_um_rebin,
+        wavelength_um,
         fluxDepth_observed,
         marker='o',
         s=20,
@@ -82,7 +82,7 @@ def plot_spectrum(
         label='sim data',
     )
     plt.errorbar(
-        wavelength_um_rebin,
+        wavelength_um,
         fluxDepth_observed,
         yerr=uncertainties_percent,
         linestyle='None',
@@ -98,10 +98,10 @@ def plot_spectrum(
     maxdepth = -666
     for imole, molecule in enumerate(molecules):
         baseline = np.min(
-            np.append(baseline, fluxDepth_by_molecule_rebin[molecule])
+            np.append(baseline, fluxDepth_by_molecule[molecule])
         )
         maxdepth = np.max(
-            np.append(maxdepth, fluxDepth_by_molecule_rebin[molecule])
+            np.append(maxdepth, fluxDepth_by_molecule[molecule])
         )
     negligible_molecules = ''
     negligible_molecules_more = ''
@@ -136,7 +136,7 @@ def plot_spectrum(
             '-.',
         ]
         feature_strength = (
-            np.max(fluxDepth_by_molecule_rebin[molecule]) - baseline
+            np.max(fluxDepth_by_molecule[molecule]) - baseline
         ) / (maxdepth - baseline)
         # cut off anything less than 1% of maximum contribution
         if feature_strength < 0.01:
@@ -149,8 +149,8 @@ def plot_spectrum(
         else:
             # print(' OK:', molecule, feature_strength)
             plt.plot(
-                wavelength_um_rebin,
-                fluxDepth_by_molecule_rebin[molecule],
+                wavelength_um,
+                fluxDepth_by_molecule[molecule],
                 color=colorlist[imole % len(colorlist)],
                 ls=stylelist[imole % len(stylelist)],
                 lw=1,
@@ -186,7 +186,7 @@ def plot_spectrum(
     # add a scale-height-normalized flux scale on the right axis
     # print('H scaling for this plot (%):',Hsscaling*100)
     add_scale_height_labels(
-        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth_rebin, ax, myfig
+        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig
     )
 
     # option to save plot to disk
@@ -214,12 +214,14 @@ def plot_spectrum_topmolecules(
     planet_letter,
     tier,
     visits,
-    wavelength_um_rebin,
-    fluxDepth_rebin,
+    wavelength_um,
+    wavelengthedge_low,
+    wavelengthedge_high,
+    fluxDepth,
     fluxDepth_observed,
     uncertainties_percent,
     molecules,
-    fluxDepth_by_molecule_rebin,
+    fluxDepth_by_molecule,
     Hsscaling,
     atmosModel,
     verbose=False,
@@ -243,8 +245,8 @@ def plot_spectrum_topmolecules(
 
     # plot the true (model) spectrum - binned
     plt.plot(
-        wavelength_um_rebin,
-        fluxDepth_rebin,
+        wavelength_um,
+        fluxDepth,
         color='k',
         ls='-',
         lw=1,
@@ -254,7 +256,7 @@ def plot_spectrum_topmolecules(
     yrange = plt.ylim()
     # plot the simulated data points
     plt.scatter(
-        wavelength_um_rebin,
+        wavelength_um,
         fluxDepth_observed,
         marker='o',
         s=20,
@@ -264,7 +266,7 @@ def plot_spectrum_topmolecules(
         label='sim data',
     )
     plt.errorbar(
-        wavelength_um_rebin,
+        wavelength_um,
         fluxDepth_observed,
         yerr=uncertainties_percent,
         linestyle='None',
@@ -276,71 +278,80 @@ def plot_spectrum_topmolecules(
 
     colorlist = [
         'red',
-        'orange',
         'palegreen',
         'lightseagreen',
         'blueviolet',
         'fuchsia',
     ]
+    moleculeColorMatch = {
+        'H2O':'steelblue',
+        'CO':'goldenrod',
+        'CO2':'gold',
+        'CH4':'darkorange',
+        'haze':'deepskyblue',
+    }
 
     dominantMolecule_byWavelength = []
-    print('molecules', molecules)
-    for iwave in range(len(wavelength_um_rebin)):
-        print('wave', iwave, wavelength_um_rebin[iwave])
-        print('  len check', len(fluxDepth_by_molecule_rebin['H2O']))
+    # print('molecules', molecules)
+    for iwave in range(len(wavelength_um)):
+        # print('wave', iwave, wavelength_um[iwave])
+        # print('  len check', len(fluxDepth_by_molecule['H2O']))
         fluxesThisWavelength = np.array(
             [
-                fluxDepth_by_molecule_rebin[molecule][iwave]
+                fluxDepth_by_molecule[molecule][iwave]
                 for molecule in molecules
             ]
         )
-        print(' fluxes', fluxesThisWavelength)
+        # print(' fluxes', fluxesThisWavelength)
         wheremax = np.where(
             fluxesThisWavelength == np.max(fluxesThisWavelength)
-        )[0]
-        print(' where max', wheremax)
-        # print(' index',fluxesThisWavelength.index(wheremax))
-        dominantMolecule_byWavelength.append(np.array(molecules)[wheremax])
-    print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
+        )[0][0]
+        # print(' where max', wheremax)
+        dominantMolecule_byWavelength.append(molecules[wheremax])
+    # print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
 
-    # feature_strength = fluxDepth_by_molecule_rebin[molecule]
-    # plt.plot(
-    #    wavelength_um_rebin,
-    #    fluxDepth_by_molecule_rebin[molecule],
-    #    color=colorlist[imole % len(colorlist)],
-    #    ls=stylelist[imole % len(stylelist)],
-    #    lw=1,
-    #    zorder=2,
-    #    label=molecule,
-    # )
+    moleculeSpacing = (yrange[1] - yrange[0]) / 20
+    nextMoleculeYpos = yrange[1] + moleculeSpacing
+    moleculesFound = []
+    moleculeYpos = []
+    for iwave in range(len(wavelength_um)):
+        thisMolecule = dominantMolecule_byWavelength[iwave]
+        if thisMolecule not in moleculesFound:
+            # print(' found a new molecule',thisMolecule)
+            moleculesFound.append(thisMolecule)
+            moleculeYpos.append(nextMoleculeYpos)
+            nextMoleculeYpos += moleculeSpacing
 
-    # extra = (maxdepth - baseline) / 13
-    # plt.ylim((baseline - extra, maxdepth + extra))
-    # yrange = plt.ylim()
-    # plt.text(
-    #    6.8,
-    #    yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
-    #    negligible_molecules,
-    #    fontsize=8,
-    # )
-    # plt.xlim(0.0, 8.0)
-    plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
+        imole = moleculesFound.index(thisMolecule)
+        if thisMolecule in moleculeColorMatch:
+            moleculeColor = moleculeColorMatch[thisMolecule]
+        else:
+            moleculeColor = colorlist[imole % len(colorlist)],
+        plt.plot(
+            [wavelengthedge_low[iwave],wavelengthedge_high[iwave]],
+            [moleculeYpos[imole],moleculeYpos[imole]],
+            color=moleculeColor,
+            ls='-',
+            lw=2,
+            zorder=2,
+        )
+        plt.text(
+            7.9,
+            moleculeYpos[imole],
+            thisMolecule,
+            color=moleculeColor,
+            fontsize=12,
+            verticalalignment='center',
+        )
+    plt.xlim(0, 8.5)
+    plt.ylim(yrange[0], nextMoleculeYpos)
+    # plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
     # print('H scaling for this plot (%):',Hsscaling*100)
     add_scale_height_labels(
-        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth_rebin, ax, myfig
+        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig
     )
-
-    # option to save plot to disk
-    # plot_dir = (
-    #     excalibur.context['data_dir'] + '/ariel/savedplots'
-    # )
-    # if not os.path.exists(plot_dir):
-    #    os.mkdir(plot_dir)
-    # plt.savefig(plot_dir +
-    #             '/ariel_' + atmosModel + 'Atmos_' +
-    #             target + '_' + planet_letter + '.png')
 
     savedFigure = save_plot_tosv(myfig)
     if verbose:
@@ -351,18 +362,35 @@ def plot_spectrum_topmolecules(
 
 # ------------------------- ------------------------------------------
 
-
 def plot_depthprobed(
     target,
     planet_letter,
     tier,
     visits,
+    model_params,
     wavelength_um,
     pressure,
-    opticalDepthProfiles,
+    opacityProfiles,
     # molecules,
     verbose=False,
 ):
+
+    # convert the local opacity to a transmission map (as func of wave)
+    # transmission is 1 at top of atmos, 0 at the bottom
+    npressure, nwave  = opacityProfiles.shape
+    print('# wavelengths, pressures', nwave, npressure)
+    currentExtinction = np.zeros(nwave)
+    opacityProfiles = np.array(opacityProfiles)
+    for ipressure in range(npressure):
+        print('size1',currentExtinction.shape)
+        print('size2',opacityProfiles.shape)
+        fractionRemoved = opacityProfiles[ipressure, :]
+        print('size2',fractionRemoved.shape)
+        print('frac',fractionRemoved[30])
+        print('exp(frac)', np.exp(-opacityProfiles[ipressure, 30]))
+        currentExtinction += 1 - np.exp(-opacityProfiles[ipressure, :])
+        print('curr',currentExtinction[30])
+
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
     plt.title(
@@ -380,12 +408,22 @@ def plot_depthprobed(
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=14)
     plt.ylabel('Pressure [bar]', fontsize=14)
 
+    print('opticaldepth',
+          np.median(opacityProfiles),
+          np.std(opacityProfiles))
+
     plt.contour(
         wavelength_um,
-        pressure,
-        opticalDepthProfiles,
+        np.log10(pressure),
+        np.log10(opacityProfiles),
     )
 
+    if 'CTP' in model_params:
+        # dashed line showing the cloud deck
+        plot(
+            wavelength_um,
+            modele_params['CTP']]*len(wavelenghth_um
+    
     savedFigure = save_plot_tosv(myfig)
     if verbose:
         plt.show()
