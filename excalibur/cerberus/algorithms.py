@@ -607,7 +607,7 @@ class Analysis(dawgie.Analyzer):
                     '--< CERBERUS ANALYSIS: NO FILTERS WITH ATMOS DATA!!!>--'
                 )
 
-            # fwr=['Ariel-sim']  # just one filter, while debugging
+            # fwr = ['Ariel-sim']  # just one filter, while debugging
             # fwr =['HST-WFC3-IR-G141-SCAN']  # just one filter, while debugging
 
             # only consider filters that have cerb.atmos results loaded in as an aspect
@@ -621,8 +621,10 @@ class Analysis(dawgie.Analyzer):
                 # runtime2 = self.__rtc.sv_as_dict()['status']
                 # print('runtime old2 way',runtime2)
 
+                # RUNTIME DOESNT WORK YET FOR ASPECTS!!
                 runtime_params = crbcore.CerbAnalysisParams(
-                    tier=runtime['ariel_simspectrum_tier'].value(),
+                    # tier=runtime['ariel_simspectrum_tier'].value(),
+                    tier=2,
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
@@ -630,6 +632,8 @@ class Analysis(dawgie.Analyzer):
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
                     boundHThick=runtime['cerberus_atmos_bounds_HThick'],
                 )
+                # if runtime_params.tier == None:
+                #    runtime_params.tier = 2  # no dice. it's too tupley
                 # print('runtime', runtime_params)
 
                 log.info('--< CERBERUS ANALYSIS: %s  >--', fltr)
