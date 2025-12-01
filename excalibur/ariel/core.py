@@ -448,7 +448,17 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        _ = myxsecs(tempspc, runtime_params, xslib)
+
+                        import pickle
+
+                        if 0:
+                            _ = myxsecs(tempspc, runtime_params, xslib)
+                            file = open('xslibsave.pkl', 'bw')
+                            pickle.dump(xslib, file)
+                        else:
+                            file = open('xslibsave.pkl', 'br')
+                            xslib = pickle.load(file)
+
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -601,7 +611,7 @@ def simulate_spectra(
                 fluxDepth_observed = 100 * fluxDepth_observed
                 # careful - uncertainties are reused, so don't change them permanently
                 uncertainties_percent = 100 * uncertainties
-                molecules = fluxDepth_by_molecule_rebin.keys()
+                molecules = list(fluxDepth_by_molecule_rebin.keys())
                 for molecule in molecules:
                     fluxDepth_by_molecule_rebin[molecule] = (
                         fluxDepth_by_molecule_rebin[molecule] * 100
@@ -620,7 +630,8 @@ def simulate_spectra(
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
                         atmosModel,
-                        verbose=verbose,
+                        # verbose=verbose,
+                        verbose=False,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -631,6 +642,8 @@ def simulate_spectra(
                     tier,
                     visits,
                     wavelength_um_rebin,
+                    ariel_instrument['wavelow'],
+                    ariel_instrument['wavehigh'],
                     fluxDepth_rebin,
                     fluxDepth_observed,
                     uncertainties_percent,
@@ -646,6 +659,7 @@ def simulate_spectra(
                         planet_letter,
                         tier,
                         visits,
+                        model_params,
                         wavelength_um_rebin,
                         pressure,
                         opticalDepthProfiles,
