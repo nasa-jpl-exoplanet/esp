@@ -630,8 +630,7 @@ def simulate_spectra(
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
                         atmosModel,
-                        # verbose=verbose,
-                        verbose=False,
+                        verbose=verbose,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -657,13 +656,10 @@ def simulate_spectra(
                     plot_depthprobed(
                         target,
                         planet_letter,
-                        tier,
-                        visits,
                         model_params,
                         wavelength_um_rebin,
                         pressure,
                         opticalDepthProfiles,
-                        # molecules,
                         verbose=verbose,
                     )
                 )

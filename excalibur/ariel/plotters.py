@@ -301,7 +301,7 @@ def plot_spectrum_topmolecules(
         dominantMolecule_byWavelength.append(molecules[wheremax])
     # print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
 
-    moleculeSpacing = (yrange[1] - yrange[0]) / 20
+    moleculeSpacing = (yrange[1] - yrange[0]) / 15
     nextMoleculeYpos = yrange[1] + moleculeSpacing
     moleculesFound = []
     moleculeYpos = []
@@ -355,8 +355,6 @@ def plot_spectrum_topmolecules(
 def plot_depthprobed(
     target,
     planet_letter,
-    tier,
-    visits,
     model_params,
     wavelength_um,
     pressure,
@@ -365,54 +363,68 @@ def plot_depthprobed(
     verbose=False,
 ):
 
+    opacityProfiles = np.array(opacityProfiles)
+    npressure, nwave = opacityProfiles.shape
+    # print('# wavelengths, pressures', nwave, npressure)
+
     # convert the local opacity to a transmission map (as func of wave)
     # transmission is 1 at top of atmos, 0 at the bottom
-    npressure, nwave = opacityProfiles.shape
-    print('# wavelengths, pressures', nwave, npressure)
-    currentExtinction = np.zeros(nwave)
-    opacityProfiles = np.array(opacityProfiles)
-    for ipressure in range(npressure):
-        print('size1', currentExtinction.shape)
-        print('size2', opacityProfiles.shape)
-        fractionRemoved = opacityProfiles[ipressure, :]
-        print('size2', fractionRemoved.shape)
-        print('frac', fractionRemoved[30])
-        print('exp(frac)', np.exp(-opacityProfiles[ipressure, 30]))
-        currentExtinction += 1 - np.exp(-opacityProfiles[ipressure, :])
-        print('curr', currentExtinction[30])
+    throughput = np.zeros((npressure + 1, nwave))
+    throughput[-1, :] = 1
+    for ipressure in range(npressure)[::-1]:  # start at high index = atmos top
+        throughput[ipressure, :] = throughput[ipressure + 1, :] * np.exp(
+            -opacityProfiles[ipressure, :]
+        )
+    # cut off that top buffer edge
+    throughput = throughput[:-1, :]
 
-    # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
+    myfig.subplots_adjust(top=0.92, bottom=0.13, left=0.09, right=0.98)
     plt.title(
-        'Ariel simulation : '
+        'Atmospheric depth probed : '
         + target
         + ' '
-        + planet_letter
-        + ' : Tier-'
-        + str(tier)
-        + ' '
-        + str(visits)
-        + ' visits',
+        + planet_letter,
         fontsize=16,
     )
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=14)
-    plt.ylabel('Pressure [bar]', fontsize=14)
+    plt.ylabel('log(Pressure) [bar]', fontsize=14)
 
-    print('opticaldepth', np.median(opacityProfiles), np.std(opacityProfiles))
-
-    plt.contour(
-        wavelength_um,
+    plt.contourf(
+        wavelength_um[::-1],  # cerberus fm calculates on a backward wave grid
         np.log10(pressure),
-        np.log10(opacityProfiles),
+        throughput,
+        zorder=2,
+        colors='grey',
+        levels=np.array([0.159, 0.841]),
     )
+    plt.contour(
+        wavelength_um[::-1],  # cerberus fm calculates on a backward wave grid
+        np.log10(pressure),
+        throughput,
+        zorder=3,
+        colors='k',
+        levels=np.array([0.5]),
+    )
+
+    # reverse the y-axis so 10 bar is at the bottom
+    ylims = plt.ylim()
+    plt.ylim(ylims[1], ylims[0])
 
     if 'CTP' in model_params:
         # dashed line showing the cloud deck
-        print('CTP:', model_params['CTP'])
-        plot(
+        # print('CTP:', model_params['CTP'])
+        plt.plot(
             wavelength_um,
-            [model_params['CTP']] * len(wavelenghth_um),
-            'k--',
+            [model_params['CTP']] * len(wavelength_um),
+            'k:',
+            zorder=3,
+        )
+        plt.text(
+            6.0,
+            model_params['CTP'] + (ylims[0] - ylims[1])/25.,
+            'top of cloud deck',
+            fontsize=8,
         )
 
     savedFigure = save_plot_tosv(myfig)
