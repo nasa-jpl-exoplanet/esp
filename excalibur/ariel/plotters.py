@@ -97,12 +97,8 @@ def plot_spectrum(
     baseline = 666
     maxdepth = -666
     for imole, molecule in enumerate(molecules):
-        baseline = np.min(
-            np.append(baseline, fluxDepth_by_molecule[molecule])
-        )
-        maxdepth = np.max(
-            np.append(maxdepth, fluxDepth_by_molecule[molecule])
-        )
+        baseline = np.min(np.append(baseline, fluxDepth_by_molecule[molecule]))
+        maxdepth = np.max(np.append(maxdepth, fluxDepth_by_molecule[molecule]))
     negligible_molecules = ''
     negligible_molecules_more = ''
     Nnegligible = 0
@@ -185,9 +181,7 @@ def plot_spectrum(
 
     # add a scale-height-normalized flux scale on the right axis
     # print('H scaling for this plot (%):',Hsscaling*100)
-    add_scale_height_labels(
-        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig
-    )
+    add_scale_height_labels({'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig)
 
     # option to save plot to disk
     # plot_dir = (
@@ -284,11 +278,11 @@ def plot_spectrum_topmolecules(
         'fuchsia',
     ]
     moleculeColorMatch = {
-        'H2O':'steelblue',
-        'CO':'goldenrod',
-        'CO2':'gold',
-        'CH4':'darkorange',
-        'haze':'deepskyblue',
+        'H2O': 'steelblue',
+        'CO': 'goldenrod',
+        'CO2': 'gold',
+        'CH4': 'darkorange',
+        'haze': 'deepskyblue',
     }
 
     dominantMolecule_byWavelength = []
@@ -297,10 +291,7 @@ def plot_spectrum_topmolecules(
         # print('wave', iwave, wavelength_um[iwave])
         # print('  len check', len(fluxDepth_by_molecule['H2O']))
         fluxesThisWavelength = np.array(
-            [
-                fluxDepth_by_molecule[molecule][iwave]
-                for molecule in molecules
-            ]
+            [fluxDepth_by_molecule[molecule][iwave] for molecule in molecules]
         )
         # print(' fluxes', fluxesThisWavelength)
         wheremax = np.where(
@@ -326,10 +317,10 @@ def plot_spectrum_topmolecules(
         if thisMolecule in moleculeColorMatch:
             moleculeColor = moleculeColorMatch[thisMolecule]
         else:
-            moleculeColor = colorlist[imole % len(colorlist)],
+            moleculeColor = (colorlist[imole % len(colorlist)],)
         plt.plot(
-            [wavelengthedge_low[iwave],wavelengthedge_high[iwave]],
-            [moleculeYpos[imole],moleculeYpos[imole]],
+            [wavelengthedge_low[iwave], wavelengthedge_high[iwave]],
+            [moleculeYpos[imole], moleculeYpos[imole]],
             color=moleculeColor,
             ls='-',
             lw=2,
@@ -349,9 +340,7 @@ def plot_spectrum_topmolecules(
 
     # add a scale-height-normalized flux scale on the right axis
     # print('H scaling for this plot (%):',Hsscaling*100)
-    add_scale_height_labels(
-        {'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig
-    )
+    add_scale_height_labels({'Hs': [Hsscaling]}, 1.0e-2 * fluxDepth, ax, myfig)
 
     savedFigure = save_plot_tosv(myfig)
     if verbose:
@@ -361,6 +350,7 @@ def plot_spectrum_topmolecules(
 
 
 # ------------------------- ------------------------------------------
+
 
 def plot_depthprobed(
     target,
@@ -377,19 +367,19 @@ def plot_depthprobed(
 
     # convert the local opacity to a transmission map (as func of wave)
     # transmission is 1 at top of atmos, 0 at the bottom
-    npressure, nwave  = opacityProfiles.shape
+    npressure, nwave = opacityProfiles.shape
     print('# wavelengths, pressures', nwave, npressure)
     currentExtinction = np.zeros(nwave)
     opacityProfiles = np.array(opacityProfiles)
     for ipressure in range(npressure):
-        print('size1',currentExtinction.shape)
-        print('size2',opacityProfiles.shape)
+        print('size1', currentExtinction.shape)
+        print('size2', opacityProfiles.shape)
         fractionRemoved = opacityProfiles[ipressure, :]
-        print('size2',fractionRemoved.shape)
-        print('frac',fractionRemoved[30])
+        print('size2', fractionRemoved.shape)
+        print('frac', fractionRemoved[30])
         print('exp(frac)', np.exp(-opacityProfiles[ipressure, 30]))
         currentExtinction += 1 - np.exp(-opacityProfiles[ipressure, :])
-        print('curr',currentExtinction[30])
+        print('curr', currentExtinction[30])
 
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
@@ -408,9 +398,7 @@ def plot_depthprobed(
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=14)
     plt.ylabel('Pressure [bar]', fontsize=14)
 
-    print('opticaldepth',
-          np.median(opacityProfiles),
-          np.std(opacityProfiles))
+    print('opticaldepth', np.median(opacityProfiles), np.std(opacityProfiles))
 
     plt.contour(
         wavelength_um,
@@ -420,10 +408,13 @@ def plot_depthprobed(
 
     if 'CTP' in model_params:
         # dashed line showing the cloud deck
+        print('CTP:', model_params['CTP'])
         plot(
             wavelength_um,
-            modele_params['CTP']]*len(wavelenghth_um
-    
+            [model_params['CTP']] * len(wavelenghth_um),
+            'k--',
+        )
+
     savedFigure = save_plot_tosv(myfig)
     if verbose:
         plt.show()
