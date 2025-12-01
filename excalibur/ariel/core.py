@@ -218,11 +218,15 @@ def simulate_spectra(
             # for now, use HD 209458 SNR for test cases.  RECONSIDER THIS CHOICE LATER
             ariel_instrument = load_ariel_instrument(
                 'HD 209458 b',
+                system_params,
+                ancil_params,
                 runtime_params,
             )
         else:
             ariel_instrument = load_ariel_instrument(
                 target + ' ' + planet_letter,
+                system_params,
+                ancil_params,
                 runtime_params,
             )
 
@@ -448,17 +452,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-
-                        import pickle
-
-                        if 0:
-                            _ = myxsecs(tempspc, runtime_params, xslib)
-                            file = open('xslibsave.pkl', 'bw')
-                            pickle.dump(xslib, file)
-                        else:
-                            file = open('xslibsave.pkl', 'br')
-                            xslib = pickle.load(file)
-
+                        _ = myxsecs(tempspc, runtime_params, xslib)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:

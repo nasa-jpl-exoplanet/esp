@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------- ---------------------------------------
-def load_ariel_instrument(target, runtime_params):
+def load_ariel_instrument(target, system_params, ancil_params, runtime_params):
     '''
     Load in the output from ArielRad - uncertainty as a function of wavelength
 
@@ -28,6 +28,11 @@ def load_ariel_instrument(target, runtime_params):
     H_mag brightness is already taken into account, but
      number of observed transits is not taken into account.
     '''
+
+    print('system_params', system_params.keys())
+    print('ancil_params', ancil_params.keys())
+    # SYSTEM PARAMS NEEDED FOR ARIELRAD:
+
 
     tier = runtime_params.tier
     arielRad_version = runtime_params.arielRad
