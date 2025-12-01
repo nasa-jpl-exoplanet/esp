@@ -28,16 +28,48 @@ def load_ariel_instrument(target, system_params, ancil_params, runtime_params):
     H_mag brightness is already taken into account, but
      number of observed transits is not taken into account.
     '''
-
-    print('system_params', system_params.keys())
-    print('ancil_params', ancil_params.keys())
-    # SYSTEM PARAMS NEEDED FOR ARIELRAD:
-
-
     tier = runtime_params.tier
     arielRad_version = runtime_params.arielRad
     thorngren = runtime_params.thorngrenMassMetals
     chachan = runtime_params.chachanMassMetals
+
+    # SYSTEM PARAMS NEEDED FOR ARIELRAD:
+    planet_letter = target[-1]
+    arielrad_params = {
+        'M*':system_params['M*'],
+        'T*':system_params['T*'],
+        'R*':system_params['R*'],
+        'dist':system_params['dist'],
+        'Hmag':system_params['Hmag'],
+        'period':system_params[planet_letter]['period'],
+        'sma':system_params[planet_letter]['sma'],
+        'Rp':system_params[planet_letter]['rp'],
+        'Mp':system_params[planet_letter]['mass'],
+        'trandur':system_params[planet_letter]['trandur'],
+        'impact':system_params[planet_letter]['impact'],
+    }
+    if chachan:
+        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_chachan']
+    elif thorngren:
+        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_thorngren']
+    else:
+        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_min']
+
+    # check for missing data; these should be filled in via system/overwriter
+    if arielrad_params['trandur']=='':
+        log.error('ArielRad Input Error: MISSING TRANSIT DURATION!!! %s', target)
+        arielrad_params['trandur'] = 2.
+    if arielrad_params['dist']=='':
+        log.error('ArielRad Input Error: MISSING DISTANCE!!! %s', target)
+        arielrad_params['dist'] = '666'
+    if arielrad_params['impact']=='':
+        log.error('ArielRad Input Error: MISSING IMPACT PARAM!!! %s', target)
+        arielrad_params['impact'] = '0'
+    if arielrad_params['M*']=='':
+        log.error('ArielRad Input Error: MISSING STAR MASS!!! %s', target)
+        arielrad_params['M*'] = '1'  # assume 1 for now
+
+    print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
 
     noise_model_dir = excalibur.context['data_dir'] + '/ariel/'
 
