@@ -90,7 +90,7 @@ class SimSpectrumSV(ExcaliburSV):
                                         + model
                                         + ' ------',
                                         self['data'][planet_letter][model][
-                                            'depthprobed'
+                                            'plot_depthprobed'
                                         ],
                                     )
             else:
