@@ -312,8 +312,7 @@ def plot_spectrum_topmolecules(
 
         imole = moleculesFound.index(thisMolecule)
         moleculeColor = moleculeColorMatch.get(
-            thisMolecule,
-            colorlist[imole % len(colorlist)]
+            thisMolecule, colorlist[imole % len(colorlist)]
         )
         # print('thismolecule,color:', thisMolecule, moleculeColor)
         plt.plot(
