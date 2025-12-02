@@ -331,6 +331,7 @@ def simulate_spectra(
                 uncertainties /= runtime_params.SNRfactor
 
             # ________LOOP OVER ALL SELECTED MODELS_______
+            opticalDepthProfiles = {}
             for atmosModel in atmosModels:
                 if verbose:
                     print()
@@ -623,7 +624,6 @@ def simulate_spectra(
                         molecules,
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
-                        atmosModel,
                         verbose=verbose,
                     )
                 )
@@ -643,7 +643,6 @@ def simulate_spectra(
                     molecules,
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
-                    atmosModel,
                     verbose=verbose,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (

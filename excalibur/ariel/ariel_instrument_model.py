@@ -67,7 +67,7 @@ def load_ariel_instrument(target, system_params, ancil_params, runtime_params):
         arielrad_params['impact'] = '0'
     if arielrad_params['M*']=='':
         log.error('ArielRad Input Error: MISSING STAR MASS!!! %s', target)
-        arielrad_params['M*'] = '1'  # assume 1 for now
+        arielrad_params['M*'] = '1'
 
     print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
 

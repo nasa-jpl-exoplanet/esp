@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 
@@ -26,7 +26,6 @@ def plot_spectrum(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
-    atmosModel,
     verbose=False,
 ):
     # PLOT THE SPECTRA
@@ -189,8 +188,7 @@ def plot_spectrum(
     # )
     # if not os.path.exists(plot_dir):
     #    os.mkdir(plot_dir)
-    # plt.savefig(plot_dir +
-    #             '/ariel_' + atmosModel + 'Atmos_' +
+    # plt.savefig(plot_dir + '/ariel_' +
     #             target + '_' + planet_letter + '.png')
 
     savedFigure = save_plot_tosv(myfig)
@@ -217,7 +215,6 @@ def plot_spectrum_topmolecules(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
-    atmosModel,
     verbose=False,
 ):
     # PLOT THE SPECTRA
@@ -317,7 +314,8 @@ def plot_spectrum_topmolecules(
         if thisMolecule in moleculeColorMatch:
             moleculeColor = moleculeColorMatch[thisMolecule]
         else:
-            moleculeColor = (colorlist[imole % len(colorlist)],)
+            moleculeColor = (colorlist[imole % len(colorlist)])
+        # print('thismolecule,color:', thisMolecule, moleculeColor)
         plt.plot(
             [wavelengthedge_low[iwave], wavelengthedge_high[iwave]],
             [moleculeYpos[imole], moleculeYpos[imole]],
@@ -378,7 +376,7 @@ def plot_depthprobed(
     # cut off that top buffer edge
     throughput = throughput[:-1, :]
 
-    myfig, ax = plt.subplots(figsize=(8, 4))
+    myfig, _ = plt.subplots(figsize=(8, 4))
     myfig.subplots_adjust(top=0.92, bottom=0.13, left=0.09, right=0.98)
     plt.title(
         'Atmospheric depth probed : '
