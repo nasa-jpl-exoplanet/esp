@@ -420,7 +420,7 @@ def plot_depthprobed(
         )
         plt.text(
             6.0,
-            model_params['CTP'] + (ylims[0] - ylims[1])/25.,
+            model_params['CTP'] + (ylims[0] - ylims[1]) / 25.0,
             'top of cloud deck',
             fontsize=8,
         )
