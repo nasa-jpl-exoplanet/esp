@@ -314,7 +314,7 @@ def plot_spectrum_topmolecules(
         if thisMolecule in moleculeColorMatch:
             moleculeColor = moleculeColorMatch[thisMolecule]
         else:
-            moleculeColor = (colorlist[imole % len(colorlist)])
+            moleculeColor = colorlist[imole % len(colorlist)]
         # print('thismolecule,color:', thisMolecule, moleculeColor)
         plt.plot(
             [wavelengthedge_low[iwave], wavelengthedge_high[iwave]],
@@ -379,10 +379,7 @@ def plot_depthprobed(
     myfig, _ = plt.subplots(figsize=(8, 4))
     myfig.subplots_adjust(top=0.92, bottom=0.13, left=0.09, right=0.98)
     plt.title(
-        'Atmospheric depth probed : '
-        + target
-        + ' '
-        + planet_letter,
+        'Atmospheric depth probed : ' + target + ' ' + planet_letter,
         fontsize=16,
     )
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=14)
