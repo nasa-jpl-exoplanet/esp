@@ -311,10 +311,10 @@ def plot_spectrum_topmolecules(
             nextMoleculeYpos += moleculeSpacing
 
         imole = moleculesFound.index(thisMolecule)
-        if thisMolecule in moleculeColorMatch:
-            moleculeColor = moleculeColorMatch[thisMolecule]
-        else:
-            moleculeColor = colorlist[imole % len(colorlist)]
+        moleculeColor = moleculeColorMatch.get(
+            thisMolecule,
+            colorlist[imole % len(colorlist)]
+        )
         # print('thismolecule,color:', thisMolecule, moleculeColor)
         plt.plot(
             [wavelengthedge_low[iwave], wavelengthedge_high[iwave]],
