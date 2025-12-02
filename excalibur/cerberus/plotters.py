@@ -975,6 +975,7 @@ def plot_fits_vs_truths(
     filt,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''
     Compare the retrieved values against the original inputs
@@ -1190,13 +1191,21 @@ def plot_fits_vs_truths(
                 + '.png'
             )
         plot_statevectors.append(save_plot_tosv(figure))
+        if verbose:
+            plt.show()
         plt.close(figure)
     return plot_statevectors
 
 
 # --------------------------------------------------------------------
 def plot_fit_uncertainties(
-    fit_values, fit_errors, prior_ranges, filt, saveDir='./', savetodisk=False
+    fit_values,
+    fit_errors,
+    prior_ranges,
+    filt,
+    saveDir='./',
+    savetodisk=False,
+    verbose=False,
 ):
     '''
     Plot uncertainty as a function of the fit value
@@ -1358,6 +1367,8 @@ def plot_fit_uncertainties(
                 + '.png'
             )
         plot_statevectors.append(save_plot_tosv(figure))
+        if verbose:
+            plt.show()
         plt.close(figure)
     return plot_statevectors
 
@@ -1374,6 +1385,7 @@ def plot_mass_vs_metals(
     saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
+    verbose=False,
 ):
     '''how well do we retrieve the input mass-metallicity relation?'''
 
@@ -1833,6 +1845,8 @@ def plot_mass_vs_metals(
     # ('display' doesn't work for pdf files)
     if savetodisk:
         plt.savefig(saveDir + 'massVSmetals_' + filt + '.png')
+    if verbose:
+        plt.show()
     return save_plot_tosv(figure), figure
 
 

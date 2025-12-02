@@ -1,7 +1,7 @@
 '''ariel Database Products View'''
 
 # Heritage code shame:
-# pylint: disable=too-many-nested-blocks
+# pylint: disable=too-many-nested-blocks,too-many-branches
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -42,20 +42,57 @@ class SimSpectrumSV(ExcaliburSV):
                         # but there should be all models present, if any models present
                         if planet_letter in self['data'].keys():
                             if model in self['data'][planet_letter].keys():
-                                visitor.add_image(
-                                    '...',
-                                    '------ simulated Ariel spectrum for '
-                                    + target
-                                    + ' '
-                                    + planet_letter
-                                    + '  MODEL:'
-                                    + model
-                                    + ' ------',
-                                    self['data'][planet_letter][model][
-                                        'plot_simspectrum'
-                                    ],
-                                )
-
+                                if (
+                                    'plot_simspectrum'
+                                    in self['data'][planet_letter][model]
+                                ):
+                                    visitor.add_image(
+                                        '...',
+                                        '------ simulated Ariel spectrum for '
+                                        + target
+                                        + ' '
+                                        + planet_letter
+                                        + '  MODEL:'
+                                        + model
+                                        + ' ------',
+                                        self['data'][planet_letter][model][
+                                            'plot_simspectrum'
+                                        ],
+                                    )
+                                if (
+                                    'plot_simspectrum_topmolecules'
+                                    in self['data'][planet_letter][model]
+                                ):
+                                    visitor.add_image(
+                                        '...',
+                                        '------ simulated Ariel spectrum for '
+                                        + target
+                                        + ' '
+                                        + planet_letter
+                                        + '  MODEL:'
+                                        + model
+                                        + ' ------',
+                                        self['data'][planet_letter][model][
+                                            'plot_simspectrum_topmolecules'
+                                        ],
+                                    )
+                                if (
+                                    'plot_depthprobed'
+                                    in self['data'][planet_letter][model]
+                                ):
+                                    visitor.add_image(
+                                        '...',
+                                        '------ atmospheric depths probed for '
+                                        + target
+                                        + ' '
+                                        + planet_letter
+                                        + '  MODEL:'
+                                        + model
+                                        + ' ------',
+                                        self['data'][planet_letter][model][
+                                            'plot_depthprobed'
+                                        ],
+                                    )
             else:
                 # determine the most recent RID from subdir filenames
                 ariel_plot_dir = excalibur.context['data_dir'] + '/ariel/'

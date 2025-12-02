@@ -404,7 +404,7 @@ def add_scale_height_labels(data, vspectrum, ax, fig):
             Hs /= data['RSTAR'][0]
 
         axtwin = ax.twinx()
-        axtwin.set_ylabel('$\\Delta$ [H$_s$]')
+        axtwin.set_ylabel('$\\Delta$ [H$_s$]', fontsize=12)
         axmin, axmax = ax.get_ylim()
 
         if np.isnan(np.nanmax(vspectrum)):
