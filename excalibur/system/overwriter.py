@@ -1947,6 +1947,41 @@ def ppar():
     overwrite['L 98-59']['b']['teq_uperr'] = teq_uperr_derived[0]
     overwrite['L 98-59']['b']['teq_ref'] = teq_ref_derived[0]
 
+    # nov.2025 addition of 450 new systems from the Archive
+    #  3 are missing distances
+    overwrite['Kepler-1676'] = {
+        'dist': (1000.0 / 1.1204),
+        'dist_uperr': 50.0,
+        'dist_lowerr': -50.0,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+    overwrite['Kepler-477'] = {
+        'dist': (1000.0 / 2.1511),
+        'dist_uperr': 5.0,
+        'dist_lowerr': -5.0,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+    overwrite['Kepler-478'] = {
+        'dist': (1000.0 / 1.3568),
+        'dist_uperr': 200.0,
+        'dist_lowerr': -200.0,
+        'dist_units': '[pc]',
+        'dist_ref': 'Gaia EDR3',
+    }
+    #  1 is missing star mass
+    #   actually TESS input catalog (Stassun 2019 and Paegert 2021)
+    #    coincidentally has it as 1.000, same as our default value
+    #   other vizier refs have it as 0.939 and 0.948
+    overwrite['EPIC 212624936'] = {
+        'M*': 1.000,
+        'M*_uperr': 0.25,
+        'M*_lowerr': -0.25,
+        'M*_ref': 'Staussun et al. 2019',
+    }
+    # ~50 are missing transit duration. update analytically?
+
     return overwrite
 
 

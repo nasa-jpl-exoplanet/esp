@@ -2709,9 +2709,11 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                 ['T', '[X/H]', '[C/O]', '[N/O]', 'Mp'],
                             ):
                                 if trueparam in truth_params:
-                                    true_value = atmos_fit['data'][
-                                        planet_letter
-                                    ]['TRUTH_MODELPARAMS'][trueparam]
+                                    true_value = float(
+                                        atmos_fit['data'][planet_letter][
+                                            'TRUTH_MODELPARAMS'
+                                        ][trueparam]
+                                    )
                                     # (metallicity and C/O do not have to be converted to log-solar)
                                     # if trueparam=='metallicity':
                                     #    true_value = np.log10(true_value)
@@ -2794,6 +2796,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 prior_ranges,
                 filt,
                 saveDir=save_dir,
+                verbose=verbose,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
             fit_t_plot = plotarray[0]
@@ -2811,6 +2814,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 prior_ranges,
                 filt,
                 saveDir=save_dir,
+                verbose=verbose,
             )
             fit_t_plot = plotarray[0]
             fit_metalplot = plotarray[1]
@@ -2828,6 +2832,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             prior_ranges,
             filt,
             saveDir=save_dir,
+            verbose=verbose,
         )
 
         # save the analysis as .csv file? (in /proj/data/spreadsheets/)

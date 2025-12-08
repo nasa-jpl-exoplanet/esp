@@ -32,6 +32,7 @@ class crbFM:
         self.__spectrum = np.empty(0)
         self.__breakdown_by_molecule = {}
         self.__moleculeProfiles = {}
+        self.__opticalDepthProfiles = {}
         self.__pressureGrid = np.empty(0)
 
     def crbmodel(
@@ -409,6 +410,7 @@ class crbFM:
         self.__breakdown_by_molecule = models_by_molecule
         self.__pressureGrid = pressure
         self.__moleculeProfiles = mixratioprofiles
+        self.__opticalDepthProfiles = tau  # (tau_by_molecule is also available)
         return self
 
     @property
@@ -426,6 +428,10 @@ class crbFM:
     @property
     def moleculeProfiles(self):
         return self.__moleculeProfiles
+
+    @property
+    def opticalDepthProfiles(self):
+        return self.__opticalDepthProfiles
 
 
 # @deprecated(
