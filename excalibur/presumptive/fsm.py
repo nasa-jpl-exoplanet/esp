@@ -15,7 +15,6 @@ from . import email
 from . import perform
 
 from datetime import datetime
-from datetime import timedelta
 
 from urllib.parse import urljoin
 from urllib.parse import urlparse
@@ -36,6 +35,7 @@ def check(args):
                 previous = pickle.load(file)
         else:
             previous = current.copy()
+            previous['reported'] = False
             previous['when'] = datetime.now()
         # if there is a change in state from the previous, reset the timer
         if (
@@ -46,9 +46,10 @@ def check(args):
             previous['when'] = datetime.now()
         # have we surpased the desired wait time
         duration = datetime.now() - previous['when']
-        if duration.total_seconds() > args.threshold:
-            previous['when'] = datetime.now() + timedelta(days=1000)
-            if current['status'] == 'active' and current['name'] == 'loading':
+        report = not (previous['reported'] if 'reported' in previous else False)
+        if report and duration.total_seconds() > args.threshold:
+            previous['reported'] = True
+            if current['status'] == 'exiting' and current['name'] == 'running':
                 msg = f'''
  The pipeline is stuck in "loading" for {duration.total_seconds()} seconds. Restarting the pipeline does not make sense because there are probably messages in /proj/sdp/data/logs/ops.log that will indicate why it has not finished loading. A pipeline restart should result in the same condition. Hence, you need to read the logs, fix the bug, and then restart the pipeline either through a github.com merge or manually.
                 '''
