@@ -1000,8 +1000,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         out['data']['EXPFLAG'] = alldq
         pass
     # I know it is useless but I feel bad
-    for it in iexist.items():
-        it[1].close()
+    for it in iexist.values():
+        it.close()
         pass
     return True
 
@@ -1079,14 +1079,9 @@ def jwstdqfiles(thisdet):
         fpath = os.path.join(local, 'jwst_nirspec_mask_0087.fits')
         pass
     with pyfits.open(fpath) as prfhdul:
-        mask = []
-        for hdu in prfhdul:
-            if hdu.data is not None:
-                fitsdata = hdu.data
-                mask.append(fitsdata)
-                del hdu.data
-                pass
-            pass
+        mask = [
+            hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+        ]
         pass
     # mask[1] contains bit definition
     return mask[0]  # Full array...
@@ -1117,14 +1112,7 @@ def jwstsbfiles(thisdet, thisgrating, iexist):
         prfhdul = pyfits.open(fpath)
         iexist[fpath] = prfhdul
         pass
-    sb = []
-    for hdu in prfhdul:
-        if hdu.data is not None:
-            fitsdata = hdu.data
-            sb.append(fitsdata)
-            del hdu.data
-            pass
-        pass
+    sb = [hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)]
     return sb[0]
 
 
@@ -1153,14 +1141,7 @@ def jwstnlfiles(thisdet, iexist):
         prfhdul = pyfits.open(fpath)
         iexist[fpath] = prfhdul
         pass
-    nl = []
-    for hdu in prfhdul:
-        if hdu.data is not None:
-            fitsdata = hdu.data
-            nl.append(fitsdata)
-            del hdu.data
-            pass
-        pass
+    nl = [hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)]
     return nl  # [Coeff, DQ, DQdef, ?]
 
 
@@ -1194,27 +1175,17 @@ def jwstreffiles(thisext):
         )
         # Trace template for each order (2D ARRAY)
         with pyfits.open(fpath) as prfhdul:
-            orders = []
-            for hdu in prfhdul:
-                if hdu.data is not None:
-                    fitsdata = hdu.data
-                    orders.append(fitsdata)
-                    del hdu.data
-                    pass
-                pass
+            orders = [
+                hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+            ]
             pass
         # Trace pixel (waves[0]['X'], waves[0]['Y']) and
         # associated calibrated wavelength (waves[0]['WAVELENGTH']) (1D ARRAYS)
         fpath = os.path.join(excalibur.context['data_cal'], thisdir, thistrace)
         with pyfits.open(fpath) as prfhdul:
-            waves = []
-            for hdu in prfhdul:
-                if hdu.data is not None:
-                    fitsdata = hdu.data
-                    waves.append(fitsdata)
-                    del hdu.data
-                    pass
-                pass
+            waves = [
+                hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+            ]
             pass
         reffiles = [orders, waves]
         pass
