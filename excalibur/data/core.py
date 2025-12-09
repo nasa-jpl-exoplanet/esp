@@ -1176,7 +1176,8 @@ def jwstreffiles(thisext):
         # Trace template for each order (2D ARRAY)
         with pyfits.open(fpath) as prfhdul:
             orders = [
-                hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+                hdu.data
+                for hdu in filter(lambda h: h.data is not None, prfhdul)
             ]
             pass
         # Trace pixel (waves[0]['X'], waves[0]['Y']) and
@@ -1184,7 +1185,8 @@ def jwstreffiles(thisext):
         fpath = os.path.join(excalibur.context['data_cal'], thisdir, thistrace)
         with pyfits.open(fpath) as prfhdul:
             waves = [
-                hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+                hdu.data
+                for hdu in filter(lambda h: h.data is not None, prfhdul)
             ]
             pass
         reffiles = [orders, waves]
