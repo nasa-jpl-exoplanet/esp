@@ -605,12 +605,10 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
 
 # ------------ -------------------------------------------------------
 # -- JWST CALIBRATION -- ---------------------------------------------
-def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
+def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
     '''
     G. ROUDIER: Ramp fits
     '''
-    out = raws.copy()
-    alldexp = raws['alldexp'].copy()
     allsb = []
     alldqnl = []
     if sb:
@@ -621,17 +619,21 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
             'proginprompt': True,
         }
         if nl:
-            progbar = nerdclub.Progressbar(argsdict, '>-- SB + NL', alldexp)
+            progbar = nerdclub.Progressbar(
+                argsdict, '>-- SB + NL', raws['alldexp']
+            )
             pass
         else:
-            progbar = nerdclub.Progressbar(argsdict, '>-- SB', alldexp)
+            progbar = nerdclub.Progressbar(argsdict, '>-- SB', raws['alldexp'])
             pass
         for i in range(len(raws['alldexp'])):
-            sbmap = jwstsbfiles(raws['alldet'][i], raws['allgrating'][i])
-            alldexp[i] = raws['alldexp'][i] - sbmap
+            sbmap = jwstsbfiles(
+                raws['alldet'][i], raws['allgrating'][i], iexist
+            )
+            raws['alldexp'][i] = raws['alldexp'][i] - sbmap
             allsb.append(sbmap)
             if nl:
-                nlmap = jwstnlfiles(raws['alldet'][i])
+                nlmap = jwstnlfiles(raws['alldet'][i], iexist)
                 domain = raws['allstartpix'][i]
                 coeffs = [
                     n[
@@ -649,8 +651,11 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
                     )
                 )
                 powers = np.arange(len(coeffs))
-                alldexp[i] = np.sum(
-                    [c * (alldexp[i] ** p) for c, p in zip(coeffs, powers)],
+                raws['alldexp'][i] = np.sum(
+                    [
+                        c * (raws['alldexp'][i] ** p)
+                        for c, p in zip(coeffs, powers)
+                    ],
                     axis=0,
                 )
                 pass
@@ -673,33 +678,29 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
     # TFORM6  = 'D       '
     # TTYPE7  = 'int_end_BJD_TDB'
     # TFORM7  = 'D       '
-    exposures = []
-    err = []
-    dq = []  # valid data flag
-
     argsdict = {
         'progbar': verbose,
         'progsizemax': 35,
         'lbllen': 15,
         'proginprompt': True,
     }
-    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', alldexp)
-    for i, _ in enumerate(alldexp):
+    progbar = nerdclub.Progressbar(argsdict, '>-- RAMPFITS', raws['alldexp'])
+    for i, _ in enumerate(raws['alldexp']):
+        f0shape = raws['alldexp'][i][0].shape
         # VECTORIAL FIT
-        dramps = [r.flatten() for r in alldexp[i]]
+        dramps = [r.flatten() for r in raws['alldexp'][i]]
         # TIMESTAMPS
         deltat = (
             (raws['alltiming'][i][-1] - raws['alltiming'][i][-3]) * 24e0 * 36e2
         ) / (
-            1e0 * len(alldexp[i])
+            1e0 * len(raws['alldexp'][i])
         )  # [s]
         xfit = deltat * np.arange(len(dramps))
         # LINFIT
         fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
-        exposures.append(fitresult[0][0].reshape(alldexp[i][0].shape))
-        cov = fitresult[1][0, 0].reshape(alldexp[i][0].shape)
-        err.append(np.sqrt(abs(cov)))
-        dqmap = np.bool(err[-1])  # zero error means trouble
+        raws['alldexp'][i] = fitresult[0][0].reshape(f0shape)
+        raws['allerr'].append(np.sqrt(abs(fitresult[1][0, 0].reshape(f0shape))))
+        dqmap = np.bool(raws['allerr'][-1])  # zero error means trouble
         dqmap = dqmap.astype(float)  # pylint: disable=E1101
         if sb:
             thrplus = np.nanpercentile(allsb[i], 50 + 68 / 2)
@@ -716,14 +717,11 @@ def rampfits(raws, sb=False, nl=False, alldq=None, verbose=False):
                 pass
             pass
         dqmap[dqmap < 1] = np.nan
-        dq.append(dqmap)
+        raws['alldq'].append(dqmap)
         progbar.update()
         pass
     progbar.close()
-    out['alldexp'] = exposures
-    out['allerr'] = err
-    out['alldq'] = dq
-    return out
+    return
 
 
 def getscore(expts):
@@ -736,7 +734,14 @@ def getscore(expts):
 
 
 def readfitsdata(
-    loclist, dbs, raws=False, sb=False, nl=False, alldq=None, verbose=False
+    loclist,
+    dbs,
+    iexist,
+    raws=False,
+    sb=False,
+    nl=False,
+    alldq=None,
+    verbose=False,
 ):
     '''
     G. ROUDIER: Creates a dictionnary of time series of
@@ -758,61 +763,60 @@ def readfitsdata(
     }
     for loc in loclist:
         fullloc = os.path.join(dbs, loc)
-        with pyfits.open(fullloc) as hdulist:
-            nints = None
-            for hdu in hdulist:
-                if 'PRIMARY' in hdu.name:
-                    nints = 1 + hdu.header['INTEND'] - hdu.header['INTSTART']
-                    out['alldet'].extend(nints * [hdu.header['DETECTOR']])
-                    out['allfilter'].extend(nints * [hdu.header['FILTER']])
-                    out['allgrating'].extend(nints * [hdu.header['GRATING']])
-                    out['allslit'].extend(nints * [hdu.header['FXD_SLIT']])
-                    out['allread'].extend(nints * [hdu.header['READPATT']])
-                    # (X,Y)
-                    out['allstartpix'].extend(
-                        nints
-                        * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
-                    )
-                    pass
-                elif 'SCI' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    out['alldexp'].extend(fitsdata)
-                    out['allunits'].extend(
-                        [hdu.header['BUNIT']] * len(fitsdata)
-                    )
-                    del hdu.data
-                    pass
-                # <-- L2b data only
-                elif 'ERR' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    out['allerr'].extend(fitsdata)
-                    del hdu.data
-                    pass
-                elif 'DQ' in hdu.name:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    out['alldq'].extend(fitsdata)
-                    del hdu.data
-                    pass
-                elif ('WAVELENGTH' in hdu.name) and nints:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    out['allwaves'].extend(nints * [fitsdata])
-                    del hdu.data
-                    pass
-                # -->
-                elif 'INT_TIMES' in hdu.name:
-                    fitsdata = hdu.data[:].copy()
-                    out['alltiming'].extend(fitsdata)
-                    del hdu.data
-                    pass
+        if loc in iexist:
+            hdulist = iexist[loc]
+            pass
+        else:
+            hdulist = pyfits.open(fullloc)
+            iexist[loc] = hdulist
+            pass
+        nints = None
+        for hdu in hdulist:
+            if 'PRIMARY' in hdu.name:
+                nints = 1 + hdu.header['INTEND'] - hdu.header['INTSTART']
+                out['alldet'].extend(nints * [hdu.header['DETECTOR']])
+                out['allfilter'].extend(nints * [hdu.header['FILTER']])
+                out['allgrating'].extend(nints * [hdu.header['GRATING']])
+                out['allslit'].extend(nints * [hdu.header['FXD_SLIT']])
+                out['allread'].extend(nints * [hdu.header['READPATT']])
+                # (X,Y)
+                out['allstartpix'].extend(
+                    nints * [(hdu.header['SUBSTRT1'], hdu.header['SUBSTRT2'])]
+                )
+                pass
+            # SCI, DQ and ERR are massaged in rampfits
+            elif 'SCI' in hdu.name:
+                fitsdata = np.copy(hdu.data)
+                out['alldexp'].extend(fitsdata)
+                out['allunits'].extend([hdu.header['BUNIT']] * len(fitsdata))
+                del hdu.data
+                pass
+            # <-- L2b data only
+            elif 'ERR' in hdu.name:
+                fitsdata = np.copy(hdu.data)
+                out['allerr'].extend(fitsdata)
+                del hdu.data
+                pass
+            elif 'DQ' in hdu.name:
+                fitsdata = np.copy(hdu.data)
+                out['alldq'].extend(fitsdata)
+                del hdu.data
+                pass
+            elif ('WAVELENGTH' in hdu.name) and nints:
+                fitsdata = hdu.data
+                out['allwaves'].extend(nints * [fitsdata])
+                del hdu.data
+                pass
+            # -->
+            elif 'INT_TIMES' in hdu.name:
+                fitsdata = hdu.data
+                out['alltiming'].extend(fitsdata)
+                del hdu.data
                 pass
             pass
         pass
     if raws:
-        out = rampfits(out, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
+        rampfits(out, iexist, sb=sb, nl=nl, alldq=alldq, verbose=verbose)
         pass
     return out
 
@@ -824,9 +828,10 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
+    iexist = {}
     # DATASET
-    rawdata = readfitsdata(rawloc, dbs, raws=True, verbose=verbose)
-    caldata = readfitsdata(calloc, dbs, raws=False, verbose=verbose)
+    rawdata = readfitsdata(rawloc, dbs, iexist, raws=True, verbose=verbose)
+    caldata = readfitsdata(calloc, dbs, iexist, raws=False, verbose=verbose)
     # NRS1 STSCI clips ref.pixels and detector plate (28, 1271)
     # NRS2 STSCI (32, 2048)
     # RAWS (32, 2048)
@@ -855,14 +860,21 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # There s no saturation for a detector. Only non linearities.
     # 2.1 - Superbias
     rawdata = readfitsdata(
-        rawloc, dbs, raws=True, sb=True, alldq=alldq, verbose=verbose
+        rawloc, dbs, iexist, raws=True, sb=True, alldq=alldq, verbose=verbose
     )
     allrexp = np.array(rawdata['alldexp'])
     alldq = np.array(rawdata['alldq'])
     allscores['2 SB'] = getscore(allrexp * alldq)
     # 2.2 - Linearity correction
     rawdata = readfitsdata(
-        rawloc, dbs, raws=True, sb=True, nl=True, alldq=alldq, verbose=verbose
+        rawloc,
+        dbs,
+        iexist,
+        raws=True,
+        sb=True,
+        nl=True,
+        alldq=alldq,
+        verbose=verbose,
     )
     allrexp = np.array(rawdata['alldexp'])
     alldq = np.array(rawdata['alldq'])
@@ -987,6 +999,10 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         out['data']['WAVE'] = all1dwave
         out['data']['EXPFLAG'] = alldq
         pass
+    # I know it is useless but I feel bad
+    for it in iexist.values():
+        it.close()
+        pass
     return True
 
 
@@ -1063,21 +1079,15 @@ def jwstdqfiles(thisdet):
         fpath = os.path.join(local, 'jwst_nirspec_mask_0087.fits')
         pass
     with pyfits.open(fpath) as prfhdul:
-        mask = []
-        for hdu in prfhdul:
-            if hdu.data is not None:
-                fitsdata = np.empty(hdu.data.shape)
-                fitsdata[:] = hdu.data[:]
-                mask.append(fitsdata)
-                del hdu.data
-                pass
-            pass
+        mask = [
+            hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)
+        ]
         pass
     # mask[1] contains bit definition
     return mask[0]  # Full array...
 
 
-def jwstsbfiles(thisdet, thisgrating):
+def jwstsbfiles(thisdet, thisgrating, iexist):
     '''
     G. ROUDIER: Returns a list of reference files for SuperBias sub
     Source: https://jwst-crds.stsci.edu
@@ -1095,20 +1105,18 @@ def jwstsbfiles(thisdet, thisgrating):
     if thisdet in ['NRS2'] and thisgrating in ['G395H']:
         fpath = os.path.join(local, 'jwst_nirspec_superbias_0474.fits')
         pass
-    with pyfits.open(fpath) as prfhdul:
-        sb = []
-        for hdu in prfhdul:
-            if hdu.data is not None:
-                fitsdata = hdu.data[:].copy()
-                sb.append(fitsdata)
-                del hdu.data
-                pass
-            pass
+    if fpath in iexist:
+        prfhdul = iexist[fpath]
         pass
+    else:
+        prfhdul = pyfits.open(fpath)
+        iexist[fpath] = prfhdul
+        pass
+    sb = [hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)]
     return sb[0]
 
 
-def jwstnlfiles(thisdet):
+def jwstnlfiles(thisdet, iexist):
     '''
     G. ROUDIER: Returns a list of reference files for NL correction
     Source: https://jwst-crds.stsci.edu
@@ -1126,16 +1134,14 @@ def jwstnlfiles(thisdet):
     if thisdet in ['NRS2']:
         fpath = os.path.join(local, 'jwst_nirspec_linearity_0025.fits')
         pass
-    with pyfits.open(fpath) as prfhdul:
-        nl = []
-        for hdu in prfhdul:
-            if hdu.data is not None:
-                fitsdata = hdu.data[:].copy()
-                nl.append(fitsdata)
-                del hdu.data
-                pass
-            pass
+    if fpath in iexist:
+        prfhdul = iexist[fpath]
         pass
+    else:
+        prfhdul = pyfits.open(fpath)
+        iexist[fpath] = prfhdul
+        pass
+    nl = [hdu.data for hdu in filter(lambda h: h.data is not None, prfhdul)]
     return nl  # [Coeff, DQ, DQdef, ?]
 
 
@@ -1169,29 +1175,19 @@ def jwstreffiles(thisext):
         )
         # Trace template for each order (2D ARRAY)
         with pyfits.open(fpath) as prfhdul:
-            orders = []
-            for hdu in prfhdul:
-                if hdu.data is not None:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    orders.append(fitsdata)
-                    del hdu.data
-                    pass
-                pass
+            orders = [
+                hdu.data
+                for hdu in filter(lambda h: h.data is not None, prfhdul)
+            ]
             pass
         # Trace pixel (waves[0]['X'], waves[0]['Y']) and
         # associated calibrated wavelength (waves[0]['WAVELENGTH']) (1D ARRAYS)
         fpath = os.path.join(excalibur.context['data_cal'], thisdir, thistrace)
         with pyfits.open(fpath) as prfhdul:
-            waves = []
-            for hdu in prfhdul:
-                if hdu.data is not None:
-                    fitsdata = np.empty(hdu.data.shape)
-                    fitsdata[:] = hdu.data[:]
-                    waves.append(fitsdata)
-                    del hdu.data
-                    pass
-                pass
+            waves = [
+                hdu.data
+                for hdu in filter(lambda h: h.data is not None, prfhdul)
+            ]
             pass
         reffiles = [orders, waves]
         pass
