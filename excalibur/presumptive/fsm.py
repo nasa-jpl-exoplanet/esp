@@ -49,7 +49,10 @@ def check(args):
         report = not (previous['reported'] if 'reported' in previous else False)
         if report and duration.total_seconds() > args.threshold:
             previous['reported'] = True
-            if current['status'] == 'exiting' and current['name'] == 'running':
+            if (
+                current['status'] == 'entering'
+                and current['name'] == 'contemplation'
+            ):
                 msg = f'''
  The pipeline is stuck in "loading" for {duration.total_seconds()} seconds. Restarting the pipeline does not make sense because there are probably messages in /proj/sdp/data/logs/ops.log that will indicate why it has not finished loading. A pipeline restart should result in the same condition. Hence, you need to read the logs, fix the bug, and then restart the pipeline either through a github.com merge or manually.
                 '''
