@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 # -- ALGORITHMS -- ---------------------------------------------------
 # ECLIPSE CLASSES INHERIT FROM TRANSIT CLASSES
 class Normalization(trnalg.Normalization):
-    '''Normalize to out ot transit, inherits from transit.normalization'''
+    '''Normalize to out of transit, inherits from transit.normalization'''
 
     def __init__(self):
         '''__init__ ds'''
