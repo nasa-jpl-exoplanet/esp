@@ -14,27 +14,51 @@ import excalibur
 import h5py
 from astropy.io.misc.hdf5 import read_table_hdf5
 
+# asdf
+# from arielrad.api.run_target import run_target
+import astropy.units as u
+
 log = logging.getLogger(__name__)
 
 
 # ---------------------------- ---------------------------------------
-def load_ariel_instrument(target, system_params, ancil_params, runtime_params):
+def calculate_ariel_instrument(
+    target,
+    system_params,
+    ancil_params,
+    runtime_params,
+    verbose=False,
+):
     '''
-    Load in the output from ArielRad - uncertainty as a function of wavelength
+    Use ArielRad to calculate instrument uncertainty as a function of wavelength
 
-    This is different from the previous version above, in that there is a single file now,
-    not a separate file for each target.
-
-    H_mag brightness is already taken into account, but
-     number of observed transits is not taken into account.
+    Uncertainty is for a single visit;
+    number of observed transits is taken into account later
     '''
     tier = runtime_params.tier
     arielRad_version = runtime_params.arielRad
     thorngren = runtime_params.thorngrenMassMetals
     chachan = runtime_params.chachanMassMetals
 
-    # SYSTEM PARAMS NEEDED FOR ARIELRAD:
     planet_letter = target[-1]
+
+    # check for missing data; these should be filled in via system/overwriter
+    if system_params[planet_letter]['trandur'] == '':
+        log.error(
+            'ArielRad Input Error: MISSING TRANSIT DURATION!!! %s', target
+        )
+        system_params[planet_letter]['trandur'] = 2.0
+    if system_params['dist'] == '':
+        log.error('ArielRad Input Error: MISSING DISTANCE!!! %s', target)
+        system_params['dist'] = '666'
+    if system_params[planet_letter]['impact'] == '':
+        log.error('ArielRad Input Error: MISSING IMPACT PARAM!!! %s', target)
+        system_params[planet_letter]['impact'] = '0'
+    if system_params['M*'] == '':
+        log.error('ArielRad Input Error: MISSING STAR MASS!!! %s', target)
+        system_params['M*'] = '1'
+
+    # SYSTEM PARAMS NEEDED FOR ARIELRAD:
     arielrad_params = {
         'M*': system_params['M*'],
         'T*': system_params['T*'],
@@ -45,33 +69,130 @@ def load_ariel_instrument(target, system_params, ancil_params, runtime_params):
         'sma': system_params[planet_letter]['sma'],
         'Rp': system_params[planet_letter]['rp'],
         'Mp': system_params[planet_letter]['mass'],
+        'Teq': system_params[planet_letter]['teq'],
         'trandur': system_params[planet_letter]['trandur'],
         'impact': system_params[planet_letter]['impact'],
     }
+    # print('arielrad_params',arielrad_params)
+    # print()
+
+    arielrad_params = {
+        'star name': target[:-2],
+        'star m': system_params['M*'] * u.M_sun,
+        'star r': system_params['R*'] * u.R_sun,
+        'star t': system_params['T*'] * u.K,
+        'star z': 0.02,
+        'star d': system_params['dist'] * u.pc,
+        'planet name': target,
+        'planet r': system_params[planet_letter]['rp'] * u.R_jup,
+        'planet m': system_params[planet_letter]['mass'] * u.M_jup,
+        'planet teff': system_params[planet_letter]['teq'] * u.K,
+        'planet P': system_params[planet_letter]['period'] * u.d,
+        'planet a': system_params[planet_letter]['sma'] * u.AU,
+        'planet albedo': 0.1,
+        'planet T14': system_params[planet_letter]['trandur'] * u.h,
+    }
+    # print('arielrad_params',arielrad_params)
+
     if chachan:
-        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_chachan']
-    elif thorngren:
-        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_thorngren']
-    else:
-        arielrad_params['mmw'] = ancil_params[planet_letter]['mmw_min']
-
-    # check for missing data; these should be filled in via system/overwriter
-    if arielrad_params['trandur'] == '':
-        log.error(
-            'ArielRad Input Error: MISSING TRANSIT DURATION!!! %s', target
+        arielrad_params['planet mmw'] = (
+            ancil_params[planet_letter]['mmw_chachan'] * u.g / u.mol
         )
-        arielrad_params['trandur'] = 2.0
-    if arielrad_params['dist'] == '':
-        log.error('ArielRad Input Error: MISSING DISTANCE!!! %s', target)
-        arielrad_params['dist'] = '666'
-    if arielrad_params['impact'] == '':
-        log.error('ArielRad Input Error: MISSING IMPACT PARAM!!! %s', target)
-        arielrad_params['impact'] = '0'
-    if arielrad_params['M*'] == '':
-        log.error('ArielRad Input Error: MISSING STAR MASS!!! %s', target)
-        arielrad_params['M*'] = '1'
+    elif thorngren:
+        arielrad_params['planet mmw'] = (
+            ancil_params[planet_letter]['mmw_thorngren'] * u.g / u.mol
+        )
+    else:
+        arielrad_params['planet mmw'] = (
+            ancil_params[planet_letter]['mmw_min'] * u.g / u.mol
+        )
 
-    print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
+    # print()
+    # print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
+    # print()
+
+    # Run the simulation
+    # noise_table, output_dict, nobs = run_target(
+    #    target_dict=arielrad_params,
+    #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
+    #    obs_mode='transit',
+    #    verbose=verbose,
+    # )
+    # asdf
+    noise_table, output_dict, nobs = [{}, {}, 0]
+
+    # print('output_dict',output_dict.keys())
+    # ['tier1', 'tier2', 'tier3', 'SNRTab']
+    # print('noise_table',noise_table.keys())
+    # ['ch_name', 'wavelength', 'left_bin_edge', 'right_bin_edge', 'total_noise', 'noise_on_transit_floor']
+    # print('nobs',nobs)
+
+    if tier == 1:
+        nVisits = nobs['tier1']
+    elif tier == 3:
+        nVisits = nobs['tier3']  # divide this by 5
+    else:
+        if tier != 2:
+            log.warning('--< Unknown Ariel Tier!: %s >--', tier)
+        nVisits = nobs['tier2']
+
+    ariel_instrument = {
+        'nVisits': nVisits,
+        'transitDuration': output_dict['SNRTab']['T14'].value,
+        'wavelength': noise_table['wavelength'].value,
+        'wavelow': noise_table['left_bin_edge'].value,
+        'wavehigh': noise_table['right_bin_edge'].value,
+        'noise': noise_table['noise_on_transit_floor'].value,
+    }
+    print('NUMBER OF VISITS', nVisits)
+    print(
+        'noisespectrum median,stdev',
+        np.median(ariel_instrument['noise']),
+        np.std(ariel_instrument['noise']),
+    )
+
+    for iwave in range(len(ariel_instrument['wavelow']) - 1):
+        # multiply by number slightly above 1 to deal with numerical precision error
+        if (
+            ariel_instrument['wavehigh'][iwave]
+            > ariel_instrument['wavelow'][iwave + 1] * 1.00001
+        ):
+            print(
+                'spectral channels overlap!!',
+                iwave,
+                ariel_instrument['wavehigh'][iwave],
+                ariel_instrument['wavelow'][iwave + 1],
+            )
+            log.info(
+                '--< ARIELSIM adjusting wavelength grid: %s wave=%s >--',
+                target,
+                ariel_instrument['wavelength'][iwave],
+            )
+            ariel_instrument['wavehigh'][iwave] = (
+                ariel_instrument['wavelow'][iwave + 1] * 0.99999
+            )
+
+    if not ariel_instrument:
+        log.warning(
+            '--< ARIELSIM: target not in SNR files; failing to simulate spectrum  for %s >--',
+            target,
+        )
+
+    return ariel_instrument
+
+
+# ---------------------------- ---------------------------------------
+def load_ariel_instrument(target, runtime_params):
+    '''
+    Load in the output from ArielRad - uncertainty as a function of wavelength
+
+    Uncertainty is for a single visit;
+    number of observed transits is taken into account later
+    '''
+    tier = runtime_params.tier
+    arielRad_version = runtime_params.arielRad
+    thorngren = runtime_params.thorngrenMassMetals
+    chachan = runtime_params.chachanMassMetals
 
     noise_model_dir = excalibur.context['data_dir'] + '/ariel/'
 
