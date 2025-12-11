@@ -68,11 +68,15 @@ class Spectrum(trnalg.Spectrum):
     def previous(self):
         '''Input State Vectors: system.finalize, eclipse.normalization,
         eclipse.whitelight'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._wht),
-        ]
+        return (
+            [
+                dawgie.ALG_REF(sys.task, self.__fin),
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._wht),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     pass
 
