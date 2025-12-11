@@ -465,15 +465,15 @@ def simulate_spectra(
                         # _ = myxsecs(tempspc, runtime_params, xslib)
                         import pickle
 
-                        # asdf
-                        if 0:
-                            _ = myxsecs(tempspc, runtime_params, xslib)
-                            file = open('xslibsave.pkl', 'bw')
-                            pickle.dump(xslib, file)
-                            file.close()
-                        else:
-                            file = open('xslibsave.pkl', 'br')
-                            xslib = pickle.load(file)
+                        # Armen - you can use this to save a little time debugging maybe
+                        # if 0:
+                        _ = myxsecs(tempspc, runtime_params, xslib)
+                        #    file = open('xslibsave.pkl', 'bw')
+                        #    pickle.dump(xslib, file)
+                        #    file.close()
+                        # else:
+                        #    file = open('xslibsave.pkl', 'br')
+                        #    xslib = pickle.load(file)
 
                         if verbose:
                             print('CALCulating cross-sections DONE')
