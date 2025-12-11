@@ -19,10 +19,7 @@ from excalibur.ariel.metallicity import (
     randomCtoO_linear,
 )
 from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
-from excalibur.ariel.ariel_instrument_model import (
-    load_ariel_instrument,
-    calculate_ariel_instrument,
-)
+from excalibur.ariel.ariel_instrument_model import load_ariel_instrument
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
 from excalibur.ariel.plotters import (
@@ -217,26 +214,20 @@ def simulate_spectra(
 
         # load in the wavelength bins and the noise model
         # there is a separate SNR file for each planet
-        targetplanet = target + ' ' + planet_letter
         if testTarget:
-            # use HD 209458 SNR as a default for test cases
-            targetplanet = 'HD 209458 b'
-
-        # select old ArielRad (results read from a table) or new (results calculated internally)
-        oldArielRad = True
-        # oldArielRad = False
-        if oldArielRad:
+            # for now, use HD 209458 SNR for test cases.  RECONSIDER THIS CHOICE LATER
             ariel_instrument = load_ariel_instrument(
-                targetplanet,
-                runtime_params,
-            )
-        else:
-            ariel_instrument = calculate_ariel_instrument(
-                targetplanet,
+                'HD 209458 b',
                 system_params,
                 ancil_params,
                 runtime_params,
-                verbose=verbose,
+            )
+        else:
+            ariel_instrument = load_ariel_instrument(
+                target + ' ' + planet_letter,
+                system_params,
+                ancil_params,
+                runtime_params,
             )
 
         if ariel_instrument:
@@ -462,19 +453,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        # _ = myxsecs(tempspc, runtime_params, xslib)
-                        import pickle
-
-                        # Armen - you can use this to save a little time debugging maybe
-                        # if 0:
                         _ = myxsecs(tempspc, runtime_params, xslib)
-                        #    file = open('xslibsave.pkl', 'bw')
-                        #    pickle.dump(xslib, file)
-                        #    file.close()
-                        # else:
-                        #    file = open('xslibsave.pkl', 'br')
-                        #    xslib = pickle.load(file)
-
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -496,8 +475,6 @@ def simulate_spectra(
                         fluxDepth_by_molecule,
                         pressures,
                         opticalDepthProfiles,
-                        _,
-                        # moleculeProfiles,
                     ) = make_cerberus_atmos(
                         runtime_params,
                         wavelength_um,
@@ -648,7 +625,6 @@ def simulate_spectra(
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
                         verbose=verbose,
-                        # verbose=False,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -668,7 +644,6 @@ def simulate_spectra(
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
                     verbose=verbose,
-                    # verbose=False,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (
                     plot_depthprobed(
@@ -681,8 +656,6 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
-
-                #  ***** Armen will make a plot showing this parameter: moleculeProfiles ********
 
                 completed_at_least_one_planet = True
 

@@ -115,7 +115,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_check_loading(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'name': 'loading', 'status': 'active'}
+        RESPONSE[0] = {'name': 'contemplation', 'status': 'entering'}
         retval = fsm.check(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))

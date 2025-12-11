@@ -1,6 +1,6 @@
 astropy
 astroquery
-dawgie==2.0.2-rc06
+dawgie==2.0.2-rc08
 deprecated
 h5py
 joblib

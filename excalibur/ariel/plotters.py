@@ -298,7 +298,7 @@ def plot_spectrum_topmolecules(
         dominantMolecule_byWavelength.append(molecules[wheremax])
     # print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
 
-    moleculeSpacing = (yrange[1] - yrange[0]) / 12
+    moleculeSpacing = (yrange[1] - yrange[0]) / 15
     nextMoleculeYpos = yrange[1] + moleculeSpacing
     moleculesFound = []
     moleculeYpos = []
@@ -416,7 +416,7 @@ def plot_depthprobed(
         )
         plt.text(
             6.0,
-            model_params['CTP'] + (ylims[0] - ylims[1]) / 40.0,
+            model_params['CTP'] + (ylims[0] - ylims[1]) / 25.0,
             'top of cloud deck',
             fontsize=8,
         )
