@@ -60,23 +60,6 @@ def calculate_ariel_instrument(
 
     # SYSTEM PARAMS NEEDED FOR ARIELRAD:
     arielrad_params = {
-        'M*': system_params['M*'],
-        'T*': system_params['T*'],
-        'R*': system_params['R*'],
-        'dist': system_params['dist'],
-        'Hmag': system_params['Hmag'],
-        'period': system_params[planet_letter]['period'],
-        'sma': system_params[planet_letter]['sma'],
-        'Rp': system_params[planet_letter]['rp'],
-        'Mp': system_params[planet_letter]['mass'],
-        'Teq': system_params[planet_letter]['teq'],
-        'trandur': system_params[planet_letter]['trandur'],
-        'impact': system_params[planet_letter]['impact'],
-    }
-    # print('arielrad_params',arielrad_params)
-    # print()
-
-    arielrad_params = {
         'star name': target[:-2],
         'star m': system_params['M*'] * u.M_sun,
         'star r': system_params['R*'] * u.R_sun,
@@ -92,8 +75,6 @@ def calculate_ariel_instrument(
         'planet albedo': 0.1,
         'planet T14': system_params[planet_letter]['trandur'] * u.h,
     }
-    # print('arielrad_params',arielrad_params)
-
     if chachan:
         arielrad_params['planet mmw'] = (
             ancil_params[planet_letter]['mmw_chachan'] * u.g / u.mol
@@ -106,26 +87,24 @@ def calculate_ariel_instrument(
         arielrad_params['planet mmw'] = (
             ancil_params[planet_letter]['mmw_min'] * u.g / u.mol
         )
-
-    # print()
     # print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
-    # print()
 
     # Run the simulation
-    # noise_table, output_dict, nobs = run_target(
+    # noise_table, output_dict, nobs, info = run_target(
     #    target_dict=arielrad_params,
     #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
     #    obs_mode='transit',
     #    verbose=verbose,
     # )
     # asdf
-    noise_table, output_dict, nobs = [{}, {}, 0]
+    noise_table, output_dict, nobs, info = [{}, {}, 0, {}]
 
     # print('output_dict',output_dict.keys())
     # ['tier1', 'tier2', 'tier3', 'SNRTab']
     # print('noise_table',noise_table.keys())
     # ['ch_name', 'wavelength', 'left_bin_edge', 'right_bin_edge', 'total_noise', 'noise_on_transit_floor']
     # print('nobs',nobs)
+    # print('version info:', info)
 
     if tier == 1:
         nVisits = nobs['tier1']
@@ -144,12 +123,12 @@ def calculate_ariel_instrument(
         'wavehigh': noise_table['right_bin_edge'].value,
         'noise': noise_table['noise_on_transit_floor'].value,
     }
-    print('NUMBER OF VISITS', nVisits)
-    print(
-        'noisespectrum median,stdev',
-        np.median(ariel_instrument['noise']),
-        np.std(ariel_instrument['noise']),
-    )
+    # print('NUMBER OF VISITS', nVisits)
+    # print(
+    #    'noisespectrum median,stdev',
+    #    np.median(ariel_instrument['noise']),
+    #    np.std(ariel_instrument['noise']),
+    # )
 
     for iwave in range(len(ariel_instrument['wavelow']) - 1):
         # multiply by number slightly above 1 to deal with numerical precision error
@@ -157,12 +136,12 @@ def calculate_ariel_instrument(
             ariel_instrument['wavehigh'][iwave]
             > ariel_instrument['wavelow'][iwave + 1] * 1.00001
         ):
-            print(
-                'spectral channels overlap!!',
-                iwave,
-                ariel_instrument['wavehigh'][iwave],
-                ariel_instrument['wavelow'][iwave + 1],
-            )
+            # print(
+            #    'spectral channels overlap!!',
+            #    iwave,
+            #    ariel_instrument['wavehigh'][iwave],
+            #    ariel_instrument['wavelow'][iwave + 1],
+            # )
             log.info(
                 '--< ARIELSIM adjusting wavelength grid: %s wave=%s >--',
                 target,
