@@ -43,10 +43,14 @@ class WhiteLight(trnalg.WhiteLight):
 
     def previous(self):
         '''Input State Vectors: eclipse.normalization, system.finalize'''
-        return [
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
-            dawgie.ALG_REF(sys.task, self.__fin),
-        ]
+        return (
+            [
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
+                dawgie.ALG_REF(sys.task, self.__fin),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     pass
 
