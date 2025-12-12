@@ -227,14 +227,6 @@ def simulate_spectra(
         # oldArielRad = False
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
-<<<<<<< HEAD
-                targetplanet,
-                runtime_params,
-            )
-        else:
-            ariel_instrument = calculate_ariel_instrument(
-                targetplanet,
-=======
                 'HD 209458 b',
                 system_params,
                 ancil_params,
@@ -243,7 +235,6 @@ def simulate_spectra(
         else:
             ariel_instrument = load_ariel_instrument(
                 target + ' ' + planet_letter,
->>>>>>> origin/main
                 system_params,
                 ancil_params,
                 runtime_params,
@@ -473,8 +464,6 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-<<<<<<< HEAD
-                        # _ = myxsecs(tempspc, runtime_params, xslib)
                         import pickle
 
                         # Armen - you can use this to save a little time debugging maybe
@@ -487,9 +476,6 @@ def simulate_spectra(
                         #    file = open('xslibsave.pkl', 'br')
                         #    xslib = pickle.load(file)
 
-=======
-                        _ = myxsecs(tempspc, runtime_params, xslib)
->>>>>>> origin/main
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -511,11 +497,8 @@ def simulate_spectra(
                         fluxDepth_by_molecule,
                         pressures,
                         opticalDepthProfiles,
-<<<<<<< HEAD
                         _,
                         # moleculeProfiles,
-=======
->>>>>>> origin/main
                     ) = make_cerberus_atmos(
                         runtime_params,
                         wavelength_um,
@@ -666,10 +649,6 @@ def simulate_spectra(
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
                         verbose=verbose,
-<<<<<<< HEAD
-                        # verbose=False,
-=======
->>>>>>> origin/main
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -689,10 +668,6 @@ def simulate_spectra(
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
                     verbose=verbose,
-<<<<<<< HEAD
-                    # verbose=False,
-=======
->>>>>>> origin/main
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (
                     plot_depthprobed(
@@ -706,11 +681,8 @@ def simulate_spectra(
                     )
                 )
 
-<<<<<<< HEAD
                 #  ***** Armen will make a plot showing this parameter: moleculeProfiles ********
 
-=======
->>>>>>> origin/main
                 completed_at_least_one_planet = True
 
     # print('completed_at_least_one_planet',completed_at_least_one_planet)
