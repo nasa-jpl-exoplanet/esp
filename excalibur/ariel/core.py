@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,too-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,too-many-arguments,too-many-positional-arguments,too-many-function-args
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
@@ -227,18 +227,19 @@ def simulate_spectra(
         # oldArielRad = False
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
-                'HD 209458 b',
+                targetplanet,
                 system_params,
                 ancil_params,
                 runtime_params,
             )
         else:
+            # ariel_instrument = calculate_ariel_instrument(
             ariel_instrument = load_ariel_instrument(
-                target + ' ' + planet_letter,
+                targetplanet,
                 system_params,
                 ancil_params,
                 runtime_params,
-                verbose=verbose,
+                # verbose=verbose,  # put this back in for calculate_ariel_instrument
             )
 
         if ariel_instrument:
@@ -464,9 +465,9 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        import pickle
 
                         # Armen - you can use this to save a little time debugging maybe
+                        # import pickle
                         # if 0:
                         _ = myxsecs(tempspc, runtime_params, xslib)
                         #    file = open('xslibsave.pkl', 'bw')
