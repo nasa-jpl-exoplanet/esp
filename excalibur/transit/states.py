@@ -7,6 +7,7 @@
 # -- IMPORTS -- ------------------------------------------------------
 
 import dawgie
+import logging
 
 import excalibur
 from excalibur.transit.core import (
@@ -27,6 +28,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import cauchy, norm, t
 from scipy.interpolate import interp1d
 
+
+log = logging.getLogger(__name__)
 
 # ------------- ------------------------------------------------------
 # -- SV -- -----------------------------------------------------------
