@@ -1,8 +1,10 @@
 '''ariel ariel ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,no-member
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+#
+# no-member is for astropy.units
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
@@ -36,7 +38,6 @@ def calculate_ariel_instrument(
     number of observed transits is taken into account later
     '''
     tier = runtime_params.tier
-    arielRad_version = runtime_params.arielRad
     thorngren = runtime_params.thorngrenMassMetals
     chachan = runtime_params.chachanMassMetals
 
@@ -97,7 +98,8 @@ def calculate_ariel_instrument(
     #    verbose=verbose,
     # )
     # asdf
-    noise_table, output_dict, nobs, info = [{}, {}, 0, {}]
+    # noise_table, output_dict, nobs, info = [{}, {}, {}, {}]
+    noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
 
     # print('output_dict',output_dict.keys())
     # ['tier1', 'tier2', 'tier3', 'SNRTab']
