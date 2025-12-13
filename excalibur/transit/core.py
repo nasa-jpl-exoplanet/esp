@@ -443,6 +443,12 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         )
         select = (phaseredo < 0.25) & (phaseredo > -0.25)
         ordered = np.argsort(phaseredo[select])
+        if selftype in ['eclipse']:
+            phaseredo = phaseredo % 1
+            select = (phaseredo > 0.25) & (phaseredo < 0.75)
+            ordered = np.argsort(phaseredo[select])[
+                ::-1
+            ]  # reversed order for eclipse
         # figure out the phase corresponding to z = 1+rp,1-rp OOT limits
         intransit_phase_min = np.interp(
             -1 - rpors, zredo[select][ordered], phaseredo[select][ordered]
@@ -1146,6 +1152,8 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
             out['data'][p]['plot_normalized_byvisit'].append(
                 save_plot_tosv(myfig)
             )
+            if verbose:
+                plt.show()
             plt.close(myfig)
 
         if out['data'][p]['visits']:
@@ -1486,6 +1494,7 @@ def hstwhitelight(
             fixedpars['inc'] = priors[p]['inc']
             fixedinc = True
             pass
+
         nodes = []
         nodeshape = []
         prior_ranges = {}
@@ -1524,7 +1533,7 @@ def hstwhitelight(
                 nodes.extend(alltknot)
                 nodeshape.append(shapettv)
 
-                if 'inc' not in ctxt.fixedpars:
+                if 'inc' not in fixedpars:
                     inc = pymc.TruncatedNormal(
                         'inc',
                         mu=priors[p]['inc'],
@@ -1984,6 +1993,7 @@ def whitelight(
         fixedpars = {}
         fixedpars['inc'] = inc
         fixedpars['ttv'] = alltknot
+
         # Set up priors for if parentprior is true
         # if selftype in ['transit'] and 'G141-SCAN' in ext:
         #    oslope_alpha = 0.004633620507894198

@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 # -- ALGORITHMS -- ---------------------------------------------------
 # ECLIPSE CLASSES INHERIT FROM TRANSIT CLASSES
 class Normalization(trnalg.Normalization):
-    '''Normalize to out ot transit, inherits from transit.normalization'''
+    '''Normalize to out of transit, inherits from transit.normalization'''
 
     def __init__(self):
         '''__init__ ds'''
@@ -43,10 +43,14 @@ class WhiteLight(trnalg.WhiteLight):
 
     def previous(self):
         '''Input State Vectors: eclipse.normalization, system.finalize'''
-        return [
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
-            dawgie.ALG_REF(sys.task, self.__fin),
-        ]
+        return (
+            [
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
+                dawgie.ALG_REF(sys.task, self.__fin),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     pass
 
@@ -64,11 +68,15 @@ class Spectrum(trnalg.Spectrum):
     def previous(self):
         '''Input State Vectors: system.finalize, eclipse.normalization,
         eclipse.whitelight'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
-            dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._wht),
-        ]
+        return (
+            [
+                dawgie.ALG_REF(sys.task, self.__fin),
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._nrm),
+                dawgie.ALG_REF(fetch('excalibur.eclipse').task, self._wht),
+            ]
+            + self.__rt.trigger('spectrum')
+            + self.__rt.refs_for_proceed()
+        )
 
     pass
 

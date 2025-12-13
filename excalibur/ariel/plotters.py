@@ -298,7 +298,7 @@ def plot_spectrum_topmolecules(
         dominantMolecule_byWavelength.append(molecules[wheremax])
     # print('dominantMolecule_byWavelength', dominantMolecule_byWavelength)
 
-    moleculeSpacing = (yrange[1] - yrange[0]) / 15
+    moleculeSpacing = (yrange[1] - yrange[0]) / 12
     nextMoleculeYpos = yrange[1] + moleculeSpacing
     moleculesFound = []
     moleculeYpos = []
