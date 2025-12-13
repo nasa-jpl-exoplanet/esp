@@ -446,7 +446,9 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
         if selftype in ['eclipse']:
             phaseredo = phaseredo % 1
             select = (phaseredo > 0.25) & (phaseredo < 0.75)
-            ordered = np.argsort(phaseredo[select])[::-1]  # reversed order for eclipse
+            ordered = np.argsort(phaseredo[select])[
+                ::-1
+            ]  # reversed order for eclipse
         # figure out the phase corresponding to z = 1+rp,1-rp OOT limits
         intransit_phase_min = np.interp(
             -1 - rpors, zredo[select][ordered], phaseredo[select][ordered]
