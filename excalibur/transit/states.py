@@ -31,6 +31,7 @@ from scipy.interpolate import interp1d
 
 log = logging.getLogger(__name__)
 
+
 # ------------- ------------------------------------------------------
 # -- SV -- -----------------------------------------------------------
 class NormSV(ExcaliburSV):
@@ -429,11 +430,11 @@ class SpectrumSV(ExcaliburSV):
                             # now ensure completion of graph even if > 5 Hs elements
                             sorted_Hs.append(max_Hs)
                             percent.append(percent[-1])
-                            perc_rejected = (
-                                len([i for i in vspectrum if np.isnan(i)])
-                                / len(vspectrum)
-                                * 100
-                            )
+                        perc_rejected = (
+                            len([i for i in vspectrum if np.isnan(i)])
+                            / len(vspectrum)
+                            * 100
+                        )
                         myfig, ax = plt.subplots(figsize=(8, 6))
                         plt.title(
                             f'Cumulative Spectrum Distribution in Hs ({perc_rejected:.1f}% rejected)'
