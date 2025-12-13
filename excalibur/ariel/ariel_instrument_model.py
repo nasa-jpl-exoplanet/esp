@@ -29,7 +29,7 @@ def calculate_ariel_instrument(
     system_params,
     ancil_params,
     runtime_params,
-    verbose=False,
+    # verbose=False,
 ):
     '''
     Use ArielRad to calculate instrument uncertainty as a function of wavelength
