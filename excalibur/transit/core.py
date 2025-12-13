@@ -1492,6 +1492,7 @@ def hstwhitelight(
             fixedpars['inc'] = priors[p]['inc']
             fixedinc = True
             pass
+
         nodes = []
         nodeshape = []
         prior_ranges = {}
@@ -1530,7 +1531,7 @@ def hstwhitelight(
                 nodes.extend(alltknot)
                 nodeshape.append(shapettv)
 
-                if 'inc' not in ctxt.fixedpars:
+                if 'inc' not in fixedpars:
                     inc = pymc.TruncatedNormal(
                         'inc',
                         mu=priors[p]['inc'],
