@@ -20,6 +20,7 @@ from excalibur.ariel.metallicity import (
 )
 from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.ariel_instrument_model import load_ariel_instrument
+
 # from excalibur.ariel.ariel_instrument_model import (
 #    load_ariel_instrument,
 #    calculate_ariel_instrument,
