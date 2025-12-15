@@ -7,6 +7,7 @@
 # -- IMPORTS -- ------------------------------------------------------
 
 import dawgie
+import logging
 
 import excalibur
 from excalibur.transit.core import (
@@ -26,6 +27,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import cauchy, norm, t
 from scipy.interpolate import interp1d
+
+
+log = logging.getLogger(__name__)
 
 
 # ------------- ------------------------------------------------------
@@ -405,30 +409,33 @@ class SpectrumSV(ExcaliburSV):
                         if Hs > 1:
                             Hs = Hs / (self['data'][p]['RSTAR'][0])
                         rp0hs = np.sqrt(np.nanmedian(vspectrum))
-                        rprs_in_Hs = abs(np.sqrt(vspectrum) - rp0hs) / Hs
-                        # sort non-nan values
-                        sorted_Hs = sorted(
-                            [i for i in rprs_in_Hs if not np.isnan(i)]
-                        )
-                        num_spec = len(sorted_Hs)
-                        max_Hs = max(sorted_Hs)
-                        # percent wizardry to make stepped graph
-                        percent = [
-                            (q / num_spec) * 100
-                            for i in range(num_spec)
-                            for q in [i, i + 1]
-                        ]
-                        # now duplicate values to make tiered step graph
-                        sorted_Hs = [i for i in sorted_Hs for j in [0, 0]]
-                        # now ensure completion of graph even if > 5 Hs elements
-                        sorted_Hs.append(max_Hs)
-                        percent.append(percent[-1])
-                        myfig, ax = plt.subplots(figsize=(8, 6))
+                        if not np.all(np.isnan(vspectrum)):
+                            log.warning('the whole spectrum is NaN!')
+                        else:
+                            rprs_in_Hs = abs(np.sqrt(vspectrum) - rp0hs) / Hs
+                            # sort non-nan values
+                            sorted_Hs = sorted(
+                                [i for i in rprs_in_Hs if not np.isnan(i)]
+                            )
+                            num_spec = len(sorted_Hs)
+                            max_Hs = max(sorted_Hs)
+                            # percent wizardry to make stepped graph
+                            percent = [
+                                (q / num_spec) * 100
+                                for i in range(num_spec)
+                                for q in [i, i + 1]
+                            ]
+                            # now duplicate values to make tiered step graph
+                            sorted_Hs = [i for i in sorted_Hs for j in [0, 0]]
+                            # now ensure completion of graph even if > 5 Hs elements
+                            sorted_Hs.append(max_Hs)
+                            percent.append(percent[-1])
                         perc_rejected = (
                             len([i for i in vspectrum if np.isnan(i)])
                             / len(vspectrum)
                             * 100
                         )
+                        myfig, ax = plt.subplots(figsize=(8, 6))
                         plt.title(
                             f'Cumulative Spectrum Distribution in Hs ({perc_rejected:.1f}% rejected)'
                         )
