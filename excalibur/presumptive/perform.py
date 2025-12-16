@@ -39,11 +39,9 @@ def reboot():
 
 def repatriation(nodes):
     '''restart the stopped workers without restarting the whole farm'''
-    cmd = 'docker ps -aq --filter "name=ops-workers*" --filter "status=exited"'
-    cmd = f'docker rm $({cmd}) && ${{HOME}}/run_workers.sh'
     for node in nodes:
         subprocess.run(
-            f'ssh -o ConnectTimeout=60 mentor{node} {cmd}',
+            f'ssh -o ConnectTimeout=60 mentor{node} ./repatriate.sh',
             check=True,
             shell=True,
         )
