@@ -85,6 +85,8 @@ def worker(args):
                         args,
                         f'''
  The pipeline is reporting {alive - total} undead processes and no other tasks. Resetting the pipeline to purge the undead workers and restore the pipeline availability.
+
+{current['busy']}
                     ''',
                     )
                     perform.reset()
