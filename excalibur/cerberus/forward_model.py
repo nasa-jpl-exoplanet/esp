@@ -10,7 +10,7 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
-# from deprecated import deprecated
+from deprecated import deprecated
 
 import excalibur.system.core as syscore
 
@@ -295,10 +295,12 @@ class crbFM:
 
             # 3) interpolate atmos depth within that cell
             for waveindex in np.arange(wtau.size):
-                myspl = itp(reversep, np.asarray(tau[:, waveindex]).flatten())
+                myspl = itp(
+                    reversep, np.asarray(tau[:, waveindex]).flatten()[::-1]
+                )
+
                 tau[cloudtopindex, waveindex] = myspl(10.0**cloudtp)
-                # this line can be done for all indices (outside of loop, I mean)
-                # tau[:cloudtopindex, waveindex] = 0.
+
                 for molecule in molecules:
                     myspl = itp(
                         reversep,
@@ -434,9 +436,9 @@ class crbFM:
         return self.__opticalDepthProfiles
 
 
-# @deprecated(
-#     'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
-# )
+@deprecated(
+    'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
+)
 def crbmodel(temp, cloudtp, **kwargs):
     log.info('use crbFM class to get additional saved results from crbmodel')
     return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum

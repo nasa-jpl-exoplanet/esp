@@ -2,5 +2,5 @@ export DAWGIE_FE_PORT=14141 \
        DAWGIE_SFE_PORT=14146 \
        EXCALIBUR_PORT=${DAWGIE_FE_PORT} \
        EXCALIBUR_LOG_LEVEL="logging.INFO" \
-       EXCALIBUR_SOURCE_PATH=/home/tokajia/esp \
+       EXCALIBUR_SOURCE_PATH=/home/tokadjia/esp \
        EXCALIBUR_UID=${UID}
