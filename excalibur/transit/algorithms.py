@@ -212,7 +212,7 @@ class WhiteLight(dawgie.Algorithm):
         vfin, sfin = checksv(fin)
         # MERGE PROTOTYPE
         # if self._type == 'transit':
-        if self._type == 'transit' or self._type == 'eclipse':
+        if self._type in ['transit', 'eclipse']:
 
             allnormdata = []
             allfilters = []
