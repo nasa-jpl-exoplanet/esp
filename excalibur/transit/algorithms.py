@@ -211,7 +211,9 @@ class WhiteLight(dawgie.Algorithm):
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
         # MERGE PROTOTYPE
-        if self._type == "transit":
+        # if self._type == 'transit':
+        if self._type in ['transit', 'eclipse']:
+
             allnormdata = []
             allfilters = []
             hstfltrs = [
@@ -221,6 +223,7 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G430L-STARE',
             ]
 
+            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
