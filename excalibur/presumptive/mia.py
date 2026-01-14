@@ -62,13 +62,17 @@ def worker(args):
     current['busy'] = sorted(
         task.split('duration')[0].strip() for task in current['busy']
     )
+    current['reported'] = False
     alive = current['idle'] + len(current['busy'])
     if alive != total:
         previous = {}
+        reported = False
         if os.path.isfile(fn):
             with open(fn, 'br') as file:
-                previous = pickle.load(file)
+                previous,reported = pickle.load(file)
         if current == previous:
+            if reported:
+                return 2
             if alive < total:
                 # have workers on strike that have not returned to the workforce
                 email.send(
@@ -77,6 +81,7 @@ def worker(args):
  Some {total - alive} workers are refusing reincarnation. Please check the docker  compose file because this should not happen. Will attempt to repatriate it.
                 ''',
                 )
+                reported = True
                 perform.repatriation(perform.fallen(args.nodes)[1])
             else:
                 # have undead workers that are both idle and supposedly working
@@ -89,6 +94,7 @@ def worker(args):
 {current['busy']}
                     ''',
                     )
+                    reported = True
                     perform.reset()
                 else:
                     fallen, where = perform.fallen(args.nodes)
@@ -99,11 +105,12 @@ def worker(args):
  The pipeline is reporting {alive - total - fallen} undead workers and {fallen} workers. Attempting to repatriate the fallen.
                             ''',
                         )
+                        reported = True
                         perform.repatriation(where)
-            pass
         else:
-            with open(fn, 'bw') as file:
-                pickle.dump(current, file)
+            reported = False
+        with open(fn, 'bw') as file:
+            pickle.dump((current, reported), file)
         return 1
     if os.path.isfile(fn):
         os.unlink(fn)
