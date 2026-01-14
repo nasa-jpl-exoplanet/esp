@@ -69,7 +69,7 @@ def worker(args):
         reported = False
         if os.path.isfile(fn):
             with open(fn, 'br') as file:
-                previous,reported = pickle.load(file)
+                previous, reported = pickle.load(file)
         if current == previous:
             if reported:
                 return 2
