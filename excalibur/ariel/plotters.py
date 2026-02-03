@@ -427,5 +427,136 @@ def plot_depthprobed(
     plt.close(myfig)
     return savedFigure
 
+# ----------------- --------------------------------------------
+
+# new plot: need to edit
+def plot_vertical_profiles(
+    target,
+    planet_letter,
+    model_params,
+    molecule_profiles,
+    pressure,
+    verbose=False,
+):
+    colorlist = [
+            'red',
+            'orange',
+            'palegreen',
+            'lightseagreen',
+            'blueviolet',
+            'fuchsia',
+        ]
+    stylelist = ['-']*6 + ['--']*6 + [':']*6 + ['-.']*6
+    # set mixing ratio boundaries for main molecules, trace molecules, and absolute cutoff
+    floor_ppm = 1e-12
+    split_ppm = 1e-6
+    xmax_ppm = 1e6
+
+    myfig, (ax_main, ax_trace)  = plt.subplots(2, 1, sharey=True, gridspec_kw={"height_ratios":[3,1]})
+    for imole, molecule in enumerate(molecule_profiles.keys()):
+        x = 10**molecule_profiles[molecule]
+        x = x.astype(float)
+        # main molecules, shown in main plot
+        x_main = x.copy()
+        x_main[(x_main < split_ppm)] = np.nan
+        ax_main.plot(x_main, pressure, label=molecule, color=colorlist[imole % len(colorlist)], ls=stylelist[imole % len(stylelist)])
+        # trace molecules shown in smaller snippet
+        x_trace = x.copy()
+        x_trace[(x_trace >= split_ppm) | (x_trace < floor_ppm)] = np.nan
+        ax_trace.plot(x_trace, pressure, color=colorlist[imole % len(colorlist)], ls=stylelist[imole % len(stylelist)])
+    ax_main.set_yscale('log')
+    ax_trace.set_yscale('log')
+    ax_main.set_xscale('log')
+    ax_trace.set_xscale('log')
+    ax_main.set_xlim(split_ppm, xmax_ppm)
+    ax_trace.set_xlim(floor_ppm, split_ppm)
+    pmin = float(np.nanmin(pressure))
+    pmax = float(np.nanmax(pressure))
+    ax_main.set_ylim(pmax, pmin)
+    # 2 column legend if more than 10 molecules
+    if len(molecule_profiles.keys()) > 10:
+        ncols = 2
+    else:
+        ncols = 1
+    ax_main.legend(bbox_to_anchor=(1.0, 1.0),ncol=ncols)
+    ax_trace.set_xlabel('Volume Mixing Ratio [ppm]', fontsize=14)
+    ax_main.set_ylabel('Pressure [bar]', fontsize=14)
+    ax_main.set_title(
+        'Vertical Chemical Profile : ' + target + ' ' + planet_letter,
+        fontsize=16,
+    )
+    plt.tight_layout()
+    savedFigure = save_plot_tosv(myfig)
+    if verbose:
+        plt.show()
+    plt.close(myfig)
+    return savedFigure    
+
+   # opacityProfiles = np.array(opacityProfiles)
+   # npressure, nwave = opacityProfiles.shape
+    # print('# wavelengths, pressures', nwave, npressure)
+
+    # convert the local opacity to a transmission map (as func of wave)
+    # transmission is 1 at top of atmos, 0 at the bottom
+   # throughput = np.zeros((npressure + 1, nwave))
+   # throughput[-1, :] = 1
+   # for ipressure in range(npressure)[::-1]:  # start at high index = atmos top
+   #     throughput[ipressure, :] = throughput[ipressure + 1, :] * np.exp(
+   #         -opacityProfiles[ipressure, :]
+   #     )
+    # cut off that top buffer edge
+   # throughput = throughput[:-1, :]
+
+   # myfig, _ = plt.subplots(figsize=(8, 4))
+   # myfig.subplots_adjust(top=0.92, bottom=0.13, left=0.09, right=0.98)
+   # plt.title(
+   #     'Atmospheric depth probed : ' + target + ' ' + planet_letter,
+   #     fontsize=16,
+   # )
+   # plt.xlabel('Wavelength [$\\mu m$]', fontsize=14)
+   # plt.ylabel('log(Pressure) [bar]', fontsize=14)
+
+   # plt.contourf(
+   #     wavelength_um[::-1],  # cerberus fm calculates on a backward wave grid
+   #     np.log10(pressure),
+   #     throughput,
+   #     zorder=2,
+   #     colors='grey',
+   #     levels=np.array([0.159, 0.841]),
+   # )
+   # plt.contour(
+   #     wavelength_um[::-1],  # cerberus fm calculates on a backward wave grid
+   #     np.log10(pressure),
+   #     throughput,
+   #     zorder=3,
+   #     colors='k',
+   #     levels=np.array([0.5]),
+   # )
+
+    # reverse the y-axis so 10 bar is at the bottom
+   # ylims = plt.ylim()
+   # plt.ylim(ylims[1], ylims[0])
+
+   # if 'CTP' in model_params:
+        # dashed line showing the cloud deck
+        # print('CTP:', model_params['CTP'])
+    #    plt.plot(
+    #        wavelength_um,
+    #        [model_params['CTP']] * len(wavelength_um),
+    #        'k:',
+    #        zorder=3,
+    #    )
+    #    plt.text(
+    #        6.0,
+    #        model_params['CTP'] + (ylims[0] - ylims[1]) / 25.0,
+    #        'top of cloud deck',
+    #        fontsize=8,
+    #    )
+
+    #savedFigure = save_plot_tosv(myfig)
+    #if verbose:
+    #    plt.show()
+    #plt.close(myfig)
+    #return savedFigure
 
 # ------------------------- ------------------------------------------
