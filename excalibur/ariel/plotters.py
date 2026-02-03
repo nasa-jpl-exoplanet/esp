@@ -478,7 +478,8 @@ def plot_vertical_profiles(
         ncols = 2
     else:
         ncols = 1
-    ax_main.legend(bbox_to_anchor=(1.0, 1.0),ncol=ncols)
+    # ax_main.legend(bbox_to_anchor=(1.0, 1.0), ncol=ncols)
+    ax_main.legend(loc='center left', bbox_to_anchor=(1.16, 0.48), ncol=ncols)
     ax_trace.set_xlabel('Volume Mixing Ratio [ppm]', fontsize=14)
     ax_main.set_ylabel('Pressure [bar]', fontsize=14)
     ax_main.set_title(
