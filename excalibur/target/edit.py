@@ -1881,6 +1881,32 @@ def targetlist():
     WASP-194 :
     WASP-195 :
     WASP-197 :
+    GJ 341 :
+    NGTS-34 :
+    NGTS-35 :
+    TOI-1648 :
+    TOI-2093 :
+    TOI-2345 :
+    TOI-283 :
+    TOI-3288 :
+    TOI-333 :
+    TOI-4507 :
+    TOI-4666 :
+    TOI-4940 :
+    TOI-521 :
+    TOI-5349 :
+    TOI-5489 :
+    TOI-5716 :
+    TOI-5728 :
+    TOI-5736 :
+    TOI-6041 :
+    TOI-6255 :
+    TOI-6448 :
+    TOI-7166 :
+    TOI-7510 :
+    TOI-756 :
+    TOI-912 :
+    WASP-108 :
     testJup :
     '''
 
