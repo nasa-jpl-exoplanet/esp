@@ -429,7 +429,7 @@ def plot_depthprobed(
 
 # ----------------- --------------------------------------------
 
-# new plot: need to edit
+
 def plot_vertical_profiles(
     target,
     planet_letter,
@@ -438,31 +438,44 @@ def plot_vertical_profiles(
     verbose=False,
 ):
     colorlist = [
-            'red',
-            'orange',
-            'palegreen',
-            'lightseagreen',
-            'blueviolet',
-            'fuchsia',
-        ]
-    stylelist = ['-']*6 + ['--']*6 + [':']*6 + ['-.']*6
+        'red',
+        'orange',
+        'palegreen',
+        'lightseagreen',
+        'blueviolet',
+        'fuchsia',
+    ]
+    stylelist = ['-'] * 6 + ['--'] * 6 + [':'] * 6 + ['-.'] * 6
     # set mixing ratio boundaries for main molecules, trace molecules, and absolute cutoff
     floor_ppm = 1e-12
     split_ppm = 1e-6
     xmax_ppm = 1e6
 
-    myfig, (ax_main, ax_trace)  = plt.subplots(2, 1, sharey=True, gridspec_kw={"height_ratios":[3,1]})
+    myfig, (ax_main, ax_trace) = plt.subplots(
+        2, 1, sharey=True, gridspec_kw={"height_ratios":[3,1]}
+    )
     for imole, molecule in enumerate(molecule_profiles.keys()):
-        x = 10**molecule_profiles[molecule]
+        x = 10 ** molecule_profiles[molecule]
         x = x.astype(float)
         # main molecules, shown in main plot
         x_main = x.copy()
         x_main[(x_main < split_ppm)] = np.nan
-        ax_main.plot(x_main, pressure, label=molecule, color=colorlist[imole % len(colorlist)], ls=stylelist[imole % len(stylelist)])
+        ax_main.plot(
+            x_main,
+            pressure,
+            label=molecule,
+            color=colorlist[imole % len(colorlist)],
+            ls=stylelist[imole % len(stylelist)],
+        )
         # trace molecules shown in smaller snippet
         x_trace = x.copy()
         x_trace[(x_trace >= split_ppm) | (x_trace < floor_ppm)] = np.nan
-        ax_trace.plot(x_trace, pressure, color=colorlist[imole % len(colorlist)], ls=stylelist[imole % len(stylelist)])
+        ax_trace.plot(
+            x_trace,
+            pressure,
+            color=colorlist[imole % len(colorlist)],
+            ls=stylelist[imole % len(stylelist)],
+        )
     ax_main.set_yscale('log')
     ax_trace.set_yscale('log')
     ax_main.set_xscale('log')
