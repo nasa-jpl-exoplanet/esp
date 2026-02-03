@@ -675,7 +675,6 @@ def simulate_spectra(
                     plot_vertical_profiles(
                         target,
                         planet_letter,
-                        model_params,
                         moleculeProfiles,
                         pressure,
                         verbose=verbose,

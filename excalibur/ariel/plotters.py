@@ -433,7 +433,6 @@ def plot_depthprobed(
 def plot_vertical_profiles(
     target,
     planet_letter,
-    model_params,
     molecule_profiles,
     pressure,
     verbose=False,
@@ -491,6 +490,6 @@ def plot_vertical_profiles(
     if verbose:
         plt.show()
     plt.close(myfig)
-    return savedFigure    
+    return savedFigure
 
 # --------------------------------------------------------------------
