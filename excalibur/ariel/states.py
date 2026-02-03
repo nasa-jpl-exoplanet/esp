@@ -42,15 +42,17 @@ class SimSpectrumSV(ExcaliburSV):
                         # but there should be all models present, if any models present
                         if planet_letter in self['data'].keys():
                             if model in self['data'][planet_letter].keys():
-                                for dictkey in self['data'][planet_letter][model].keys():
+                                for dictkey in self['data'][planet_letter][
+                                        model
+                                ].keys():
                                     if dictkey.startswith('plot_'):
-                                        if dictkey=='plot_depthprobed':
+                                        if dictkey == 'plot_depthprobed':
                                             title = '------ atmospheric depths probed for '
                                         else:
                                             title = '------ simulated Ariel spectrum for '
                                         visitor.add_image(
                                             '...',
-                                            title,
+                                            title
                                             + target
                                             + ' '
                                             + planet_letter
