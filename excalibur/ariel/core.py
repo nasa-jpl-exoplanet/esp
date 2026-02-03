@@ -408,7 +408,7 @@ def simulate_spectra(
 
                 fluxDepth_by_molecule = {}
                 moleculeProfiles = {}
-                        
+
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
                     if 'Noclouds' in atmosModel:

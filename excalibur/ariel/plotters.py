@@ -10,7 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
-
 # ------------------------- ------------------------------------------
 
 
@@ -427,6 +426,7 @@ def plot_depthprobed(
     plt.close(myfig)
     return savedFigure
 
+
 # ----------------- --------------------------------------------
 
 
@@ -452,7 +452,7 @@ def plot_vertical_profiles(
     xmax_ppm = 1e6
 
     myfig, (ax_main, ax_trace) = plt.subplots(
-        2, 1, sharey=True, gridspec_kw={"height_ratios":[3,1]}
+        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}
     )
     for imole, molecule in enumerate(molecule_profiles.keys()):
         x = 10 ** molecule_profiles[molecule]
@@ -504,5 +504,6 @@ def plot_vertical_profiles(
         plt.show()
     plt.close(myfig)
     return savedFigure
+
 
 # --------------------------------------------------------------------
