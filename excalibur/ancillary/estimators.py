@@ -297,7 +297,7 @@ def pl_mmw_thorngren(priors, _ests, pl):
     if metallicity is None:
         return None
 
-    (a, b, c) = (2.274, 0.02671737, 2.195719)
+    a, b, c = (2.274, 0.02671737, 2.195719)
     mmw = a + b * np.exp(c * metallicity)
     return round(mmw, 5)
 
@@ -308,7 +308,7 @@ def pl_mmw_chachan(priors, _ests, pl):
     if metallicity is None:
         return None
 
-    (a, b, c) = (2.274, 0.02671737, 2.195719)
+    a, b, c = (2.274, 0.02671737, 2.195719)
     mmw = a + b * np.exp(c * metallicity)
     return round(mmw, 5)
 

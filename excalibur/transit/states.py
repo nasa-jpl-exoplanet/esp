@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import cauchy, norm, t
 from scipy.interpolate import interp1d
 
-
 log = logging.getLogger(__name__)
 
 

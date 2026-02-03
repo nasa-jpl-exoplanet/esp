@@ -10,7 +10,6 @@ import pytensor.tensor as tnsr
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
-
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
 ctxt = ctxtinit()
 
