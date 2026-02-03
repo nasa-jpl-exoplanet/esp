@@ -231,16 +231,14 @@ def simulate_spectra(
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
-#                system_params,
-#                ancil_params,
                 runtime_params,
             )
         else:
             # ariel_instrument = calculate_ariel_instrument(
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
-#                system_params,
-#                ancil_params,
+                # system_params,
+                # ancil_params,
                 runtime_params,
                 # verbose=verbose,  # put this back in for calculate_ariel_instrument
             )
@@ -468,18 +466,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-
-                        # Armen - you can use this to save a little time debugging maybe
-                        import pickle
-                        if 0:
-                            _ = myxsecs(tempspc, runtime_params, xslib)
-                            file = open('xslibsave.pkl', 'bw')
-                            pickle.dump(xslib, file)
-                            file.close()
-                        else:
-                            file = open('xslibsave.pkl', 'br')
-                            xslib = pickle.load(file)
-
+                        _ = myxsecs(tempspc, runtime_params, xslib)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
