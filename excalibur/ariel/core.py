@@ -31,7 +31,7 @@ from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
     plot_depthprobed,
-    plot_vertical_profiles
+    plot_vertical_profiles,
 )
 
 # import os
@@ -671,14 +671,14 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
-                out['data'][planet_letter][atmosModel]['plot_vertical_profiles'] = (
-                    plot_vertical_profiles(
-                        target,
-                        planet_letter,
-                        moleculeProfiles,
-                        pressure,
-                        verbose=verbose,
-                    )
+                out['data'][planet_letter][atmosModel][
+                    'plot_vertical_profiles'
+                ] = plot_vertical_profiles(
+                    target,
+                    planet_letter,
+                    moleculeProfiles,
+                    pressure,
+                    verbose=verbose,
                 )
 
                 completed_at_least_one_planet = True
