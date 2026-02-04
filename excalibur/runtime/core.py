@@ -9,7 +9,6 @@ from . import binding
 
 import logging
 
-
 log = logging.getLogger(__name__)
 
 ENV_NAME = 'EXCALIBUR_LEVER_AND_KNOB_SETTINGS'
