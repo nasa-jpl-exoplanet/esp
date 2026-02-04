@@ -33,7 +33,6 @@ from importlib import import_module as fetch  # avoid cicular dependencies
 
 import logging
 
-
 log = logging.getLogger(__name__)
 
 numexpr.ncores = 1  # this is actually a performance enhancer!

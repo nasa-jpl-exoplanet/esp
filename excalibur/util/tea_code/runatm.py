@@ -22,7 +22,6 @@ from excalibur.util.tea_code import iterate
 from excalibur.util.tea_code import makeheader
 from excalibur.util.tea_code import updated_balance
 
-
 # -----------------------------------------------------------------------------
 
 

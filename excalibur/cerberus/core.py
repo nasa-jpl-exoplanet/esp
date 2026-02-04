@@ -57,7 +57,6 @@ from scipy.interpolate import interp1d as itp
 
 import pymc
 
-
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)

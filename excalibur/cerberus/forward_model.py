@@ -18,7 +18,6 @@ from excalibur.util.cerberus import crbce, calcTEA, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
 
-
 log = logging.getLogger(__name__)
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint

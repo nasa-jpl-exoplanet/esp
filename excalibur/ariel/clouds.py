@@ -12,7 +12,6 @@ import logging
 # from excalibur.cerberus.bounds import setPriorBound
 import excalibur
 
-
 log = logging.getLogger(__name__)
 
 
