@@ -53,7 +53,6 @@ from excalibur.util.tea_code import lambdacorr
 from excalibur.util.tea_code import format as form
 from excalibur.util.tea_code.format import printout
 
-
 # =============================================================================
 # This program executes the iteration loop for TEA. It repeats Lagrangian
 # minimization (lagrange.py) and lambda correction (lambdacorr.py) until the
