@@ -91,13 +91,15 @@ def calculate_ariel_instrument(
     # print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
 
     # Run the simulation
-    # noise_table, output_dict, nobs, info = run_target(
-    #    target_dict=arielrad_params,
-    #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
-    #    obs_mode='transit',
-    #    verbose=verbose,
-    # )
     noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
+    noise_table, output_dict, nobs, info = run_target(
+        target_dict=arielrad_params,
+        run_config='/proj/sdp/data/arielrad/runConfig.xml',
+        obs_mode='transit',
+        verbose=verbose,
+    )
+    if verbose and noise_table=={}:
+        print('looks like arielrad calculation was not run')
 
     # print('output_dict',output_dict.keys())
     # ['tier1', 'tier2', 'tier3', 'SNRTab']

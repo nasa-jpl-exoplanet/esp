@@ -225,7 +225,7 @@ def simulate_spectra(
 
         # select old ArielRad (results read from a table) or new (results calculated internally)
         oldArielRad = True
-        # oldArielRad = False
+        oldArielRad = False
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
@@ -234,8 +234,8 @@ def simulate_spectra(
         else:
             ariel_instrument = calculate_ariel_instrument(
                 targetplanet,
-                # system_params,
-                # ancil_params,
+                system_params,
+                ancil_params,
                 runtime_params,
                 verbose=verbose,
             )
