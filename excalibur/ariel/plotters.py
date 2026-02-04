@@ -10,7 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 
-
 # ------------------------- ------------------------------------------
 
 

@@ -10,7 +10,6 @@ from excalibur.util.main import main_start
 
 import excalibur.target.bot
 
-
 # ------------- ------------------------------------------------------
 
 rid, tn = main_start()
