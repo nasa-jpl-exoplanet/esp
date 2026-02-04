@@ -15,7 +15,6 @@ from excalibur.util.plotters import save_plot_tosv
 
 import logging
 
-
 log = logging.getLogger(__name__)
 
 ssc = ssconstants(mks=True)

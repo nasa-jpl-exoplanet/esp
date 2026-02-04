@@ -7,7 +7,6 @@ import excalibur
 
 from collections import namedtuple
 
-
 # -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
 
 CONTEXT = namedtuple(

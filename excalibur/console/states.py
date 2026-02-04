@@ -194,15 +194,12 @@ class CpuAndMem(dawgie.StateVector):
         ll.segment('x', 'ytn', 'x', 'ytx', color='cyan', source=rid, view=rv)
         ll.scatter('x', 'yt', marker='*', color='blue', source=rid, view=rv)
         ll.xaxis.axis_label = 'Run ID'
-        ll.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code=f'''
+        ll.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {list(self['rids'])};
-return labels[tick];'''
-        )
+return labels[tick];''')
         ll.xaxis.major_label_orientation = math.pi / 4
         ll.yaxis.axis_label = 'Wall Clock [d H:M:S]'
-        ll.yaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code='''
+        ll.yaxis.formatter = bokeh.models.CustomJSTickFormatter(code='''
 function convertSecondsToDHMS(totalSeconds) {
   totalSeconds = Number(totalSeconds);
   const days = Math.floor(totalSeconds / (24 * 3600));
@@ -218,8 +215,7 @@ function convertSecondsToDHMS(totalSeconds) {
   result += `${seconds.toString().padStart(2, '0')}`;
   return result;
 }
-return convertSecondsToDHMS(tick);'''
-        )
+return convertSecondsToDHMS(tick);''')
         lr = bokeh.plotting.figure(
             height=400,
             tools='pan,ywheel_zoom,box_zoom,xwheel_zoom,save,reset',
@@ -230,15 +226,12 @@ return convertSecondsToDHMS(tick);'''
         lr.segment('x', 'ytn', 'x', 'ytx', color='cyan', source=tn, view=tv)
         lr.scatter('x', 'yt', marker='*', color='blue', source=tn, view=tv)
         lr.xaxis.axis_label = 'Target'
-        lr.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code=f'''
+        lr.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {list(self['tns'])};
-return labels[tick];'''
-        )
+return labels[tick];''')
         lr.xaxis.major_label_orientation = math.pi / 4
         lr.yaxis.axis_label = 'Wall Clock [d H:M:S]'
-        lr.yaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code='''
+        lr.yaxis.formatter = bokeh.models.CustomJSTickFormatter(code='''
 function convertSecondsToDHMS(totalSeconds) {
   totalSeconds = Number(totalSeconds);
   const days = Math.floor(totalSeconds / (24 * 3600));
@@ -254,8 +247,7 @@ function convertSecondsToDHMS(totalSeconds) {
   result += `${seconds.toString().padStart(2, '0')}`;
   return result;
 }
-return convertSecondsToDHMS(tick);'''
-        )
+return convertSecondsToDHMS(tick);''')
         ul = bokeh.plotting.figure(
             height=400,
             tools='pan,ywheel_zoom,box_zoom,xwheel_zoom,save,reset',
@@ -265,15 +257,12 @@ return convertSecondsToDHMS(tick);'''
         ul.segment('x', 'ymn', 'x', 'ymx', color='cyan', source=rid, view=rv)
         ul.scatter('x', 'ym', marker='*', color='blue', source=rid, view=rv)
         ul.xaxis.axis_label = 'Run ID'
-        ul.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code=f'''
+        ul.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {list(self['rids'])};
-return labels[tick];'''
-        )
+return labels[tick];''')
         ul.xaxis.major_label_orientation = math.pi / 4
         ul.yaxis.axis_label = 'Memory [B]'
-        ul.yaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code='''
+        ul.yaxis.formatter = bokeh.models.CustomJSTickFormatter(code='''
 function format_engineering(value) {
     if (value === 0) return "0";
     let sign = value < 0 ? "-" : "";
@@ -282,8 +271,7 @@ function format_engineering(value) {
     let mantissa = abs_value / Math.pow(10, exponent);
     return sign + mantissa.toFixed(2) + "e" + exponent;
 }
-return format_engineering(tick);'''
-        )
+return format_engineering(tick);''')
         ur = bokeh.plotting.figure(
             height=400,
             tools='pan,ywheel_zoom,box_zoom,xwheel_zoom,save,reset',
@@ -294,15 +282,12 @@ return format_engineering(tick);'''
         ur.segment('x', 'ymn', 'x', 'ymx', color='cyan', source=tn, view=tv)
         ur.scatter('x', 'ym', marker='*', color='blue', source=tn, view=tv)
         ur.xaxis.axis_label = 'Target'
-        ur.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code=f'''
+        ur.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
             var labels = {list(self['tns'])};
-            return labels[tick];'''
-        )
+            return labels[tick];''')
         ur.xaxis.major_label_orientation = math.pi / 4
         ur.yaxis.axis_label = 'Memory [B]'
-        ur.yaxis.formatter = bokeh.models.CustomJSTickFormatter(
-            code='''
+        ur.yaxis.formatter = bokeh.models.CustomJSTickFormatter(code='''
 function format_engineering(value) {
     if (value === 0) return "0";
     let sign = value < 0 ? "-" : "";
@@ -311,8 +296,7 @@ function format_engineering(value) {
     let mantissa = abs_value / Math.pow(10, exponent);
     return sign + mantissa.toFixed(2) + "e" + exponent;
 }
-return format_engineering(tick);'''
-        )
+return format_engineering(tick);''')
         sel = bokeh.models.Select(
             title='Task.Algorithm:',
             value=talg,
@@ -420,17 +404,13 @@ def plot_cube(data, algs, rids, tns, max_rids):
         x='tid', y='alg', color='red', marker='*', source=cds, view=tv2
     )
     top.select_one(bokeh.models.HoverTool).renderers = [t0, t1, t2]
-    top.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-        code=f'''
+    top.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {sorted(tns)};
-return labels[tick];'''
-    )
+return labels[tick];''')
     top.xaxis.major_label_orientation = math.pi / 2
-    top.yaxis.formatter = bokeh.models.CustomJSTickFormatter(
-        code=f'''
+    top.yaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {sorted(algs)};
-return labels[tick];'''
-    )
+return labels[tick];''')
     front = bokeh.plotting.figure(
         active_drag='pan',
         active_scroll='xwheel_zoom',
@@ -446,11 +426,9 @@ return labels[tick];'''
         x='tid', y='rid', color='green', marker='x', source=cds, view=fv
     )
     front.yaxis.axis_label = 'Run ID'
-    front.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-        code=f'''
+    front.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {sorted(rids)};
-return labels[tick];'''
-    )
+return labels[tick];''')
     front.xaxis.major_label_text_font_size = "0pt"
     front.x_range = top.x_range
     side = bokeh.plotting.figure(
@@ -464,11 +442,9 @@ return labels[tick];'''
     side.toolbar_location = None
     side.scatter(x='rid', y='alg', color='red', marker='x', source=cds, view=sv)
     side.xaxis.axis_label = 'Run ID'
-    side.xaxis.formatter = bokeh.models.CustomJSTickFormatter(
-        code=f'''
+    side.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code=f'''
 var labels = {sorted(rids)};
-return labels[tick];'''
-    )
+return labels[tick];''')
     side.yaxis.major_label_text_font_size = "0pt"
     side.y_range = top.y_range
     htcb = bokeh.models.CustomJS(

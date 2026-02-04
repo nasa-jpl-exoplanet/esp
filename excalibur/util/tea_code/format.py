@@ -46,7 +46,6 @@
 import numpy as np
 from sys import stdout
 
-
 # =============================================================================
 # This is an auxiliary program that allows each program to read the output of
 # the previous step so the data can be used in the next step. It also manages
@@ -379,10 +378,8 @@ def fancyout(
     f = open(file, 'w+')
 
     # Write top comment and iteration number
-    f.write(
-        'This .txt file is for visual use only.  \
-             DO NOT USE FOR ITERATIONS!\n'
-    )
+    f.write('This .txt file is for visual use only.  \
+             DO NOT USE FOR ITERATIONS!\n')
     f.write('Data for iteration #' + np.str(it_num) + '\n\n')
 
     # Count number of species
