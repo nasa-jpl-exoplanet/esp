@@ -29,6 +29,7 @@ from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
     plot_depthprobed,
+    plot_vertical_profiles,
 )
 
 # import os
@@ -228,15 +229,13 @@ def simulate_spectra(
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
-                system_params,
-                ancil_params,
                 runtime_params,
             )
         else:
             ariel_instrument = calculate_ariel_instrument(
                 targetplanet,
-                system_params,
-                ancil_params,
+                # system_params,
+                # ancil_params,
                 runtime_params,
                 verbose=verbose,
             )
@@ -405,6 +404,7 @@ def simulate_spectra(
                     )
 
                 fluxDepth_by_molecule = {}
+                moleculeProfiles = {}
 
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
@@ -464,18 +464,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-
-                        # Armen - you can use this to save a little time debugging maybe
-                        # import pickle
-                        # if 0:
                         _ = myxsecs(tempspc, runtime_params, xslib)
-                        #    file = open('xslibsave.pkl', 'bw')
-                        #    pickle.dump(xslib, file)
-                        #    file.close()
-                        # else:
-                        #    file = open('xslibsave.pkl', 'br')
-                        #    xslib = pickle.load(file)
-
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -497,8 +486,7 @@ def simulate_spectra(
                         fluxDepth_by_molecule,
                         pressures,
                         opticalDepthProfiles,
-                        _,
-                        # moleculeProfiles,
+                        moleculeProfiles,
                     ) = make_cerberus_atmos(
                         runtime_params,
                         wavelength_um,
@@ -680,8 +668,15 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
-
-                #  ***** Armen will make a plot showing this parameter: moleculeProfiles ********
+                out['data'][planet_letter][atmosModel][
+                    'plot_vertical_profiles'
+                ] = plot_vertical_profiles(
+                    target,
+                    planet_letter,
+                    moleculeProfiles,
+                    pressure,
+                    verbose=verbose,
+                )
 
                 completed_at_least_one_planet = True
 
