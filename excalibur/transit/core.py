@@ -289,7 +289,7 @@ def normversion():
     return dawgie.VERSION(1, 1, 9)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
     '''
     JWST spectra normalization
     '''
@@ -335,7 +335,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         ignore = np.array(tme['data'][p]['ignore']) | np.array(
             cal['data']['IGNORED']
         )
-        z = tme['data'][p]['z']
         allwavet = {}
         alltemplates = {}
         for thisdet in np.unique(cal['data']['DET']):
@@ -1191,7 +1190,6 @@ def scube(allspec, allwaves, name='', verbose=False):
     '''
     slc = np.isfinite(allwaves[0])
     zwve = allwaves[0][slc]
-    zspc = allspec[0][slc]
     twve = []
     tspc = []
     mask = ~np.isfinite(allwaves)
