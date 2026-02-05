@@ -59,16 +59,6 @@ def load_hwo_instrument(target, runtime_params):
                 targets = hwomodel['errorbars_evaluated'].keys()
 
                 if target not in targets:
-                    print(
-                        'NOTE: target not in HWO SNR file; failing to simulate spectrum',
-                        target,
-                    )
-                    log.warning(
-                        '--< HWOSIM: target not in SNR file; failing to simulate spectrum  %s >--',
-                        target,
-                    )
-                    hwo_instrument = None
-                    print('  not in this part:', noise_model_filename)
                     pass
                 else:
                     # print('  found it in this part:',noise_model_filename)

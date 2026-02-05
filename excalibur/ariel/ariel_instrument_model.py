@@ -98,7 +98,7 @@ def calculate_ariel_instrument(
         obs_mode='transit',
         verbose=verbose,
     )
-    if verbose and noise_table=={}:
+    if verbose and noise_table == {}:
         print('looks like arielrad calculation was not run')
 
     # print('output_dict',output_dict.keys())
