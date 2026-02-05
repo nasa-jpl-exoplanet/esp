@@ -22,7 +22,7 @@ from excalibur.hwo.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
 from excalibur.hwo.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
-from excalibur.hwo.plotters import (
+from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
     plot_depthprobed,
@@ -595,6 +595,7 @@ def simulate_spectra(
                     plot_spectrum(
                         target,
                         planet_letter,
+                        '',
                         visits,
                         wavelength_um_rebin,
                         fluxDepth_rebin,
@@ -611,6 +612,7 @@ def simulate_spectra(
                 ] = plot_spectrum_topmolecules(
                     target,
                     planet_letter,
+                    '',
                     visits,
                     wavelength_um_rebin,
                     hwo_instrument['wavelow'],

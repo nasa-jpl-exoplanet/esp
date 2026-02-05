@@ -16,8 +16,6 @@ import excalibur
 import h5py
 from astropy.io.misc.hdf5 import read_table_hdf5
 
-import astropy.units as u
-
 log = logging.getLogger(__name__)
 
 
@@ -31,8 +29,6 @@ def load_hwo_instrument(target, runtime_params):
     Uncertainty is for a single visit;
     number of observed transits is taken into account later
     '''
-    thorngren = runtime_params.thorngrenMassMetals
-    chachan = runtime_params.chachanMassMetals
 
     noise_model_dir = excalibur.context['data_dir'] + '/hwo/'
 

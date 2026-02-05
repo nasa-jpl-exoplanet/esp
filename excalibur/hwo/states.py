@@ -7,13 +7,7 @@
 import dawgie
 
 import excalibur
-from excalibur.util.plotters import save_plot_toscreen
 from excalibur.util.svs import ExcaliburSV
-
-import os
-
-import matplotlib.image as img
-import matplotlib.pyplot as plt
 
 
 # ------------- ------------------------------------------------------
