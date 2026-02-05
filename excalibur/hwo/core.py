@@ -14,15 +14,16 @@ from collections import namedtuple
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
 
-from excalibur.hwo.metallicity import (
+from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
+
+from excalibur.cerberus.core import myxsecs
+from excalibur.ariel.forward_models import make_cerberus_atmos
+from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
+from excalibur.ariel.metallicity import (
     massMetalRelation,
     massMetalRelationDisp,
     randomCtoO_linear,
 )
-from excalibur.hwo.clouds import fixedCloudParameters, randomCloudParameters
-from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
-from excalibur.hwo.forward_models import make_cerberus_atmos
-from excalibur.cerberus.core import myxsecs
 from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
@@ -30,10 +31,6 @@ from excalibur.ariel.plotters import (
     plot_vertical_profiles,
 )
 
-# import os
-# import sys
-
-# import pickle
 import numpy as np
 import scipy.constants as cst
 
@@ -605,6 +602,7 @@ def simulate_spectra(
                         molecules,
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
+                        plottype='HWO',
                         verbose=verbose,
                     )
                 )
@@ -624,6 +622,7 @@ def simulate_spectra(
                     molecules,
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
+                    plottype='HWO',
                     verbose=verbose,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (

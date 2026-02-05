@@ -1,5 +1,8 @@
 '''hwo algorithms ds'''
 
+# Heritage code shame:
+# pylint: disable=duplicate-code
+
 # -- IMPORTS -- ------------------------------------------------------
 import logging
 

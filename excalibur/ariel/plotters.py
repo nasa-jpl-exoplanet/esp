@@ -25,12 +25,14 @@ def plot_spectrum(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
+    plottype='Ariel',
     verbose=False,
 ):
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
     plt.title(
-        'Ariel simulation : '
+        plottype
+        + ' simulation : '
         + target
         + ' '
         + planet_letter
@@ -214,12 +216,14 @@ def plot_spectrum_topmolecules(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
+    plottype='Ariel',
     verbose=False,
 ):
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
     plt.title(
-        'Ariel simulation : '
+        plottype
+        + ' simulation : '
         + target
         + ' '
         + planet_letter
@@ -452,7 +456,7 @@ def plot_vertical_profiles(
     xmax_ppm = 1e6
 
     myfig, (ax_main, ax_trace) = plt.subplots(
-        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}
+        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}, figsize=(8, 4)
     )
     for imole, molecule in enumerate(molecule_profiles.keys()):
         x = 10 ** molecule_profiles[molecule]
