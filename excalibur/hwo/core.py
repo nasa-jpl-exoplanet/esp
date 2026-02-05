@@ -144,9 +144,6 @@ def simulate_spectra(
 
     testTarget = bool(target.startswith('test'))
 
-    # select Tier-1 or Tier-2 for spectra SNR
-    tier = runtime_params.tier
-
     sscmks = syscore.ssconstants(mks=True)
 
     system_params = system_dict['priors']
@@ -303,7 +300,6 @@ def simulate_spectra(
             # Load the instrument model and rescale based on #-of-transits
             uncertainties = hwo_instrument['noise']
             visits = hwo_instrument['nVisits']
-            # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
 
             uncertainties /= np.sqrt(float(visits))
 
@@ -563,8 +559,7 @@ def simulate_spectra(
                     'wavelength_norebin': wavelength_um,
                 }
 
-                # also save the Tier level and the number of visits; add these to the plot
-                out['data'][planet_letter][atmosModel]['tier'] = tier
+                # also save the number of visits; add it to the plot
                 out['data'][planet_letter][atmosModel]['visits'] = visits
 
                 # save the parameters used to create the spectrum. some could be useful
@@ -600,7 +595,6 @@ def simulate_spectra(
                     plot_spectrum(
                         target,
                         planet_letter,
-                        tier,
                         visits,
                         wavelength_um_rebin,
                         fluxDepth_rebin,
@@ -617,7 +611,6 @@ def simulate_spectra(
                 ] = plot_spectrum_topmolecules(
                     target,
                     planet_letter,
-                    tier,
                     visits,
                     wavelength_um_rebin,
                     hwo_instrument['wavelow'],

@@ -16,7 +16,6 @@ from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
 def plot_spectrum(
     target,
     planet_letter,
-    tier,
     visits,
     wavelength_um,
     fluxDepth,
@@ -34,8 +33,6 @@ def plot_spectrum(
         + target
         + ' '
         + planet_letter
-        + ' : Tier-'
-        + str(tier)
         + ' '
         + str(visits)
         + ' visits',
@@ -194,7 +191,6 @@ def plot_spectrum(
 def plot_spectrum_topmolecules(
     target,
     planet_letter,
-    tier,
     visits,
     wavelength_um,
     wavelengthedge_low,
@@ -214,8 +210,6 @@ def plot_spectrum_topmolecules(
         + target
         + ' '
         + planet_letter
-        + ' : Tier-'
-        + str(tier)
         + ' '
         + str(visits)
         + ' visits',
