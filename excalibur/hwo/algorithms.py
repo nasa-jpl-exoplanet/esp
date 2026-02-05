@@ -55,9 +55,7 @@ class SimSpectrum(dawgie.Algorithm):
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
-            log.info(
-                '--< HWO.%s: not a valid target >--', self.name().upper()
-            )
+            log.info('--< HWO.%s: not a valid target >--', self.name().upper())
 
         else:
             update = False

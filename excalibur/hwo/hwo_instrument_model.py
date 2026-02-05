@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 # ---------------------------- ---------------------------------------
 
+
 def load_hwo_instrument(target, runtime_params):
     '''
     Load in the HWO instrument response - uncertainty as a function of wavelength
@@ -58,10 +59,16 @@ def load_hwo_instrument(target, runtime_params):
                 targets = hwomodel['errorbars_evaluated'].keys()
 
                 if target not in targets:
-                    print('NOTE: target not in HWO SNR file; failing to simulate spectrum',target)
-                    log.warning('--< HWOSIM: target not in SNR file; failing to simulate spectrum  %s >--',target)
+                    print(
+                        'NOTE: target not in HWO SNR file; failing to simulate spectrum',
+                        target,
+                    )
+                    log.warning(
+                        '--< HWOSIM: target not in SNR file; failing to simulate spectrum  %s >--',
+                        target,
+                    )
                     hwo_instrument = None
-                    print('  not in this part:',noise_model_filename)
+                    print('  not in this part:', noise_model_filename)
                     pass
                 else:
                     # print('  found it in this part:',noise_model_filename)
@@ -72,12 +79,12 @@ def load_hwo_instrument(target, runtime_params):
                     # print('SNR options',SNRtable.keys())
 
                     # assume tier-2
-                    nTransitsCH0 = SNRtable['AIRS-CH0-T2-nTransits'][
-                        'value'
-                    ][()]
-                    nTransitsCH1 = SNRtable['AIRS-CH1-T2-nTransits'][
-                        'value'
-                    ][()]
+                    nTransitsCH0 = SNRtable['AIRS-CH0-T2-nTransits']['value'][
+                        ()
+                    ]
+                    nTransitsCH1 = SNRtable['AIRS-CH1-T2-nTransits']['value'][
+                        ()
+                    ]
                     T14 = SNRtable['T14']['value'][()]
                     planetNames = SNRtable['planetName']['value'][()]
                     planetNames = np.array(
@@ -138,8 +145,11 @@ def load_hwo_instrument(target, runtime_params):
                             hwo_instrument['wavehigh'][iwave]
                             > hwo_instrument['wavelow'][iwave + 1] * 1.00001
                         ):
-                            log.info('--< HWOSIM adjusting wavelength grid: %s wave=%s >--',
-                                     target,hwo_instrument['wavelength'][iwave])
+                            log.info(
+                                '--< HWOSIM adjusting wavelength grid: %s wave=%s >--',
+                                target,
+                                hwo_instrument['wavelength'][iwave],
+                            )
                             hwo_instrument['wavehigh'][iwave] = (
                                 hwo_instrument['wavelow'][iwave + 1] * 0.99999
                             )

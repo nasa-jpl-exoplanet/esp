@@ -38,13 +38,15 @@ class SimSpectrumSV(ExcaliburSV):
                     if planet_letter in self['data'].keys():
                         if model in self['data'][planet_letter].keys():
                             for dictkey in self['data'][planet_letter][
-                                    model
+                                model
                             ].keys():
                                 if dictkey.startswith('plot_'):
                                     if dictkey == 'plot_depthprobed':
                                         title = '------ atmospheric depths probed for '
                                     else:
-                                        title = '------ simulated HWO spectrum for '
+                                        title = (
+                                            '------ simulated HWO spectrum for '
+                                        )
                                     visitor.add_image(
                                         '...',
                                         title
