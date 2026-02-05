@@ -227,8 +227,11 @@ class TimingSV(dawgie.StateVector):
             # just the planet letters anymore. Safer to explicitely loop them
             # and not all keys in the dict.
             # We only wanna loop through the planet keys here.
-            planetkeys = [thisp for thisp in map(chr, range(97, 123))
-                          if thisp in self['data'].keys()]
+            planetkeys = [
+                thisp
+                for thisp in map(chr, range(97, 123))
+                if thisp in self['data'].keys()
+            ]
             for p in planetkeys:
                 if 'Spitzer' in self.__name or 'JWST' in self.__name:
                     vlabels = ['TRANSIT', 'ECLIPSE', 'PHASE CURVE']

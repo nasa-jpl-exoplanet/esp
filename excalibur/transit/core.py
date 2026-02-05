@@ -315,9 +315,13 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
     allzp = [tme['data'][p]['z'] for _, p in enumerate(events)]
-    allrps = [priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
-              for _, p in enumerate(events)]
-    alloot = [np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)]
+    allrps = [
+        priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+        for _, p in enumerate(events)
+    ]
+    alloot = [
+        np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)
+    ]
     oot = np.logical_and.reduce(alloot, 0).astype(np.bool)
     for p in events:
         if verbose:
@@ -337,10 +341,12 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         for thisdet in np.unique(cal['data']['DET']):
             select = np.array([d in [thisdet] for d in cal['data']['DET']])
             soot = oot[select]
-            wavet, template = scube(spectra[select][soot],
-                                    wave[select][soot],
-                                    name=thisdet,
-                                    verbose=verbose)
+            wavet, template = scube(
+                spectra[select][soot],
+                wave[select][soot],
+                name=thisdet,
+                verbose=verbose,
+            )
             alltemplates[thisdet] = np.array(template)
             allwavet[thisdet] = np.array(wavet)
             pass
@@ -358,8 +364,8 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         for ws, s, det in zip(wave, spectra, cal['data']['DET']):
             t = alltemplates[det]
             w = allwavet[det]
-            dw = np.nanmedian(np.diff(w)) / 2.
-            
+            dw = np.nanmedian(np.diff(w)) / 2.0
+
             norms = []
             wnorms = []
             for thisw, thiss in zip(ws, s):
@@ -1199,10 +1205,14 @@ def scube(allspec, allwaves, name='', verbose=False):
     }
     progbar = nerdclub.Progressbar(argsdict, '>-- SCUBE ' + name, zwve)
     for iw, w in enumerate(zwve):
-        if (iw - 1) < 0: left = 0
-        else: left = (w - zwve[iw - 1])/2.
-        if (iw + 1) > (zwve.size - 1): right = 0
-        else: right = (zwve[iw + 1] - w)/2.
+        if (iw - 1) < 0:
+            left = 0
+        else:
+            left = (w - zwve[iw - 1]) / 2.0
+        if (iw + 1) > (zwve.size - 1):
+            right = 0
+        else:
+            right = (zwve[iw + 1] - w) / 2.0
         radius = np.nanmax([left, right])
         select = np.abs(allwaves - w) <= radius
         twve.append(np.nanmedian(allwaves[select]))
