@@ -2,6 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
+# pylint: disable=duplicate-code
 # pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,too-many-arguments,too-many-positional-arguments,too-many-function-args
 
 # -- IMPORTS -- ------------------------------------------------------
