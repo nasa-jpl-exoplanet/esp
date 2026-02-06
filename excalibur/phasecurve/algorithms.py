@@ -276,12 +276,7 @@ class pcflaredetection(dawgie.Algorithm):
         return
 
     def _flaredetection(self, wlpc, fin, out, index):
-        if 'Spitzer' in fltrs[index]:
-            flares = phccore.flaredetection(
-                wlpc, fin, out, self._type, fltrs[index]
-            )
-        else:
-            return True
+        flares = phccore.flaredetection(wlpc, fin, out, fltrs[index])
         return flares
 
     def _failure(self, errstr):

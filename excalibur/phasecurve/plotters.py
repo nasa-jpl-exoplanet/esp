@@ -1,5 +1,8 @@
 '''phasecurve plotters ds'''
 
+# Heritage code shame:
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+
 # -- IMPORTS ---------------------------------------------------------
 
 import numpy as np
@@ -18,6 +21,7 @@ def plot_phasecurve(
     whitelightdata,
     # systemparam,
     flarephases,
+    fltr,
     bin_dt=10.0 / (60 * 24),
     zoom=False,
     phase=True,
@@ -113,6 +117,8 @@ def plot_phasecurve(
         flarephases, [flareplotloc] * len(flarephases), 'rv', label='flares'
     )
     axs[0].legend(loc='center left', bbox_to_anchor=(1.06, 0.48))
+
+    f.title(fltr)
 
     bt, br, _ = elca.time_bin(
         whitelightdata['time'],

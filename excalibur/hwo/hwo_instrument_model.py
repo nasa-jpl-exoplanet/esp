@@ -146,34 +146,6 @@ def load_hwo_instrument(target):
             target,
         )
 
-    if 0:
-        print(hwo_instrument['nVisits'])
-        print(hwo_instrument['transitDuration'])
-        print(
-            np.median(hwo_instrument['wavelength']),
-            np.std(hwo_instrument['wavelength']),
-        )
-        print(
-            np.median(hwo_instrument['wavelow']),
-            np.std(hwo_instrument['wavelow']),
-        )
-        print(
-            np.median(hwo_instrument['wavehigh']),
-            np.std(hwo_instrument['wavehigh']),
-        )
-        print(
-            np.median(hwo_instrument['noise']), np.std(hwo_instrument['noise'])
-        )
-
-        for i in range(len(hwo_instrument['noise']) - 1):
-            print(
-                'wave edge check',
-                hwo_instrument['wavehigh'][i],
-                hwo_instrument['wavelow'][i + 1],
-                hwo_instrument['wavehigh'][i]
-                - hwo_instrument['wavelow'][i + 1],
-            )
-
     # wavelength grid parameters
     Nwave = 100
     wavemin = 0.4

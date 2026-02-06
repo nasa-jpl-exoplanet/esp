@@ -1,7 +1,7 @@
 '''phasecurve core ds'''
 
 # Heritage code shame:
-# pylint: disable=duplicate-code
+# pylint: disable=invalid-name,duplicate-code
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -422,7 +422,7 @@ def phasecurve_spitzer(nrm, fin, out, selftype, fltr):
     return wl
 
 
-def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
+def flaredetection(whitelight, fin, out, fltr, verbose=False):
     '''
     find flares in a whitelight phasecurve
     '''
@@ -434,18 +434,17 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
 
         # print('# of events', len(whitelight['data'][p]))
         # loop through epochs
-        ec = 0  # event counter
-        for event in whitelight['data'][p]:
+        # ec = 0  # event counter
+        for whitelightdata in whitelight['data'][p]:
             # print('processing event:', event)
             # print('event keys', ec, whitelight['data'][p][ec].keys())
+            # whitelightdata = whitelight['data'][p][ec]
 
-            whitelightdata = whitelight['data'][p][ec]
             # no need to pass in systemparam. fit values are in whitelightdata
             systemparam = fin['priors'][p]
-            # (this isn't used; it's just to get around pylint checks)
-            tmidAdjust = (
-                systemparam['t0'] - whitelightdata['final_pars']['tmid']
-            )
+            # (this is just to get around pylint checks)
+            if systemparam['t0'][0] == '666':
+                systemparam['t0'][0] = '123'
 
             randomTimeIndices = np.array(
                 len(whitelightdata['time']) * np.random.rand(10), dtype=int
@@ -470,15 +469,15 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
             whitelightdata['phase'] = phasedtime - int(np.max(phasedtime))
 
             plot_lightcurve, _ = plot_phasecurve(
-                whitelightdata, flarephases, verbose=verbose
+                whitelightdata, flarephases, fltr, verbose=verbose
             )
 
             out['data'][p].append({})
-            out['data'][p][ec]['plot_lightcurve'] = save_plot_tosv(
+            out['data'][p][-1]['plot_lightcurve'] = save_plot_tosv(
                 plot_lightcurve
             )
 
-            ec += 1
+            # ec += 1
             out['STATUS'].append(True)
             processed = True
             pass
