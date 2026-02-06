@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 # ---------------------------- ---------------------------------------
 
 
-def load_hwo_instrument(target, runtime_params):
+def load_hwo_instrument(target):
     '''
     Load in the HWO instrument response - uncertainty as a function of wavelength
 

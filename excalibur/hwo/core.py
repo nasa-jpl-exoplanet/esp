@@ -204,10 +204,7 @@ def simulate_spectra(
             # use HD 209458 SNR as a default for test cases
             targetplanet = 'HD 209458 b'
 
-        hwo_instrument = load_hwo_instrument(
-            targetplanet,
-            runtime_params,
-        )
+        hwo_instrument = load_hwo_instrument(targetplanet)
 
         if hwo_instrument:
             # asdf : LATER : add in uncertainty scatter to these model parameters

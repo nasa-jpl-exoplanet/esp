@@ -92,12 +92,12 @@ def calculate_ariel_instrument(
 
     # Run the simulation
     noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
-    noise_table, output_dict, nobs, info = run_target(
-        target_dict=arielrad_params,
-        run_config='/proj/sdp/data/arielrad/runConfig.xml',
-        obs_mode='transit',
-        verbose=verbose,
-    )
+    # noise_table, output_dict, nobs, info = run_target(
+    #    target_dict=arielrad_params,
+    #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
+    #    obs_mode='transit',
+    #    verbose=verbose,
+    # )
     if verbose and noise_table == {}:
         print('looks like arielrad calculation was not run')
 
