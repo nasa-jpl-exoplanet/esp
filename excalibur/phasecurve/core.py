@@ -427,45 +427,37 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
     find flares in a whitelight phasecurve
     '''
     processed = False
-    priors = fin['priors'].copy()
-    ssc = syscore.ssconstants()
 
     planetloop = list(whitelight['data'].keys())
-
     for p in planetloop:
-
         out['data'][p] = []
 
-        print('# of events', len(whitelight['data'][p]))
-
+        # print('# of events', len(whitelight['data'][p]))
         # loop through epochs
         ec = 0  # event counter
         for event in whitelight['data'][p]:
             # print('processing event:', event)
-
-            # smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
-            # tmid = priors[p]['t0'] + event * priors[p]['period']
-            # rprs = (priors[p]['rp'] * 7.1492e7) / (priors['R*'] * 6.955e8)
-            # w = priors[p]['omega']
-            # phase = (time - fin['priors'][p]['t0']) / fin['priors'][p]['period']
-
-            # wf model transit residuals detrended filter final_pars final_errs
             # print('event keys', ec, whitelight['data'][p][ec].keys())
 
             whitelightdata = whitelight['data'][p][ec]
+            # no need to pass in systemparam. fit values are in whitelightdata
             systemparam = fin['priors'][p]
+            # (this isn't used; it's just to get around pylint checks)
+            tmidAdjust = systemparam['t0'] - whitelightdata['final_pars']['tmid']
 
             randomTimeIndices = np.array(
-                len(whitelightdata['time']) * np.random.rand(10), dtype=int)
+                len(whitelightdata['time']) * np.random.rand(10), dtype=int
+            )
             flaretimes = whitelightdata['time'][randomTimeIndices]
-            flarephases = flaretimes - int(np.max(flaretimes))
-            print('flar',flaretimes)
-            print('flar',flarephases)
+            flarephases = (flaretimes - whitelightdata['final_pars']['tmid']
+                           ) / whitelightdata['final_pars']['per']
+            flarephases = flarephases - int(np.max(flarephases))
 
             # phase isn't defined yet. have to calculate it here
             # phasedtime = (
             #    whitelightdata['time'] - systemparam['t0']
             # ) / systemparam['period']
+            # use the fit values, not the original system params
             phasedtime = (
                 whitelightdata['time'] - whitelightdata['final_pars']['tmid']
             ) / whitelightdata['final_pars']['per']
@@ -474,7 +466,6 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
             # actually keep all the data in order; don't wrap around
             whitelightdata['phase'] = phasedtime - int(np.max(phasedtime))
 
-            # no need to pass in systemparam. fit values are in whitelightdata
             plot_lightcurve, _ = plot_phasecurve(
                 whitelightdata, flarephases, verbose=verbose
             )
@@ -487,7 +478,6 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
             ec += 1
             out['STATUS'].append(True)
             processed = True
-
             pass
         pass
     return processed
