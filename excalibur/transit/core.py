@@ -16,7 +16,7 @@ import excalibur.data.core as datcore
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
 import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
-from excalibur.util import elca
+from excalibur.util import elca, nerdclub
 from excalibur.util import time as tm
 from excalibur.util.plotters import (
     save_plot_tosv,
@@ -289,7 +289,7 @@ def normversion():
     return dawgie.VERSION(1, 1, 9)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
     '''
     JWST spectra normalization
     '''
@@ -303,7 +303,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
     wavetemplate = []
     for thisdet in np.unique(cal['data']['DET']):
         if verbose:
-            log.warning('>-- %s', thisdet)
+            log.info('>-- %s', thisdet)
             pass
         select = np.array([d in [thisdet] for d in cal['data']['DET']])
         wavetemplate.append(np.mean(wave[select], axis=0))
@@ -314,12 +314,20 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         for pnet in tme['data'].keys()
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
+    allzp = [tme['data'][p]['z'] for _, p in enumerate(events)]
+    allrps = [
+        priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+        for _, p in enumerate(events)
+    ]
+    alloot = [
+        np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)
+    ]
+    oot = np.logical_and.reduce(alloot, 0).astype(np.bool)
     for p in events:
         if verbose:
-            log.warning('>-- Planet: %s', p)
+            log.info('>-- Planet: %s', p)
             pass
         out['data'][p] = {}
-        rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         mttref = priors[p]['t0']
         if mttref > 2400000.5:
             mttref -= 2400000.5
@@ -327,45 +335,51 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, debug=False):
         ignore = np.array(tme['data'][p]['ignore']) | np.array(
             cal['data']['IGNORED']
         )
-        z = tme['data'][p]['z']
-        uniqlen = []
-        allwavet = []
-        alltemplates = []
+        allwavet = {}
+        alltemplates = {}
         for thisdet in np.unique(cal['data']['DET']):
             select = np.array([d in [thisdet] for d in cal['data']['DET']])
-            soot = abs(z[select]) > (1e0 + 2e0 * rpors)
-            wavet, template = tplbuild(
+            soot = oot[select]
+            wavet, template = scube(
                 spectra[select][soot],
                 wave[select][soot],
-                [
-                    np.nanmin([np.nanmin(w) for w in wave[select]]),
-                    np.nanmax([np.nanmax(w) for w in wave[select]]),
-                ],
-                np.diff(wave[select][0]),
-                medest=True,
-                verbose=debug,
+                name=thisdet,
+                verbose=verbose,
             )
-            template = np.array(template)
-            wavet = np.array(wavet)
-            # template[template > 1] = np.nan
-            allwavet.append(wavet)
-            alltemplates.append(template)
+            alltemplates[thisdet] = np.array(template)
+            allwavet[thisdet] = np.array(wavet)
             pass
-        # BREAK POINT CODE IS GONNA CRASH HERE
+
         # NORM
         allnorms = []
         allnwaves = []
-        for ws, s in zip(wave, spectra):
-            t = alltemplates[uniqlen.index(len(s))]
-            w = allwavet[uniqlen.index(len(s))]
+        argsdict = {
+            'progbar': verbose,
+            'progsizemax': 35,
+            'lbllen': 15,
+            'proginprompt': True,
+        }
+        progbar = nerdclub.Progressbar(argsdict, '>-- NORM ', wave)
+        for ws, s, det in zip(wave, spectra, cal['data']['DET']):
+            t = alltemplates[det]
+            w = allwavet[det]
+            dw = np.nanmedian(np.diff(w)) / 2.0
+
             norms = []
-            for thisw in w:
-                dist = list(abs(ws - thisw))
-                norms.append(s[dist.index(np.min(dist))])
+            wnorms = []
+            for thisw, thiss in zip(ws, s):
+                dist = list(abs(w - thisw))
+                if np.nanmin(dist) < dw:
+                    norms.append(thiss / t[dist.index(np.min(dist))])
+                    wnorms.append(thisw)
+                    pass
                 pass
-            allnorms.append(np.array(norms) / t)
+            allnorms.append(np.array(norms))
             allnwaves.append(w)
+            progbar.update()
             pass
+        progbar.close()
+
         out['data'][p]['visits'] = tme['data'][p]['visits']
         out['data'][p]['ignore'] = ignore
         out['data'][p]['nspec'] = allnorms
@@ -1166,6 +1180,47 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
 
 # ------------------- ------------------------------------------------
 # -- TEMPLATE BUILDER -- ---------------------------------------------
+def scube(allspec, allwaves, name='', verbose=False):
+    '''
+    GMR: Stellar Super-resolution Spectrum from out of transit spectra
+    [I] allspec: out of transit spectra
+    [I] allwaves: associated wavelengths
+    [O] twve: template wavelength grid
+    [O] tspc: template normalization spectrum
+    '''
+    slc = np.isfinite(allwaves[0])
+    zwve = allwaves[0][slc]
+    twve = []
+    tspc = []
+    mask = ~np.isfinite(allwaves)
+    allwaves[mask] = -1
+    allspec[mask] = -1
+    argsdict = {
+        'progbar': verbose,
+        'progsizemax': 35,
+        'lbllen': 15,
+        'proginprompt': True,
+    }
+    progbar = nerdclub.Progressbar(argsdict, '>-- SCUBE ' + name, zwve)
+    for iw, w in enumerate(zwve):
+        if (iw - 1) < 0:
+            left = 0
+        else:
+            left = (w - zwve[iw - 1]) / 2.0
+        if (iw + 1) > (zwve.size - 1):
+            right = 0
+        else:
+            right = (zwve[iw + 1] - w) / 2.0
+        radius = np.nanmax([left, right])
+        select = np.abs(allwaves - w) <= radius
+        twve.append(np.nanmedian(allwaves[select]))
+        tspc.append(np.nanmedian(allspec[select]))
+        progbar.update()
+        pass
+    progbar.close()
+    return twve, tspc
+
+
 def tplbuild(
     spectra, wave, vrange, disp, superres=False, medest=False, verbose=False
 ):
@@ -1181,7 +1236,7 @@ def tplbuild(
         allwave.extend(w)
     allspec = np.array(allspec)
     allwave = np.array(allwave)
-    vdisp = np.mean(disp)
+    vdisp = np.nanmean(disp)
     wavet = []
     template = []
     guess = [np.min(vrange) - vdisp / 2e0]
