@@ -1,9 +1,5 @@
 '''phasecurve plotters ds'''
 
-# Heritage code shame:
-# asdfasdf pylint: disable=duplicate-code
-# asdfadsf  disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-statements
-
 # -- IMPORTS ---------------------------------------------------------
 
 import numpy as np

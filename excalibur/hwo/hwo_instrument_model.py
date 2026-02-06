@@ -180,7 +180,7 @@ def load_hwo_instrument(target):
     wavemax = 1.0
 
     wavegridedges = np.linspace(wavemin, wavemax, Nwave + 1)
-    dwave = wavegridedges[1] - wavegridedges[0]
+    # dwave = wavegridedges[1] - wavegridedges[0]
     # print('dwave', dwave)
 
     wavelow = wavegridedges[:-1]

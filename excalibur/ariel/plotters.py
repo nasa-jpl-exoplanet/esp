@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-branches,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
 
