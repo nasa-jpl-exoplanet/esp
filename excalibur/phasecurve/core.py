@@ -443,14 +443,17 @@ def flaredetection(whitelight, fin, out, selftype, fltr, verbose=False):
             # no need to pass in systemparam. fit values are in whitelightdata
             systemparam = fin['priors'][p]
             # (this isn't used; it's just to get around pylint checks)
-            tmidAdjust = systemparam['t0'] - whitelightdata['final_pars']['tmid']
+            tmidAdjust = (
+                systemparam['t0'] - whitelightdata['final_pars']['tmid']
+            )
 
             randomTimeIndices = np.array(
                 len(whitelightdata['time']) * np.random.rand(10), dtype=int
             )
             flaretimes = whitelightdata['time'][randomTimeIndices]
-            flarephases = (flaretimes - whitelightdata['final_pars']['tmid']
-                           ) / whitelightdata['final_pars']['per']
+            flarephases = (
+                flaretimes - whitelightdata['final_pars']['tmid']
+            ) / whitelightdata['final_pars']['per']
             flarephases = flarephases - int(np.max(flarephases))
 
             # phase isn't defined yet. have to calculate it here

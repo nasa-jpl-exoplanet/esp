@@ -109,14 +109,14 @@ def plot_phasecurve(
                 alpha=0.025,
             )
 
-    #____________ show when the flares happen ____________
+    # ____________ show when the flares happen ____________
     flareplotloc = np.median(whitelightdata['detrended']) + 3.0 * np.std(
         whitelightdata['detrended']
     )
     axs[0].plot(
         flarephases, [flareplotloc] * len(flarephases), 'rv', label='flares'
     )
-    axs[0].legend(loc='center left',bbox_to_anchor=(1.16, 0.48))
+    axs[0].legend(loc='center left', bbox_to_anchor=(1.06, 0.48))
 
     bt, br, _ = elca.time_bin(
         whitelightdata['time'],
@@ -176,7 +176,7 @@ def plot_phasecurve(
         )
         axs[1].set_xlabel('Time [day]')
 
-    axs[1].legend(loc='center left',bbox_to_anchor=(1.16, 0.48))
+    axs[1].legend(loc='center left', bbox_to_anchor=(1.06, 0.48))
     axs[1].set_ylabel('Residuals [ppm]')
     axs[1].grid(True, ls='--')
     plt.tight_layout()
