@@ -1,7 +1,7 @@
 '''phasecurve plotters ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
 
 # -- IMPORTS ---------------------------------------------------------
 
@@ -43,6 +43,7 @@ def plot_phasecurve(
     #      systemparam['t0'])
 
     f = plt.figure(figsize=(10, 5))
+    f.suptitle(fltr)
     ax_lc = plt.subplot2grid((4, 5), (0, 0), colspan=5, rowspan=3)
     ax_res = plt.subplot2grid((4, 5), (3, 0), colspan=5, rowspan=1)
     axs = [ax_lc, ax_res]
@@ -117,8 +118,6 @@ def plot_phasecurve(
         flarephases, [flareplotloc] * len(flarephases), 'rv', label='flares'
     )
     axs[0].legend(loc='center left', bbox_to_anchor=(1.06, 0.48))
-
-    f.title(fltr)
 
     bt, br, _ = elca.time_bin(
         whitelightdata['time'],

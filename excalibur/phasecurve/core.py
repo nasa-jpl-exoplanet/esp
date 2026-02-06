@@ -443,8 +443,8 @@ def flaredetection(whitelight, fin, out, fltr, verbose=False):
             # no need to pass in systemparam. fit values are in whitelightdata
             systemparam = fin['priors'][p]
             # (this is just to get around pylint checks)
-            if systemparam['t0'][0] == '666':
-                systemparam['t0'][0] = '123'
+            if systemparam['t0'] == '666':
+                systemparam['t0'] = '123'
 
             randomTimeIndices = np.array(
                 len(whitelightdata['time']) * np.random.rand(10), dtype=int
