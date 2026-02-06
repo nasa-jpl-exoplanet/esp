@@ -204,3 +204,90 @@ class pcwhitelight(dawgie.Algorithm):
         return
 
     pass
+
+
+class pcflaredetection(dawgie.Algorithm):
+    '''
+    looks for flares in whitelight phasecurve data
+    '''
+
+    def __init__(self, wlpc=pcwhitelight()):
+        self._version_ = dawgie.VERSION(1, 1, 2)
+        self._type = 'phasecurve'
+        self._wlpc = wlpc
+        self.__rt = rtalg.Autofill()
+        self.__fin = sysalg.Finalize()
+        self.__out = [phcstates.FlaresSV(fltr) for fltr in fltrs]
+        return
+
+    def name(self):
+        return 'flares'
+
+    def previous(self):
+        return [
+            dawgie.ALG_REF(
+                fetch('excalibur.phasecurve').task,
+                self._wlpc,
+            ),
+            dawgie.ALG_REF(sys.task, self.__fin),
+        ] + self.__rt.refs_for_proceed()
+
+    def state_vectors(self):
+        return self.__out
+
+    def run(self, ds, ps):
+
+        fin = self.__fin.sv_as_dict()['parameters']
+        vfin, sfin = checksv(fin)
+
+        svupdate = []
+        # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
+        #     stop here if it is not a runtime target
+        #     self.__rt.proceed(fltr)
+        for fltr in ['Spitzer-IRAC-IR-36-SUB', 'Spitzer-IRAC-IR-45-SUB']:
+            update = False
+            index = fltrs.index(fltr)
+            phasecurve = self._wlpc.sv_as_dict()[fltr]
+            vwlpc, swlpc = checksv(phasecurve)
+            if vwlpc and vfin:
+                log.info(
+                    '--< %s FLARE DETECTION: %s >--', self._type.upper(), fltr
+                )
+                update = self._flaredetection(
+                    phasecurve, fin, self.__out[index], index
+                )
+                pass
+            else:
+                errstr = [m for m in [swlpc, sfin] if m is not None]
+                self._failure(errstr[0])
+                pass
+            if update:
+                svupdate.append(self.__out[index])
+            pass
+        self.__out = svupdate
+        if self.__out:
+            _ = excalibur.lagger()
+            ds.update()
+            pass
+        else:
+            raise dawgie.NoValidOutputDataError(
+                f'No output created for PHASECURVE.{self.name()}'
+            )
+        return
+
+    def _flaredetection(self, wlpc, fin, out, index):
+        if 'Spitzer' in fltrs[index]:
+            flares = phccore.flaredetection(
+                wlpc, fin, out, self._type, fltrs[index]
+            )
+        else:
+            return True
+        return flares
+
+    def _failure(self, errstr):
+        log.warning(
+            '--< %s FLARE DETECTION: %s >--', self._type.upper(), errstr
+        )
+        return
+
+    pass
