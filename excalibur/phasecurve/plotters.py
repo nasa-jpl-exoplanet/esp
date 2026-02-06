@@ -42,9 +42,7 @@ def plot_phasecurve(
     #      whitelightdata['final_pars']['tmid'],
     #      systemparam['t0'])
 
-    # f = plt.figure(figsize=(12, 7))
-    f = plt.figure(figsize=(8, 5))
-    # f.subplots_adjust(top=0.94,bottom=0.08,left=0.07,right=0.96)
+    f = plt.figure(figsize=(10, 5))
     ax_lc = plt.subplot2grid((4, 5), (0, 0), colspan=5, rowspan=3)
     ax_res = plt.subplot2grid((4, 5), (3, 0), colspan=5, rowspan=1)
     axs = [ax_lc, ax_res]
@@ -77,7 +75,7 @@ def plot_phasecurve(
 
     axs[0].set_ylabel('Relative Flux')
     axs[0].grid(True, ls='--')
-        
+
     if zoom:
         axs[0].set_ylim(
             [
@@ -111,13 +109,15 @@ def plot_phasecurve(
                 alpha=0.025,
             )
 
-    # yrange = axs[0].get_ylim()
-    # show when the flares happen
-    flareplotloc = np.median(whitelightdata['detrended']) + 3. * np.std(whitelightdata['detrended'])
-    axs[0].plot(flarephases, [flareplotloc] * len(flarephases), 'rv',
-                label='flares')
-    axs[0].legend(loc='upper right')
-    
+    #____________ show when the flares happen ____________
+    flareplotloc = np.median(whitelightdata['detrended']) + 3.0 * np.std(
+        whitelightdata['detrended']
+    )
+    axs[0].plot(
+        flarephases, [flareplotloc] * len(flarephases), 'rv', label='flares'
+    )
+    axs[0].legend(loc='center left',bbox_to_anchor=(1.16, 0.48))
+
     bt, br, _ = elca.time_bin(
         whitelightdata['time'],
         whitelightdata['residuals'] / np.median(whitelightdata['flux']) * 1e6,
@@ -176,7 +176,7 @@ def plot_phasecurve(
         )
         axs[1].set_xlabel('Time [day]')
 
-    axs[1].legend(loc='best')
+    axs[1].legend(loc='center left',bbox_to_anchor=(1.16, 0.48))
     axs[1].set_ylabel('Residuals [ppm]')
     axs[1].grid(True, ls='--')
     plt.tight_layout()
