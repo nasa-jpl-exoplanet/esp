@@ -146,4 +146,65 @@ def load_hwo_instrument(target, runtime_params):
             target,
         )
 
+    if 0:
+        print(hwo_instrument['nVisits'])
+        print(hwo_instrument['transitDuration'])
+        print(
+            np.median(hwo_instrument['wavelength']),
+            np.std(hwo_instrument['wavelength']),
+        )
+        print(
+            np.median(hwo_instrument['wavelow']),
+            np.std(hwo_instrument['wavelow']),
+        )
+        print(
+            np.median(hwo_instrument['wavehigh']),
+            np.std(hwo_instrument['wavehigh']),
+        )
+        print(
+            np.median(hwo_instrument['noise']), np.std(hwo_instrument['noise'])
+        )
+
+        for i in range(len(hwo_instrument['noise']) - 1):
+            print(
+                'wave edge check',
+                hwo_instrument['wavehigh'][i],
+                hwo_instrument['wavelow'][i + 1],
+                hwo_instrument['wavehigh'][i]
+                - hwo_instrument['wavelow'][i + 1],
+            )
+
+    # wavelength grid parameters
+    Nwave = 100
+    wavemin = 0.4
+    wavemax = 1.0
+
+    wavegridedges = np.linspace(wavemin, wavemax, Nwave + 1)
+    dwave = wavegridedges[1] - wavegridedges[0]
+    # print('dwave', dwave)
+
+    wavelow = wavegridedges[:-1]
+    wavehigh = wavegridedges[1:]
+    # waves = wavegridedges[:-1] + dwave/2  # same thing as below
+    waves = (wavelow + wavehigh) / 2
+    # print('wave range', waves[0], waves[10], waves[-1])
+
+    # instrument noise parameters
+    noiselevel_ppm = 100.0
+    noise = np.array([noiselevel_ppm / 1.0e6] * Nwave)
+
+    # transitDuration isnt used; this is just for future checking
+    #  (the noise is calculated based on this transit duration)
+    #
+    # nVisits is used; the noise will be multiplied by sqrt(N)
+
+    hwo_instrument = {
+        'nVisits': 1,
+        'transitDuration': 3600,
+        'wavelength': waves,
+        'wavelow': wavelow,
+        'wavehigh': wavehigh,
+        'noise': noise,
+    }
+
     return hwo_instrument
