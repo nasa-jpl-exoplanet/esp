@@ -223,7 +223,16 @@ class TimingSV(dawgie.StateVector):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            for p in self['data'].keys():
+            # GMR: We keep adding stuff inside the data keys, it is not
+            # just the planet letters anymore. Safer to explicitely loop them
+            # and not all keys in the dict.
+            # We only wanna loop through the planet keys here.
+            planetkeys = [
+                thisp
+                for thisp in map(chr, range(97, 123))
+                if thisp in self['data'].keys()
+            ]
+            for p in planetkeys:
                 if 'Spitzer' in self.__name or 'JWST' in self.__name:
                     vlabels = ['TRANSIT', 'ECLIPSE', 'PHASE CURVE']
                     hlabels = ['PLANET: ' + p, 'VISIT NUMBER']
