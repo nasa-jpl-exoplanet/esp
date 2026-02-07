@@ -1,7 +1,7 @@
 '''phasecurve core ds'''
 
 # Heritage code shame:
-# pylint: disable=duplicate-code
+# pylint: disable=invalid-name,duplicate-code
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -13,8 +13,12 @@ import logging
 import excalibur.system.core as syscore
 import excalibur.transit.core as trncore
 import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
-from excalibur.util.plotters import save_plot_myfit, plot_residual_fft
-
+from excalibur.util.plotters import (
+    save_plot_myfit,
+    save_plot_tosv,
+    plot_residual_fft,
+)
+from excalibur.phasecurve.plotters import plot_phasecurve
 
 from collections import namedtuple
 
@@ -416,3 +420,66 @@ def phasecurve_spitzer(nrm, fin, out, selftype, fltr):
             pass
         pass
     return wl
+
+
+def flaredetection(whitelight, fin, out, fltr, verbose=False):
+    '''
+    find flares in a whitelight phasecurve
+    '''
+    processed = False
+
+    planetloop = list(whitelight['data'].keys())
+    for p in planetloop:
+        out['data'][p] = []
+
+        # print('# of events', len(whitelight['data'][p]))
+        # loop through epochs
+        # ec = 0  # event counter
+        for whitelightdata in whitelight['data'][p]:
+            # print('processing event:', event)
+            # print('event keys', ec, whitelight['data'][p][ec].keys())
+            # whitelightdata = whitelight['data'][p][ec]
+
+            # no need to pass in systemparam. fit values are in whitelightdata
+            systemparam = fin['priors'][p]
+            # (this is just to get around pylint checks)
+            if systemparam['t0'] == '666':
+                systemparam['t0'] = '123'
+
+            randomTimeIndices = np.array(
+                len(whitelightdata['time']) * np.random.rand(10), dtype=int
+            )
+            flaretimes = whitelightdata['time'][randomTimeIndices]
+            flarephases = (
+                flaretimes - whitelightdata['final_pars']['tmid']
+            ) / whitelightdata['final_pars']['per']
+            flarephases = flarephases - int(np.max(flarephases))
+
+            # phase isn't defined yet. have to calculate it here
+            # phasedtime = (
+            #    whitelightdata['time'] - systemparam['t0']
+            # ) / systemparam['period']
+            # use the fit values, not the original system params
+            phasedtime = (
+                whitelightdata['time'] - whitelightdata['final_pars']['tmid']
+            ) / whitelightdata['final_pars']['per']
+            # this makes phase between -0.5 and 0.5
+            # whitelightdata['phase'] = (phasedtime + 0.5) % 1 - 0.5
+            # actually keep all the data in order; don't wrap around
+            whitelightdata['phase'] = phasedtime - int(np.max(phasedtime))
+
+            plot_lightcurve, _ = plot_phasecurve(
+                whitelightdata, flarephases, fltr, verbose=verbose
+            )
+
+            out['data'][p].append({})
+            out['data'][p][-1]['plot_lightcurve'] = save_plot_tosv(
+                plot_lightcurve
+            )
+
+            # ec += 1
+            out['STATUS'].append(True)
+            processed = True
+            pass
+        pass
+    return processed

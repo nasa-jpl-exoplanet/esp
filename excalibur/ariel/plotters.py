@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-branches,too-many-statements
 
 # -- IMPORTS -- ------------------------------------------------------
 
@@ -25,18 +25,23 @@ def plot_spectrum(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
+    plottype='Ariel',
     verbose=False,
 ):
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
+    if plottype == 'Ariel':
+        tierlabel = 'Tier-' + str(tier) + ' '
+    else:
+        tierlabel = ''
     plt.title(
-        'Ariel simulation : '
+        plottype
+        + ' simulation : '
         + target
         + ' '
         + planet_letter
-        + ' : Tier-'
-        + str(tier)
-        + ' '
+        + ' : '
+        + tierlabel
         + str(visits)
         + ' visits',
         fontsize=16,
@@ -100,6 +105,10 @@ def plot_spectrum(
     negligible_molecules = ''
     negligible_molecules_more = ''
     Nnegligible = 0
+    if plottype == 'Ariel':
+        negligibletextloc = 6.8
+    else:
+        negligibletextloc = 0.95
     for imole, molecule in enumerate(molecules):
         colorlist = [
             'red',
@@ -109,26 +118,7 @@ def plot_spectrum(
             'blueviolet',
             'fuchsia',
         ]
-        stylelist = [
-            '--',
-            '--',
-            '--',
-            '--',
-            '--',
-            '--',
-            ':',
-            ':',
-            ':',
-            ':',
-            ':',
-            ':',
-            '-.',
-            '-.',
-            '-.',
-            '-.',
-            '-.',
-            '-.',
-        ]
+        stylelist = ['--'] * 6 + [':'] * 6 + ['-.'] * 6
         feature_strength = (
             np.max(fluxDepth_by_molecule[molecule]) - baseline
         ) / (maxdepth - baseline)
@@ -155,7 +145,7 @@ def plot_spectrum(
         plt.ylim((baseline - extra, maxdepth + extra))
         yrange = plt.ylim()
         plt.text(
-            6.9,
+            negligibletextloc,
             yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
             'negligible contribution:',
             fontsize=8,
@@ -163,18 +153,23 @@ def plot_spectrum(
         # there's formating problems when too many negligible molecules
         # better to split it up over two lines
         plt.text(
-            6.8,
+            negligibletextloc,
             yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
             negligible_molecules,
             fontsize=8,
         )
         plt.text(
-            6.8,
+            negligibletextloc,
             yrange[0] + (yrange[1] - yrange[0]) * (-0.23),
             negligible_molecules_more,
             fontsize=8,
         )
-    plt.xlim(0.0, 8.0)
+    if plottype == 'Ariel':
+        plt.xlim(0.0, 8.0)
+    else:
+        # legend doesn't come up without this? huh?
+        plt.xlim(0.3, 1.1)  # this doesnt work (no legend)
+        # plt.xlim(0.0, 8.0)  # this works (huh?!)
     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
@@ -214,18 +209,23 @@ def plot_spectrum_topmolecules(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
+    plottype='Ariel',
     verbose=False,
 ):
     # PLOT THE SPECTRA
     myfig, ax = plt.subplots(figsize=(8, 4))
+    if plottype == 'Ariel':
+        tierlabel = 'Tier-' + str(tier) + ' '
+    else:
+        tierlabel = ''
     plt.title(
-        'Ariel simulation : '
+        plottype
+        + ' simulation : '
         + target
         + ' '
         + planet_letter
-        + ' : Tier-'
-        + str(tier)
-        + ' '
+        + ' : '
+        + tierlabel
         + str(visits)
         + ' visits',
         fontsize=16,
@@ -330,7 +330,8 @@ def plot_spectrum_topmolecules(
             fontsize=12,
             verticalalignment='center',
         )
-    plt.xlim(0, 8.5)
+    if plottype == 'Ariel':
+        plt.xlim(0, 8.5)
     plt.ylim(yrange[0], nextMoleculeYpos)
     # plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
@@ -452,7 +453,7 @@ def plot_vertical_profiles(
     xmax_ppm = 1e6
 
     myfig, (ax_main, ax_trace) = plt.subplots(
-        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}
+        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}, figsize=(8, 4)
     )
     for imole, molecule in enumerate(molecule_profiles.keys()):
         x = 10 ** molecule_profiles[molecule]

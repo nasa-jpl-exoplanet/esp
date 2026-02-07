@@ -2075,6 +2075,7 @@ def targetlist_G141():
         'LTT 9779',
         'TOI-1201',
         'TOI-1231',
+        'TOI-1410',  # new Jan.2026
         'TOI-1759',
         'TOI-178',  # new Oct.2024
         'TOI-199',  # new Dec.2024
@@ -2083,6 +2084,7 @@ def targetlist_G141():
         'TOI-431',
         'TOI-561',
         'TOI-674',
+        'TOI-700',  # new Jan.2026
         'TRAPPIST-1',
         'V1298 Tau',
         'WASP-101',
@@ -2236,6 +2238,12 @@ def targetlist_JWST():
         'WASP-47',  # added Aug.2025
         'WASP-76',  # added Aug.2025
         'TOI-3235',  # added Aug.2025
+        'PH2',  # added Jan.2026
+        'Kepler-12',  # added Jan.2026
+        'NGTS-2',  # added Jan.2026
+        'WASP-6',  # added Jan.2026
+        'Kepler-1522',  # added Jan.2026
+        'K2-384',  # added Jan.2026
     ]
     return targets
 

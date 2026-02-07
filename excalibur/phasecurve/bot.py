@@ -13,7 +13,11 @@ class Actor(dawgie.Task):
 
     def list(self) -> [dawgie.Task]:
         '''Subtasks top level ordered call'''
-        return [phcalg.pcnormalization(), phcalg.pcwhitelight()]
+        return [
+            phcalg.pcnormalization(),
+            phcalg.pcwhitelight(),
+            phcalg.pcflaredetection(),
+        ]
 
     pass
 

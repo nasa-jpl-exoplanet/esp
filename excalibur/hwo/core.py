@@ -1,7 +1,8 @@
-'''ariel core ds'''
+'''hwo core ds'''
 
 # Heritage code shame:
 # pylint: disable=invalid-name
+# pylint: disable=duplicate-code
 # pylint: disable=too-many-branches,too-many-locals,too-many-nested-blocks,too-many-statements,too-many-arguments,too-many-positional-arguments,too-many-function-args
 
 # -- IMPORTS -- ------------------------------------------------------
@@ -13,18 +14,16 @@ from collections import namedtuple
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
 
+from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
+
+from excalibur.cerberus.core import myxsecs
+from excalibur.ariel.forward_models import make_cerberus_atmos
+from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.metallicity import (
     massMetalRelation,
     massMetalRelationDisp,
     randomCtoO_linear,
 )
-from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
-from excalibur.ariel.ariel_instrument_model import (
-    load_ariel_instrument,
-    calculate_ariel_instrument,
-)
-from excalibur.ariel.forward_models import make_cerberus_atmos
-from excalibur.cerberus.core import myxsecs
 from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
@@ -32,20 +31,14 @@ from excalibur.ariel.plotters import (
     plot_vertical_profiles,
 )
 
-# import os
-# import sys
-
-# import pickle
 import numpy as np
 import scipy.constants as cst
 
 log = logging.getLogger(__name__)
 
-ArielParams = namedtuple(
-    'ariel_params_from_runtime',
+HWOparams = namedtuple(
+    'hwo_params_from_runtime',
     [
-        'tier',
-        'arielRad',
         'SNRfactor',
         'randomSeed',
         'randomCloudProperties',
@@ -70,7 +63,7 @@ ArielParams = namedtuple(
 
 
 # ----------------- --------------------------------------------------
-# -- SIMULATE ARIEL SPECTRA ------------------------------------------
+# -- SIMULATE HWO SPECTRA ------------------------------------------
 def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     '''
     calculate the mean molecular weight and scale height
@@ -137,7 +130,7 @@ def simulate_spectra(
     verbose=False,
 ):
     '''
-    Simulate Ariel spectra, adding noise based on the Ariel instrument model
+    Simulate HWO spectra, adding noise based on the HWO instrument model
     Mulitple spectra are now calculated, allowing a choice within cerberus.atmos fitting
     1) only Cerberus atmosphere models now; Taurex option removed Dec.2024
     2) with or without clouds
@@ -148,9 +141,6 @@ def simulate_spectra(
     # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
 
     testTarget = bool(target.startswith('test'))
-
-    # select Tier-1 or Tier-2 for spectra SNR
-    tier = runtime_params.tier
 
     sscmks = syscore.ssconstants(mks=True)
 
@@ -163,20 +153,20 @@ def simulate_spectra(
 
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
-        'cerberus',
+        # 'cerberus',
         'cerberusTEA',
-        'cerberuslowmmw',
-        'cerberusNoclouds',
-        'cerberusTEANoclouds',
-        'cerberuslowmmwNoclouds',
+        # 'cerberuslowmmw',
+        # 'cerberusNoclouds',
+        # 'cerberusTEANoclouds',
+        # 'cerberuslowmmwNoclouds',
     ]
 
     if testTarget:
         atmosModels = [
-            'cerberus',
+            # 'cerberus',
             'cerberusTEA',
-            'cerberusNoclouds',
-            'cerberusTEANoclouds',
+            # 'cerberusNoclouds',
+            # 'cerberusTEANoclouds',
         ]
 
     solarCtoO = 0.54951
@@ -207,15 +197,6 @@ def simulate_spectra(
             ) % 1000000
         np.random.seed(intFromTarget)
 
-        # check for Ariel targets that are not in excalibur
-        # from excalibur.target.targetlists import targetlist_ArielMCSknown_transitCategory
-        # targs = targetlist_ArielMCSknown_transitCategory()
-        # import excalibur.target.edit as trgedit
-        # excaliburTargets = trgedit.targetlist.__doc__
-        # for targ in targs:
-        #     if targ[:-2] not in excaliburTargets:
-        #         print('ADD NEW TARGET:',targ)
-
         # load in the wavelength bins and the noise model
         # there is a separate SNR file for each planet
         targetplanet = target + ' ' + planet_letter
@@ -223,24 +204,9 @@ def simulate_spectra(
             # use HD 209458 SNR as a default for test cases
             targetplanet = 'HD 209458 b'
 
-        # select old ArielRad (results read from a table) or new (results calculated internally)
-        oldArielRad = True
-        oldArielRad = False
-        if oldArielRad:
-            ariel_instrument = load_ariel_instrument(
-                targetplanet,
-                runtime_params,
-            )
-        else:
-            ariel_instrument = calculate_ariel_instrument(
-                targetplanet,
-                system_params,
-                ancil_params,
-                runtime_params,
-                verbose=verbose,
-            )
+        hwo_instrument = load_hwo_instrument(targetplanet)
 
-        if ariel_instrument:
+        if hwo_instrument:
             # asdf : LATER : add in uncertainty scatter to these model parameters
             model_params = {
                 'T*': system_params['T*'],
@@ -327,10 +293,8 @@ def simulate_spectra(
                 # print('CtoO_planet_linear',CtoO_planet_linear)
 
             # Load the instrument model and rescale based on #-of-transits
-            uncertainties = ariel_instrument['noise']
-            # use #-of-visits our ArielRad calculation, not from Edwards table
-            visits = ariel_instrument['nVisits']
-            # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
+            uncertainties = hwo_instrument['noise']
+            visits = hwo_instrument['nVisits']
 
             uncertainties /= np.sqrt(float(visits))
 
@@ -456,7 +420,7 @@ def simulate_spectra(
                         # print('Nhires',Nhires)
                         wavelength_um = np.logspace(-0.5, 1.0, int(Nhires))
                     else:
-                        wavelength_um = ariel_instrument['wavelength']
+                        wavelength_um = hwo_instrument['wavelength']
 
                     if not xslib['STATUS'][-1]:
                         tempspc = {
@@ -513,7 +477,7 @@ def simulate_spectra(
                 #        len(fluxDepth),
                 #    )
 
-                # REBIN to the Ariel spectral resolution
+                # REBIN to the HWO spectral resolution
                 wavelength_um_rebin = []
                 fluxDepth_rebin = []
                 fluxDepth_by_molecule_rebin = {}
@@ -521,8 +485,8 @@ def simulate_spectra(
                 for molecule in molecules:
                     fluxDepth_by_molecule_rebin[molecule] = []
                 for wavelow, wavehigh in zip(
-                    ariel_instrument['wavelow'],
-                    ariel_instrument['wavehigh'],
+                    hwo_instrument['wavelow'],
+                    hwo_instrument['wavehigh'],
                 ):
                     thisWaveBin = np.where(
                         (wavelength_um >= wavelow) & (wavelength_um <= wavehigh)
@@ -590,8 +554,7 @@ def simulate_spectra(
                     'wavelength_norebin': wavelength_um,
                 }
 
-                # also save the Tier level and the number of visits; add these to the plot
-                out['data'][planet_letter][atmosModel]['tier'] = tier
+                # also save the number of visits; add it to the plot
                 out['data'][planet_letter][atmosModel]['visits'] = visits
 
                 # save the parameters used to create the spectrum. some could be useful
@@ -610,7 +573,7 @@ def simulate_spectra(
                     'model_params'
                 ] = model_params.copy()
                 # if testTarget:
-                #    print('model_params in ariel:', model_params)
+                #    print('model_params in hwo:', model_params)
 
                 # convert to percentage depth (just for plotting, not for the saved results)
                 fluxDepth = 100 * fluxDepth
@@ -627,7 +590,7 @@ def simulate_spectra(
                     plot_spectrum(
                         target,
                         planet_letter,
-                        tier,
+                        '',
                         visits,
                         wavelength_um_rebin,
                         fluxDepth_rebin,
@@ -636,6 +599,7 @@ def simulate_spectra(
                         molecules,
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
+                        plottype='HWO',
                         verbose=verbose,
                     )
                 )
@@ -644,17 +608,18 @@ def simulate_spectra(
                 ] = plot_spectrum_topmolecules(
                     target,
                     planet_letter,
-                    tier,
+                    '',
                     visits,
                     wavelength_um_rebin,
-                    ariel_instrument['wavelow'],
-                    ariel_instrument['wavehigh'],
+                    hwo_instrument['wavelow'],
+                    hwo_instrument['wavehigh'],
                     fluxDepth_rebin,
                     fluxDepth_observed,
                     uncertainties_percent,
                     molecules,
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
+                    plottype='HWO',
                     verbose=verbose,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (

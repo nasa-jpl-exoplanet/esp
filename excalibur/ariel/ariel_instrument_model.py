@@ -29,7 +29,7 @@ def calculate_ariel_instrument(
     system_params,
     ancil_params,
     runtime_params,
-    # verbose=False,
+    verbose=False,
 ):
     '''
     Use ArielRad to calculate instrument uncertainty as a function of wavelength
@@ -70,7 +70,7 @@ def calculate_ariel_instrument(
         'planet name': target,
         'planet r': system_params[planet_letter]['rp'] * u.R_jup,
         'planet m': system_params[planet_letter]['mass'] * u.M_jup,
-        'planet teff': system_params[planet_letter]['teq'] * u.K,
+        'planet teff': float(system_params[planet_letter]['teq']) * u.K,
         'planet P': system_params[planet_letter]['period'] * u.d,
         'planet a': system_params[planet_letter]['sma'] * u.AU,
         'planet albedo': 0.1,
@@ -91,15 +91,15 @@ def calculate_ariel_instrument(
     # print('SYSTEM PARAMS FOR ARIELRAD:', arielrad_params)
 
     # Run the simulation
+    noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
     # noise_table, output_dict, nobs, info = run_target(
     #    target_dict=arielrad_params,
     #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
     #    obs_mode='transit',
     #    verbose=verbose,
     # )
-    # asdf
-    # noise_table, output_dict, nobs, info = [{}, {}, {}, {}]
-    noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
+    if verbose and not noise_table:
+        print('looks like arielrad calculation was not run')
 
     # print('output_dict',output_dict.keys())
     # ['tier1', 'tier2', 'tier3', 'SNRTab']

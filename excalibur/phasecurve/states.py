@@ -111,3 +111,24 @@ class WhiteLightSV(ExcaliburSV):
 
 
 # -------- -----------------------------------------------------------
+
+
+class FlaresSV(ExcaliburSV):
+    '''phasecurve.flaredetection view'''
+
+    def __init__(self, name):
+        '''__init__ ds'''
+        ExcaliburSV.__init__(self, name, dawgie.VERSION(1, 1, 1))
+
+    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
+        '''view ds'''
+        if self['STATUS'][-1]:
+            for p in self['data'].keys():
+                for ivisit in range(len(self['data'][p])):
+                    visitor.add_image(
+                        '...', ' ', self['data'][p][ivisit]['plot_lightcurve']
+                    )
+        return
+
+
+# -------- -----------------------------------------------------------

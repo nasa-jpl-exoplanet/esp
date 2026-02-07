@@ -1934,17 +1934,17 @@ def ppar():
     logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = (
         derive_LOGGplanet_from_R_and_M(system_info, 'b')
     )
-    overwrite['L 98-59']['b']['logg'] = logg_derived[0]
-    overwrite['L 98-59']['b']['logg_lowerr'] = logg_lowerr_derived[0]
-    overwrite['L 98-59']['b']['logg_uperr'] = logg_uperr_derived[0]
+    overwrite['L 98-59']['b']['logg'] = float(logg_derived[0])
+    overwrite['L 98-59']['b']['logg_lowerr'] = float(logg_lowerr_derived[0])
+    overwrite['L 98-59']['b']['logg_uperr'] = float(logg_uperr_derived[0])
     overwrite['L 98-59']['b']['logg_ref'] = logg_ref_derived[0]
 
     teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = (
         derive_Teqplanet_from_Lstar_and_sma(system_info, 'b')
     )
-    overwrite['L 98-59']['b']['teq'] = teq_derived[0]
-    overwrite['L 98-59']['b']['teq_lowerr'] = teq_lowerr_derived[0]
-    overwrite['L 98-59']['b']['teq_uperr'] = teq_uperr_derived[0]
+    overwrite['L 98-59']['b']['teq'] = float(teq_derived[0])
+    overwrite['L 98-59']['b']['teq_lowerr'] = float(teq_lowerr_derived[0])
+    overwrite['L 98-59']['b']['teq_uperr'] = float(teq_uperr_derived[0])
     overwrite['L 98-59']['b']['teq_ref'] = teq_ref_derived[0]
 
     # nov.2025 addition of 450 new systems from the Archive
