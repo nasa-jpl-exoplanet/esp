@@ -147,9 +147,11 @@ def load_hwo_instrument(target):
         )
 
     # wavelength grid parameters
-    Nwave = 100
-    wavemin = 0.4
-    wavemax = 1.0
+    Nwave = 300
+    # wavemin = 0.4
+    # wavemax = 1.0
+    wavemin = 0.2
+    wavemax = 1.8
 
     wavegridedges = np.linspace(wavemin, wavemax, Nwave + 1)
     # dwave = wavegridedges[1] - wavegridedges[0]
