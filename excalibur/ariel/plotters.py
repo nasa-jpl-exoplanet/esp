@@ -114,7 +114,11 @@ def plot_spectrum(
     if plottype == 'Ariel':
         negligibletextloc = 6.8
     else:
+<<<<<<< HEAD
         negligibletextloc = xlims[1] * 0.85
+=======
+        negligibletextloc = 0.95
+>>>>>>> origin/main
     for imole, molecule in enumerate(molecules):
         colorlist = [
             'red',
@@ -170,6 +174,15 @@ def plot_spectrum(
             negligible_molecules_more,
             fontsize=8,
         )
+<<<<<<< HEAD
+=======
+    if plottype == 'Ariel':
+        plt.xlim(0.0, 8.0)
+    else:
+        # legend doesn't come up without this? huh?
+        plt.xlim(0.3, 1.1)  # this doesnt work (no legend)
+        # plt.xlim(0.0, 8.0)  # this works (huh?!)
+>>>>>>> origin/main
     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
