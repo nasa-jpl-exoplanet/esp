@@ -173,7 +173,10 @@ def plot_spectrum(
     if plottype == 'Ariel':
         plt.xlim(0.0, 8.0)
     else:
-        plt.xlim(0.3, 1.1)
+        # plt.xlim(0.3, 1.1)
+        xlims = plt.xlim()
+        plt.xlim(0.0, xlims[1])
+
     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
