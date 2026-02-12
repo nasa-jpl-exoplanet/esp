@@ -154,7 +154,8 @@ def simulate_spectra(
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
         # 'cerberus',
-        'cerberusTEA',
+        #'cerberusTEA',
+        'cerberusTEAozone',
         # 'cerberuslowmmw',
         # 'cerberusNoclouds',
         # 'cerberusTEANoclouds',
@@ -315,6 +316,8 @@ def simulate_spectra(
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
+                if 'ozone' in atmosModel:
+                    chemistry += 'ozone'
 
                 # ABUNDANCES
                 if 'lowmmw' in atmosModel:
