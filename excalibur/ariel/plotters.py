@@ -341,7 +341,7 @@ def plot_spectrum_topmolecules(
     # if plottype == 'Ariel':
     #     plt.xlim(0, 8.5)
     xlims = plt.xlim()
-    plt.xlim(0, xlims[1]*1.08)
+    plt.xlim(0, xlims[1] * 1.08)
     plt.ylim(yrange[0], nextMoleculeYpos)
     # plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 

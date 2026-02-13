@@ -224,26 +224,27 @@ class crbFM:
                     # add in ozone, but keep the same total metallicity
                     originalmetals = 0
                     for molecule in mixratio:
-                        originalmetals += 10.**mixratio[molecule]
+                        originalmetals += 10. ** mixratio[molecule]
                     # print('originalmetals', originalmetals/1.e6)
 
                     # print(' ozone mixratio before', mixratio['O3'])
+                    mixratio['O3'] = mixratio['O3'] * 0 + 5.
                     # mixratio['O3'] = mixratio['O3'] * 0 + 7.
                     # print(' NEW OZONE mixratio', mixratio['O3'])
 
                     # totalmetals = 0
                     # for molecule in mixratio:
-                    #     totalmetals += 10.**mixratio[molecule]
+                    #     totalmetals += 10. ** mixratio[molecule]
                     # print('totalmetals', totalmetals/1.e6)
 
-                    newsum = originalmetals + 10.**mixratio['O3']
+                    newsum = originalmetals + 10. ** mixratio['O3']
 
                     for molecule in mixratio:
                         mixratio[molecule] -= np.log10(newsum/originalmetals)
                     # print(' ozone mixratio renorm', mixratio['O3'])
                     # totalmetals = 0
                     # for molecule in mixratio:
-                    #    totalmetals += 10.**mixratio[molecule]
+                    #    totalmetals += 10. ** mixratio[molecule]
                     # print('totalmetals', totalmetals/1.e6)
 
                     mmw, fH2, fHe = getmmw(mixratio)
@@ -313,7 +314,7 @@ class crbFM:
         molecules = tau_by_molecule.keys()
         # SEMI FINITE CLOUD ---------------------------------------------------
         reversep = np.array(pressure[::-1])
-        selectcloud = pressure > 10.0**cloudtp
+        selectcloud = pressure > 10.0 ** cloudtp
         blocked = False
         if np.all(selectcloud):
             tau = tau * 0
@@ -336,7 +337,7 @@ class crbFM:
                     reversep, np.asarray(tau[:, waveindex]).flatten()[::-1]
                 )
 
-                tau[cloudtopindex, waveindex] = myspl(10.0**cloudtp)
+                tau[cloudtopindex, waveindex] = myspl(10.0 ** cloudtp)
 
                 for molecule in molecules:
                     myspl = itp(
@@ -346,13 +347,13 @@ class crbFM:
                         ).flatten(),
                     )
                     tau_by_molecule[molecule][cloudtopindex, waveindex] = myspl(
-                        10.0**cloudtp
+                        10.0 ** cloudtp
                     )
                     # tau_by_molecule[molecule][:cloudtopindex, waveindex] = 0.
                 pass
 
             # adjust rp0 based on the cloudtop
-            ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
+            ctpdpress = 10.0 ** cloudtp - pressure[cloudtopindex]
             ctpdz = abs(
                 Hs[cloudtopindex]
                 / 2.0
@@ -368,7 +369,7 @@ class crbFM:
             2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
         ).flatten()
 
-        model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
+        model = (rp0 ** 2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
         # model is a 1xN matrix; it needs to be a 1-d array
         #  otherwise some subsequent * or ** operations fail
         model = np.asarray(model).reshape(-1)
@@ -381,7 +382,7 @@ class crbFM:
                 2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
             ).flatten()
 
-            models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
+            models_by_molecule[molecule] = (rp0 ** 2 + atmdepth) / (
                 orbp['R*'] * ssc['Rsun']
             ) ** 2
 
@@ -627,8 +628,8 @@ def gettau(
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
             pass
-        tau = tau + (f1 * f2 * sigma * rho**2).T
-        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
+        tau = tau + (f1 * f2 * sigma * rho ** 2).T
+        tau_by_molecule[cia] = (f1 * f2 * sigma * rho ** 2).T
     # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
@@ -642,9 +643,9 @@ def gettau(
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hazeslope)
         hazedensity = np.ones(len(z))
-        tau = tau + 10.0**hazescale * sigma * np.array([hazedensity]).T
+        tau = tau + 10.0 ** hazescale * sigma * np.array([hazedensity]).T
         tau_by_molecule['haze'] = (
-            10.0**hazescale * sigma * np.array([hazedensity]).T
+            10.0 ** hazescale * sigma * np.array([hazedensity]).T
         )
     else:
         # WEST ET AL. 2004
@@ -700,7 +701,7 @@ def gettau(
                     'g^',
                 )
                 if hazeloc is not None:
-                    plt.axhline(10**hazeloc, linestyle='--', color='red')
+                    plt.axhline(10 ** hazeloc, linestyle='--', color='red')
                     pass
                 plt.semilogy()
                 plt.semilogx()
@@ -728,7 +729,7 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
+        hazecontribution = 10.0 ** hazescale * sigma * np.array([rh]).T
         tau = tau + hazecontribution
         tau_by_molecule['haze'] = hazecontribution
         pass
@@ -976,7 +977,7 @@ def cloudyfmcerberus(*crbinputs):
     fmc = fmc[ctxt.cleanup]
 
     if len(ctxt.mcmcsig) > 0:
-        fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
+        fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig ** 2)
 
     return fmc
 
@@ -1053,7 +1054,7 @@ def clearfmcerberus(*crbinputs):
 
     # (no need for isfinite check; that's what cleanup does already)
     # if np.all(np.isfinite(ctxt.mcmcdat)):
-    fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig**2)
+    fmc += np.average(ctxt.mcmcdat - fmc, weights=1 / ctxt.mcmcsig ** 2)
     # else:
     #     fmc += np.nanmean(ctxt.mcmcdat - fmc)
 
