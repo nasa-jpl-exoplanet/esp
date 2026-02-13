@@ -154,7 +154,7 @@ def simulate_spectra(
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
         # 'cerberus',
-        #'cerberusTEA',
+        # 'cerberusTEA',
         'cerberusTEAozone',
         # 'cerberuslowmmw',
         # 'cerberusNoclouds',
@@ -431,7 +431,17 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        _ = myxsecs(tempspc, runtime_params, xslib)
+                        # _ = myxsecs(tempspc, runtime_params, xslib)
+                        import pickle
+                        if 0:
+                            _ = myxsecs(tempspc, runtime_params, xslib)
+                            file = open('hwoxslibsave.pkl', 'bw')
+                            pickle.dump(xslib, file)
+                            file.close()
+                        else:
+                            file = open('hwoxslibsave.pkl', 'br')
+                            xslib = pickle.load(file)
+
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
