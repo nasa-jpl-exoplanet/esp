@@ -431,7 +431,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        # _ = myxsecs(tempspc, runtime_params, xslib)
+                        _ = myxsecs(tempspc, runtime_params, xslib)
                         # import pickle
                         # if 0:
                         #    _ = myxsecs(tempspc, runtime_params, xslib)
