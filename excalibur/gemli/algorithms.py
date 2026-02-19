@@ -1,7 +1,7 @@
 '''gemli algorithms ds'''
 
 # Heritage code shame:
-# apylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -24,6 +24,7 @@ from excalibur import ariel
 import excalibur.ariel.algorithms as arielalg
 import excalibur.cerberus as crb
 import excalibur.cerberus.algorithms as crbalg
+import excalibur.cerberus.core as crbcore
 import excalibur.gemli.core as gemlicore
 import excalibur.gemli.states as gemlistates
 from excalibur.util.checksv import checksv
@@ -231,7 +232,7 @@ class Results(dawgie.Algorithm):
         self._version_ = gemlicore.resultsversion()
         self.__fin = sysalg.Finalize()
         self.__anc = ancillaryalg.Estimate()
-        self.__xsl = XSLib()
+        self.__xsl = crbalg.XSLib()
         self.__atm = Atmos()
         self.__rt = rtalg.Autofill()
         self.__out = [gemlistates.ResSv(fltr) for fltr in fltrs]

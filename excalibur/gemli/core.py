@@ -219,9 +219,6 @@ def atmos(
             modparlbl['TEC'].remove('CtoO')
             # modparlbl['TEA'].remove('CtoO')
 
-    if (singlemod is not None) and (singlemod in modfam):
-        modfam = [modfam[modfam.index(singlemod)]]
-
     # save the stellar params, so that analysis knows the stellar metallicity
     star_params = [
         'M*',
@@ -825,11 +822,12 @@ def atmos(
                         log.info('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
-                    # asdf: careful here. #-chains and #-cores are same thing?
-
+                    # DEBUG TEST: do normal fitting, but for a short chain
+                    chainlen = 10
+                    Nchains = 4
+                    
                     # --< SAMPLING >--
                     trace = pymc.sample(
                         chainlen,
