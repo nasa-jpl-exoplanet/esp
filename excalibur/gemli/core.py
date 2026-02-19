@@ -4,6 +4,7 @@
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-nested-blocks,too-many-positional-arguments,too-many-statements
 #  more for customDist pymc method:
 # pylint: disable=invalid-name,cell-var-from-loop
+# pylint: disable=duplicate-code
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -15,7 +16,6 @@ from excalibur.target.targetlists import get_target_lists
 from excalibur.cerberus.fmcontext import ctxtupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
-    absorb,
     crbFM,
     clearfmcerberus,
     cloudyfmcerberus,
@@ -50,7 +50,6 @@ import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 from scipy.interpolate import interp1d as itp
@@ -150,6 +149,7 @@ def atmosversion():
     '''
     return dawgie.VERSION(1, 0, 0)
 
+
 def atmos(
     fin,
     xsl,
@@ -158,6 +158,8 @@ def atmos(
     out,
     ext,
     only_these_planets=None,
+    chainlen=10,
+    Nchains=4,
     hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
     verbose=False,
 ):
@@ -823,10 +825,6 @@ def atmos(
                         sampler = pymc.Metropolis()
 
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
-
-                    # DEBUG TEST: do normal fitting, but for a short chain
-                    chainlen = 10
-                    Nchains = 4
 
                     # --< SAMPLING >--
                     trace = pymc.sample(
