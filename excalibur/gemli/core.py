@@ -146,7 +146,7 @@ exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 # -- ATMOS -- --------------------------------------------------------
 def atmosversion():
     '''
-    V1.0.0: 
+    V1.0.0:
     '''
     return dawgie.VERSION(1, 0, 0)
 
@@ -827,7 +827,7 @@ def atmos(
                     # DEBUG TEST: do normal fitting, but for a short chain
                     chainlen = 10
                     Nchains = 4
-                    
+
                     # --< SAMPLING >--
                     trace = pymc.sample(
                         chainlen,
@@ -1302,7 +1302,7 @@ def hazelib(
 # -- RESULTS ----------------------------------------------------------
 def resultsversion():
     '''
-    V1.0.0: 
+    V1.0.0:
     '''
     return dawgie.VERSION(1, 0, 0)
 
@@ -2061,9 +2061,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                     stellar_feh = atmos_fit['data']['stellar_params']['FEH*']
                 else:
                     stellar_feh = 0
-                    log.warning(
-                        '--< GEMLI ANALYSIS: no FEH* for %s >--', trgt
-                    )
+                    log.warning('--< GEMLI ANALYSIS: no FEH* for %s >--', trgt)
 
                 # verify SV succeeded for target
                 if not atmos_fit['STATUS'][-1]:
