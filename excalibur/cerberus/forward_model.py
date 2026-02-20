@@ -397,7 +397,7 @@ class crbFM:
             ax2 = ax1.twiny()
 
             for k in mxr.items():
-                ax1.plot(k[1], pressure, label=k[0])
+                ax1.plot(pressure * 0 + k[1], pressure, label=k[0])
                 pass
             ax1.legend(loc='upper left')
 
