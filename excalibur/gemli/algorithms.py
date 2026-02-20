@@ -1,6 +1,8 @@
 '''gemli algorithms ds'''
 
+# after update are made, check if there's still duplicate code!
 # Heritage code shame:
+# pylint: disable=duplicate-code
 # pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
