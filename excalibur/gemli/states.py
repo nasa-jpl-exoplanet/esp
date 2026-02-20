@@ -22,31 +22,9 @@ import os
 # -- SV -- -----------------------------------------------------------
 
 
-class AtmosSv(ExcaliburSV):
-    '''gemli.atmos view'''
-
-    def __init__(self, name):
-        '''__init__ ds'''
-        ExcaliburSV.__init__(self, name, dawgie.VERSION(1, 1, 0))
-
-    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
-        '''view ds'''
-        if self['STATUS'][-1]:
-            myfig = plt.figure()
-            gemlilogo = img.imread(
-                os.path.join(
-                    excalibur.context['data_dir'], 'CERBERUS/cerberus.png'
-                )
-            )
-            plt.imshow(gemlilogo)
-            plt.axis('off')
-            save_plot_toscreen(myfig, visitor, headertext='GEMLI ')
-        return
-
-
 # -------- -----------------------------------------------------------
-class ResSv(ExcaliburSV):
-    '''gemli.results view'''
+class MLfitSv(ExcaliburSV):
+    '''gemli.mlfit view'''
 
     def __init__(self, name):
         '''__init__ ds'''
@@ -61,13 +39,9 @@ class ResSv(ExcaliburSV):
                 for savedresult in self['data'][planet_letter].keys():
                     if 'plot' in savedresult:
                         if savedresult.startswith('plot_spectrum'):
-                            plotlabel = 'best-fit spectrum'
+                            plotlabel = 'cerberus-fit spectrum'
                         elif savedresult.startswith('plot_corner'):
-                            plotlabel = 'corner plot'
-                        elif savedresult.startswith('plot_vsprior'):
-                            plotlabel = 'improvement past prior'
-                        elif savedresult.startswith('plot_walkerevol'):
-                            plotlabel = 'walker evolution'
+                            plotlabel = 'cerberus corner plot'
                         else:
                             plotlabel = 'unknown plottype plot'
                         if savedresult.endswith('PHOTOCHEM'):

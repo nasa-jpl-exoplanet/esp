@@ -17,7 +17,7 @@ if tn in ['', '__all__']:
     NAME = 'analysis'
     subtasks = excalibur.gemli.bot.Agent('gemli', 4, rid)
 else:
-    NAME = ['atmos', 'results', None][-1]  # -1 to run them all
+    NAME = ['inference', None][-1]  # -1 to run them all
     subtasks = excalibur.gemli.bot.Actor('gemli', 4, rid, tn)
     pass
 

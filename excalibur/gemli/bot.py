@@ -14,8 +14,7 @@ class Actor(dawgie.Task):
     def list(self) -> [dawgie.Task]:
         '''Subtasks top level ordered call'''
         return [
-            gemlialg.Atmos(),
-            gemlialg.Results(),
+            gemlialg.MLfit(),
         ]
 
     pass
