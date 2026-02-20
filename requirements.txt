@@ -1,4 +1,4 @@
-altaipony
+altaipony        # for flare detection
 astropy
 astroquery
 dawgie==2.0.2
