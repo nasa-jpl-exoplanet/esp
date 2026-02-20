@@ -1,5 +1,10 @@
 '''Gemli Database Products View'''
 
+# this might be temporary - classes are currently same as in cerb but need edits
+# Heritage code shame:
+# pylint: disable=duplicate-code
+
+
 # -- IMPORTS -- ------------------------------------------------------
 
 import dawgie
