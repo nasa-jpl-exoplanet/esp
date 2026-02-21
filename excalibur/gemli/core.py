@@ -15,6 +15,9 @@ from excalibur.target.targetlists import get_target_lists
 from excalibur.cerberus.core import hazelib
 from excalibur.cerberus.forward_model import crbFM
 
+import joblib
+from xgboost import XGBRegressor
+
 # (
 #    crbFM,
 #    clearfmcerberus,
@@ -29,7 +32,9 @@ from excalibur.cerberus.forward_model import crbFM
 #    offcerberus7,
 #    offcerberus8,
 # )
+
 from excalibur.cerberus.plotters import (
+    plot_ML_fits_vs_truths,
     rebin_data,
     plot_corner,
     plot_spectrumfit,
@@ -44,48 +49,41 @@ import numpy as np
 from collections import defaultdict
 from collections import namedtuple
 
-
 log = logging.getLogger(__name__)
 
-GemliResultsParams = namedtuple(
-    'gemli_results_params_from_runtime',
-    [
-        'nrandomwalkers',
-        'randomseed',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'Hsmax',
-        'solrad',
-        'cornerBins',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-    ],
-)
+# GemliResultsParams = namedtuple(
+#    'gemli_results_params_from_runtime',
+#    [
+#        'nrandomwalkers',
+#        'randomseed',
+#        'knownspecies',
+#        'cialist',
+#        'xmollist',
+#        'nlevels',
+#        'Hsmax',
+#        'solrad',
+#        'cornerBins',
+#        'lbroadening',
+#        'lshifting',
+#        'isothermal',
+#    ],
+# )
 
-GemliAnalysisParams = namedtuple(
-    'gemli_analysis_params_from_runtime',
-    [
-        'tier',
-        'boundTeq',
-        'boundAbundances',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
-
-hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
-tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
-ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
-exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
+# GemliAnalysisParams = namedtuple(
+#    'gemli_analysis_params_from_runtime',
+#    [
+#        'tier',
+#        'boundTeq',
+#        'boundAbundances',
+#        'boundCTP',
+#        'boundHLoc',
+#        'boundHScale',
+#        'boundHThick',
+#    ],
+# )
 
 
 # ---------------------------------- ---------------------------------
-# -- mlfit ----------------------------------------------------------
 def mlfitversion():
     '''
     V1.0.0:
@@ -130,16 +128,12 @@ def mlfit(
     completed_at_least_one_planet = False
 
     for p in fin['priors']['planets']:
-        # print('post-analysis for planet:',p)
 
         # TEC,TEA params - X/H, C/O, N/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
         # (some planets are skipped, because they have an unbound atmosphere)
-        if verbose:
-            print('atmkeys', cerbatmos.keys())
-
         if only_these_planets and p not in only_these_planets:
             log.info(
                 '--< GEMLI.MLFIT: skipping non-tier2 planet %s %s >--',
@@ -155,6 +149,115 @@ def mlfit(
 
         else:
             out['data'][p] = {}
+
+            # **** NEW CODE START HERE ****
+            print('START MLFit for planet:', p)
+
+            ML_param_names = [
+                'Teq',
+                'Rp',
+                'mlpH2O',
+                'mlpCH4',
+                'mlpCO',
+                'mlpCO2',
+                'mlpNH3',
+            ]
+            ML_param_names_forprint = [
+                'T$_{eq}$ (K)',
+                'R$_p$ (log R$_\\oplus$)',
+                'H$_2$O (log ppm)',
+                'CH$_4$ (log ppm)',
+                'CO (log ppm)',
+                'CO$_2$ (log ppm)',
+                'NH$_3$ (log ppm)',
+            ]
+
+            ML_inputdir = os.path.join(
+                excalibur.context['data_dir'], 'gemli/export_model'
+            )
+
+            # load models
+            models = []
+            for param_name in ML_param_names:
+                m = XGBRegressor()
+                m.load_model(os.path.join(ML_inputdir, f'{param_name}.json'))
+                models.append(m)
+
+            # check how well the ML models perform over a range of test data
+            # load test data
+            data = np.load(os.path.join(ML_inputdir, 'test_data.npz'))
+            test_spectra = data['X_test_2']
+            input_params = data['y_test_2']
+
+            # load scaler and use it to normalize the data
+            scaler = joblib.load(os.path.join(ML_inputdir, 'scaler.pkl'))
+            test_spectra_norm = scaler.transform(test_spectra)
+
+            # predict results for the testing set of parameters
+            MLfit_params = np.column_stack(
+                [m.predict(test_spectra_norm) for m in models]
+            )
+
+            out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
+                ML_param_names_forprint,
+                input_params,
+                MLfit_params,
+                verbose=verbose,
+            )
+
+            def features_from_one_spectrum(fluxDepth, Rs, Mp):
+                """
+                fluxDepth: 1D array-like, same length/order as training spectra
+                Rs: stellar radius, in Rsun
+                Mp: planet mass in Mjup
+                returns: (1, n_features) array ready for scaler.transform()
+                """
+                x = np.asarray(fluxDepth, dtype=float)
+                x_mean = x.mean()
+                x_std = x.std()
+
+                # per-spectrum normalization (row-wise)
+                x_norm = (x - x_mean) / x_std
+
+                # Rp_proxy = Rs * sqrt(mean(fluxDepth))
+                Rp_proxy = Rs * np.sqrt(x_mean)
+
+                # stack features
+                X_features = np.concatenate(
+                    [x_norm, [Rp_proxy, x_std, Rs, Mp]]
+                ).reshape(1, -1)
+
+                return X_features
+
+            def predict_params_from_spectrum(
+                fluxDepth, Rs, Mp, models, scaler, ML_param_names
+            ):
+                X_features = features_from_one_spectrum(fluxDepth, Rs, Mp)
+                X_scaled = scaler.transform(X_features)
+
+                preds = [m.predict(X_scaled)[0] for m in models]
+                return dict(zip(ML_param_names, preds))
+
+            # Test on one of the test
+            j = 5
+            exemple = test_spectra[j]
+
+            # number of wavelength bins
+            bins = 52
+            print('raw # of wavelengths', len(exemple))
+            fluxDepth_ex = exemple[:bins]
+            # print('spectrumexample', fluxDepth_ex)
+            Rs_ex = exemple[bins + 2]
+            Mp_ex = exemple[bins + 3]
+
+            pred = predict_params_from_spectrum(
+                fluxDepth_ex, Rs_ex, Mp_ex, models, scaler, ML_param_names
+            )
+            if verbose:
+                for k in ML_param_names:
+                    print(f'MLfit result for {k:7s}: {pred[k]: .6g}')
+
+            # **** NEW CODE END HERE ****
 
             # limit results to just the TEC model?  No, not for HST/G141
             # but do verify that TEC exists at least
@@ -560,14 +663,13 @@ def mlfit(
 
                 if verbose:
                     print('paramValues median  ', param_values_median)
-                    print('paramValues profiled', param_values_profiled)
                     print('paramValues bestFit ', param_values_best_fit)
 
                 # _______________CORNER PLOT________________
                 out['data'][p]['plot_corner_' + model_name], _ = plot_corner(
                     all_keys,
                     all_traces,
-                    profiled_traces,
+                    all_traces,
                     param_values_best_fit,
                     truth_params,
                     prior_ranges,
@@ -657,7 +759,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             }
         else:
             log.error(
-                "ERROR: unknown tier level for mass-metal plot %s",
+                'ERROR: unknown tier level for mass-metal plot %s',
                 runtime_params.tier,
             )
     else:

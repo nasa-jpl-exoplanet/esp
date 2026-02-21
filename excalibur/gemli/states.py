@@ -32,7 +32,9 @@ class MLfitSv(ExcaliburSV):
             for target, planet_letter in zip(self['target'], self['planets']):
                 for savedresult in self['data'][planet_letter].keys():
                     if 'plot' in savedresult:
-                        if savedresult.startswith('plot_spectrum'):
+                        if savedresult.startswith('plot_MLfitvstruth'):
+                            plotlabel = 'machine learning fit vs truth'
+                        elif savedresult.startswith('plot_spectrum'):
                             plotlabel = 'cerberus-fit spectrum'
                         elif savedresult.startswith('plot_corner'):
                             plotlabel = 'cerberus corner plot'

@@ -1851,3 +1851,57 @@ def plot_mass_vs_metals(
 
 
 # --------------------------------------------------------------------
+def plot_ML_fits_vs_truths(
+    param_names,
+    input_params,
+    MLfit_params,
+    saveDir='./',
+    savetodisk=False,
+    verbose=False,
+):
+    '''
+    compare ML model retrieved values against the input parameters
+    (no instrument included here; this is just a measure of ML uncertainty)
+    '''
+
+    numColumns = int(np.ceil(len(param_names) / 2.0))
+    fig, axs = plt.subplots(2, numColumns, figsize=(3.5 * numColumns, 7))
+    fig.subplots_adjust(
+        left=0.15, right=0.95, bottom=0.15, top=0.92, wspace=0.4, hspace=0.4
+    )
+    axs = axs.flatten()
+
+    for k, param_name in enumerate(param_names):
+        ax = axs[k]
+        ax.set_aspect('equal')
+        ax.scatter(input_params[:, k], MLfit_params[:, k], s=5, alpha=0.3)
+
+        xlims = ax.get_xlim()
+        ylims = ax.get_ylim()
+        print('prior range for', param_name, '=', xlims)
+        vmin = min([xlims[0], ylims[0]])
+        vmax = max([xlims[1], ylims[1]])
+        # vmin = min(input_params[:, k].min(), MLfit_params[:, k].min())
+        # vmax = max(input_params[:, k].max(), MLfit_params[:, k].max())
+        # print('vmin,vmax', vmin, vmax)
+        ax.plot([vmin, vmax], [vmin, vmax], 'k--', lw=1)
+
+        ax.set_xlim((vmin, vmax))
+        ax.set_ylim((vmin, vmax))
+
+        # ax.set_xlabel(f'True {param_name}', fontsize=14)
+        # ax.set_ylabel(f'Predicted {param_name}', fontsize=14)
+        ax.set_xlabel(f'Input value', fontsize=14)
+        ax.set_ylabel(f'Retrieved value', fontsize=14)
+        ax.set_title(param_name, fontsize=16)
+
+    # if there's an odd number of parameters, hide the last empty frame
+    if len(param_names) % 2 == 1:
+        axs[-1].axis("off")
+
+    plt.tight_layout()
+    if savetodisk:
+        plt.savefig(saveDir + 'MLfitVStruth.png')
+    if verbose:
+        plt.show()
+    return save_plot_tosv(fig), fig
