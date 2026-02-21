@@ -1,9 +1,9 @@
 '''gemli algorithms ds'''
 
-# after update are made, check if there's still duplicate code!
+# after updates are made, check if there's still duplicate code!
 # Heritage code shame:
 # pylint: disable=duplicate-code
-# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
+# pylint: disable=too-many-arguments,too-many-branches,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks,too-many-instance-attributes
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -276,8 +276,8 @@ class Analysis(dawgie.Analyzer):
     def traits(self) -> [dawgie.SV_REF, dawgie.V_REF]:
         '''traits ds'''
         return [
-            dawgie.SV_REF(fetch('excalibur.gemli').task, Inference(), sv)
-            for sv in Inference().state_vectors()
+            dawgie.SV_REF(fetch('excalibur.gemli').task, MLfit(), sv)
+            for sv in MLfit().state_vectors()
         ]
 
     def state_vectors(self):
