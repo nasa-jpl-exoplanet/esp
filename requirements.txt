@@ -18,3 +18,4 @@ service_identity # for twisted with TLS (optionally loaded so must do it here)
 scipy
 sympy
 ultranest
+xgboost          # for gemli machine learning inference
