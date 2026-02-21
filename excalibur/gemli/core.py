@@ -12,11 +12,7 @@ import excalibur
 import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
-# from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt
 from excalibur.cerberus.core import hazelib
-
-# from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import crbFM
 
 # (
@@ -37,32 +33,19 @@ from excalibur.cerberus.plotters import (
     rebin_data,
     plot_corner,
     plot_spectrumfit,
-    plot_vs_prior,
-    plot_walker_evolution,
     plot_fits_vs_truths,
     plot_fit_uncertainties,
     plot_mass_vs_metals,
-)
-from excalibur.cerberus.bounds import (
-    set_prior_bound,
-    add_priors,
-    get_profile_limits_hstg141,
-    apply_profiling,
 )
 
 import logging
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from collections import defaultdict
 from collections import namedtuple
-from scipy.interpolate import interp1d as itp
 
-import pymc
 
 log = logging.getLogger(__name__)
-pymclog = logging.getLogger('pymc')
-pymclog.setLevel(logging.ERROR)
 
 GemliResultsParams = namedtuple(
     'gemli_results_params_from_runtime',

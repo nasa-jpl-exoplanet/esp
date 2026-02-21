@@ -54,6 +54,7 @@ class MLfit(dawgie.Algorithm):
         self.__anc = ancillaryalg.Estimate()
         self.__xsl = crbalg.XSLib()
         self.__atm = crbalg.Atmos()
+        self.__spc = trnalg.Spectrum()
         self.__arielsim = arielalg.SimSpectrum()
         self.__rt = rtalg.Autofill()
         self.__out = [gemlistates.MLfitSv(fltr) for fltr in fltrs]
@@ -70,6 +71,7 @@ class MLfit(dawgie.Algorithm):
             dawgie.ALG_REF(anc.task, self.__anc),
             dawgie.ALG_REF(crb.task, self.__xsl),
             dawgie.ALG_REF(crb.task, self.__atm),
+            dawgie.ALG_REF(trn.task, self.__spc),
             dawgie.ALG_REF(ariel.task, self.__arielsim),
         ] + self.__rt.refs_for_proceed()
 
@@ -249,7 +251,7 @@ class Analysis(dawgie.Analyzer):
     def __init__(self):
         '''__init__ ds'''
         # use same version number as results
-        self._version_ = gemlicore.resultsversion()
+        self._version_ = gemlicore.mlfitversion()
         # self.__fin = sysalg.finalize()
         # self.__xsl = xslib()
         # self.__atm = atmos()
@@ -274,8 +276,8 @@ class Analysis(dawgie.Analyzer):
     def traits(self) -> [dawgie.SV_REF, dawgie.V_REF]:
         '''traits ds'''
         return [
-            dawgie.SV_REF(fetch('excalibur.gemli').task, Atmos(), sv)
-            for sv in Atmos().state_vectors()
+            dawgie.SV_REF(fetch('excalibur.gemli').task, Inference(), sv)
+            for sv in Inference().state_vectors()
         ]
 
     def state_vectors(self):
