@@ -64,52 +64,8 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbXSlibParams = namedtuple(
-    'cerberus_xslib_params_from_runtime',
-    [
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-    ],
-)
-
-CerbAtmosParams = namedtuple(
-    'cerberus_atmos_params_from_runtime',
-    [
-        'MCMC_chains',
-        'MCMC_chain_length',
-        'MCMC_sliceSampler',
-        'cornerBins',
-        'fitCloudParameters',
-        'fitT',
-        'fitCtoO',
-        'fitNtoO',
-        'fitmolecules',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-        'boundTeq',
-        'boundAbundances',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
-
-CerbResultsParams = namedtuple(
-    'cerberus_results_params_from_runtime',
+GemliResultsParams = namedtuple(
+    'gemli_results_params_from_runtime',
     [
         'nrandomwalkers',
         'randomseed',
@@ -126,8 +82,8 @@ CerbResultsParams = namedtuple(
     ],
 )
 
-CerbAnalysisParams = namedtuple(
-    'cerberus_analysis_params_from_runtime',
+GemliAnalysisParams = namedtuple(
+    'gemli_analysis_params_from_runtime',
     [
         'tier',
         'boundTeq',
@@ -189,12 +145,6 @@ def mlfit(
         print('gemli/MLfit for target:', trgt)
 
     completed_at_least_one_planet = False
-
-    # load in the table of limits used for profiling
-    if filt == 'HST-WFC3-IR-G141-SCAN':
-        profiling_limits = get_profile_limits_hstg141()
-    else:
-        profiling_limits = []
 
     for p in fin['priors']['planets']:
         # print('post-analysis for planet:',p)
@@ -279,24 +229,6 @@ def mlfit(
                         all_keys.append(key)
                 # print('all_keys',all_keys)
 
-                # remove the traced phase space that is excluded by profiling
-                profile_trace, applied_limits = apply_profiling(
-                    trgt + ' ' + p, profiling_limits, all_traces, all_keys
-                )
-                keepers = np.where(profile_trace == 1)
-                # don't do profiling if it excludes every single walker
-                if len(keepers[0]) == 0:
-                    log.warning(
-                        '--< Profiling removes everything! %s >--', trgt
-                    )
-                    keepers = np.where(profile_trace == 0)
-                profiled_traces = []
-                for key in cerbatmos[p][model_name]['MCTRACE']:
-                    profiled_traces.append(
-                        cerbatmos[p][model_name]['MCTRACE'][key][keepers]
-                    )
-                profiled_traces = np.array(profiled_traces)
-
                 # make note of the bounds placed on each parameter
                 if 'prior_ranges' in cerbatmos[p][model_name].keys():
                     prior_ranges = cerbatmos[p][model_name]['prior_ranges']
@@ -337,11 +269,7 @@ def mlfit(
 
                 if fit_t:
                     tprtrace = cerbatmos[p][model_name]['MCTRACE']['T']
-                    # tprtrace_profiled = cerbatmos[p][model_name]['MCTRACE']['T'][keepers]
-                    tprtrace_profiled = tprtrace[keepers]
-
                     tpr = np.median(tprtrace)
-                    tpr_profiled = np.median(tprtrace_profiled)
                 else:
                     if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
                         'Teq' in cerbatmos[p]['TRUTH_MODELPARAMS']
@@ -350,7 +278,6 @@ def mlfit(
                         tpr = cerbatmos[p]['TRUTH_MODELPARAMS']['Teq']
                     else:
                         tpr = 666
-                    tpr_profiled = tpr
 
                 mdplist = [
                     key
@@ -359,13 +286,8 @@ def mlfit(
                 ]
                 # print('mdplist',mdplist)
                 mdptrace = []
-                mdptrace_profiled = []
                 for key in mdplist:
                     mdptrace.append(cerbatmos[p][model_name]['MCTRACE'][key])
-                for key in mdplist:
-                    mdptrace_profiled.append(
-                        cerbatmos[p][model_name]['MCTRACE'][key][keepers]
-                    )
                 if fit_cloud_parameters:
                     ctptrace = cerbatmos[p][model_name]['MCTRACE']['CTP']
                     hazescaletrace = cerbatmos[p][model_name]['MCTRACE'][
@@ -383,33 +305,12 @@ def mlfit(
                     # print('fit results; HScale:', hazescale)
                     # print('fit results; HLoc:', hazeloc)
                     # print('fit results; HThick:', hazethick)
-                    ctptrace_profiled = cerbatmos[p][model_name]['MCTRACE'][
-                        'CTP'
-                    ][keepers]
-                    hazescaletrace_profiled = cerbatmos[p][model_name][
-                        'MCTRACE'
-                    ]['HScale'][keepers]
-                    hazeloctrace_profiled = cerbatmos[p][model_name]['MCTRACE'][
-                        'HLoc'
-                    ][keepers]
-                    hazethicktrace_profiled = cerbatmos[p][model_name][
-                        'MCTRACE'
-                    ]['HThick'][keepers]
-                    ctp_profiled = np.median(ctptrace_profiled)
-                    hazescale_profiled = np.median(hazescaletrace_profiled)
-                    hazeloc_profiled = np.median(hazeloctrace_profiled)
-                    hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
                     ctp = cerbatmos[p]['TRUTH_MODELPARAMS']['CTP']
                     hazescale = cerbatmos[p]['TRUTH_MODELPARAMS']['HScale']
                     hazeloc = cerbatmos[p]['TRUTH_MODELPARAMS']['HLoc']
                     hazethick = cerbatmos[p]['TRUTH_MODELPARAMS']['HThick']
-                    ctp_profiled = ctp
-                    hazescale_profiled = hazescale
-                    hazeloc_profiled = hazeloc
-                    hazethick_profiled = hazethick
                 mdp = np.median(np.array(mdptrace), axis=1)
-                mdp_profiled = np.median(np.array(mdptrace_profiled), axis=1)
                 # print('fit results; T:',tpr)
                 # print('fit results; mdplist:',mdp)
 
@@ -418,14 +319,10 @@ def mlfit(
                 if model_name in ['TEC', 'TEA']:
                     # if len(mdp)!=3: log.warning('--< Expecting 3 molecules for TEQ model! >--')
                     mixratio = None
-                    mixratio_profiled = None
                     tceqdict = {}
-                    tceqdict_profiled = {}
                     tceqdict['XtoH'] = float(mdp[0])
-                    tceqdict_profiled['XtoH'] = float(mdp_profiled[0])
                     if fit_c_to_o:
                         tceqdict['CtoO'] = float(mdp[1])
-                        tceqdict_profiled['CtoO'] = float(mdp_profiled[1])
                     else:
                         if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
                             'CtoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
@@ -437,11 +334,9 @@ def mlfit(
                         else:
                             # default is Solar
                             tceqdict['CtoO'] = 0.0
-                        tceqdict_profiled['CtoO'] = tceqdict['CtoO']
 
                     if fit_n_to_o:
                         tceqdict['NtoO'] = float(mdp[2])
-                        tceqdict_profiled['NtoO'] = float(mdp_profiled[2])
                     else:
                         if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
                             'NtoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
@@ -453,7 +348,6 @@ def mlfit(
                         else:
                             # default is Solar
                             tceqdict['NtoO'] = 0.0
-                        tceqdict_profiled['NtoO'] = tceqdict['NtoO']
                 elif model_name == 'PHOTOCHEM':
                     if len(mdp) != 5:
                         log.warning(
@@ -466,13 +360,6 @@ def mlfit(
                     mixratio['C2H2'] = float(mdp[2])
                     mixratio['CO2'] = float(mdp[3])
                     mixratio['H2CO'] = float(mdp[4])
-                    tceqdict_profiled = None
-                    mixratio_profiled = {}
-                    mixratio_profiled['HCN'] = float(mdp_profiled[0])
-                    mixratio_profiled['CH4'] = float(mdp_profiled[1])
-                    mixratio_profiled['C2H2'] = float(mdp_profiled[2])
-                    mixratio_profiled['CO2'] = float(mdp_profiled[3])
-                    mixratio_profiled['H2CO'] = float(mdp_profiled[4])
 
                 else:
                     log.warning(
@@ -493,15 +380,6 @@ def mlfit(
                     hazethick,
                     tceqdict,
                     mixratio,
-                )
-                param_values_profiled = (
-                    tpr_profiled,
-                    ctp_profiled,
-                    hazescale_profiled,
-                    hazeloc_profiled,
-                    hazethick_profiled,
-                    tceqdict_profiled,
-                    mixratio_profiled,
                 )
 
                 # print('median fmc',np.nanmedian(fmc))
@@ -539,50 +417,12 @@ def mlfit(
                     weights=1 / transitdata['error'][okPart] ** 2,
                 )
 
-                fmc_profiled = np.zeros(transitdata['depth'].size)
-                fmc_profiled = crbFM().crbmodel(
-                    float(tpr_profiled),
-                    float(ctp_profiled),
-                    hazescale=float(hazescale_profiled),
-                    hazeloc=float(hazeloc_profiled),
-                    hazethick=float(hazethick_profiled),
-                    mixratio=mixratio_profiled,
-                    rp0=rp0,
-                    xsecs=cerbxsl[p]['XSECS'],
-                    qtgrid=cerbxsl[p]['QTGRID'],
-                    wgrid=transitdata['wavelength'],
-                    orbp=fin['priors'],
-                    hzlib=crbhzlib,
-                    cheq=tceqdict_profiled,
-                    planet=p,
-                    knownspecies=runtime_params.knownspecies,
-                    cialist=runtime_params.cialist,
-                    xmollist=runtime_params.xmollist,
-                    lbroadening=runtime_params.lbroadening,
-                    lshifting=runtime_params.lshifting,
-                    nlevels=runtime_params.nlevels,
-                    Hsmax=runtime_params.Hsmax,
-                    solrad=runtime_params.solrad,
-                )
-                spectrum_profiled = fmc_profiled.spectrum
-                # add offset to match data (i.e. modify Rp)
-                okPart = np.where(np.isfinite(transitdata['depth']))
-                patmos_model_profiled = spectrum_profiled[okPart] + np.average(
-                    (transitdata['depth'][okPart] - spectrum_profiled[okPart]),
-                    weights=1 / transitdata['error'][okPart] ** 2,
-                )
-
                 # calculate chi2 values to see which is the best fit
                 offsets_model = (
                     patmos_model - transitdata['depth'][okPart]
                 ) / transitdata['error'][okPart]
                 chi2model = np.nansum(offsets_model**2)
                 # print('chi2model', chi2model)
-
-                # actually the profiled chi2 isn't used below just now, so has to be commented out
-                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth'][okPart]) / transitdata['error'][okPart]
-                # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
-                # print('chi2 after profiling',chi2modelProfiled)
 
                 # make an array of some randomly selected walker results
                 # fix the random seed for each target/planet, so that results are reproducable
@@ -597,7 +437,7 @@ def mlfit(
 
                 chi2best = chi2model
                 patmos_best_fit = patmos_model
-                param_values_best_fit = param_values_profiled
+                param_values_best_fit = param_values_median
                 spectrumarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
@@ -720,7 +560,7 @@ def mlfit(
                     plot_spectrumfit(
                         transitdata,
                         patmos_model,
-                        patmos_model_profiled,
+                        patmos_model,
                         patmos_best_fit,
                         spectrumarray,
                         truth_spectrum,
