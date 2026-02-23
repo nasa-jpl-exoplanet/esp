@@ -8,33 +8,15 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
-import excalibur
-import excalibur.system.core as syscore
-from excalibur.target.targetlists import get_target_lists
-
-from excalibur.cerberus.core import hazelib
-from excalibur.cerberus.forward_model import crbFM
-
 import joblib
 from xgboost import XGBRegressor
 
-# (
-#    crbFM,
-#    clearfmcerberus,
-#    cloudyfmcerberus,
-#    offcerberus,
-#    offcerberus1,
-#    offcerberus2,
-#    offcerberus3,
-#    offcerberus4,
-#    offcerberus5,
-#    offcerberus6,
-#    offcerberus7,
-#    offcerberus8,
-# )
-
+import excalibur
+import excalibur.system.core as syscore
+from excalibur.target.targetlists import get_target_lists
+from excalibur.cerberus.core import hazelib
+from excalibur.cerberus.forward_model import crbFM
 from excalibur.cerberus.plotters import (
-    plot_ML_fits_vs_truths,
     rebin_data,
     plot_corner,
     plot_spectrumfit,
@@ -42,12 +24,16 @@ from excalibur.cerberus.plotters import (
     plot_fit_uncertainties,
     plot_mass_vs_metals,
 )
+from excalibur.gemli.plotters import (
+    plot_ML_fits_vs_truths,
+    plot_ML_spectrumfit,
+)
 
 import logging
 import os
 import numpy as np
 from collections import defaultdict
-from collections import namedtuple
+# from collections import namedtuple
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +86,7 @@ def mlfit(
     anc,
     xsl,
     atm,
-    spectrum,
+    spc,
     out,
     only_these_planets=None,
     verbose=False,
@@ -153,6 +139,16 @@ def mlfit(
             # **** NEW CODE START HERE ****
             # print('START MLFit for planet:', p)
 
+            # if verbose:
+            #    print('Ariel-sim INPUT PARAMETERS')
+            #    print('  ', fin['priors'].keys())
+            #    print('  ', fin['priors'][p].keys())
+            #    print('  Rp', fin['priors'][p]['rp'])
+            #    print('  Mp', fin['priors'][p]['mass'])
+            #    print('  Rs', fin['priors']['R*'])
+            #    print('  ', spc['data'][p].keys())
+            #    print()
+
             ML_param_names = [
                 'Teq',
                 'Rp',
@@ -177,11 +173,11 @@ def mlfit(
             )
 
             # load models
-            models = []
+            ML_models = []
             for param_name in ML_param_names:
                 m = XGBRegressor()
                 m.load_model(os.path.join(ML_inputdir, f'{param_name}.json'))
-                models.append(m)
+                ML_models.append(m)
 
             # check how well the ML models perform over a range of test data
             # load test data
@@ -193,16 +189,9 @@ def mlfit(
             scaler = joblib.load(os.path.join(ML_inputdir, 'scaler.pkl'))
             test_spectra_norm = scaler.transform(test_spectra)
 
-            # predict results for the testing set of parameters
+            # predict results for the test sets of parameters
             MLfit_params = np.column_stack(
-                [m.predict(test_spectra_norm) for m in models]
-            )
-
-            out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
-                ML_param_names_forprint,
-                input_params,
-                MLfit_params,
-                verbose=verbose,
+                [model.predict(test_spectra_norm) for model in ML_models]
             )
 
             def features_from_one_spectrum(fluxDepth, Rs, Mp):
@@ -219,7 +208,6 @@ def mlfit(
                 # per-spectrum normalization (row-wise)
                 x_norm = (x - x_mean) / x_std
 
-                # Rp_proxy = Rs * sqrt(mean(fluxDepth))
                 Rp_proxy = Rs * np.sqrt(x_mean)
 
                 # stack features
@@ -229,33 +217,118 @@ def mlfit(
 
                 return X_features
 
-            def predict_params_from_spectrum(
-                fluxDepth, Rs, Mp, models, scaler, ML_param_names
-            ):
-                X_features = features_from_one_spectrum(fluxDepth, Rs, Mp)
-                X_scaled = scaler.transform(X_features)
+            # def predict_params_from_spectrum(
+            #    fluxDepth, Rs, Mp, models, scaler, ML_param_names
+            # ):
+            #    X_features = features_from_one_spectrum(fluxDepth, Rs, Mp)
+            #    X_scaled = scaler.transform(X_features)
+            #    preds = [m.predict(X_scaled)[0] for m in models]
+            #    return dict(zip(ML_param_names, preds))
 
-                preds = [m.predict(X_scaled)[0] for m in models]
-                return dict(zip(ML_param_names, preds))
+            # asdf
+            realspectrum = True
+            realspectrum = False
+            if realspectrum:
+                Rs = fin['priors']['R*']
+                Mp = fin['priors'][p]['mass']
 
-            # Test on one of the test
-            j = 5
-            exemple = test_spectra[j]
+                # oops actually which spectrum to use?
+                # maybe just use the cerberus one?
+                # but we want to do ML without cerberus, right? so use ariel-sim
 
-            # number of wavelength bins
-            bins = 52
-            print('raw # of wavelengths', len(exemple))
-            fluxDepth_ex = exemple[:bins]
-            # print('spectrumexample', fluxDepth_ex)
-            Rs_ex = exemple[bins + 2]
-            Mp_ex = exemple[bins + 3]
+                # (could try using 'cerberusTEA' here)
+                # useArielSpectrum = False
+                # print(' truekeys', spc['data'][p]['cerberus']['true_spectrum'].keys())
+                true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
+                ML_spectrum = true_spectrum['fluxDepth']
+                print('spec,err', np.mean(ML_spectrum), 0)
+                print(' # of waves',len(ML_spectrum))
 
-            pred = predict_params_from_spectrum(
-                fluxDepth_ex, Rs_ex, Mp_ex, models, scaler, ML_param_names
+                ML_spectrum = spc['data'][p]['cerberus']['ES'] ** 2
+                ML_spectrum_error = (
+                    2
+                    * spc['data'][p]['cerberus']['ES']
+                    * spc['data'][p]['cerberus']['ESerr']
+                )
+                # print('dict check', spc['data'][p]['cerberus'].keys())
+                print(
+                    'spec,err', np.mean(ML_spectrum), np.mean(ML_spectrum_error)
+                )
+                another_spectrum = cerbatmos[p]['SPECTRUM'] ** 2
+                another_spectrum_error = (
+                    2 * cerbatmos[p]['SPECTRUM'] * cerbatmos[p]['ERRORS']
+                )
+                print(
+                    'spec,err',
+                    np.mean(another_spectrum),
+                    np.mean(another_spectrum_error),
+                )
+                print(' # of waves',len(another_spectrum))
+            else:
+                # instead of input ariel-sim info, try one of the test spectra
+                jtest = 123
+
+                # number of wavelength bins
+                numwaves = 52
+                # print('raw # of wavelengths', len(exemple))  # 56?!
+                ML_spectrum = test_spectra[jtest][:numwaves]
+                # print('spectrumexample', test_spectrum)
+                Rs = test_spectra[jtest][numwaves + 2]
+                Mp = test_spectra[jtest][numwaves + 3]
+            if verbose:
+                print(' trying Rs,Mp = ', Rs, Mp)
+
+            # pred = predict_params_from_spectrum(
+            #     fluxDepth_ex, Rs, Mp, models, scaler, ML_param_names
+            # )
+            ML_spectrum_features = features_from_one_spectrum(
+                ML_spectrum, Rs, Mp
             )
+            ML_spectrum_scaled = scaler.transform(ML_spectrum_features)
+            preds = [
+                model.predict(ML_spectrum_scaled)[0] for model in ML_models
+            ]
+            pred = dict(zip(ML_param_names, preds))
             if verbose:
                 for k in ML_param_names:
                     print(f'MLfit result for {k:7s}: {pred[k]: .6g}')
+
+
+            truth_spectrum = {
+                'depth': true_spectrum['fluxdepth'],
+                'wavelength': true_spectrum['wavelength'],
+            }
+            transitdata = {}
+            transitdata['wavelength'] = spc['data'][p]['cerberus']['WB']
+            transitdata['depth'] = spc['data'][p]['cerberus']['ES'] ** 2
+            transitdata['error'] = (
+                2
+                * spc['data'][p]['cerberus']['ES']
+                * spc['data'][p]['cerberus']['ESerr']
+            )
+
+            ML_best_fit = transitdata
+
+            # plot the best-fit-by-ML model vs the data / truth
+            out['data'][p]['plot_spectrum_' + model_name], _ = (
+                plot_ML_spectrumfit(
+                    transitdata,
+                    ML_best_fit,
+                    truth_spectrum,
+                    fin['priors'],
+                    anc['data'][p],
+                    filt,
+                    trgt,
+                    p,
+                )
+            )
+
+            out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
+                ML_param_names_forprint,
+                input_params,
+                MLfit_params,
+                verbose=verbose,
+            )
 
             # **** NEW CODE END HERE ****
 
