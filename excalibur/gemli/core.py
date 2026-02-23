@@ -293,7 +293,9 @@ def mlfit(
             ML_param_results = dict(zip(ML_param_names, ML_param_results))
             if verbose:
                 for k in ML_param_names:
-                    print(f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}')
+                    print(
+                        f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}'
+                    )
 
             true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
             # print('true keys', true_spectrum.keys())
@@ -311,7 +313,7 @@ def mlfit(
                 * spc['data'][p]['cerberus']['ESerr']
             )
             transitdata = rebin_data(transitdata)
-            
+
             ML_best_fit = truth_spectrum['depth'] * 1.01
 
             # asdf
@@ -321,21 +323,19 @@ def mlfit(
             #    (transitdata['depth'][okPart] - spectrum[okPart]),
             #    weights=1 / transitdata['error'][okPart] ** 2,
             # )
-                
+
             # plot the best-fit-by-ML model vs the data / truth
-            out['data'][p]['plot_MLspectrum'], _ = (
-                plot_ML_spectrumfit(
-                    transitdata,
-                    truth_spectrum,
-                    ML_best_fit,
-                    ML_param_names,
-                    ML_param_results,
-                    fin['priors'],
-                    anc['data'][p],
-                    filt,
-                    trgt,
-                    p,
-                )
+            out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
+                transitdata,
+                truth_spectrum,
+                ML_best_fit,
+                ML_param_names,
+                ML_param_results,
+                fin['priors'],
+                anc['data'][p],
+                filt,
+                trgt,
+                p,
             )
 
             out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(

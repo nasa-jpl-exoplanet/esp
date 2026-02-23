@@ -93,13 +93,11 @@ def plot_ML_spectrumfit(
     saveDir='./',
     savetodisk=False,
 ):
-    '''plot the best fit to the data'''
+    '''plot the machine-learning best fit to the data'''
 
     include_fit_range_as_grey_lines = False
 
-    # figure, ax = plt.subplots(figsize=(8,4))
-    figgy = plt.figure(figsize=(20, 4))
-    # figgy = plt.figure(figsize=(8,4))
+    figgy = plt.figure(figsize=(8,4))
     figgy.subplots_adjust(
         left=0.05, right=0.7, bottom=0.15, top=0.93, wspace=0.8
     )
@@ -160,28 +158,14 @@ def plot_ML_spectrumfit(
     offsets_model = (
         ML_best_fit - transitdata['depth'][okPart]
     ) / transitdata['error'][okPart]
-
-    # the 'average' function (which allows for weights) doesn't have a NaN version,
-    #  so mask out any NaN regions by hand
-    flatlineFit = np.average(
-        transitdata['depth'][okPart],
-        weights=1 / transitdata['error'][okPart] ** 2,
-    )
-    # print('flatline average',flatlineFit)
-    offsets_flat = (flatlineFit - transitdata['depth']) / transitdata['error']
-    # print('median chi2, flat',np.nanmedian(offsets_flat**2))
-
     chi2model = np.nansum(offsets_model**2)
-    chi2flat = np.nansum(offsets_flat**2)
 
     numParam_model = 8
     numParam_truth = 0
-    numParam_flat = 1
 
     numPoints = len(ML_best_fit)
     # print('numpoints',numPoints)
     chi2model_red = chi2model / (numPoints - numParam_model)
-    chi2flat_red = chi2flat / (numPoints - numParam_flat)
     
     # add some labels off to the right side
     xoffset = 1.2
@@ -193,53 +177,40 @@ def plot_ML_spectrumfit(
         chi2truth_red = chi2truth / (numPoints - numParam_truth)
         plt.text(
             xlims[1] + xoffset,
-            ylims[0] + (ylims[1] - ylims[0]) * 0.6,
+            ylims[0] + (ylims[1] - ylims[0]) * 0.9,
             '$\\chi^2$-truth=' + f"{chi2truth:5.2f}",
             fontsize=12,
         )
         plt.text(
             xlims[1] + xoffset,
-            ylims[0] + (ylims[1] - ylims[0]) * 0.36,
+            ylims[0] + (ylims[1] - ylims[0]) * 0.74,
             '$\\chi^2_{red}$-truth=' + f"{chi2truth_red:5.2f}",
             fontsize=12,
         )
     plt.text(
         xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.53,
+        ylims[0] + (ylims[1] - ylims[0]) * 0.83,
         '$\\chi^2$-model=' + f"{chi2model:5.2f}",
         fontsize=12,
     )
     plt.text(
         xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.46,
-        '$\\chi^2$-flat=' + f"{chi2flat:5.2f}",
-        fontsize=12,
-    )
-    plt.text(
-        xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.29,
+        ylims[0] + (ylims[1] - ylims[0]) * 0.67,
         '$\\chi^2_{red}$-model=' + f"{chi2model_red:5.2f}",
         fontsize=12,
     )
-    plt.text(
-        xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.22,
-        '$\\chi^2_{red}$-flat=' + f"{chi2flat_red:5.2f}",
-        fontsize=12,
-    )
-    plt.text(
-        xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.12,
-        '$\\chi^2_{red}$(model/flat)='
-        + f"{(chi2model_red / chi2flat_red):5.2f}",
-        fontsize=12,
-    )
-    plt.text(
-        xlims[1] + xoffset,
-        ylims[0] + (ylims[1] - ylims[0]) * 0.05,
-        '$\\Delta\\chi^2$(flat-model)=' + f"{(chi2flat - chi2model):5.1f}",
-        fontsize=12,
-    )
+
+    # print out the best-fit parameters on the right side
+    yloc = 0.62
+    for name, value in zip(ML_param_names, ML_param_results):
+        print(name, '=' ,value)
+        yloc =- 0.07
+        plt.text(
+            xlims[1] + xoffset,
+            ylims[0] + (ylims[1] - ylims[0]) * yloc,
+            name + '=' + f"{value:5.2f}",
+            fontsize=12,
+        )
 
     if filt == 'Ariel-sim':
         plt.xlim(0, 8)
