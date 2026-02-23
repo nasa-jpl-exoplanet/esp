@@ -77,6 +77,7 @@ def plot_ML_fits_vs_truths(
         plt.show()
     return save_plot_tosv(fig), fig
 
+
 # --------------------------------------------------------------------
 def plot_ML_spectrumfit(
     transitdata,
@@ -151,9 +152,9 @@ def plot_ML_spectrumfit(
             label='truth',
         )
 
-    offsets_model = (patmos_bestfit - transitdata['depth'][okPart]) / transitdata[
-        'error'
-    ][okPart]
+    offsets_model = (
+        patmos_bestfit - transitdata['depth'][okPart]
+    ) / transitdata['error'][okPart]
 
     # the 'average' function (which allows for weights) doesn't have a NaN version,
     #  so mask out any NaN regions by hand
@@ -231,8 +232,7 @@ def plot_ML_spectrumfit(
     plt.text(
         xlims[1] + xoffset,
         ylims[0] + (ylims[1] - ylims[0]) * 0.05,
-        '$\\Delta\\chi^2$(flat-model)='
-        + f"{(chi2flat - chi2model):5.1f}",
+        '$\\Delta\\chi^2$(flat-model)=' + f"{(chi2flat - chi2model):5.1f}",
         fontsize=12,
     )
 
@@ -273,16 +273,7 @@ def plot_ML_spectrumfit(
     # plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
-        plt.savefig(
-            saveDir
-            + 'bestFit_'
-            + filt
-            + '_'
-            + trgt
-            + ' '
-            + p
-            + '.png'
-        )
+        plt.savefig(saveDir + 'bestFit_' + filt + '_' + trgt + ' ' + p + '.png')
 
     return save_plot_tosv(figgy), figgy
 
