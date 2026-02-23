@@ -6,12 +6,9 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
-import corner
 import numpy as np
 import matplotlib.pyplot as plt
 
-# import excalibur
-from excalibur.ariel.metallicity import massMetalRelation
 from excalibur.system.core import ssconstants
 from excalibur.util.plotters import save_plot_tosv
 
@@ -84,6 +81,7 @@ def plot_ML_spectrumfit(
     truth_spectrum,
     ML_best_fit,
     ML_param_names,
+    ML_param_names_forprint,
     ML_param_results,
     system_data,
     ancillary_data,
@@ -95,9 +93,8 @@ def plot_ML_spectrumfit(
 ):
     '''plot the machine-learning best fit to the data'''
 
-    include_fit_range_as_grey_lines = False
-
-    figgy = plt.figure(figsize=(8,4))
+    figgy = plt.figure(figsize=(20, 4))
+    # figgy = plt.figure(figsize=(8,4))
     figgy.subplots_adjust(
         left=0.05, right=0.7, bottom=0.15, top=0.93, wspace=0.8
     )
@@ -154,10 +151,10 @@ def plot_ML_spectrumfit(
 
     xlims = plt.xlim()
     ylims = plt.ylim()
-    
-    offsets_model = (
-        ML_best_fit - transitdata['depth'][okPart]
-    ) / transitdata['error'][okPart]
+
+    offsets_model = (ML_best_fit - transitdata['depth'][okPart]) / transitdata[
+        'error'
+    ][okPart]
     chi2model = np.nansum(offsets_model**2)
 
     numParam_model = 8
@@ -166,7 +163,7 @@ def plot_ML_spectrumfit(
     numPoints = len(ML_best_fit)
     # print('numpoints',numPoints)
     chi2model_red = chi2model / (numPoints - numParam_model)
-    
+
     # add some labels off to the right side
     xoffset = 1.2
     if truth_spectrum is not None:
@@ -201,14 +198,20 @@ def plot_ML_spectrumfit(
     )
 
     # print out the best-fit parameters on the right side
-    yloc = 0.62
-    for name, value in zip(ML_param_names, ML_param_results):
-        print(name, '=' ,value)
-        yloc =- 0.07
+    yloc = 0.55
+    for param, name in zip(ML_param_names, ML_param_names_forprint):
+        # print(param, '=', ML_param_results[param])
+        yloc -= 0.08
+        if '(' in name:
+            namesplit = name.index('(')
+            units = name[namesplit:]
+            name = name[:namesplit]
+        else:
+            units = ''
         plt.text(
             xlims[1] + xoffset,
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
-            name + '=' + f"{value:5.2f}",
+            name + '= ' + f"{ML_param_results[param]:5.2f}" + ' ' + units,
             fontsize=12,
         )
 

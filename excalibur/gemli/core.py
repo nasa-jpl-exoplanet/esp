@@ -297,6 +297,12 @@ def mlfit(
                         f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}'
                     )
 
+            ML_mixratio = {}
+            for param in ML_param_names:
+                if param.startswith('mlp'):
+                    ML_mixratio[param[3:]] = ML_param_results[param]
+            print('ML_mixratio for forwardmodel call', ML_mixratio)
+
             true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
             # print('true keys', true_spectrum.keys())
             truth_spectrum = {
@@ -330,6 +336,7 @@ def mlfit(
                 truth_spectrum,
                 ML_best_fit,
                 ML_param_names,
+                ML_param_names_forprint,
                 ML_param_results,
                 fin['priors'],
                 anc['data'][p],
