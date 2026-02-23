@@ -123,7 +123,7 @@ def mlfit(
     cerbxsl = xsl['data']
 
     if verbose:
-        print('gemli/MLfit for target:', trgt)
+        print('starting MLfit for target:', trgt, filt)
 
     completed_at_least_one_planet = False
 
@@ -151,7 +151,7 @@ def mlfit(
             out['data'][p] = {}
 
             # **** NEW CODE START HERE ****
-            print('START MLFit for planet:', p)
+            # print('START MLFit for planet:', p)
 
             ML_param_names = [
                 'Teq',
