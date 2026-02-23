@@ -81,8 +81,10 @@ def plot_ML_fits_vs_truths(
 # --------------------------------------------------------------------
 def plot_ML_spectrumfit(
     transitdata,
-    patmos_bestfit,
     truth_spectrum,
+    ML_best_fit,
+    ML_param_names,
+    ML_param_results,
     system_data,
     ancillary_data,
     filt,
@@ -133,7 +135,7 @@ def plot_ML_spectrumfit(
     # 3b) plot the best-fit model - new random selection parameter-set checking
     plt.plot(
         transitdata['wavelength'][okPart],
-        patmos_bestfit * 100,
+        ML_best_fit * 100,
         # c='k', lw=2, zorder=4,
         c='orange',
         lw=2,
@@ -152,8 +154,11 @@ def plot_ML_spectrumfit(
             label='truth',
         )
 
+    xlims = plt.xlim()
+    ylims = plt.ylim()
+    
     offsets_model = (
-        patmos_bestfit - transitdata['depth'][okPart]
+        ML_best_fit - transitdata['depth'][okPart]
     ) / transitdata['error'][okPart]
 
     # the 'average' function (which allows for weights) doesn't have a NaN version,
@@ -173,11 +178,11 @@ def plot_ML_spectrumfit(
     numParam_truth = 0
     numParam_flat = 1
 
-    numPoints = len(patmos_bestfit)
+    numPoints = len(ML_best_fit)
     # print('numpoints',numPoints)
     chi2model_red = chi2model / (numPoints - numParam_model)
     chi2flat_red = chi2flat / (numPoints - numParam_flat)
-
+    
     # add some labels off to the right side
     xoffset = 1.2
     if truth_spectrum is not None:

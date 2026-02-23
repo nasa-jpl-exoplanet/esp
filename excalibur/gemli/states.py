@@ -34,6 +34,8 @@ class MLfitSv(ExcaliburSV):
                     if 'plot' in savedresult:
                         if savedresult.startswith('plot_MLfitvstruth'):
                             plotlabel = 'machine learning fit vs truth'
+                        elif savedresult.startswith('plot_MLspectrum'):
+                            plotlabel = 'machine-learning-fit spectrum'
                         elif savedresult.startswith('plot_spectrum'):
                             plotlabel = 'cerberus-fit spectrum'
                         elif savedresult.startswith('plot_corner'):

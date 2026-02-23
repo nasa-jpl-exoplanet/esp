@@ -33,6 +33,7 @@ import logging
 import os
 import numpy as np
 from collections import defaultdict
+
 # from collections import namedtuple
 
 log = logging.getLogger(__name__)
@@ -238,11 +239,12 @@ def mlfit(
 
                 # (could try using 'cerberusTEA' here)
                 # useArielSpectrum = False
+                # print(' uppkeys', spc['data'][p]['cerberus'].keys())
                 # print(' truekeys', spc['data'][p]['cerberus']['true_spectrum'].keys())
                 true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
                 ML_spectrum = true_spectrum['fluxDepth']
                 print('spec,err', np.mean(ML_spectrum), 0)
-                print(' # of waves',len(ML_spectrum))
+                print(' # of waves', len(ML_spectrum))
 
                 ML_spectrum = spc['data'][p]['cerberus']['ES'] ** 2
                 ML_spectrum_error = (
@@ -263,7 +265,7 @@ def mlfit(
                     np.mean(another_spectrum),
                     np.mean(another_spectrum_error),
                 )
-                print(' # of waves',len(another_spectrum))
+                print(' # of waves', len(another_spectrum))
             else:
                 # instead of input ariel-sim info, try one of the test spectra
                 jtest = 123
@@ -285,36 +287,49 @@ def mlfit(
                 ML_spectrum, Rs, Mp
             )
             ML_spectrum_scaled = scaler.transform(ML_spectrum_features)
-            preds = [
+            ML_param_results = [
                 model.predict(ML_spectrum_scaled)[0] for model in ML_models
             ]
-            pred = dict(zip(ML_param_names, preds))
+            ML_param_results = dict(zip(ML_param_names, ML_param_results))
             if verbose:
                 for k in ML_param_names:
-                    print(f'MLfit result for {k:7s}: {pred[k]: .6g}')
+                    print(f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}')
 
-
+            true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
+            # print('true keys', true_spectrum.keys())
             truth_spectrum = {
-                'depth': true_spectrum['fluxdepth'],
-                'wavelength': true_spectrum['wavelength'],
+                'depth': true_spectrum['fluxDepth'],
+                'wavelength': true_spectrum['wavelength_um'],
             }
+            # print('obs keys', spc['data'][p]['cerberus'].keys())
             transitdata = {}
-            transitdata['wavelength'] = spc['data'][p]['cerberus']['WB']
+            transitdata['wavelength'] = spc['data'][p]['WB']
             transitdata['depth'] = spc['data'][p]['cerberus']['ES'] ** 2
             transitdata['error'] = (
                 2
                 * spc['data'][p]['cerberus']['ES']
                 * spc['data'][p]['cerberus']['ESerr']
             )
+            transitdata = rebin_data(transitdata)
+            
+            ML_best_fit = truth_spectrum['depth'] * 1.01
 
-            ML_best_fit = transitdata
-
+            # asdf
+            # add offset to match data (i.e. modify Rp)
+            # okPart = np.where(np.isfinite(transitdata['depth']))
+            # patmos_model = spectrum[okPart] + np.average(
+            #    (transitdata['depth'][okPart] - spectrum[okPart]),
+            #    weights=1 / transitdata['error'][okPart] ** 2,
+            # )
+                
             # plot the best-fit-by-ML model vs the data / truth
-            out['data'][p]['plot_spectrum_' + model_name], _ = (
+            out['data'][p]['plot_MLspectrum'], _ = (
                 plot_ML_spectrumfit(
                     transitdata,
-                    ML_best_fit,
                     truth_spectrum,
+                    ML_best_fit,
+                    ML_param_names,
+                    ML_param_results,
                     fin['priors'],
                     anc['data'][p],
                     filt,
