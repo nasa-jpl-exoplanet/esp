@@ -60,8 +60,8 @@ def plot_ML_fits_vs_truths(
 
         # ax.set_xlabel(f'True {param_name}', fontsize=14)
         # ax.set_ylabel(f'Predicted {param_name}', fontsize=14)
-        ax.set_xlabel(f'Input value', fontsize=14)
-        ax.set_ylabel(f'Retrieved value', fontsize=14)
+        ax.set_xlabel('Input value', fontsize=14)
+        ax.set_ylabel('Retrieved value', fontsize=14)
         ax.set_title(param_name, fontsize=16)
 
     # if there's an odd number of parameters, hide the last empty frame
