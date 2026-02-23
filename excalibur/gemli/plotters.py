@@ -1,6 +1,7 @@
 '''cerberus plotting ds'''
 
 # Heritage code shame:
+# pylint: disable=duplicate-code
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
