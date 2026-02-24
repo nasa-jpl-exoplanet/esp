@@ -109,6 +109,10 @@ def mlfit(
     cerbatmos = atm['data']
     cerbxsl = xsl['data']
 
+    crbhzlib = {'PROFILE': []}
+    hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
+    hazelib(crbhzlib, hazedir=hazedir, verbose=False)
+
     if verbose:
         print('starting MLfit for target:', trgt, filt)
 
@@ -320,15 +324,42 @@ def mlfit(
             )
             transitdata = rebin_data(transitdata)
 
-            ML_best_fit = truth_spectrum['depth'] * 1.01
+            # calculate the spectrum based on the best-fit ML model
+            #  the best-fit model provided Tp, Rp, & mixing ratios
+            #  set clouds/haze to zero
+            fmc = crbFM().crbmodel(
+                ML_param_results['Teq'],
+                10.,
+                hazescale=1.e-10,
+                hazeloc=1.0,
+                hazethick=1.0,
+                mixratio=ML_mixratio,
+                cheq=None,
+                rp0=ML_param_results['Rp'],
+                xsecs=cerbxsl[p]['XSECS'],
+                qtgrid=cerbxsl[p]['QTGRID'],
+                wgrid=transitdata['wavelength'],
+                orbp=fin['priors'],
+                hzlib=crbhzlib,
+                planet=p,
+                knownspecies=runtime_params.knownspecies,
+                cialist=runtime_params.cialist,
+                xmollist=runtime_params.xmollist,
+                lbroadening=runtime_params.lbroadening,
+                lshifting=runtime_params.lshifting,
+                nlevels=runtime_params.nlevels,
+                Hsmax=runtime_params.Hsmax,
+                solrad=runtime_params.solrad,
+            )
+            spectrum = fmc.spectrum
 
-            # asdf
             # add offset to match data (i.e. modify Rp)
-            # okPart = np.where(np.isfinite(transitdata['depth']))
-            # patmos_model = spectrum[okPart] + np.average(
-            #    (transitdata['depth'][okPart] - spectrum[okPart]),
-            #    weights=1 / transitdata['error'][okPart] ** 2,
-            # )
+            okPart = np.where(np.isfinite(transitdata['depth']))
+            ML_best_fit = spectrum[okPart] + np.average(
+                (transitdata['depth'][okPart] - spectrum[okPart]),
+                weights=1 / transitdata['error'][okPart] ** 2,
+            )
+            # ML_best_fit = truth_spectrum['depth'] * 1.01
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
@@ -343,13 +374,6 @@ def mlfit(
                 filt,
                 trgt,
                 p,
-            )
-
-            out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
-                ML_param_names_forprint,
-                input_params,
-                MLfit_params,
-                verbose=verbose,
             )
 
             # **** NEW CODE END HERE ****
@@ -546,12 +570,6 @@ def mlfit(
                     log.warning(
                         '--< Expecting TEQ, TEC, or PHOTOCHEM model! >--'
                     )
-
-                crbhzlib = {'PROFILE': []}
-                hazedir = os.path.join(
-                    excalibur.context['data_dir'], 'CERBERUS/HAZE'
-                )
-                hazelib(crbhzlib, hazedir=hazedir, verbose=False)
 
                 param_values_median = (
                     tpr,
@@ -759,6 +777,14 @@ def mlfit(
                 if verbose:
                     print('paramValues median  ', param_values_median)
                     print('paramValues bestFit ', param_values_best_fit)
+
+                # _______________ML fit-vs-truth PLOT________________
+                out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
+                    ML_param_names_forprint,
+                    input_params,
+                    MLfit_params,
+                    verbose=verbose,
+                )
 
                 # _______________CORNER PLOT________________
                 out['data'][p]['plot_corner_' + model_name], _ = plot_corner(

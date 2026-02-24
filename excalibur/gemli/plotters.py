@@ -71,8 +71,8 @@ def plot_ML_fits_vs_truths(
     # plt.tight_layout()
     if savetodisk:
         plt.savefig(saveDir + 'MLfitVStruth.png')
-    if verbose:
-        plt.show()
+    # if verbose:
+    #     plt.show()
     return save_plot_tosv(fig), fig
 
 
