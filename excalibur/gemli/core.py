@@ -44,7 +44,8 @@ def mlfitversion():
     '''
     return dawgie.VERSION(1, 0, 0)
 
-#---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 def features_from_one_spectrum(fluxDepth, Rs, Mp):
     '''
     fluxDepth: 1D array-like, same length/order as training spectra
@@ -62,14 +63,14 @@ def features_from_one_spectrum(fluxDepth, Rs, Mp):
     Rp_proxy = Rs * np.sqrt(x_mean)
 
     # stack features
-    X_features = np.concatenate(
-        [x_norm, [Rp_proxy, x_std, Rs, Mp]]
-    ).reshape(1, -1)
+    X_features = np.concatenate([x_norm, [Rp_proxy, x_std, Rs, Mp]]).reshape(
+        1, -1
+    )
 
     return X_features
 
 
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def mlfit(
     trgt,
     filt,
@@ -187,8 +188,18 @@ def mlfit(
 
             # predict results for the test sets of parameters
             MLfit_results = np.column_stack(
-                [model.predict(MLtestsample_spectra_norm) for model in ML_models]
+                [
+                    model.predict(MLtestsample_spectra_norm)
+                    for model in ML_models
+                ]
             )
+
+            arielModel = 'cerberus'
+            # CAREFUL!  need to use a cloud-free model for self-consistency!!!
+            arielModel = 'cerberusNoclouds'
+            # arielModel = 'cerberusTEANoClouds'
+
+            # uh oh DOUBLE-CAREFUL! cerberus.atmos is currently the cloudy model
 
             # asdf
             realspectrum = True
@@ -201,11 +212,6 @@ def mlfit(
                 # maybe just use the cerberus one?
                 # but we want to do ML without cerberus, right? so use ariel-sim
 
-                arielModel = 'cerberus'
-                # CAREFUL!  need to use a cloud-free model for self-consistency!!!
-                arielModel = 'cerberusNoClouds'
-                # arielModel = 'cerberusTEANoClouds'
-                
                 # useArielSpectrum = False
                 # print(' uppkeys', spc['data'][p][arielModel].keys())
                 # print(' truekeys', spc['data'][p][arielModel]['true_spectrum'].keys())
@@ -256,9 +262,12 @@ def mlfit(
             observed_spectrum_features = features_from_one_spectrum(
                 observed_spectrum, Rs, Mp
             )
-            observed_spectrum_scaled = scaler.transform(observed_spectrum_features)
+            observed_spectrum_scaled = scaler.transform(
+                observed_spectrum_features
+            )
             ML_param_results = [
-                model.predict(observed_spectrum_scaled)[0] for model in ML_models
+                model.predict(observed_spectrum_scaled)[0]
+                for model in ML_models
             ]
             ML_param_results = dict(zip(ML_param_names, ML_param_results))
             if verbose:
@@ -273,15 +282,24 @@ def mlfit(
             for k, ML_param_name in enumerate(ML_param_names):
                 if ML_param_name.startswith('mlp') or (ML_param_name == 'Rp'):
                     # lump together test samples within 0.1 dex
-                    thisbin = np.where(np.abs(MLfit_results[:, k] -
-                                              ML_param_results[ML_param_name]
-                                              ) < 0.1)
+                    thisbin = np.where(
+                        np.abs(
+                            MLfit_results[:, k]
+                            - ML_param_results[ML_param_name]
+                        )
+                        < 0.1
+                    )
                 elif ML_param_name == 'Teq':
                     # lump together test samples within 5%
-                    thisbin = np.where(np.abs(np.log10(
-                        MLfit_results[:, k]/
-                        ML_param_results[ML_param_name]
-                    )) < np.log(1.05))
+                    thisbin = np.where(
+                        np.abs(
+                            np.log10(
+                                MLfit_results[:, k]
+                                / ML_param_results[ML_param_name]
+                            )
+                        )
+                        < np.log(1.05)
+                    )
                 else:
                     thisbin = [[]]
                     log.warning('Unknown ML parameter!?  %s', ML_param_name)
@@ -322,15 +340,17 @@ def mlfit(
             transitdata = rebin_data(transitdata)
 
             nrandomSample = 1000  # this is fast, so can do a lot itk
-            instrumentNoise = transitdata['error'] * np.random.normal(size=(nrandomSample, len(transitdata['wavelength'])))
+            instrumentNoise = transitdata['error'] * np.random.normal(
+                size=(nrandomSample, len(transitdata['wavelength']))
+            )
             # print('instrumentNoise shape',instrumentNoise.shape)
             # then add that to the observed spectrum
             #  it seems to do the broadcasting automatically. nice
-            noisedspectra = transitdata['depth'] + instrumentNoise 
-            print('transit data shape',noisedspectra.shape)
+            noisedspectra = transitdata['depth'] + instrumentNoise
+            print('transit data shape', noisedspectra.shape)
             print(' NOW loop over each of these 1000...')
             # exit()
-            
+
             # calculate the spectrum based on the best-fit ML model
             #  the best-fit model provided Tp, Rp, & mixing ratios
             #  set clouds/haze to zero

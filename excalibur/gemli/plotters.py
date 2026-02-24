@@ -42,7 +42,9 @@ def plot_ML_fits_vs_truths(
     for k, param_name in enumerate(param_names):
         ax = axs[k]
         ax.set_aspect('equal')
-        ax.scatter(input_param_values[:, k], MLfit_param_values[:, k], s=5, alpha=0.3)
+        ax.scatter(
+            input_param_values[:, k], MLfit_param_values[:, k], s=5, alpha=0.3
+        )
 
         xlims = ax.get_xlim()
         ylims = ax.get_ylim()
