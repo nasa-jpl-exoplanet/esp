@@ -21,8 +21,8 @@ ssc = ssconstants(mks=True)
 # --------------------------------------------------------------------
 def plot_ML_fits_vs_truths(
     param_names,
-    input_params,
-    MLfit_params,
+    input_param_values,
+    MLfit_param_values,
     saveDir='./',
     savetodisk=False,
     verbose=False,
@@ -42,7 +42,7 @@ def plot_ML_fits_vs_truths(
     for k, param_name in enumerate(param_names):
         ax = axs[k]
         ax.set_aspect('equal')
-        ax.scatter(input_params[:, k], MLfit_params[:, k], s=5, alpha=0.3)
+        ax.scatter(input_param_values[:, k], MLfit_param_values[:, k], s=5, alpha=0.3)
 
         xlims = ax.get_xlim()
         ylims = ax.get_ylim()
@@ -50,8 +50,8 @@ def plot_ML_fits_vs_truths(
             print(' prior range for', param_name, '=', xlims)
         vmin = min([xlims[0], ylims[0]])
         vmax = max([xlims[1], ylims[1]])
-        # vmin = min(input_params[:, k].min(), MLfit_params[:, k].min())
-        # vmax = max(input_params[:, k].max(), MLfit_params[:, k].max())
+        # vmin = min(input_param_values[:, k].min(), MLfit_param_values[:, k].min())
+        # vmax = max(input_param_values[:, k].max(), MLfit_param_values[:, k].max())
         # print('vmin,vmax', vmin, vmax)
         ax.plot([vmin, vmax], [vmin, vmax], 'k--', lw=1)
 
@@ -66,7 +66,7 @@ def plot_ML_fits_vs_truths(
 
     # if there's an odd number of parameters, hide the last empty frame
     if len(param_names) % 2 == 1:
-        axs[-1].axis("off")
+        axs[-1].axis('off')
 
     # plt.tight_layout()
     if savetodisk:
@@ -84,6 +84,7 @@ def plot_ML_spectrumfit(
     ML_param_names,
     ML_param_names_forprint,
     ML_param_results,
+    ML_param_uncertainties,
     system_data,
     ancillary_data,
     filt,
@@ -212,7 +213,7 @@ def plot_ML_spectrumfit(
         plt.text(
             xlims[1] + xoffset,
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
-            name + '= ' + f"{ML_param_results[param]:5.2f}" + ' ' + units,
+            f"{name:s} = {ML_param_results[param]:5.2f} $\pm$ {ML_param_uncertainties[param]:5.2f}   {units:s}",
             fontsize=12,
         )
 

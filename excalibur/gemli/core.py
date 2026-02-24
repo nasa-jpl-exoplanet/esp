@@ -34,40 +34,7 @@ import os
 import numpy as np
 from collections import defaultdict
 
-# from collections import namedtuple
-
 log = logging.getLogger(__name__)
-
-# GemliResultsParams = namedtuple(
-#    'gemli_results_params_from_runtime',
-#    [
-#        'nrandomwalkers',
-#        'randomseed',
-#        'knownspecies',
-#        'cialist',
-#        'xmollist',
-#        'nlevels',
-#        'Hsmax',
-#        'solrad',
-#        'cornerBins',
-#        'lbroadening',
-#        'lshifting',
-#        'isothermal',
-#    ],
-# )
-
-# GemliAnalysisParams = namedtuple(
-#    'gemli_analysis_params_from_runtime',
-#    [
-#        'tier',
-#        'boundTeq',
-#        'boundAbundances',
-#        'boundCTP',
-#        'boundHLoc',
-#        'boundHScale',
-#        'boundHThick',
-#    ],
-# )
 
 
 # ---------------------------------- ---------------------------------
@@ -77,8 +44,32 @@ def mlfitversion():
     '''
     return dawgie.VERSION(1, 0, 0)
 
+#---------------------------------------------------------------------
+def features_from_one_spectrum(fluxDepth, Rs, Mp):
+    '''
+    fluxDepth: 1D array-like, same length/order as training spectra
+    Rs: stellar radius, in Rsun
+    Mp: planet mass in Mjup
+    returns: (1, n_features) array ready for scaler.transform()
+    '''
+    x = np.asarray(fluxDepth, dtype=float)
+    x_mean = x.mean()
+    x_std = x.std()
 
-# ------------------------------ -------------------------------------
+    # per-spectrum normalization (row-wise)
+    x_norm = (x - x_mean) / x_std
+
+    Rp_proxy = Rs * np.sqrt(x_mean)
+
+    # stack features
+    X_features = np.concatenate(
+        [x_norm, [Rp_proxy, x_std, Rs, Mp]]
+    ).reshape(1, -1)
+
+    return X_features
+
+
+#---------------------------------------------------------------------
 def mlfit(
     trgt,
     filt,
@@ -187,48 +178,17 @@ def mlfit(
             # check how well the ML models perform over a range of test data
             # load test data
             data = np.load(os.path.join(ML_inputdir, 'test_data.npz'))
-            test_spectra = data['X_test_2']
-            input_params = data['y_test_2']
+            MLtestsample_spectra = data['X_test_2']
+            MLtestSample_input_params = data['y_test_2']
 
             # load scaler and use it to normalize the data
             scaler = joblib.load(os.path.join(ML_inputdir, 'scaler.pkl'))
-            test_spectra_norm = scaler.transform(test_spectra)
+            MLtestsample_spectra_norm = scaler.transform(MLtestsample_spectra)
 
             # predict results for the test sets of parameters
-            MLfit_params = np.column_stack(
-                [model.predict(test_spectra_norm) for model in ML_models]
+            MLfit_results = np.column_stack(
+                [model.predict(MLtestsample_spectra_norm) for model in ML_models]
             )
-
-            def features_from_one_spectrum(fluxDepth, Rs, Mp):
-                """
-                fluxDepth: 1D array-like, same length/order as training spectra
-                Rs: stellar radius, in Rsun
-                Mp: planet mass in Mjup
-                returns: (1, n_features) array ready for scaler.transform()
-                """
-                x = np.asarray(fluxDepth, dtype=float)
-                x_mean = x.mean()
-                x_std = x.std()
-
-                # per-spectrum normalization (row-wise)
-                x_norm = (x - x_mean) / x_std
-
-                Rp_proxy = Rs * np.sqrt(x_mean)
-
-                # stack features
-                X_features = np.concatenate(
-                    [x_norm, [Rp_proxy, x_std, Rs, Mp]]
-                ).reshape(1, -1)
-
-                return X_features
-
-            # def predict_params_from_spectrum(
-            #    fluxDepth, Rs, Mp, models, scaler, ML_param_names
-            # ):
-            #    X_features = features_from_one_spectrum(fluxDepth, Rs, Mp)
-            #    X_scaled = scaler.transform(X_features)
-            #    preds = [m.predict(X_scaled)[0] for m in models]
-            #    return dict(zip(ML_param_names, preds))
 
             # asdf
             realspectrum = True
@@ -241,24 +201,30 @@ def mlfit(
                 # maybe just use the cerberus one?
                 # but we want to do ML without cerberus, right? so use ariel-sim
 
-                # (could try using 'cerberusTEA' here)
+                arielModel = 'cerberus'
+                # CAREFUL!  need to use a cloud-free model for self-consistency!!!
+                arielModel = 'cerberusNoClouds'
+                # arielModel = 'cerberusTEANoClouds'
+                
                 # useArielSpectrum = False
-                # print(' uppkeys', spc['data'][p]['cerberus'].keys())
-                # print(' truekeys', spc['data'][p]['cerberus']['true_spectrum'].keys())
-                true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
-                ML_spectrum = true_spectrum['fluxDepth']
-                print('spec,err', np.mean(ML_spectrum), 0)
-                print(' # of waves', len(ML_spectrum))
+                # print(' uppkeys', spc['data'][p][arielModel].keys())
+                # print(' truekeys', spc['data'][p][arielModel]['true_spectrum'].keys())
+                true_spectrum = spc['data'][p][arielModel]['true_spectrum']
+                # observed_spectrum = true_spectrum['fluxDepth']
+                # print('spec,err', np.mean(observed_spectrum), 0)
+                # print(' # of waves', len(observed_spectrum))
 
-                ML_spectrum = spc['data'][p]['cerberus']['ES'] ** 2
-                ML_spectrum_error = (
+                observed_spectrum = spc['data'][p][arielModel]['ES'] ** 2
+                observed_spectrum_error = (
                     2
-                    * spc['data'][p]['cerberus']['ES']
-                    * spc['data'][p]['cerberus']['ESerr']
+                    * spc['data'][p][arielModel]['ES']
+                    * spc['data'][p][arielModel]['ESerr']
                 )
-                # print('dict check', spc['data'][p]['cerberus'].keys())
+                # print('dict check', spc['data'][p][arielModel].keys())
                 print(
-                    'spec,err', np.mean(ML_spectrum), np.mean(ML_spectrum_error)
+                    'spec,err',
+                    np.mean(observed_spectrum),
+                    np.mean(observed_spectrum_error),
                 )
                 another_spectrum = cerbatmos[p]['SPECTRUM'] ** 2
                 another_spectrum_error = (
@@ -272,27 +238,27 @@ def mlfit(
                 print(' # of waves', len(another_spectrum))
             else:
                 # instead of input ariel-sim info, try one of the test spectra
-                jtest = 123
+                jtest = 1234
 
                 # number of wavelength bins
                 numwaves = 52
                 # print('raw # of wavelengths', len(exemple))  # 56?!
-                ML_spectrum = test_spectra[jtest][:numwaves]
-                # print('spectrumexample', test_spectrum)
-                Rs = test_spectra[jtest][numwaves + 2]
-                Mp = test_spectra[jtest][numwaves + 3]
+                observed_spectrum = MLtestsample_spectra[jtest][:numwaves]
+                # print('spectrumexample', MLtestsample_spectrum)
+                Rs = MLtestsample_spectra[jtest][numwaves + 2]
+                Mp = MLtestsample_spectra[jtest][numwaves + 3]
             if verbose:
                 print(' trying Rs,Mp = ', Rs, Mp)
 
             # pred = predict_params_from_spectrum(
             #     fluxDepth_ex, Rs, Mp, models, scaler, ML_param_names
             # )
-            ML_spectrum_features = features_from_one_spectrum(
-                ML_spectrum, Rs, Mp
+            observed_spectrum_features = features_from_one_spectrum(
+                observed_spectrum, Rs, Mp
             )
-            ML_spectrum_scaled = scaler.transform(ML_spectrum_features)
+            observed_spectrum_scaled = scaler.transform(observed_spectrum_features)
             ML_param_results = [
-                model.predict(ML_spectrum_scaled)[0] for model in ML_models
+                model.predict(observed_spectrum_scaled)[0] for model in ML_models
             ]
             ML_param_results = dict(zip(ML_param_names, ML_param_results))
             if verbose:
@@ -301,36 +267,77 @@ def mlfit(
                         f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}'
                     )
 
+            # calculate the systematic/ML uncertainty from the test sample
+            ML_param_uncertainties = {}
+            Nsample = len(MLtestSample_input_params)
+            for k, ML_param_name in enumerate(ML_param_names):
+                if ML_param_name.startswith('mlp') or (ML_param_name == 'Rp'):
+                    # lump together test samples within 0.1 dex
+                    thisbin = np.where(np.abs(MLfit_results[:, k] -
+                                              ML_param_results[ML_param_name]
+                                              ) < 0.1)
+                elif ML_param_name == 'Teq':
+                    # lump together test samples within 5%
+                    thisbin = np.where(np.abs(np.log10(
+                        MLfit_results[:, k]/
+                        ML_param_results[ML_param_name]
+                    )) < np.log(1.05))
+                else:
+                    thisbin = [[]]
+                    log.warning('Unknown ML parameter!?  %s', ML_param_name)
+                # print('binsize', ML_param_name, len(thisbin[0]) / Nsample)
+                # determine the range on input values in this bin
+                # (the range of input values that can produce the fit result)
+                inputvals = MLtestSample_input_params[:, k][thisbin]
+                # print(' ML uncertainty', ML_param_name, np.std(inputvals))
+                ML_param_uncertainties[ML_param_name] = np.std(inputvals)
+
+            # calculate the effect of instrument noise on ML retrieval
+            # loop over a bunch of random noise selections on each data point
+            # and then see how much the ML param results vary
+            # (and then compare this uncertainty against the intrinsic ML uncert)
+
+            # calculate the spectrum for the resulting best-fit mixratios
             ML_mixratio = {}
             for param in ML_param_names:
                 if param.startswith('mlp'):
                     ML_mixratio[param[3:]] = ML_param_results[param]
             print('ML_mixratio for forwardmodel call', ML_mixratio)
 
-            true_spectrum = spc['data'][p]['cerberus']['true_spectrum']
+            true_spectrum = spc['data'][p][arielModel]['true_spectrum']
             # print('true keys', true_spectrum.keys())
             truth_spectrum = {
                 'depth': true_spectrum['fluxDepth'],
                 'wavelength': true_spectrum['wavelength_um'],
             }
-            # print('obs keys', spc['data'][p]['cerberus'].keys())
+            # print('obs keys', spc['data'][p][arielModel].keys())
             transitdata = {}
             transitdata['wavelength'] = spc['data'][p]['WB']
-            transitdata['depth'] = spc['data'][p]['cerberus']['ES'] ** 2
+            transitdata['depth'] = spc['data'][p][arielModel]['ES'] ** 2
             transitdata['error'] = (
                 2
-                * spc['data'][p]['cerberus']['ES']
-                * spc['data'][p]['cerberus']['ESerr']
+                * spc['data'][p][arielModel]['ES']
+                * spc['data'][p][arielModel]['ESerr']
             )
             transitdata = rebin_data(transitdata)
 
+            nrandomSample = 1000  # this is fast, so can do a lot itk
+            instrumentNoise = transitdata['error'] * np.random.normal(size=(nrandomSample, len(transitdata['wavelength'])))
+            # print('instrumentNoise shape',instrumentNoise.shape)
+            # then add that to the observed spectrum
+            #  it seems to do the broadcasting automatically. nice
+            noisedspectra = transitdata['depth'] + instrumentNoise 
+            print('transit data shape',noisedspectra.shape)
+            print(' NOW loop over each of these 1000...')
+            # exit()
+            
             # calculate the spectrum based on the best-fit ML model
             #  the best-fit model provided Tp, Rp, & mixing ratios
             #  set clouds/haze to zero
             fmc = crbFM().crbmodel(
                 ML_param_results['Teq'],
-                10.,
-                hazescale=1.e-10,
+                10.0,
+                hazescale=1.0e-10,
                 hazeloc=1.0,
                 hazethick=1.0,
                 mixratio=ML_mixratio,
@@ -351,15 +358,14 @@ def mlfit(
                 Hsmax=runtime_params.Hsmax,
                 solrad=runtime_params.solrad,
             )
-            spectrum = fmc.spectrum
+            simulated_spectrum = fmc.spectrum
 
             # add offset to match data (i.e. modify Rp)
             okPart = np.where(np.isfinite(transitdata['depth']))
-            ML_best_fit = spectrum[okPart] + np.average(
-                (transitdata['depth'][okPart] - spectrum[okPart]),
+            ML_best_fit = simulated_spectrum[okPart] + np.average(
+                (transitdata['depth'][okPart] - simulated_spectrum[okPart]),
                 weights=1 / transitdata['error'][okPart] ** 2,
             )
-            # ML_best_fit = truth_spectrum['depth'] * 1.01
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
@@ -369,6 +375,7 @@ def mlfit(
                 ML_param_names,
                 ML_param_names_forprint,
                 ML_param_results,
+                ML_param_uncertainties,
                 fin['priors'],
                 anc['data'][p],
                 filt,
@@ -781,8 +788,8 @@ def mlfit(
                 # _______________ML fit-vs-truth PLOT________________
                 out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
                     ML_param_names_forprint,
-                    input_params,
-                    MLfit_params,
+                    MLtestSample_input_params,
+                    MLfit_results,
                     verbose=verbose,
                 )
 
