@@ -278,7 +278,6 @@ def mlfit(
 
             # calculate the systematic/ML uncertainty from the test sample
             ML_param_uncertainties = {}
-            Nsample = len(MLtestSample_input_params)
             for k, ML_param_name in enumerate(ML_param_names):
                 if ML_param_name.startswith('mlp') or (ML_param_name == 'Rp'):
                     # lump together test samples within 0.1 dex
@@ -303,6 +302,7 @@ def mlfit(
                 else:
                     thisbin = [[]]
                     log.warning('Unknown ML parameter!?  %s', ML_param_name)
+                # Nsample = len(MLtestSample_input_params)
                 # print('binsize', ML_param_name, len(thisbin[0]) / Nsample)
                 # determine the range on input values in this bin
                 # (the range of input values that can produce the fit result)
