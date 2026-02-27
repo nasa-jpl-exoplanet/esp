@@ -1356,7 +1356,7 @@ def hstwhitelight(
     '''
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
-    candidates = [thisp for thisp in map(chr, range(97, 123))]
+    candidates = list(map(chr, range(97, 123)))
     planetloop = []
     for nrm in allnrm:
         planetloop.extend(
@@ -2112,7 +2112,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
             # out['data'][p]['postflatphase'] = postflatphase
             # out['data'][p]['modelphase'] = modelphase
             # out['data'][p]['modellc'] = modellc
-            out['data'][p]['mcpost'] = mcpost
+            out['data'][pln]['mcpost'] = mcpost
             # out['data'][p]['mctrace'] = mctrace
             # out['data'][p]['tauwhite'] = tauwhite
 
@@ -2147,13 +2147,9 @@ def whitelight(
     for p in planetloop:
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         visits = nrm['data'][p]['visits']
-        # HST specific format
-        if 'orbits' in nrm['data'][p]:
-            orbits = nrm['data'][p]['orbits']
-            time = nrm['data'][p]['time']
-            photnoise = nrm['data'][p]['photnoise']
-            out['data'][p]['orbits'] = orbits
-            pass
+        orbits = nrm['data'][p]['orbits']
+        time = nrm['data'][p]['time']
+        photnoise = nrm['data'][p]['photnoise']
         wave = nrm['data'][p]['wave']
         nspec = nrm['data'][p]['nspec']
         sep = nrm['data'][p]['z']
@@ -2162,6 +2158,7 @@ def whitelight(
         out['data'][p]['nspec'] = nspec
         out['data'][p]['wave'] = wave
         out['data'][p]['visits'] = visits
+        out['data'][p]['orbits'] = orbits
         allwhite = []
         allerrwhite = []
         flatminww = []
