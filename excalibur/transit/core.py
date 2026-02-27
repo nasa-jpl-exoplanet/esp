@@ -3596,6 +3596,11 @@ def orbital(*whiteparams):
         # GMR:JWST
         r = whiteparams
         jwstflag = True
+        midtransits = None
+        inclination = None
+        avs = None
+        aos = None
+        aoi = None
         pass
     elif ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, avs, aos, aoi = whiteparams
