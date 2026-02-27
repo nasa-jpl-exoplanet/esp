@@ -240,8 +240,18 @@ def LogLikelihood(inputs):
         ForwardModel = orbital(*newnodes)
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
-    Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
-    out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0 - Norm
+    Norm = np.log(2e0 * np.pi * np.array(ctxt.mcmcsig))
+    out = (
+        -(
+            (
+                (np.array(ctxt.mcmcdat) - np.array(ForwardModel))
+                / np.array(ctxt.mcmcsig)
+            )
+            ** 2
+        )
+        / 2e0
+        - Norm
+    )
 
     return out
 
@@ -289,11 +299,18 @@ def normversion():
     return dawgie.VERSION(1, 1, 9)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=False):
     '''
     JWST spectra normalization
     '''
     normed = False
+    if test:
+        cal['data']['SPECTRUM'] = cal['data']['SPECTRUM'][:200]
+        cal['data']['WAVE'] = cal['data']['WAVE'][:200]
+        cal['data']['DET'] = cal['data']['DET'][:200]
+        cal['data']['IGNORED'] = cal['data']['IGNORED'][:200]
+        tme['data']['c']['z'] = tme['data']['c']['z'][:200]
+        pass
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
     spectra = np.array(cal['data']['SPECTRUM'])
@@ -323,6 +340,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
         np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)
     ]
     oot = np.logical_and.reduce(alloot, 0).astype(np.bool)
+
     for p in events:
         if verbose:
             log.info('>-- Planet: %s', p)
@@ -332,9 +350,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
         if mttref > 2400000.5:
             mttref -= 2400000.5
             pass
-        ignore = np.array(tme['data'][p]['ignore']) | np.array(
-            cal['data']['IGNORED']
-        )
         allwavet = {}
         alltemplates = {}
         for thisdet in np.unique(cal['data']['DET']):
@@ -375,16 +390,16 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False):
                     pass
                 pass
             allnorms.append(np.array(norms))
-            allnwaves.append(w)
+            allnwaves.append(np.array(wnorms))
             progbar.update()
             pass
         progbar.close()
 
         out['data'][p]['visits'] = tme['data'][p]['visits']
-        out['data'][p]['ignore'] = ignore
         out['data'][p]['nspec'] = allnorms
         out['data'][p]['wave'] = allnwaves
         out['data'][p]['z'] = tme['data'][p]['z']
+        out['data'][p]['time'] = tme['data'][p]['time']
         out['data'][p]['phase'] = tme['data'][p]['phase']
         out['data'][p]['wavet'] = allwavet
         out['data'][p]['template'] = alltemplates
@@ -891,13 +906,15 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
                 noisescalethr = 5e0
                 if nscale <= noisescalethr:
                     nscale = noisescalethr
+                    pass
                 elif (nscale > noisescalethr) and (not singlevisit):
-                    nscale = 2e0
                     log.warning(
-                        '--< Visit %s: Noise scale above %s',
+                        '--< Visit %s: Noise scale %s above %s',
                         str(int(v)),
+                        str(int(nscale)),
                         str(int(noisescalethr)),
                     )
+                    nscale = 2e0
                     pass
                 check = []
                 for w, s, pn in zip(visw, viss, photnoise):
@@ -1339,13 +1356,14 @@ def hstwhitelight(
     '''
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
+    candidates = [thisp for thisp in map(chr, range(97, 123))]
     planetloop = []
     for nrm in allnrm:
         planetloop.extend(
             [
                 p
                 for p in nrm['data'].keys()
-                if (nrm['data'][p]['visits']) and (p not in planetloop)
+                if (p in candidates) and (p not in planetloop)
             ]
         )
         pass
@@ -1875,6 +1893,235 @@ def hstwhitelight(
     return True
 
 
+def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
+    '''
+    GMR: JWST Whitelight
+    - nrm [INPUT] [SV]: transit.normalization
+    - fin [INPUT] [SV]: system.finalize
+    - rtp [INPUT] [SV]: runtime.autofill
+    - out [OUTPUT] [SV]: transit.whitelight
+    - thr [OPT] [INT]: percentile threshold for valid data in norm spectrum
+      i.e one of [100, 99, 95, 68, 50]
+    - verbose [OPT] [BOOL]: messages and plots
+
+    out: [DICT]
+    out['STATUS']: [LIST] Appending True for each planet / instrument added
+    out['data']: [DICT] Keys are planet names
+    out['data'][pln]: [DICT] Keys are detector names
+    out['data'][pln][instrument]: [DICT]
+    out['data'][pln][instrument]['prewhite']: [LIST] Whitelight before fit
+    out['data'][pln][instrument]['prewhite_err']: [LIST] prewhite errors
+    out['data'][pln][instrument]['prewhite_sep']: [LIST] prewhite separation
+    out['data'][pln][instrument]['valid'] : [LIST] valid channels per spectrum
+    out['data'][pln][instrument]['whiteld'] : [LIST] white LD coefficients
+    out['data'][pln][instrument]['mcpost'] : [PYMC] post stats
+    '''
+    planetloop = [
+        thisp
+        for thisp in map(chr, range(97, 123))
+        if thisp in nrm['data'].keys()
+    ]
+    prc = [100, 99, 95, 68, 50]
+    priors = fin['priors'].copy()
+    ssc = syscore.ssconstants()
+
+    for pln in planetloop:
+        out['data'][pln] = {}
+        for key in nrm['data'][pln]['wavet']:
+            out['data'][pln][key] = {}
+            lwv = np.nanmin(nrm['data'][pln]['wavet'][key])
+            mwv = np.nanmax(nrm['data'][pln]['wavet'][key])
+            wht = []
+            whterr = []
+            whtz = []
+            validl = []
+            stdl = []
+            for wvs, nsp, z in zip(
+                nrm['data'][pln]['wave'],
+                nrm['data'][pln]['nspec'],
+                nrm['data'][pln]['z'],
+            ):
+                select = (wvs >= lwv) & (wvs <= mwv)
+                if np.sum(select):
+                    if verbose:
+                        prclist = [
+                            np.nanpercentile(np.abs(1e0 - nsp), p) for p in prc
+                        ]
+                        slist = [
+                            np.abs(1e0 - nsp) <= thisp for thisp in prclist
+                        ]
+                        vldlist = [select & s for s in slist]
+                        pltavrl = [np.nanmean(nsp[v]) for v in vldlist]
+                        pltstdl = [np.nanstd(nsp[v]) for v in vldlist]
+                        errlist = [
+                            ps / np.sqrt(np.sum(v))
+                            for ps, v in zip(pltstdl, vldlist)
+                        ]
+
+                        # plt.figure()
+                        # plt.plot(prc, pltavrl)
+                        # plt.plot(prc, pltstdl)
+                        # plt.plot(prc, errlist)
+                        # plt.semilogy()
+                        # plt.show()
+
+                        validl.append(vldlist[prc.index(thr)])
+                        stdl.append(pltstdl[prc.index(thr)])
+                        wht.append(pltavrl[prc.index(thr)])
+                        whterr.append(errlist[prc.index(thr)])
+                        pass
+                    else:
+                        s = np.abs(1e0 - nsp) <= np.nanpercentile(
+                            np.abs(1e0 - nsp), thr
+                        )
+                        validl.append(select & s)
+                        stdl.append(np.nanstd(nsp[select & s]))
+                        wht.append(np.nanmean(nsp[select & s]))
+                        # ERROR ESTIMATED ON DATA
+                        whterr.append(stdl[-1] / np.sqrt(np.sum(select)))
+                        pass
+                    whtz.append(z)
+                    pass
+                pass
+            if verbose:
+                plt.figure()
+                plt.errorbar(whtz, wht, yerr=whterr, fmt='o')
+                plt.show()
+                pass
+            out['data'][pln][key]['prewhite'] = wht
+            out['data'][pln][key]['prewhite_err'] = whterr
+            out['data'][pln][key]['prewhite_sep'] = whtz
+            out['data'][pln][key]['valid'] = validl
+
+            # LIMB DARKENING
+            # GMR: This below will crash because the method integrate of
+            # BoxcarFilter of the LDTK package fails.
+            # We would need to fix filters.py from the package which is out of question
+            # Moving to Lady Of The Lake (Excalibur Limb Darkening code see )
+            # For whitelight implementation tryout, fixing LDs to some values
+            # obtained with a temporary and local fix to the code.
+            # def integrate(self, wavelengths, values):
+            #    w = self(wavelengths)
+            #    if all(w < 1e-10):
+            #        ix = searchsorted(wavelengths, 0.5*(self.wl_min+self.wl_max))
+            #        if ix > (len(w) - 1):
+            #            w[-1] = 1
+            #            pass
+            #        else:
+            #            w[ix] = 1
+            #            pass
+            #
+            # deltaw = mwv - np.mean([lwv, mwv])
+            # whiteld = createldgrid(
+            #    [lwv - deltaw, np.mean([lwv, mwv]) - deltaw, mwv - deltaw],
+            #    [lwv + deltaw, np.mean([lwv, mwv]) + deltaw, mwv + deltaw],
+            #    priors,
+            #    segmentation=int(10),
+            # )
+            # g1, g2, g3, g4 = whiteld['LD']
+            g1 = [3.7479351]
+            g2 = [-6.59634188]
+            g3 = [5.65796194]
+            g4 = [-1.80955517]
+            out['data'][pln][key]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
+
+            # PRIORS
+            rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+            tmjd = priors[pln]['t0']
+            if tmjd > 2400000.5:
+                tmjd -= 2400000.5
+                pass
+            fixedpars = {}
+            fixedpars['inc'] = priors[pln]['inc']
+            fixedpars['ttv'] = tmjd
+
+            nodes = []
+            nodeshape = []
+            prior_ranges = {}
+            prior_center = {}
+
+            # MCMC
+            with pymc.Model():
+                rprs = pymc.Uniform(
+                    'rprs', lower=rpors / 2e0, upper=rpors * 2e0
+                )
+                prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+                prior_center['rprs'] = rpors
+                nodes.append(rprs)
+                nodeshape.append(1)
+
+                ctxtupdt(
+                    orbp=priors[pln],
+                    ecc=priors[pln]['ecc'],
+                    g1=g1,
+                    g2=g2,
+                    g3=g3,
+                    g4=g4,
+                    period=priors[pln]['period'],
+                    smaors=priors[pln]['sma'] / priors['R*'] / ssc['Rsun/AU'],
+                    time=nrm['data'][pln]['time'],
+                    tmjd=tmjd,
+                    visits=nrm['data'][pln]['visits'],
+                    ginc=priors[pln]['inc'],
+                    fixedpars=fixedpars,
+                    mcmcdat=wht,
+                    mcmcsig=whterr,
+                    nodeshape=nodeshape,
+                    selectfit=np.array([True] * len(wht)),
+                )
+                # FIXED ORBITAL SOLUTION
+                TensorModel = TensorShell()
+
+                def LogLH(_, nodes):
+                    '''
+                    GMR: Fill in model tensor shell
+                    '''
+                    return TensorModel(nodes)
+
+                # GMR: CustomDist will only take a list that has consistent dims,
+                # hence the use of flatnodes
+                _ = pymc.CustomDist(
+                    "likelihood",
+                    nodes,
+                    observed=wht,
+                    logp=LogLH,
+                )
+                if rtp.sliceSampler:
+                    log.info('>--< WHITELIGHT SAMPLER: Slice >--')
+                    sampler = pymc.Slice()
+                    pass
+                else:
+                    log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
+                    sampler = pymc.Metropolis()
+                    log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
+                    pass
+                trace = pymc.sample(
+                    chainlen,
+                    cores=4,
+                    tune=int(chainlen / 2),
+                    compute_convergence_checks=False,
+                    step=sampler,
+                    progressbar=verbose,
+                )
+                mcpost = pymc.stats.summary(trace)
+                pass
+            # out['data'][p]['postlc'] = postlc
+            # out['data'][p]['postim'] = postim
+            # out['data'][p]['postsep'] = postsep
+            # out['data'][p]['postphase'] = postphase
+            # out['data'][p]['postflatphase'] = postflatphase
+            # out['data'][p]['modelphase'] = modelphase
+            # out['data'][p]['modellc'] = modellc
+            out['data'][p]['mcpost'] = mcpost
+            # out['data'][p]['mctrace'] = mctrace
+            # out['data'][p]['tauwhite'] = tauwhite
+
+            out['STATUS'].append(True)
+            pass
+        pass
+    return True
+
+
 def whitelight(
     nrm,
     fin,
@@ -1892,22 +2139,29 @@ def whitelight(
     '''
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
-    planetloop = [p for p in nrm['data'].keys() if nrm['data'][p]['visits']]
+    planetloop = [
+        thisp
+        for thisp in map(chr, range(97, 123))
+        if thisp in nrm['data'].keys()
+    ]
     for p in planetloop:
         rpors = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         visits = nrm['data'][p]['visits']
-        orbits = nrm['data'][p]['orbits']
-        time = nrm['data'][p]['time']
+        # HST specific format
+        if 'orbits' in nrm['data'][p]:
+            orbits = nrm['data'][p]['orbits']
+            time = nrm['data'][p]['time']
+            photnoise = nrm['data'][p]['photnoise']
+            out['data'][p]['orbits'] = orbits
+            pass
         wave = nrm['data'][p]['wave']
         nspec = nrm['data'][p]['nspec']
         sep = nrm['data'][p]['z']
         phase = nrm['data'][p]['phase']
-        photnoise = nrm['data'][p]['photnoise']
         out['data'][p] = {}
         out['data'][p]['nspec'] = nspec
         out['data'][p]['wave'] = wave
         out['data'][p]['visits'] = visits
-        out['data'][p]['orbits'] = orbits
         allwhite = []
         allerrwhite = []
         flatminww = []
@@ -3340,7 +3594,13 @@ def orbital(*whiteparams):
     '''
     G. ROUDIER: Orbital model
     '''
-    if ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
+    jwstflag = False
+    if not ctxt.orbits:
+        # GMR:JWST
+        r = whiteparams
+        jwstflag = True
+        pass
+    elif ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, avs, aos, aoi = whiteparams
         inclination = ctxt.fixedpars['inc']
         midtransits = ctxt.fixedpars['ttv']
@@ -3376,40 +3636,62 @@ def orbital(*whiteparams):
         log.error('!!! No parameter passed in orbital() !!!')
         pass
     out = []
-    for i, v in enumerate(ctxt.visits):
-        omt = ctxt.time[i]
-        if v in ctxt.ttv:
-            omtk = midtransits[ctxt.ttv.index(v)]
+    if not jwstflag:
+        for i, v in enumerate(ctxt.visits):
+            omt = ctxt.time[i]
+            if v in ctxt.ttv:
+                omtk = midtransits[ctxt.ttv.index(v)]
+                pass
+            else:
+                omtk = ctxt.tmjd
+                pass
+            omz, _pmph = tm.time2z(
+                omt,
+                inclination,
+                omtk,
+                ctxt.smaors,
+                ctxt.period,
+                ctxt.ecc,
+            )
+            lcout = tldlc(
+                abs(omz),
+                r,
+                g1=ctxt.g1[0],
+                g2=ctxt.g2[0],
+                g3=ctxt.g3[0],
+                g4=ctxt.g4[0],
+            )
+            imout = timlc(
+                omt,
+                ctxt.orbits[i],
+                vslope=avs[i],
+                vitcp=1e0,
+                oslope=aos[i],
+                oitcp=aoi[i],
+            )
+            out.extend(lcout * imout)
             pass
-        else:
-            omtk = ctxt.tmjd
-            pass
+        pass
+    else:
+        # JWST
         omz, _pmph = tm.time2z(
-            omt,
-            inclination,
-            omtk,
+            ctxt.time,
+            ctxt.ginc,
+            ctxt.tmjd,
             ctxt.smaors,
             ctxt.period,
             ctxt.ecc,
         )
-        lcout = tldlc(
+        out = tldlc(
             abs(omz),
-            r,
+            float(r[0]),
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
             g4=ctxt.g4[0],
         )
-        imout = timlc(
-            omt,
-            ctxt.orbits[i],
-            vslope=avs[i],
-            vitcp=1e0,
-            oslope=aos[i],
-            oitcp=aoi[i],
-        )
-        out.extend(lcout * imout)
         pass
+
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
     return out
 

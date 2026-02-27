@@ -351,6 +351,7 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['data'][p]['wherev'] = wherev
                 out['data'][p]['visits'] = vis
                 out['data'][p]['z'] = z
+                out['data'][p]['time'] = time
                 out['data'][p]['phase'] = phase
                 out['data'][p]['ordt'] = ordt
                 out['data'][p]['ignore'] = ign
