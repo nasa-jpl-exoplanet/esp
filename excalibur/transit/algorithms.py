@@ -106,6 +106,7 @@ class Normalization(dawgie.Algorithm):
                 pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
+                pass
             pass
         self.__out = svupdate
         if self.__out:
@@ -127,7 +128,6 @@ class Normalization(dawgie.Algorithm):
             pass
         elif 'NIRISS' in fltrs[index]:
             # Not compatible with new calibration. To be updated.
-            # normed = trncore.norm_jwst_niriss(cal, tme, fin, self.__out[index], self._type)
             normed = False
             pass
         elif 'NIRSPEC' in fltrs[index]:
@@ -209,10 +209,9 @@ class WhiteLight(dawgie.Algorithm):
         svupdate = []
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
-        # MERGE PROTOTYPE
-        # if self._type == 'transit':
-        if self._type in ['transit', 'eclipse']:
 
+        # MERGE
+        if self._type in ['transit', 'eclipse']:
             allnormdata = []
             allfilters = []
             hstfltrs = [
@@ -221,7 +220,6 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
-
             # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
@@ -272,6 +270,7 @@ class WhiteLight(dawgie.Algorithm):
                     )
                     pass
                 pass
+            pass
 
         # FILTER LOOP
         # just one filter, while debugging:
@@ -290,11 +289,15 @@ class WhiteLight(dawgie.Algorithm):
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
+                pass
             else:
                 errstr = [m for m in [snrm, sfin] if m is not None]
                 self._failure(errstr[0])
+                pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
+                pass
+            pass
         self.__out = svupdate
         if self.__out:
             _ = excalibur.lagger()
@@ -329,8 +332,13 @@ class WhiteLight(dawgie.Algorithm):
                 nrm, fin, out, self._type, fltr, self.__out[-1]
             )
         elif 'JWST' in fltr:
-            wl = trncore.lightcurve_jwst_niriss(
-                nrm, fin, out, self._type, fltr, self.__out[-1], method='ns'
+            wl = trncore.jwstwl(
+                nrm,
+                fin,
+                runtime_params,
+                out,
+                chainlen=runtime_params.sliceSampler,
+                verbose=False,
             )
         else:
             wl = trncore.whitelight(
