@@ -215,7 +215,7 @@ def plot_ML_spectrumfit(
         plt.text(
             xlims[1] + xoffset,
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
-            f"{name:s} = {ML_param_results[param]:5.2f} $\pm$ {ML_param_uncertainties[param]:5.2f}   {units:s}",
+            f"{name:s} = {ML_param_results[param]:5.2f} $\\pm$ {ML_param_uncertainties[param]:5.2f}   {units:s}",
             fontsize=12,
         )
 

@@ -157,7 +157,7 @@ def mlfit(
             ]
             ML_param_names_forprint = [
                 'T$_{eq}$ (K)',
-                'R$_p$ (log R$_\\oplus$)',
+                'R$_p$ (R$_\\oplus$)',
                 'H$_2$O (log ppm)',
                 'CH$_4$ (log ppm)',
                 'CO (log ppm)',
@@ -203,7 +203,7 @@ def mlfit(
 
             # asdf
             realspectrum = True
-            realspectrum = False
+            # realspectrum = False
             if realspectrum:
                 Rs = fin['priors']['R*']
                 Mp = fin['priors'][p]['mass']
@@ -212,7 +212,6 @@ def mlfit(
                 # maybe just use the cerberus one?
                 # but we want to do ML without cerberus, right? so use ariel-sim
 
-                # useArielSpectrum = False
                 # print(' uppkeys', spc['data'][p][arielModel].keys())
                 # print(' truekeys', spc['data'][p][arielModel]['true_spectrum'].keys())
                 true_spectrum = spc['data'][p][arielModel]['true_spectrum']
@@ -247,12 +246,15 @@ def mlfit(
                 jtest = 1234
 
                 # number of wavelength bins
-                numwaves = 52
+                # numwaves = 52
+                numwaves = len(MLtestsample_spectra[jtest]) - 4
                 # print('raw # of wavelengths', len(exemple))  # 56?!
                 observed_spectrum = MLtestsample_spectra[jtest][:numwaves]
                 # print('spectrumexample', MLtestsample_spectrum)
-                Rs = MLtestsample_spectra[jtest][numwaves + 2]
-                Mp = MLtestsample_spectra[jtest][numwaves + 3]
+                # Rs = MLtestsample_spectra[jtest][numwaves + 2]
+                # Mp = MLtestsample_spectra[jtest][numwaves + 3]
+                Rs = MLtestsample_spectra[jtest][-2]
+                Mp = MLtestsample_spectra[jtest][-1]
             if verbose:
                 print(' trying Rs,Mp = ', Rs, Mp)
 
@@ -349,11 +351,20 @@ def mlfit(
             noisedspectra = transitdata['depth'] + instrumentNoise
             print('transit data shape', noisedspectra.shape)
             print(' NOW loop over each of these 1000...')
+
+            print('TBD HERE!!!')
             # exit()
 
             # calculate the spectrum based on the best-fit ML model
             #  the best-fit model provided Tp, Rp, & mixing ratios
             #  set clouds/haze to zero
+            # Rp = 10.**ML_param_results['Rp'] * ssc['Rearth']
+            # print('Rp (RJup)', Rp)
+            Rp = ML_param_results['Rp'] * ssc['Rjup']
+            # print('Rp (cgs) for ML', Rp)
+            # Rp = fin['priors'][p]['rp'] * ssc['Rjup']
+            # print('IGNORING ML Rp; using system.finalize prior', Rp)
+
             fmc = crbFM().crbmodel(
                 ML_param_results['Teq'],
                 10.0,
@@ -362,7 +373,7 @@ def mlfit(
                 hazethick=1.0,
                 mixratio=ML_mixratio,
                 cheq=None,
-                rp0=ML_param_results['Rp'],
+                rp0=Rp,
                 xsecs=cerbxsl[p]['XSECS'],
                 qtgrid=cerbxsl[p]['QTGRID'],
                 wgrid=transitdata['wavelength'],
@@ -382,10 +393,21 @@ def mlfit(
 
             # add offset to match data (i.e. modify Rp)
             okPart = np.where(np.isfinite(transitdata['depth']))
+            print(
+                'average depth before normalizing',
+                np.mean(simulated_spectrum[okPart]),
+            )
+            # OLD normalization method (+- offset)
             ML_best_fit = simulated_spectrum[okPart] + np.average(
                 (transitdata['depth'][okPart] - simulated_spectrum[okPart]),
                 weights=1 / transitdata['error'][okPart] ** 2,
             )
+            # NEW normalization method (*/ factor)
+            # ML_best_fit = simulated_spectrum[okPart] * np.average(
+            #    (transitdata['depth'][okPart] / simulated_spectrum[okPart]),
+            #    weights=1 / transitdata['error'][okPart] ** 2,
+            # )
+            print('average depth after  normalizing', np.average(ML_best_fit))
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
@@ -547,6 +569,7 @@ def mlfit(
                 # print('fit results; mdplist:',mdp)
 
                 rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
+                # print('Rp (cgs) cerberus', rp0)
 
                 if model_name in ['TEC', 'TEA']:
                     # if len(mdp)!=3: log.warning('--< Expecting 3 molecules for TEQ model! >--')
