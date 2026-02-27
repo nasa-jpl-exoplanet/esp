@@ -10,12 +10,13 @@ import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
 
+from deprecated import deprecated
+
 import excalibur.system.core as syscore
 
 from excalibur.util.cerberus import crbce, calcTEA, getmmw
 
 from excalibur.cerberus.fmcontext import ctxtinit
-
 
 log = logging.getLogger(__name__)
 
@@ -23,384 +24,423 @@ log = logging.getLogger(__name__)
 ctxt = ctxtinit()
 
 
-# ----------- --------------------------------------------------------
-# -- CERBERUS MODEL -- -----------------------------------------------
-def crbmodel(
-    temp,
-    cloudtp,
-    cheq=None,
-    mixratio=None,
-    hazescale=0.0,
-    hazethick=1.0,
-    hazeslope=-4.0,
-    hazeloc=None,
-    hazeprof='AVERAGE',
-    hzlib=None,
-    chemistry='TEC',
-    planet=None,
-    rp0=None,
-    orbp=None,
-    wgrid=None,
-    xsecs=None,
-    qtgrid=None,
-    lbroadening=None,
-    lshifting=None,
-    knownspecies=None,
-    cialist=None,
-    xmollist=None,
-    nlevels=None,
-    Hsmax=None,
-    solrad=None,
-    break_down_by_molecule=False,
-    logx=False,
-    verbose=False,
-    debug=False,
-):
-    '''
-    G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
-    radius solrad evenly log divided amongst nlevels steps
-    - TP profile
-    - VMR profile
-    - MMW profile
-    '''
+# --------------------------------------------------------------------
+# -- CERBERUS FORWARD MODEL ------------------------------------------
+class crbFM:
+    def __init__(self):
+        self.__spectrum = np.empty(0)
+        self.__breakdown_by_molecule = {}
+        self.__moleculeProfiles = {}
+        self.__opticalDepthProfiles = {}
+        self.__pressureGrid = np.empty(0)
 
-    if planet is None:
-        planet = ctxt.planet
-    if orbp is None:
-        orbp = ctxt.orbp
-    if knownspecies is None:
-        knownspecies = ctxt.knownspecies
-    if cialist is None:
-        cialist = ctxt.cialist
-    # else:
-    #    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    if xmollist is None:
-        xmollist = ctxt.xmollist
-    # else:
-    #    xmollist = [
-    #        'TIO',
-    #        'H2O',
-    #        'H2CO',
-    #        'HCN',
-    #        'CO',
-    #        'CO2',
-    #        'NH3',
-    #        'CH4',
-    #        'C2H2',
-    #    ]
-    # this is passed in. why reset it here?
-    #    # longer list currently used by Luke:
-    #  PUT THIS INTO RUNTIME OPS!!
-    #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
-    # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
-    # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
-    if nlevels is None:
-        nlevels = ctxt.nlevels
-    if Hsmax is None:
-        Hsmax = ctxt.Hsmax
-    if solrad is None:
-        solrad = ctxt.solrad
-    if not bool(lshifting):
-        lshifting = ctxt.lshifting
-    if not bool(lbroadening):
-        lbroadening = ctxt.lbroadening
-    if rp0 is None:
-        rp0 = ctxt.rp0
-    if xsecs is None:
-        xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
-    if qtgrid is None:
-        qtgrid = ctxt.xsl['data'][ctxt.planet]['QTGRID']
-    if wgrid is None:
-        wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
-    if hzlib is None:
-        hzlib = ctxt.hzlib
+    def crbmodel(
+        self,
+        temp,
+        cloudtp,
+        cheq=None,
+        mixratio=None,
+        hazescale=0.0,
+        hazethick=1.0,
+        hazeslope=-4.0,
+        hazeloc=None,
+        hazeprof='AVERAGE',
+        hzlib=None,
+        chemistry='TEC',
+        planet=None,
+        rp0=None,
+        orbp=None,
+        wgrid=None,
+        xsecs=None,
+        qtgrid=None,
+        lbroadening=None,
+        lshifting=None,
+        knownspecies=None,
+        cialist=None,
+        xmollist=None,
+        nlevels=None,
+        Hsmax=None,
+        solrad=None,
+        break_down_by_molecule=False,
+        logx=False,
+        verbose=False,
+        debug=False,
+    ):
+        '''
+        G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
+        radius solrad evenly log divided amongst nlevels steps
+        - TP profile
+        - VMR profile
+        - MMW profile
+        '''
+        if planet is None:
+            planet = ctxt.planet
+        if orbp is None:
+            orbp = ctxt.orbp
+        if knownspecies is None:
+            knownspecies = ctxt.knownspecies
+        if cialist is None:
+            cialist = ctxt.cialist
+        # else:
+        #    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
+        if xmollist is None:
+            xmollist = ctxt.xmollist
+        # else:
+        #    xmollist = [
+        #        'TIO',
+        #        'H2O',
+        #        'H2CO',
+        #        'HCN',
+        #        'CO',
+        #        'CO2',
+        #        'NH3',
+        #        'CH4',
+        #        'C2H2',
+        #    ]
+        # this is passed in. why reset it here?
+        #    # longer list currently used by Luke:
+        #  PUT THIS INTO RUNTIME OPS!!
+        #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
+        # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
+        # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
+        if nlevels is None:
+            nlevels = ctxt.nlevels
+        if Hsmax is None:
+            Hsmax = ctxt.Hsmax
+        if solrad is None:
+            solrad = ctxt.solrad
+        if not bool(lshifting):
+            lshifting = ctxt.lshifting
+        if not bool(lbroadening):
+            lbroadening = ctxt.lbroadening
+        if rp0 is None:
+            rp0 = ctxt.rp0
+        if xsecs is None:
+            xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
+        if qtgrid is None:
+            qtgrid = ctxt.xsl['data'][ctxt.planet]['QTGRID']
+        if wgrid is None:
+            wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
+        if hzlib is None:
+            hzlib = ctxt.hzlib
 
-    temp = np.array(temp)
-    if temp.ndim:
-        tpp = temp
-    else:
-        tpp = np.array([float(temp)] * nlevels)
-        pass
-    # verify that the temperature array has the right length (nlevels)
-    if len(tpp) not in [int(nlevels)]:
-        log.error('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
-        pass
-
-    if mixratio is not None:
-        mxr = {}
-        for molecule in mixratio:
-            mxr[molecule] = np.array(mixratio[molecule])
-            if not mxr[molecule].ndim:
-                mxr[molecule] = np.array([float(mxr[molecule])] * len(tpp))
-                pass
-            # verify that the mixratio array has the right length (nlevels)
-            if len(mxr[molecule]) not in [int(nlevels)]:
-                log.error(
-                    '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
-                    nlevels,
-                )
-                pass
-            pass
-        pass
-    else:
-        mxr = None
-
-    ssc = syscore.ssconstants(mks=True)
-    pgrid = np.arange(
-        np.log(solrad) - Hsmax,
-        np.log(solrad) + Hsmax / nlevels,
-        Hsmax / (nlevels - 1),
-    )
-    pgrid = np.exp(pgrid)
-    pressure = pgrid[::-1]
-    dPoverP = (pressure[1] - pressure[0]) / pressure[0]
-
-    if not mixratio:
-        # chemical equilibrium case
-        if cheq is None:
-            log.error('!!! >--< Neither mixratio nor cheq are defined')
-            pass
-        if chemistry == 'TEC':
-            mixratio, fH2, fHe = crbce(
-                pressure,
-                tpp,
-                C2Or=cheq['CtoO'],
-                X2Hr=cheq['XtoH'],
-                N2Or=cheq['NtoO'],
-            )
-            mmw, fH2, fHe = getmmw(
-                mixratio,
-                protosolar=False,
-                fH2=fH2,
-                fHe=fHe,
-            )
-            pass
-
-        elif chemistry == 'TEA':
-            #  (this one gives a div-by-0 error)
-            # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-            tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-            mixratioarray = calcTEA(
-                tempCoeffs,
-                pressure,
-                metallicity=10.0 ** cheq['XtoH'],
-                C_O=0.55 * 10.0 ** cheq['CtoO'],
-                # N_O=?? * 10.0 ** cheq['NtoO'],
-            )
-
-            # have to take the average! (same as done in crbce)
-            mixratio = {}
-            for molecule in mixratioarray:
-                mixratio[molecule] = np.log10(
-                    np.mean(10.0 ** mixratioarray[molecule])
-                )
-            # print()
-            # print('mixratio in cerb', mixratio)
-            mmw, fH2, fHe = getmmw(mixratio)
-            # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
-
+        temp = np.array(temp)
+        if temp.ndim:
+            tpp = temp
         else:
-            fH2 = 0
-            fHe = 0
-            mixratio = {}
-            mmw = 1
-            log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
+            tpp = np.array([float(temp)] * nlevels)
+            pass
+        # verify that the temperature array has the right length (nlevels)
+        if len(tpp) not in [int(nlevels)]:
+            log.error(
+                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
+            )
             pass
 
-        mxr = mixratio
-        pass
-
-    else:
-        # DISEQ case
-        mmw, fH2, fHe = getmmw(mxr)
-        pass
-    mmw = mmw * cst.m_p  # [kg]
-
-    if debug:
-        log.info('>-- mmw: %s', mmw * 6.022e26)
-        pass
-
-    Hs = (
-        cst.Boltzmann
-        * tpp
-        / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
-    )  # [m]
-
-    # when the Pressure grid is log-spaced, rdz is a constant
-    #  drop dz[] and dzprime[] arrays and just use this constant instead
-    dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
-    z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
-
-    rho = pressure * 1e5 / (cst.Boltzmann * tpp)
-    tau, tau_by_molecule, wtau = gettau(
-        xsecs,
-        qtgrid,
-        tpp,
-        mxr,
-        z,
-        dz,
-        rho,
-        rp0,
-        pressure,
-        wgrid,
-        lbroadening,
-        lshifting,
-        cialist,
-        fH2,
-        fHe,
-        xmollist,
-        hazescale,
-        hzlib,
-        hazeprof,
-        hazeslope,
-        hazeloc,
-        hazethick,
-        debug=debug,
-    )
-
-    # print('tau', tau)
-    # for molecule, tau in tau_by_molecule.items:
-    #    print('tau', molecule, tau)
-
-    if not break_down_by_molecule:
-        tau_by_molecule = {}
-        pass
-    molecules = tau_by_molecule.keys()
-    # SEMI FINITE CLOUD ------------------------------------------------------------------
-    reversep = np.array(pressure[::-1])
-    selectcloud = pressure > 10.0**cloudtp
-    blocked = False
-    if np.all(selectcloud):
-        tau = tau * 0
-        for molecule in molecules:
-            tau_by_molecule[molecule] = tau_by_molecule[molecule] * 0
-        blocked = True
-        pass
-    if not np.all(~selectcloud) and not blocked:
-        # 1) find the cloudtop location in the pressure grid
-        cloudtopindex = np.max(np.arange(len(pressure))[selectcloud]) + 1
-
-        # 2) set atmos depth to zero for all cells deeper than that
-        tau[:cloudtopindex, :] = 0.0
-        for molecule in molecules:
-            tau_by_molecule[molecule][:cloudtopindex, :] = 0.0
-
-        # 3) interpolate atmos depth within that cell
-        for waveindex in np.arange(wtau.size):
-            myspl = itp(reversep, np.asarray(tau[:, waveindex]).flatten())
-            tau[cloudtopindex, waveindex] = myspl(10.0**cloudtp)
-            # this line can be done for all indices (outside of loop, I mean)
-            # tau[:cloudtopindex, waveindex] = 0.
-            for molecule in molecules:
-                myspl = itp(
-                    reversep,
-                    np.asarray(
-                        tau_by_molecule[molecule][:, waveindex]
-                    ).flatten(),
-                )
-                tau_by_molecule[molecule][cloudtopindex, waveindex] = myspl(
-                    10.0**cloudtp
-                )
-                # tau_by_molecule[molecule][:cloudtopindex, waveindex] = 0.
+        if mixratio is not None:
+            mxr = {}
+            for molecule in mixratio:
+                mxr[molecule] = np.array(mixratio[molecule])
+                if not mxr[molecule].ndim:
+                    mxr[molecule] = np.array([float(mxr[molecule])] * len(tpp))
+                    pass
+                # verify that the mixratio array has the right length (nlevels)
+                if len(mxr[molecule]) not in [int(nlevels)]:
+                    log.error(
+                        '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
+                        nlevels,
+                    )
+                    pass
+                pass
             pass
+        else:
+            mxr = None
 
-        # adjust rp0 based on the cloudtop
-        ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
-        ctpdz = abs(
-            Hs[cloudtopindex]
-            / 2.0
-            * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+        ssc = syscore.ssconstants(mks=True)
+        pgrid = np.arange(
+            np.log(solrad) - Hsmax,
+            np.log(solrad) + Hsmax / nlevels,
+            Hsmax / (nlevels - 1),
         )
-        rp0 += z[cloudtopindex] + ctpdz
-    pass
+        pgrid = np.exp(pgrid)
+        pressure = pgrid[::-1]
+        dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
-    # note that original version had rp0+z as matrix then multiply by dz after
-    geometrygrid = (rp0 + z) * dz
-    absorptiongrid = 1.0 - np.exp(-tau)
-    atmdepth = (
-        2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
-    ).flatten()
+        mixratioprofiles = {}
+        if not mixratio:
+            # chemical equilibrium case
+            if cheq is None:
+                log.error('!!! >--< Neither mixratio nor cheq are defined')
+                pass
+            if chemistry == 'TEC':
+                mixratio, mixratioprofiles, fH2, fHe = crbce(
+                    pressure,
+                    tpp,
+                    C2Or=cheq['CtoO'],
+                    X2Hr=cheq['XtoH'],
+                    N2Or=cheq['NtoO'],
+                )
+                mmw, fH2, fHe = getmmw(
+                    mixratio,
+                    protosolar=False,
+                    fH2=fH2,
+                    fHe=fHe,
+                )
+                pass
 
-    model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
-    # model is a 1xN matrix; it needs to be a 1-d array
-    #  otherwise some subsequent * or ** operations fail
-    model = np.asarray(model).reshape(-1)
-    plotmodel = model.copy()
-    model = model[::-1]
-    models_by_molecule = {}
-    for molecule in molecules:
-        absorptiongrid = 1.0 - np.exp(-tau_by_molecule[molecule])
+            elif chemistry == 'TEA':
+                #  (this one gives a div-by-0 error)
+                # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+                tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                mixratioprofiles = calcTEA(
+                    tempCoeffs,
+                    pressure,
+                    metallicity=10.0 ** cheq['XtoH'],
+                    C_O=0.55 * 10.0 ** cheq['CtoO'],
+                    # N_O=?? * 10.0 ** cheq['NtoO'],
+                )
+
+                # have to take the average! (same as done in crbce)
+                mixratio = {}
+                for molecule in mixratioprofiles:
+                    mixratio[molecule] = np.log10(
+                        np.mean(10.0 ** mixratioprofiles[molecule])
+                    )
+                # print()
+                # print('mixratio in cerb', mixratio)
+                mmw, fH2, fHe = getmmw(mixratio)
+                # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
+            else:
+                fH2 = 0
+                fHe = 0
+                mixratio = {}
+                mixratioprofiles = {}
+                mmw = 1
+                log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
+                pass
+
+            mxr = mixratio
+            pass
+        else:
+            # DISEQ case
+            mmw, fH2, fHe = getmmw(mxr)
+            pass
+        mmw = mmw * cst.m_p  # [kg]
+
+        if debug:
+            log.info('>-- mmw: %s', mmw * 6.022e26)
+            pass
+
+        Hs = (
+            cst.Boltzmann
+            * tpp
+            / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
+        )  # [m]
+
+        # when the Pressure grid is log-spaced, rdz is a constant
+        #  drop dz[] and dzprime[] arrays and just use this constant instead
+        dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
+        z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
+
+        rho = pressure * 1e5 / (cst.Boltzmann * tpp)
+        tau, tau_by_molecule, wtau = gettau(
+            xsecs,
+            qtgrid,
+            tpp,
+            mxr,
+            z,
+            dz,
+            rho,
+            rp0,
+            pressure,
+            wgrid,
+            lbroadening,
+            lshifting,
+            cialist,
+            fH2,
+            fHe,
+            xmollist,
+            hazescale,
+            hzlib,
+            hazeprof,
+            hazeslope,
+            hazeloc,
+            hazethick,
+            debug=debug,
+        )
+        if not break_down_by_molecule:
+            tau_by_molecule = {}
+            pass
+        molecules = tau_by_molecule.keys()
+        # SEMI FINITE CLOUD ---------------------------------------------------
+        reversep = np.array(pressure[::-1])
+        selectcloud = pressure > 10.0**cloudtp
+        blocked = False
+        if np.all(selectcloud):
+            tau = tau * 0
+            for molecule in molecules:
+                tau_by_molecule[molecule] = tau_by_molecule[molecule] * 0
+            blocked = True
+            pass
+        if not np.all(~selectcloud) and not blocked:
+            # 1) find the cloudtop location in the pressure grid
+            cloudtopindex = np.max(np.arange(len(pressure))[selectcloud]) + 1
+
+            # 2) set atmos depth to zero for all cells deeper than that
+            tau[:cloudtopindex, :] = 0.0
+            for molecule in molecules:
+                tau_by_molecule[molecule][:cloudtopindex, :] = 0.0
+
+            # 3) interpolate atmos depth within that cell
+            for waveindex in np.arange(wtau.size):
+                myspl = itp(
+                    reversep, np.asarray(tau[:, waveindex]).flatten()[::-1]
+                )
+
+                tau[cloudtopindex, waveindex] = myspl(10.0**cloudtp)
+
+                for molecule in molecules:
+                    myspl = itp(
+                        reversep,
+                        np.asarray(
+                            tau_by_molecule[molecule][:, waveindex]
+                        ).flatten(),
+                    )
+                    tau_by_molecule[molecule][cloudtopindex, waveindex] = myspl(
+                        10.0**cloudtp
+                    )
+                    # tau_by_molecule[molecule][:cloudtopindex, waveindex] = 0.
+                pass
+
+            # adjust rp0 based on the cloudtop
+            ctpdpress = 10.0**cloudtp - pressure[cloudtopindex]
+            ctpdz = abs(
+                Hs[cloudtopindex]
+                / 2.0
+                * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
+            )
+            rp0 += z[cloudtopindex] + ctpdz
+        pass
+
+        # note that original version had rp0+z as matrix then multiply by dz after
+        geometrygrid = (rp0 + z) * dz
+        absorptiongrid = 1.0 - np.exp(-tau)
         atmdepth = (
             2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
         ).flatten()
 
-        models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
-            orbp['R*'] * ssc['Rsun']
-        ) ** 2
+        model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
+        # model is a 1xN matrix; it needs to be a 1-d array
+        #  otherwise some subsequent * or ** operations fail
+        model = np.asarray(model).reshape(-1)
+        plotmodel = model.copy()
+        model = model[::-1]
+        models_by_molecule = {}
+        for molecule in molecules:
+            absorptiongrid = 1.0 - np.exp(-tau_by_molecule[molecule])
+            atmdepth = (
+                2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
+            ).flatten()
 
-        # convert matrix to 1-d array
-        models_by_molecule[molecule] = np.asarray(
-            models_by_molecule[molecule]
-        ).reshape(-1)
-        models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
+            models_by_molecule[molecule] = (rp0**2 + atmdepth) / (
+                orbp['R*'] * ssc['Rsun']
+            ) ** 2
 
-    if verbose:
-        fig, ax1 = plt.subplots(figsize=(10, 6))
-        ax2 = ax1.twiny()
+            # convert matrix to 1-d array
+            models_by_molecule[molecule] = np.asarray(
+                models_by_molecule[molecule]
+            ).reshape(-1)
+            models_by_molecule[molecule] = models_by_molecule[molecule][::-1]
 
-        for k in mxr.items():
-            ax1.plot(k[1], pressure, label=k[0])
+        if verbose:
+            fig, ax1 = plt.subplots(figsize=(10, 6))
+            ax2 = ax1.twiny()
+
+            for k in mxr.items():
+                ax1.plot(k[1], pressure, label=k[0])
+                pass
+            ax1.legend(loc='upper left')
+
+            ax2.plot(tpp, pressure, color='pink', label='Temperature', ls='--')
+            ax2.legend(loc='center left')
+
+            plt.semilogy()
+            plt.gca().invert_yaxis()
+            ax1.set_xlabel('log(VMR) [ppm]')
+            ax2.set_xlabel('Temperature [K]')
+            ax1.set_ylabel('Pressure [bar]')
+            plt.show()
+
+            noatm = np.nanmin(plotmodel)
+            rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
+
+            fig, ax = plt.subplots(figsize=(10, 6))
+            axes = [ax, ax.twinx(), ax.twinx()]
+            fig.subplots_adjust(left=0.125, right=0.775)
+            axes[-1].spines['right'].set_position(('axes', 1.2))
+            axes[-1].set_frame_on(True)
+            axes[-1].patch.set_visible(False)
+            axes[0].plot(wtau, 1e2 * plotmodel)
+            axes[0].plot(wtau, plotmodel * 0 + 1e2 * noatm, '--')
+            axes[0].set_xlabel('Wavelength $\\lambda$[$\\mu m$]')
+            axes[0].set_ylabel('Transit Depth [%]')
+            axes[0].get_yaxis().get_major_formatter().set_useOffset(False)
+            yaxmin, yaxmax = axes[0].get_ylim()
+            ax2min = (
+                np.sqrt(1e-2 * yaxmin) * orbp['R*'] * ssc['Rsun'] - rp0hs
+            ) / np.nanmean(Hs)
+            ax2max = (
+                np.sqrt(1e-2 * yaxmax) * orbp['R*'] * ssc['Rsun'] - rp0hs
+            ) / np.nanmean(Hs)
+            axes[-1].set_ylabel('Transit Depth Modulation [Hs]')
+            axes[-1].set_ylim(ax2min, ax2max)
+            axes[-1].get_yaxis().get_major_formatter().set_useOffset(False)
+            axes[1].set_ylabel('Transit Depth Modulation [ppm]')
+            axes[1].set_ylim(
+                1e6 * (1e-2 * yaxmin - noatm), 1e6 * (1e-2 * yaxmax - noatm)
+            )
+            axes[1].get_yaxis().get_major_formatter().set_useOffset(False)
+            if logx:
+                plt.semilogx()
+                plt.xlim([np.min(wtau), np.max(wtau)])
+                pass
+            plt.show()
             pass
-        ax1.legend(loc='upper left')
+        self.__spectrum = model
+        self.__breakdown_by_molecule = models_by_molecule
+        self.__pressureGrid = pressure
+        self.__moleculeProfiles = mixratioprofiles
+        self.__opticalDepthProfiles = tau  # (tau_by_molecule is also available)
+        return self
 
-        ax2.plot(tpp, pressure, color='pink', label='Temperature', ls='--')
-        ax2.legend(loc='center left')
+    @property
+    def spectrum(self):
+        return self.__spectrum
 
-        plt.semilogy()
-        plt.gca().invert_yaxis()
-        ax1.set_xlabel('log(VMR) [ppm]')
-        ax2.set_xlabel('Temperature [K]')
-        ax1.set_ylabel('Pressure [bar]')
-        plt.show()
+    @property
+    def breakdown_by_molecule(self):
+        return self.__breakdown_by_molecule
 
-        noatm = np.nanmin(plotmodel)
-        rp0hs = np.sqrt(noatm * (orbp['R*'] * ssc['Rsun']) ** 2)
+    @property
+    def pressureGrid(self):
+        return self.__pressureGrid
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        axes = [ax, ax.twinx(), ax.twinx()]
-        fig.subplots_adjust(left=0.125, right=0.775)
-        axes[-1].spines['right'].set_position(('axes', 1.2))
-        axes[-1].set_frame_on(True)
-        axes[-1].patch.set_visible(False)
-        axes[0].plot(wtau, 1e2 * plotmodel)
-        axes[0].plot(wtau, plotmodel * 0 + 1e2 * noatm, '--')
-        axes[0].set_xlabel('Wavelength $\\lambda$[$\\mu m$]')
-        axes[0].set_ylabel('Transit Depth [%]')
-        axes[0].get_yaxis().get_major_formatter().set_useOffset(False)
-        yaxmin, yaxmax = axes[0].get_ylim()
-        ax2min = (
-            np.sqrt(1e-2 * yaxmin) * orbp['R*'] * ssc['Rsun'] - rp0hs
-        ) / np.nanmean(Hs)
-        ax2max = (
-            np.sqrt(1e-2 * yaxmax) * orbp['R*'] * ssc['Rsun'] - rp0hs
-        ) / np.nanmean(Hs)
-        axes[-1].set_ylabel('Transit Depth Modulation [Hs]')
-        axes[-1].set_ylim(ax2min, ax2max)
-        axes[-1].get_yaxis().get_major_formatter().set_useOffset(False)
-        axes[1].set_ylabel('Transit Depth Modulation [ppm]')
-        axes[1].set_ylim(
-            1e6 * (1e-2 * yaxmin - noatm), 1e6 * (1e-2 * yaxmax - noatm)
-        )
-        axes[1].get_yaxis().get_major_formatter().set_useOffset(False)
-        if logx:
-            plt.semilogx()
-            plt.xlim([np.min(wtau), np.max(wtau)])
-            pass
-        plt.show()
-        pass
-    if break_down_by_molecule:
-        return model, models_by_molecule
-    return model
+    @property
+    def moleculeProfiles(self):
+        return self.__moleculeProfiles
+
+    @property
+    def opticalDepthProfiles(self):
+        return self.__opticalDepthProfiles
+
+
+@deprecated(
+    'replace crbmodel() with crbFM().crbmodel() and use .spectrum method'
+)
+def crbmodel(temp, cloudtp, **kwargs):
+    log.info('use crbFM class to get additional saved results from crbmodel')
+    return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum
 
 
 # --------------------------- ----------------------------------------
@@ -846,15 +886,6 @@ def cloudyfmcerberus(*crbinputs):
         ctp, hazescale, hazeloc, hazethick, mdp = crbinputs
     else:
         ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
-    # print(
-    #    ' not-fixed cloud parameters (cloudy) cloudstuff,T,mdp:',
-    #    ctp,
-    #    hazescale,
-    #    hazeloc,
-    #    hazethick,
-    #    tpr,
-    #    mdp
-    # )
 
     # this extra list[] is needed for the single param case (only metallicity)
     if not isinstance(mdp, list):
@@ -882,7 +913,7 @@ def cloudyfmcerberus(*crbinputs):
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
         # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             ctp,
             hazescale=hazescale,
@@ -895,7 +926,7 @@ def cloudyfmcerberus(*crbinputs):
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = mdp[index]
 
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             ctp,
             hazescale=hazescale,
@@ -903,7 +934,7 @@ def cloudyfmcerberus(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
-
+    fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup]
 
     if len(ctxt.mcmcsig) > 0:
@@ -958,7 +989,7 @@ def clearfmcerberus(*crbinputs):
 
         # print('calculating forward model XtoH =', tceqdict['XtoH'])
 
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             float(ctp),
             hazescale=float(hazescale),
@@ -971,7 +1002,7 @@ def clearfmcerberus(*crbinputs):
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = mdp[index]
             pass
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             tpr,
             float(ctp),
             hazescale=float(hazescale),
@@ -979,7 +1010,7 @@ def clearfmcerberus(*crbinputs):
             hazethick=float(hazethick),
             mixratio=mixratio,
         )
-
+    fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup]
 
     # (no need for isfinite check; that's what cleanup does already)
@@ -1010,7 +1041,7 @@ def offcerberus(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1018,11 +1049,12 @@ def offcerberus(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1030,6 +1062,7 @@ def offcerberus(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     cond_G430 = flt[ctxt.cleanup] == 'HST-STIS-CCD-G430L-STARE'
     cond_G141 = flt[ctxt.cleanup] == 'HST-WFC3-IR-G141-SCAN'
     tspectrum_clean = ctxt.tspectrum[ctxt.cleanup]
@@ -1054,7 +1087,7 @@ def offcerberus1(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1062,11 +1095,12 @@ def offcerberus1(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1074,6 +1108,7 @@ def offcerberus1(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1095,7 +1130,7 @@ def offcerberus2(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1103,11 +1138,12 @@ def offcerberus2(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1115,6 +1151,7 @@ def offcerberus2(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     #    fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     #    fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     flt = np.array(ctxt.spc['data'][ctxt.planet]['Fltrs'])
@@ -1137,7 +1174,7 @@ def offcerberus3(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1145,11 +1182,12 @@ def offcerberus3(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1157,6 +1195,7 @@ def offcerberus3(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1178,7 +1217,7 @@ def offcerberus4(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1186,11 +1225,12 @@ def offcerberus4(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1198,6 +1238,7 @@ def offcerberus4(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G430 = 'HST-STIS-CCD-G430-STARE' in flt
@@ -1217,7 +1258,7 @@ def offcerberus5(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1225,11 +1266,12 @@ def offcerberus5(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1237,6 +1279,7 @@ def offcerberus5(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
@@ -1258,7 +1301,7 @@ def offcerberus6(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1266,11 +1309,12 @@ def offcerberus6(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1278,6 +1322,7 @@ def offcerberus6(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1297,7 +1342,7 @@ def offcerberus7(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1305,11 +1350,12 @@ def offcerberus7(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1317,6 +1363,7 @@ def offcerberus7(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G750 = 'HST-STIS-CCD-G750-STARE' in flt
@@ -1336,7 +1383,7 @@ def offcerberus8(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1344,11 +1391,12 @@ def offcerberus8(*crbinputs):
             hazethick=hazethick,
             cheq=tceqdict,
         )
+        fmc = fmc.spectrum
     else:
         mixratio = {}
         for index, key in enumerate(ctxt.modparlbl[ctxt.model]):
             mixratio[key] = float(mdp[index])
-        fmc = crbmodel(
+        fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
             hazescale=float(hazescale),
@@ -1356,6 +1404,7 @@ def offcerberus8(*crbinputs):
             hazethick=hazethick,
             mixratio=mixratio,
         )
+        fmc = fmc.spectrum
     fmc = fmc[ctxt.cleanup] - np.nanmean(fmc[ctxt.cleanup])
     fmc = fmc + np.nanmean(ctxt.tspectrum[ctxt.cleanup])
     cond_G102 = 'HST-WFC3-IR-G102-SCAN' in flt
