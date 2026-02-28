@@ -82,6 +82,7 @@ def plot_ML_fits_vs_truths(
 def plot_ML_spectrumfit(
     transitdata,
     truth_spectrum,
+    truth_mixratios,
     ML_best_fit,
     ML_param_names,
     ML_param_names_forprint,
@@ -170,6 +171,7 @@ def plot_ML_spectrumfit(
 
     # add some labels off to the right side
     xoffset = 1.2
+    xoffsettruth = 1.8
     if truth_spectrum is not None:
         offsets_truth = (
             truth_spectrum['depth'] - transitdata['depth']
@@ -218,6 +220,19 @@ def plot_ML_spectrumfit(
             f"{name:s} = {ML_param_results[param]:5.2f} $\\pm$ {ML_param_uncertainties[param]:5.2f}   {units:s}",
             fontsize=12,
         )
+
+        # print the truth value for each molecule
+        print('TRUE MIXRATIOS', truth_mixratios)
+        if param[3:] in truth_mixratios:
+            plt.text(
+                xlims[1] + xoffsettruth,
+                ylims[0] + (ylims[1] - ylims[0]) * yloc,
+                f"{name:s} = {truth_mixratios[param]:5.2f} (ppm)",
+                fontsize=12,
+            )
+            print('YEP', param)
+        else:
+            print('NOPE', param)
 
     if filt == 'Ariel-sim':
         plt.xlim(0, 8)

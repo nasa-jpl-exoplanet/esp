@@ -13,6 +13,7 @@ from xgboost import XGBRegressor
 
 import excalibur
 import excalibur.system.core as syscore
+import excalibur.util.cerberus as crbutil
 from excalibur.target.targetlists import get_target_lists
 from excalibur.cerberus.core import hazelib
 from excalibur.cerberus.forward_model import crbFM
@@ -129,7 +130,6 @@ def mlfit(
                 trgt,
                 p,
             )
-
         else:
             out['data'][p] = {}
 
@@ -409,10 +409,51 @@ def mlfit(
             # )
             print('average depth after  normalizing', np.average(ML_best_fit))
 
+            # print('arielsim keys', spc['data'][p][arielModel].keys())
+            # print('cerb keys', cerbatmos[p].keys())
+            # print('arielsim stuff', spc['data'][p][arielModel]['model_params'])
+            # print('cerb stuff', cerbatmos[p]['MODELPARNAMES']) TEC and TEA; XtoH,CtoO
+            # print('cerb stuff', cerbatmos[p]['TRUTH_MODELPARAMS'])
+            # print('cerb stuff', cerbatmos[p]['TEC'].keys()) prior_ranges MCTRACE
+
+            # get the true mixing ratio values, for comparison
+            pgrid = np.exp(
+                np.arange(
+                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
+                    np.log(runtime_params.solrad)
+                    + runtime_params.Hsmax / runtime_params.nlevels,
+                    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+                )
+            )
+            pressure = pgrid[::-1]
+            # ok I confirm that these are the same thing
+            model_params = spc['data'][p][arielModel]['model_params']
+            model_params = cerbatmos[p]['TRUTH_MODELPARAMS']
+            print('model_params', model_params)
+            if 'TEA' in arielModel:
+                tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
+                mixratioprofiles = crbutil.calcTEA(
+                    tempCoeffs, pressure,
+                    metallicity=10.0 ** model_params['metallicity'],
+                    C_O=0.55 * 10.0 ** model_params['C/O'],
+                )
+                truth_mixratios = {}
+                for molecule in mixratioprofiles:
+                    truth_mixratios[molecule] = np.log10(
+                        np.mean(10.0 ** mixratioprofiles[molecule])
+                    )
+            else:
+                truth_mixratios, _, _, _ = crbutil.crbce(
+                    pressure, model_params['Teq'],
+                    X2Hr=model_params['metallicity'],
+                    C2Or=model_params['C/O'],
+                )
+
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
                 transitdata,
                 truth_spectrum,
+                truth_mixratios,
                 ML_best_fit,
                 ML_param_names,
                 ML_param_names_forprint,
@@ -833,7 +874,8 @@ def mlfit(
                     ML_param_names_forprint,
                     MLtestSample_input_params,
                     MLfit_results,
-                    verbose=verbose,
+                    verbose=False,
+                    # verbose=verbose,  # asdf
                 )
 
                 # _______________CORNER PLOT________________
@@ -849,7 +891,8 @@ def mlfit(
                     trgt,
                     p,
                     bins=runtime_params.cornerBins,
-                    verbose=verbose,
+                    verbose=False,
+                    # verbose=verbose,  # asdf
                     saveDir=save_dir,
                 )
             out['target'].append(trgt)

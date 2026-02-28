@@ -242,6 +242,8 @@ def calcTEA(
         if sp in df.columns
     }
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
+    # print('MIXRATIO IN TEA for h2o',np.log10(
+    #    np.mean(10.0 ** mixratio['H2O'])))
     return mixratio
 
 
@@ -389,7 +391,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
         'N2': np.log10(nN2profile) + 6.0,
         'CO': np.log10(nCOprofile) + 6.0,
     }
-    # print('mixratio', mixratio)
+    # print('MIXRATIO IN TEC', mixratio)
     return mixratio, mixratioprofiles, nH2, nHe
 
 
