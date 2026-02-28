@@ -317,6 +317,13 @@ def mlfit(
             # and then see how much the ML param results vary
             # (and then compare this uncertainty against the intrinsic ML uncert)
 
+            # TEST TEST TEST
+            #  increase the metallicity by some factor
+            # for param in ML_param_names:
+            #    if param.startswith('mlp'):
+            #        ML_param_results[param] += 1.5
+            # TEST TEST TEST
+
             # calculate the spectrum for the resulting best-fit mixratios
             ML_mixratio = {}
             for param in ML_param_names:
@@ -437,23 +444,32 @@ def mlfit(
                     metallicity=10.0 ** model_params['metallicity'],
                     C_O=0.55 * 10.0 ** model_params['C/O'],
                 )
-                truth_mixratios = {}
+                truth_params = {}
                 for molecule in mixratioprofiles:
-                    truth_mixratios[molecule] = np.log10(
+                    truth_params[molecule] = np.log10(
                         np.mean(10.0 ** mixratioprofiles[molecule])
                     )
             else:
-                truth_mixratios, _, _, _ = crbutil.crbce(
+                truth_params, _, _, _ = crbutil.crbce(
                     pressure, model_params['Teq'],
                     X2Hr=model_params['metallicity'],
                     C2Or=model_params['C/O'],
                 )
+            # include Teq and Rp truths in with the mixing ratios
+            truth_params['Teq'] = model_params['Teq']
+            truth_params['Rp'] = model_params['Rp']
+
+            out['data'][p]['ML_param_names'] = ML_param_names
+            out['data'][p]['ML_param_results'] = ML_param_results
+            out['data'][p]['ML_param_uncertainties'] = ML_param_uncertainties
+            out['data'][p]['ML_spectrum_bestfit'] = ML_best_fit
+            out['data'][p]['truth_params'] = truth_params
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
                 transitdata,
                 truth_spectrum,
-                truth_mixratios,
+                truth_params,
                 ML_best_fit,
                 ML_param_names,
                 ML_param_names_forprint,
@@ -464,6 +480,7 @@ def mlfit(
                 filt,
                 trgt,
                 p,
+                verbose=verbose,
             )
 
             # **** NEW CODE END HERE ****

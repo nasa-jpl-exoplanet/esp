@@ -73,8 +73,8 @@ def plot_ML_fits_vs_truths(
     # plt.tight_layout()
     if savetodisk:
         plt.savefig(saveDir + 'MLfitVStruth.png')
-    # if verbose:
-    #     plt.show()
+    if verbose:
+        plt.show()
     return save_plot_tosv(fig), fig
 
 
@@ -82,7 +82,7 @@ def plot_ML_fits_vs_truths(
 def plot_ML_spectrumfit(
     transitdata,
     truth_spectrum,
-    truth_mixratios,
+    truth_params,
     ML_best_fit,
     ML_param_names,
     ML_param_names_forprint,
@@ -95,6 +95,7 @@ def plot_ML_spectrumfit(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''plot the machine-learning best fit to the data'''
 
@@ -171,7 +172,7 @@ def plot_ML_spectrumfit(
 
     # add some labels off to the right side
     xoffset = 1.2
-    xoffsettruth = 1.8
+    xoffsettruth = 0.8
     if truth_spectrum is not None:
         offsets_truth = (
             truth_spectrum['depth'] - transitdata['depth']
@@ -205,6 +206,18 @@ def plot_ML_spectrumfit(
 
     # print out the best-fit parameters on the right side
     yloc = 0.55
+    plt.text(
+        xlims[1] + xoffset,
+        ylims[0] + (ylims[1] - ylims[0]) * yloc,
+        '  ML fit results',
+        fontsize=12,
+    )
+    plt.text(
+        xlims[1] + xoffset + xoffsettruth * (xlims[1] - xlims[0]),
+        ylims[0] + (ylims[1] - ylims[0]) * yloc,
+        '  true values',
+        fontsize=12,
+    )
     for param, name in zip(ML_param_names, ML_param_names_forprint):
         # print(param, '=', ML_param_results[param])
         yloc -= 0.08
@@ -222,17 +235,23 @@ def plot_ML_spectrumfit(
         )
 
         # print the truth value for each molecule
-        print('TRUE MIXRATIOS', truth_mixratios)
-        if param[3:] in truth_mixratios:
-            plt.text(
-                xlims[1] + xoffsettruth,
-                ylims[0] + (ylims[1] - ylims[0]) * yloc,
-                f"{name:s} = {truth_mixratios[param]:5.2f} (ppm)",
-                fontsize=12,
-            )
-            print('YEP', param)
+        if param[3:] in truth_params:
+            truthprint = (f"{name:s} = {truth_params[param[3:]]:5.2f} (log ppm)")
+            # print('YEP', param)
+        elif param in truth_params:
+            truthprint = (f"{name:s} = {truth_params[param]:5.2f}")
+            # print('YEP', param)
+        elif param=='mlpCO2':
+            truthprint = ('CO$_2$ = zero')
         else:
-            print('NOPE', param)
+            truthprint = ''
+            print('NOPE. no truth for param:', param)
+        plt.text(
+            xlims[1] + xoffset + xoffsettruth * (xlims[1] - xlims[0]),
+            ylims[0] + (ylims[1] - ylims[0]) * yloc,
+            truthprint,
+            fontsize=12,
+        )
 
     if filt == 'Ariel-sim':
         plt.xlim(0, 8)
@@ -268,7 +287,8 @@ def plot_ML_spectrumfit(
             )
 
     # figgy.tight_layout()
-    # plt.show()
+    if verbose:
+        plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
         plt.savefig(saveDir + 'bestFit_' + filt + '_' + trgt + ' ' + p + '.png')
