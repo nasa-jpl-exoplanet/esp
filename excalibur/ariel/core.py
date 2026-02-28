@@ -503,9 +503,22 @@ def simulate_spectra(
                     # save the mixing ratios for this model
                     # (to compare against FREE chemistry case (especially gemli)
                     if useTEA:
-                        tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
+                        T = model_params['Teq']
+                        tempCoeffs = [
+                            0,
+                            T,
+                            0,
+                            1,
+                            0,
+                            -1,
+                            1,
+                            0,
+                            -1,
+                            1,
+                        ]
                         mixratioprofiles = crbutil.calcTEA(
-                            tempCoeffs, pressure,
+                            tempCoeffs,
+                            pressure,
                             metallicity=10.0 ** model_params['metallicity'],
                             C_O=0.55 * 10.0 ** model_params['C/O'],
                         )
@@ -516,7 +529,8 @@ def simulate_spectra(
                             )
                     else:
                         mixratio, _, fH2, fHe = crbutil.crbce(
-                            pressure, model_params['Teq'],
+                            pressure,
+                            model_params['Teq'],
                             X2Hr=model_params['metallicity'],
                             C2Or=model_params['C/O'],
                             # X2Hr=10.0 ** model_params['metallicity'],
