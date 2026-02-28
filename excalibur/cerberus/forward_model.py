@@ -172,7 +172,7 @@ class crbFM:
             if cheq is None:
                 log.error('!!! >--< Neither mixratio nor cheq are defined')
                 pass
-            if chemistry == 'TEC':
+            if chemistry.startswith('TEC'):
                 mixratio, mixratioprofiles, fH2, fHe = crbce(
                     pressure,
                     tpp,
@@ -188,7 +188,7 @@ class crbFM:
                 )
                 pass
 
-            elif chemistry == 'TEA':
+            elif chemistry.startswith('TEA'):
                 #  (this one gives a div-by-0 error)
                 # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                 tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
@@ -201,6 +201,10 @@ class crbFM:
                 )
 
                 # have to take the average! (same as done in crbce)
+
+                #  REVISIT THIS LATER!!!
+                #  IT SHOULD BE ABLE TO HANDLE PROFILES NOW!!!
+
                 mixratio = {}
                 for molecule in mixratioprofiles:
                     mixratio[molecule] = np.log10(
@@ -210,6 +214,41 @@ class crbFM:
                 # print('mixratio in cerb', mixratio)
                 mmw, fH2, fHe = getmmw(mixratio)
                 # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
+
+                if 'ozone' in chemistry:
+                    # print()
+                    # print('OZONE CHECK')
+                    if 'O3' not in mixratio:
+                        log.error('O3 not selected for ozone model!!')
+
+                    # add in ozone, but keep the same total metallicity
+                    originalmetals = 0
+                    for molecule in mixratio:
+                        originalmetals += 10.0 ** mixratio[molecule]
+                    # print('originalmetals', originalmetals/1.e6)
+
+                    # print(' ozone mixratio before', mixratio['O3'])
+                    # mixratio['O3'] = mixratio['O3'] * 0 + 5.0
+                    # mixratio['O3'] = mixratio['O3'] * 0 + 7.0
+                    # print(' NEW OZONE mixratio', mixratio['O3'])
+
+                    # totalmetals = 0
+                    # for molecule in mixratio:
+                    #     totalmetals += 10.0 ** mixratio[molecule]
+                    # print('totalmetals', totalmetals/1.e6)
+
+                    newsum = originalmetals + 10.0 ** mixratio['O3']
+
+                    for molecule in mixratio:
+                        mixratio[molecule] -= np.log10(newsum / originalmetals)
+                    # print(' ozone mixratio renorm', mixratio['O3'])
+                    # totalmetals = 0
+                    # for molecule in mixratio:
+                    #    totalmetals += 10.0 ** mixratio[molecule]
+                    # print('totalmetals', totalmetals/1.e6)
+
+                    mmw, fH2, fHe = getmmw(mixratio)
+                    # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
             else:
                 fH2 = 0
@@ -358,7 +397,7 @@ class crbFM:
             ax2 = ax1.twiny()
 
             for k in mxr.items():
-                ax1.plot(k[1], pressure, label=k[0])
+                ax1.plot(pressure * 0 + k[1], pressure, label=k[0])
                 pass
             ax1.legend(loc='upper left')
 

@@ -125,7 +125,7 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
         cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
     )  # [m]
 
-    return mmw, Hs
+    return mmw, mixratio, Hs
 
 
 def simulate_spectra(
@@ -225,7 +225,7 @@ def simulate_spectra(
 
         # select old ArielRad (results read from a table) or new (results calculated internally)
         oldArielRad = True
-        oldArielRad = False
+        # oldArielRad = False
         if oldArielRad:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
@@ -381,7 +381,7 @@ def simulate_spectra(
                         model_params['N/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
-                _, Hs = calc_mmw_Hs(
+                _, _, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
                     model_params['logg'],
@@ -405,6 +405,7 @@ def simulate_spectra(
 
                 fluxDepth_by_molecule = {}
                 moleculeProfiles = {}
+                mixratio = {}
 
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
@@ -499,6 +500,44 @@ def simulate_spectra(
                     if np.any(pressures != pressure):
                         print('ERROR: pressure grids dont match!')
 
+                    # save the mixing ratios for this model
+                    # (to compare against FREE chemistry case (especially gemli)
+                    if useTEA:
+                        T = model_params['Teq']
+                        tempCoeffs = [
+                            0,
+                            T,
+                            0,
+                            1,
+                            0,
+                            -1,
+                            1,
+                            0,
+                            -1,
+                            1,
+                        ]
+                        mixratioprofiles = crbutil.calcTEA(
+                            tempCoeffs,
+                            pressure,
+                            metallicity=10.0 ** model_params['metallicity'],
+                            C_O=0.55 * 10.0 ** model_params['C/O'],
+                        )
+                        mixratio = {}
+                        for molecule in mixratioprofiles:
+                            mixratio[molecule] = np.log10(
+                                np.mean(10.0 ** mixratioprofiles[molecule])
+                            )
+                    else:
+                        mixratio, _, fH2, fHe = crbutil.crbce(
+                            pressure,
+                            model_params['Teq'],
+                            X2Hr=model_params['metallicity'],
+                            C2Or=model_params['C/O'],
+                            # X2Hr=10.0 ** model_params['metallicity'],
+                            # C2Or=0.55 * 10.0 ** model_params['C/O'],
+                        )
+                    # print('mixratio!', useTEA, mixratio)
+
                 elif 'taurex' in atmosModel:
                     log.error('ERROR: taurex no longer an option')
                 else:
@@ -573,6 +612,9 @@ def simulate_spectra(
                     'ES': signedSqrt,
                     'ESerr': 0.5 * uncertainties / signedSqrt,
                 }
+
+                # save the mixing ratio (to compare against gemli free chemistry)
+                out['data'][planet_letter][atmosModel]['mixratio'] = mixratio
 
                 # cerberus also wants the scale height, to normalize the spectrum
                 #  keep Hs as it's own param (not inside of system_ or model_param
