@@ -236,13 +236,13 @@ def plot_ML_spectrumfit(
 
         # print the truth value for each molecule
         if param[3:] in truth_params:
-            truthprint = (f"{name:s} = {truth_params[param[3:]]:5.2f} (log ppm)")
+            truthprint = f"{name:s} = {truth_params[param[3:]]:5.2f} (log ppm)"
             # print('YEP', param)
         elif param in truth_params:
-            truthprint = (f"{name:s} = {truth_params[param]:5.2f}")
+            truthprint = f"{name:s} = {truth_params[param]:5.2f}"
             # print('YEP', param)
-        elif param=='mlpCO2':
-            truthprint = ('CO$_2$ = zero')
+        elif param == 'mlpCO2':
+            truthprint = 'CO$_2$ = zero'
         else:
             truthprint = ''
             print('NOPE. no truth for param:', param)
