@@ -222,11 +222,12 @@ def mlfit(
                 # print(' # of waves', len(observed_spectrum))
 
                 observed_spectrum = spc['data'][p][arielModel]['ES'] ** 2
-                observed_spectrum_error = (
-                    2
-                    * spc['data'][p][arielModel]['ES']
-                    * spc['data'][p][arielModel]['ESerr']
-                )
+                #  not used:
+                # observed_spectrum_error = (
+                #    2
+                #    * spc['data'][p][arielModel]['ES']
+                #    * spc['data'][p][arielModel]['ESerr']
+                # )
                 # print('dict check', spc['data'][p][arielModel].keys())
                 # print(
                 #    'spec,err',

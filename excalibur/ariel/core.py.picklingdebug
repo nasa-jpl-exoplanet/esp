@@ -465,7 +465,15 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        _ = myxsecs(tempspc, runtime_params, xslib)
+                        import pickle
+                        if 0:
+                            _ = myxsecs(tempspc, runtime_params, xslib)
+                            file = open('arielxslibsave.pkl', 'bw')
+                            pickle.dump(xslib, file)
+                            file.close()
+                        else:
+                            with open('arielxslibsave.pkl', 'br') as file:
+                                xslib = pickle.load(file)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -503,22 +511,9 @@ def simulate_spectra(
                     # save the mixing ratios for this model
                     # (to compare against FREE chemistry case (especially gemli)
                     if useTEA:
-                        T = model_params['Teq']
-                        tempCoeffs = [
-                            0,
-                            T,
-                            0,
-                            1,
-                            0,
-                            -1,
-                            1,
-                            0,
-                            -1,
-                            1,
-                        ]
+                        tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                         mixratioprofiles = crbutil.calcTEA(
-                            tempCoeffs,
-                            pressure,
+                            tempCoeffs, pressure,
                             metallicity=10.0 ** model_params['metallicity'],
                             C_O=0.55 * 10.0 ** model_params['C/O'],
                         )
@@ -528,9 +523,8 @@ def simulate_spectra(
                                 np.mean(10.0 ** mixratioprofiles[molecule])
                             )
                     else:
-                        mixratio, _, _, _ = crbutil.crbce(
-                            pressure,
-                            model_params['Teq'],
+                        mixratio, _, fH2, fHe = crbutil.crbce(
+                            pressure, model_params['Teq'],
                             X2Hr=model_params['metallicity'],
                             C2Or=model_params['C/O'],
                             # X2Hr=10.0 ** model_params['metallicity'],
@@ -614,6 +608,7 @@ def simulate_spectra(
                 }
 
                 # save the mixing ratio (to compare against gemli free chemistry)
+                print('  saved mixratio in', planet_letter, atmosModel)
                 out['data'][planet_letter][atmosModel]['mixratio'] = mixratio
 
                 # cerberus also wants the scale height, to normalize the spectrum
