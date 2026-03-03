@@ -87,7 +87,8 @@ def plot_ML_spectrumfit(
     ML_param_names,
     ML_param_names_forprint,
     ML_param_results,
-    ML_param_uncertainties,
+    ML_uncertainties_systematic,
+    ML_uncertainties_instrument,
     system_data,
     ancillary_data,
     filt,
@@ -209,7 +210,7 @@ def plot_ML_spectrumfit(
     plt.text(
         xlims[1] + xoffset,
         ylims[0] + (ylims[1] - ylims[0]) * yloc,
-        '  ML fit results',
+        '  ML fit results (sys/instr uncertainties)',
         fontsize=12,
     )
     plt.text(
@@ -230,7 +231,7 @@ def plot_ML_spectrumfit(
         plt.text(
             xlims[1] + xoffset,
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
-            f"{name:s} = {ML_param_results[param]:5.2f} $\\pm$ {ML_param_uncertainties[param]:5.2f}   {units:s}",
+            f"{name:s} = {ML_param_results[param]:5.2f} $\\pm$ {ML_uncertainties_systematic[param]:5.2f} $\\pm$ {ML_uncertainties_instrument[param]:5.2f}   {units:s}",
             fontsize=12,
         )
 

@@ -199,9 +199,11 @@ def mlfit(
             arielModel = 'cerberusNoclouds'
             # arielModel = 'cerberusTEANoClouds'
 
-            # uh oh DOUBLE-CAREFUL! cerberus.atmos is currently the cloudy model
+            # MORE CAREFUL! cerberus.atmos is currently the cloudy model
+            # decide here whether to use the cerb.atmos atm or arielsim spc
+            # useAtmos = False
+            # (currently just using arielsim spc, not cerbatmos
 
-            # asdf
             realspectrum = True
             # realspectrum = False
             if realspectrum:
@@ -226,21 +228,21 @@ def mlfit(
                     * spc['data'][p][arielModel]['ESerr']
                 )
                 # print('dict check', spc['data'][p][arielModel].keys())
-                print(
-                    'spec,err',
-                    np.mean(observed_spectrum),
-                    np.mean(observed_spectrum_error),
-                )
-                another_spectrum = cerbatmos[p]['SPECTRUM'] ** 2
-                another_spectrum_error = (
-                    2 * cerbatmos[p]['SPECTRUM'] * cerbatmos[p]['ERRORS']
-                )
-                print(
-                    'spec,err',
-                    np.mean(another_spectrum),
-                    np.mean(another_spectrum_error),
-                )
-                print(' # of waves', len(another_spectrum))
+                # print(
+                #    'spec,err',
+                #    np.mean(observed_spectrum),
+                #    np.mean(observed_spectrum_error),
+                # )
+                # another_spectrum = cerbatmos[p]['SPECTRUM'] ** 2
+                # another_spectrum_error = (
+                #    2 * cerbatmos[p]['SPECTRUM'] * cerbatmos[p]['ERRORS']
+                # )
+                # print(
+                #    'spec,err',
+                #    np.mean(another_spectrum),
+                #    np.mean(another_spectrum_error),
+                # )
+                # print(' # of waves', len(another_spectrum))
             else:
                 # instead of input ariel-sim info, try one of the test spectra
                 jtest = 1234
@@ -272,14 +274,14 @@ def mlfit(
                 for model in ML_models
             ]
             ML_param_results = dict(zip(ML_param_names, ML_param_results))
-            if verbose:
-                for k in ML_param_names:
-                    print(
-                        f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}'
-                    )
+            # if verbose:
+            #    for k in ML_param_names:
+            #        print(
+            #            f'MLfit result for {k:7s}: {ML_param_results[k]: .6g}'
+            #        )
 
             # calculate the systematic/ML uncertainty from the test sample
-            ML_param_uncertainties = {}
+            ML_uncertainties_systematic = {}
             for k, ML_param_name in enumerate(ML_param_names):
                 if ML_param_name.startswith('mlp') or (ML_param_name == 'Rp'):
                     # lump together test samples within 0.1 dex
@@ -310,7 +312,7 @@ def mlfit(
                 # (the range of input values that can produce the fit result)
                 inputvals = MLtestSample_input_params[:, k][thisbin]
                 # print(' ML uncertainty', ML_param_name, np.std(inputvals))
-                ML_param_uncertainties[ML_param_name] = np.std(inputvals)
+                ML_uncertainties_systematic[ML_param_name] = np.std(inputvals)
 
             # calculate the effect of instrument noise on ML retrieval
             # loop over a bunch of random noise selections on each data point
@@ -329,7 +331,7 @@ def mlfit(
             for param in ML_param_names:
                 if param.startswith('mlp'):
                     ML_mixratio[param[3:]] = ML_param_results[param]
-            print('ML_mixratio for forwardmodel call', ML_mixratio)
+            # print('ML_mixratio for forwardmodel call', ML_mixratio)
 
             true_spectrum = spc['data'][p][arielModel]['true_spectrum']
             # print('true keys', true_spectrum.keys())
@@ -349,6 +351,8 @@ def mlfit(
             transitdata = rebin_data(transitdata)
 
             nrandomSample = 1000  # this is fast, so can do a lot itk
+            # nrandomSample = 11
+            np.random.seed(123)  # make the results reproduciblea
             instrumentNoise = transitdata['error'] * np.random.normal(
                 size=(nrandomSample, len(transitdata['wavelength']))
             )
@@ -356,11 +360,44 @@ def mlfit(
             # then add that to the observed spectrum
             #  it seems to do the broadcasting automatically. nice
             noisedspectra = transitdata['depth'] + instrumentNoise
-            print('transit data shape', noisedspectra.shape)
-            print(' NOW loop over each of these 1000...')
+            # print('transit data shape', noisedspectra.shape)
+            # print('transit data shape', noisedspectra[:,][0].shape)
+            # print('transit data shape', noisedspectra[,:].shape)
+            # print(' NOW loop over each of these 1000...')
 
-            print('TBD HERE!!!')
-            # exit()
+            ML_param_results_noisedlist = []
+            # for noisedspectrum in noisedspectra[:,]:
+            for inoise in range(nrandomSample):
+                noisedspectrum = noisedspectra[inoise, :]
+                observed_spectrum_features = features_from_one_spectrum(
+                    noisedspectrum, Rs, Mp
+                )
+                observed_spectrum_scaled = scaler.transform(
+                    observed_spectrum_features
+                )
+                ML_param_results_noised = [
+                    model.predict(observed_spectrum_scaled)[0]
+                    for model in ML_models
+                ]
+                # print('added in', dict(zip(ML_param_names, ML_param_results)))
+                ML_param_results_noisedlist.append(
+                    dict(zip(ML_param_names, ML_param_results_noised))
+                )
+            # now check the range of ML results for each parameter
+            # print('len check',len(ML_param_results_noised))
+            # if 1:
+            ML_uncertainties_instrument = {}
+            for param in ML_param_names:
+                # for instance in ML_param_results_noisedlist:
+                #    print('check', instance)
+                # print('param', param)
+                values = [
+                    instance[param] for instance in ML_param_results_noisedlist
+                ]
+                ML_uncertainties_instrument[param] = np.std(values)
+
+            # print('uncertainty from the instrument', ML_uncertainties_instrument)
+            # exit('asdf')
 
             # calculate the spectrum based on the best-fit ML model
             #  the best-fit model provided Tp, Rp, & mixing ratios
@@ -400,10 +437,10 @@ def mlfit(
 
             # add offset to match data (i.e. modify Rp)
             okPart = np.where(np.isfinite(transitdata['depth']))
-            print(
-                'average depth before normalizing',
-                np.mean(simulated_spectrum[okPart]),
-            )
+            # print(
+            #    'average depth before normalizing',
+            #    np.mean(simulated_spectrum[okPart]),
+            # )
             # OLD normalization method (+- offset)
             ML_best_fit = simulated_spectrum[okPart] + np.average(
                 (transitdata['depth'][okPart] - simulated_spectrum[okPart]),
@@ -414,7 +451,7 @@ def mlfit(
             #    (transitdata['depth'][okPart] / simulated_spectrum[okPart]),
             #    weights=1 / transitdata['error'][okPart] ** 2,
             # )
-            print('average depth after  normalizing', np.average(ML_best_fit))
+            # print('average depth after  normalizing', np.average(ML_best_fit))
 
             # print('arielsim keys', spc['data'][p][arielModel].keys())
             # print('cerb keys', cerbatmos[p].keys())
@@ -463,7 +500,12 @@ def mlfit(
 
             out['data'][p]['ML_param_names'] = ML_param_names
             out['data'][p]['ML_param_results'] = ML_param_results
-            out['data'][p]['ML_param_uncertainties'] = ML_param_uncertainties
+            out['data'][p][
+                'ML_uncertainties_systematic'
+            ] = ML_uncertainties_systematic
+            out['data'][p][
+                'ML_uncertainties_instrument'
+            ] = ML_uncertainties_instrument
             out['data'][p]['ML_spectrum_bestfit'] = ML_best_fit
             out['data'][p]['truth_params'] = truth_params
 
@@ -476,7 +518,8 @@ def mlfit(
                 ML_param_names,
                 ML_param_names_forprint,
                 ML_param_results,
-                ML_param_uncertainties,
+                ML_uncertainties_systematic,
+                ML_uncertainties_instrument,
                 fin['priors'],
                 anc['data'][p],
                 filt,
@@ -893,8 +936,8 @@ def mlfit(
                     ML_param_names_forprint,
                     MLtestSample_input_params,
                     MLfit_results,
-                    verbose=False,
-                    # verbose=verbose,  # asdf
+                    # verbose=False,
+                    verbose=verbose,  # asdf
                 )
 
                 # _______________CORNER PLOT________________
