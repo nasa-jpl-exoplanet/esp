@@ -1,3 +1,4 @@
+altaipony        # for flare detection
 astropy
 astroquery
 dawgie==2.0.2
@@ -17,3 +18,4 @@ service_identity # for twisted with TLS (optionally loaded so must do it here)
 scipy
 sympy
 ultranest
+xgboost          # for gemli machine learning inference
