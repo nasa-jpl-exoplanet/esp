@@ -116,11 +116,11 @@ class MLfit(dawgie.Algorithm):
             # allowed_filters = self.__rt.sv_as_dict()['status']['allowed_filter_names']
             # print('allowed filters in cerb.results',allowed_filters)
 
-            # only run for Arielsim; needs to have truth spectrum/params
-            for fltr in ['Ariel-sim']:
             # for fltr in self.__rt.sv_as_dict()['status'][
             #    'allowed_filter_names'
             # ]:
+            # only run for Arielsim; needs to have truth spectrum/params
+            for fltr in ['Ariel-sim']:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
 
