@@ -48,8 +48,8 @@ def plot_ML_fits_vs_truths(
 
         xlims = ax.get_xlim()
         ylims = ax.get_ylim()
-        if verbose:
-            print(' prior range for', param_name, '=', xlims)
+        # if verbose:
+        #    print(' prior range for', param_name, '=', xlims)
         vmin = min([xlims[0], ylims[0]])
         vmax = max([xlims[1], ylims[1]])
         # vmin = min(input_param_values[:, k].min(), MLfit_param_values[:, k].min())

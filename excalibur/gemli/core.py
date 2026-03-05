@@ -76,11 +76,11 @@ def mlfit(
     trgt,
     filt,
     runtime_params,
-    fin,
-    anc,
-    xsl,
-    atm,
-    spc,
+    sysfin,
+    ancillary,
+    cerbxsl,
+    cerbatmos,
+    arielsim,
     out,
     only_these_planets=None,
     verbose=False,
@@ -89,18 +89,15 @@ def mlfit(
     Plot out the results from gemli.atmos()
     trgt [INPUT]: target name
     filt [INPUT]: filter
-    fin [INPUT]: system.finalize.parameters
-    anc [INPUT]: ancillary.finalize.parameters
-    xls [INPUT]: cerberus.xslib.data
-    atm [INPUT]: cerberus.atmos.data
-    spectrum [INPUT]: ariel.simspectrum.parameters
+    sysfin [INPUT]: system.finalize.parameters
+    ancillary [INPUT]: ancillary.finalize.parameters
+    cerbxls [INPUT]: cerberus.xslib.data
+    cerbatm [INPUT]: cerberus.atmos.data
+    arielsim [INPUT]: ariel.simspectrum.parameters
     out [INPUT/OUTPUT]
     verbose [OPTIONAL]: verbosity
     '''
     ssc = syscore.ssconstants(mks=True)
-
-    cerbatmos = atm['data']
-    cerbxsl = xsl['data']
 
     crbhzlib = {'PROFILE': []}
     hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
@@ -111,7 +108,7 @@ def mlfit(
 
     completed_at_least_one_planet = False
 
-    for p in fin['priors']['planets']:
+    for p in sysfin['priors']['planets']:
 
         # TEC,TEA params - X/H, C/O, N/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
@@ -138,12 +135,12 @@ def mlfit(
 
             # if verbose:
             #    print('Ariel-sim INPUT PARAMETERS')
-            #    print('  ', fin['priors'].keys())
-            #    print('  ', fin['priors'][p].keys())
-            #    print('  Rp', fin['priors'][p]['rp'])
-            #    print('  Mp', fin['priors'][p]['mass'])
-            #    print('  Rs', fin['priors']['R*'])
-            #    print('  ', spc['data'][p].keys())
+            #    print('  ', sysfin['priors'].keys())
+            #    print('  ', sysfin['priors'][p].keys())
+            #    print('  Rp', sysfin['priors'][p]['rp'])
+            #    print('  Mp', sysfin['priors'][p]['mass'])
+            #    print('  Rs', sysfin['priors']['R*'])
+            #    print('  ', arielsim['data'][p].keys())
             #    print()
 
             ML_param_names = [
@@ -207,28 +204,28 @@ def mlfit(
             realspectrum = True
             # realspectrum = False
             if realspectrum:
-                Rs = fin['priors']['R*']
-                Mp = fin['priors'][p]['mass']
+                Rs = sysfin['priors']['R*']
+                Mp = sysfin['priors'][p]['mass']
 
                 # oops actually which spectrum to use?
                 # maybe just use the cerberus one?
                 # but we want to do ML without cerberus, right? so use ariel-sim
 
-                # print(' uppkeys', spc['data'][p][arielModel].keys())
-                # print(' truekeys', spc['data'][p][arielModel]['true_spectrum'].keys())
-                true_spectrum = spc['data'][p][arielModel]['true_spectrum']
+                # print(' uppkeys', arielsim['data'][p][arielModel].keys())
+                # print(' truekeys', arielsim['data'][p][arielModel]['true_spectrum'].keys())
+                true_spectrum = arielsim['data'][p][arielModel]['true_spectrum']
                 # observed_spectrum = true_spectrum['fluxDepth']
                 # print('spec,err', np.mean(observed_spectrum), 0)
                 # print(' # of waves', len(observed_spectrum))
 
-                observed_spectrum = spc['data'][p][arielModel]['ES'] ** 2
+                observed_spectrum = arielsim['data'][p][arielModel]['ES'] ** 2
                 #  not used:
                 # observed_spectrum_error = (
                 #    2
-                #    * spc['data'][p][arielModel]['ES']
-                #    * spc['data'][p][arielModel]['ESerr']
+                #    * arielsim['data'][p][arielModel]['ES']
+                #    * arielsim['data'][p][arielModel]['ESerr']
                 # )
-                # print('dict check', spc['data'][p][arielModel].keys())
+                # print('dict check', arielsim['data'][p][arielModel].keys())
                 # print(
                 #    'spec,err',
                 #    np.mean(observed_spectrum),
@@ -258,8 +255,8 @@ def mlfit(
                 # Mp = MLtestsample_spectra[jtest][numwaves + 3]
                 Rs = MLtestsample_spectra[jtest][-2]
                 Mp = MLtestsample_spectra[jtest][-1]
-            if verbose:
-                print(' trying Rs,Mp = ', Rs, Mp)
+            # if verbose:
+            #    print(' trying Rs,Mp = ', Rs, Mp)
 
             # pred = predict_params_from_spectrum(
             #     fluxDepth_ex, Rs, Mp, models, scaler, ML_param_names
@@ -334,20 +331,20 @@ def mlfit(
                     ML_mixratio[param[3:]] = ML_param_results[param]
             # print('ML_mixratio for forwardmodel call', ML_mixratio)
 
-            true_spectrum = spc['data'][p][arielModel]['true_spectrum']
+            true_spectrum = arielsim['data'][p][arielModel]['true_spectrum']
             # print('true keys', true_spectrum.keys())
             truth_spectrum = {
                 'depth': true_spectrum['fluxDepth'],
                 'wavelength': true_spectrum['wavelength_um'],
             }
-            # print('obs keys', spc['data'][p][arielModel].keys())
+            # print('obs keys', arielsim['data'][p][arielModel].keys())
             transitdata = {}
-            transitdata['wavelength'] = spc['data'][p]['WB']
-            transitdata['depth'] = spc['data'][p][arielModel]['ES'] ** 2
+            transitdata['wavelength'] = arielsim['data'][p]['WB']
+            transitdata['depth'] = arielsim['data'][p][arielModel]['ES'] ** 2
             transitdata['error'] = (
                 2
-                * spc['data'][p][arielModel]['ES']
-                * spc['data'][p][arielModel]['ESerr']
+                * arielsim['data'][p][arielModel]['ES']
+                * arielsim['data'][p][arielModel]['ESerr']
             )
             transitdata = rebin_data(transitdata)
 
@@ -407,7 +404,7 @@ def mlfit(
             # print('Rp (RJup)', Rp)
             Rp = ML_param_results['Rp'] * ssc['Rjup']
             # print('Rp (cgs) for ML', Rp)
-            # Rp = fin['priors'][p]['rp'] * ssc['Rjup']
+            # Rp = sysfin['priors'][p]['rp'] * ssc['Rjup']
             # print('IGNORING ML Rp; using system.finalize prior', Rp)
 
             fmc = crbFM().crbmodel(
@@ -422,7 +419,7 @@ def mlfit(
                 xsecs=cerbxsl[p]['XSECS'],
                 qtgrid=cerbxsl[p]['QTGRID'],
                 wgrid=transitdata['wavelength'],
-                orbp=fin['priors'],
+                orbp=sysfin['priors'],
                 hzlib=crbhzlib,
                 planet=p,
                 knownspecies=runtime_params.knownspecies,
@@ -454,9 +451,9 @@ def mlfit(
             # )
             # print('average depth after  normalizing', np.average(ML_best_fit))
 
-            # print('arielsim keys', spc['data'][p][arielModel].keys())
+            # print('arielsim keys', arielsim['data'][p][arielModel].keys())
             # print('cerb keys', cerbatmos[p].keys())
-            # print('arielsim stuff', spc['data'][p][arielModel]['model_params'])
+            # print('arielsim stuff', arielsim['data'][p][arielModel]['model_params'])
             # print('cerb stuff', cerbatmos[p]['MODELPARNAMES']) TEC and TEA; XtoH,CtoO
             # print('cerb stuff', cerbatmos[p]['TRUTH_MODELPARAMS'])
             # print('cerb stuff', cerbatmos[p]['TEC'].keys()) prior_ranges MCTRACE
@@ -472,9 +469,9 @@ def mlfit(
             )
             pressure = pgrid[::-1]
             # ok I confirm that these are the same thing
-            model_params = spc['data'][p][arielModel]['model_params']
+            model_params = arielsim['data'][p][arielModel]['model_params']
             model_params = cerbatmos[p]['TRUTH_MODELPARAMS']
-            print('model_params', model_params)
+            # print('model_params', model_params)
             if 'TEA' in arielModel:
                 tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                 mixratioprofiles = crbutil.calcTEA(
@@ -521,8 +518,8 @@ def mlfit(
                 ML_param_results,
                 ML_uncertainties_systematic,
                 ML_uncertainties_instrument,
-                fin['priors'],
-                anc['data'][p],
+                sysfin['priors'],
+                ancillary['data'][p],
                 filt,
                 trgt,
                 p,
@@ -672,7 +669,7 @@ def mlfit(
                 # print('fit results; T:',tpr)
                 # print('fit results; mdplist:',mdp)
 
-                rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
+                rp0 = sysfin['priors'][p]['rp'] * ssc['Rjup']
                 # print('Rp (cgs) cerberus', rp0)
 
                 if model_name in ['TEC', 'TEA']:
@@ -749,7 +746,7 @@ def mlfit(
                     xsecs=cerbxsl[p]['XSECS'],
                     qtgrid=cerbxsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
-                    orbp=fin['priors'],
+                    orbp=sysfin['priors'],
                     hzlib=crbhzlib,
                     planet=p,
                     knownspecies=runtime_params.knownspecies,
@@ -857,7 +854,7 @@ def mlfit(
                         xsecs=cerbxsl[p]['XSECS'],
                         qtgrid=cerbxsl[p]['QTGRID'],
                         wgrid=transitdata['wavelength'],
-                        orbp=fin['priors'],
+                        orbp=sysfin['priors'],
                         hzlib=crbhzlib,
                         cheq=tceqdict,
                         planet=p,
@@ -917,8 +914,8 @@ def mlfit(
                         patmos_best_fit,
                         spectrumarray,
                         truth_spectrum,
-                        fin['priors'],
-                        anc['data'][p],
+                        sysfin['priors'],
+                        ancillary['data'][p],
                         cerbatmos[p],
                         filt,
                         model_name,
@@ -928,9 +925,9 @@ def mlfit(
                     )
                 )
 
-                if verbose:
-                    print('paramValues median  ', param_values_median)
-                    print('paramValues bestFit ', param_values_best_fit)
+                # if verbose:
+                #    print('paramValues median  ', param_values_median)
+                #    print('paramValues bestFit ', param_values_best_fit)
 
                 # _______________ML fit-vs-truth PLOT________________
                 out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(

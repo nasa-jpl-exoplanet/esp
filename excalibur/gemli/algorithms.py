@@ -116,12 +116,11 @@ class MLfit(dawgie.Algorithm):
             # allowed_filters = self.__rt.sv_as_dict()['status']['allowed_filter_names']
             # print('allowed filters in cerb.results',allowed_filters)
 
-            # just one filter, while debugging:
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-            # for fltr in ['Ariel-sim']:
-            for fltr in self.__rt.sv_as_dict()['status'][
-                'allowed_filter_names'
-            ]:
+            # for fltr in self.__rt.sv_as_dict()['status'][
+            #    'allowed_filter_names'
+            # ]:
+            # only run for Arielsim; needs to have truth spectrum/params
+            for fltr in ['Ariel-sim']:
                 # stop here if it is not a runtime target
                 self.__rt.proceed(fltr)
 
@@ -170,8 +169,8 @@ class MLfit(dawgie.Algorithm):
                     update = self._mlfit(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
-                        runtime_params,
                         only_these_planets,
+                        runtime_params,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -208,6 +207,7 @@ class MLfit(dawgie.Algorithm):
         self,
         trgt,
         fltr,
+        only_these_planets,
         runtime_params,
         fin,
         ancil,
@@ -215,9 +215,9 @@ class MLfit(dawgie.Algorithm):
         crbatmos,
         spectrum,
         index,
-        only_these_planets,
     ):
         '''Core code call'''
+
         mlfitout = gemlicore.mlfit(
             trgt,
             fltr,
