@@ -122,7 +122,7 @@ class MLfit(dawgie.Algorithm):
             # only run for Arielsim; needs to have truth spectrum/params
             for fltr in ['Ariel-sim']:
                 # stop here if it is not a runtime target
-                self.__rt.proceed(fltr)
+                # self.__rt.proceed(fltr)
 
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
