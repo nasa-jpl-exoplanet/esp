@@ -662,7 +662,7 @@ def gettau(
             frh = hzlib['PROFILE'][0][hazeprof][0]
             rh = frh(pressure)
             rh[rh < 0] = 0.0
-            haze_ref_pressure = float(pressure[rh == np.max(rh)])
+            haze_ref_pressure = float(pressure[rh == np.max(rh)].item())
             if hazeloc is None:
                 hazeshift = 0e0
             else:
