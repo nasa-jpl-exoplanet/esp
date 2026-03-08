@@ -291,15 +291,17 @@ class Analysis(dawgie.Analyzer):
         if len(aspects) == 0:
             log.warning('--< GEMLI ANALYSIS: contains no targets >--')
         else:
-            # determine which filters have results from cerb.atmos (in aspects)
+            # determine which filters have results from gemli.mlfit (in aspects)
             #  (you have to loop through all targets, since filters vary by target)
             fwr = []
+            print('looping through aspect to get filters')
             for trgt in aspects:
+                print('checking target', trgt)
                 for fltr in fltrs:
                     if (fltr not in fwr) and (
-                        'gemli.atmos.' + fltr in aspects[trgt]
+                        'gemli.mlfit.' + fltr in aspects[trgt]
                     ):
-                        # print('This filter exists in the cerb.atmos aspect:',fltr,trgt)
+                        print('This filter exists in the cerb.atmos aspect:',fltr,trgt)
                         fwr.append(fltr)
             if not fwr:
                 log.warning(
