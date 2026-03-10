@@ -1108,18 +1108,24 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         reformatMLresults = {}
         reformatMLerrors = {}
         reformatMLerrorssys = {}
-        for param in MLparams:
-            reformatMLtruths[param] = np.array(
-                [MLtruth[param] for MLtruth in MLtruths]
+        for MLparam in MLparams:
+            # truth params mixing ratio names don't start with 'mlp'
+            if MLparam.startswith('mlp'):
+                truthparam = MLparam[3:]
+            else:
+                truthparam = MLparam
+
+            reformatMLtruths[MLparam] = np.array(
+                [MLtruth[truthparam] for MLtruth in MLtruths]
             )
-            reformatMLresults[param] = np.array(
-                [MLresult[param] for MLresult in MLresults]
+            reformatMLresults[MLparam] = np.array(
+                [MLresult[MLparam] for MLresult in MLresults]
             )
-            reformatMLerrors[param] = np.array(
-                [MLerror[param] for MLerror in MLerrors]
+            reformatMLerrors[MLparam] = np.array(
+                [MLerror[MLparam] for MLerror in MLerrors]
             )
-            reformatMLerrorssys[param] = np.array(
-                [MLerrorsys[param] for MLerrorsys in MLerrorssys]
+            reformatMLerrorssys[MLparam] = np.array(
+                [MLerrorsys[MLparam] for MLerrorsys in MLerrorssys]
             )
 
         # set path for optional saving plot to disk
