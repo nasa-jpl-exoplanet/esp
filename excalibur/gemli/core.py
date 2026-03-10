@@ -1044,6 +1044,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     for targetlist in analysistargetlists:
         if verbose:
             print('  running targetlist=', targetlist['targetlistname'])
+        MLparams = []
         MLresults = []
         MLtruths = []
         MLerrors = []
@@ -1122,6 +1123,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             reformatMLerrorssys[param] = np.array(
                 [MLerrorssys[param] for MLtruth in MLtruths]
             )
+            print('MLtruth check',MLtruths[0])
+            print('MLtruth check',MLtruths[0][param])
+            print('MLtruth check',[0 for MLtruth in MLtruths])
+            print('MLtruth check',[MLtruth[param] for MLtruth in MLtruths])
 
         # set path for optional saving plot to disk
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
