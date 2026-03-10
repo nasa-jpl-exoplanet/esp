@@ -1109,14 +1109,19 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         reformatMLerrors = {}
         reformatMLerrorssys = {}
         for param in MLparams:
+            reformatMLtruths[param] = [MLtruth[param] for MLtruth in MLtruths]
             reformatMLtruths[param] = np.array(
-                [MLtruth[param] for MLtruth in MLtruths])
+                [MLtruth[param] for MLtruth in MLtruths]
+            )
             reformatMLresults[param] = np.array(
-                [MLresults[param] for MLtruth in MLtruths])
+                [MLresults[param] for MLtruth in MLtruths]
+            )
             reformatMLerrors[param] = np.array(
-                [MLerrors[param] for MLtruth in MLtruths])
+                [MLerrors[param] for MLtruth in MLtruths]
+            )
             reformatMLerrorssys[param] = np.array(
-                [MLerrorssys[param] for MLtruth in MLtruths])
+                [MLerrorssys[param] for MLtruth in MLtruths]
+            )
 
         # set path for optional saving plot to disk
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
