@@ -304,10 +304,6 @@ def plot_overallsample_fits_vs_truths(
     fit_values,
     fit_errors,
     fit_errorssys,
-    # MLtruths,
-    # MLresults,
-    # MLerrors,
-    # MLerrorssys,
     filt,
     saveDir='./',
     savetodisk=False,
@@ -327,7 +323,7 @@ def plot_overallsample_fits_vs_truths(
             truth_values[param],
             fit_values[param],
             fit_errors[param],
-            fit_errorssys[param]
+            fit_errorssys[param],
         ):
             ax.scatter(
                 truth,
@@ -345,12 +341,12 @@ def plot_overallsample_fits_vs_truths(
             )
 
         # plot equality as a dashed diagonal line
-        overallmin = min(ax.get_xlim()[0],ax.get_ylim()[0])
+        overallmin = min(ax.get_xlim()[0], ax.get_ylim()[0])
         overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
         ax.plot([-10, 10000], [-10, 10000], 'k--', lw=1, zorder=1)
-        ax.set_xlim(overallmin,overallmax)
-        ax.set_ylim(overallmin,overallmax)
-            
+        ax.set_xlim(overallmin, overallmax)
+        ax.set_ylim(overallmin, overallmax)
+
         ax.set_xlabel(param + ' truth', fontsize=14)
         ax.set_ylabel(param + ' fit', fontsize=14)
         plt.title(
