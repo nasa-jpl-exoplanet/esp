@@ -324,10 +324,10 @@ def plot_overallsample_fits_vs_truths(
         ax = figure.add_subplot(1, 2, 1)
 
         for truth, fit, error, errorsys in zip(
-                truth_values[param],
-                fit_values[param],
-                fit_errors[param],
-                fit_errorssys[param]
+            truth_values[param],
+            fit_values[param],
+            fit_errors[param],
+            fit_errorssys[param]
         ):
             ax.scatter(
                 truth,
@@ -344,23 +344,15 @@ def plot_overallsample_fits_vs_truths(
                 truth, fit, yerr=errorsys, fmt='.', color='r', lw=1, zorder=2
             )
 
+        # plot equality as a dashed diagonal line
+        overallmin = min(ax.get_xlim()[0],ax.get_ylim()[0])
+        overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
+        ax.plot([-10, 10000], [-10, 10000], 'k--', lw=1, zorder=1)
+        ax.set_xlim(overallmin,overallmax)
+        ax.set_ylim(overallmin,overallmax)
+            
         ax.set_xlabel(param + ' truth', fontsize=14)
         ax.set_ylabel(param + ' fit', fontsize=14)
-
-        xrange = ax.get_xlim()
-        # overallmin = min(ax.get_xlim()[0],ax.get_ylim()[0])
-        overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
-
-        # plot equality as a dashed diagonal line
-        ax.plot([-10, 10000], [-10, 10000], 'k--', lw=1, zorder=1)
-        if param == 'T':  # show T prior (from 0.75 to 1.5 times Teq)
-            ax.plot(
-                [-10, 10000], [-10 * 0.75, 10000 * 0.75], 'k:', lw=1, zorder=1
-            )
-            ax.plot(
-                [-10, 10000], [-10 * 1.5, 10000 * 1.5], 'k:', lw=1, zorder=1
-            )
-
         plt.title(
             param + ' retrieval for ' + str(len(fit_errors[param])) + ' planets'
         )
