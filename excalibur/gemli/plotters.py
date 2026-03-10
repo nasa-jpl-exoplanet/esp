@@ -298,3 +298,137 @@ def plot_ML_spectrumfit(
 
 
 # --------------------------------------------------------------------
+def plot_overallsample_fits_vs_truths(
+    params,
+    truth_values,
+    fit_values,
+    fit_errors,
+    fit_errorssys,
+    # MLtruths,
+    # MLresults,
+    # MLerrors,
+    # MLerrorssys,
+    filt,
+    saveDir='./',
+    savetodisk=False,
+    verbose=False,
+):
+    '''
+    Compare the retrieved values against the original inputs
+    Also (optionally) show a histogram of the uncertainty values
+    '''
+
+    plot_statevectors = []
+    for param in params:
+        figure = plt.figure(figsize=(11, 5))
+        ax = figure.add_subplot(1, 2, 1)
+
+        for truth, fit, error in zip(
+            truth_values[param], fit_values[param], fit_errors[param]
+        ):
+            clr = 'k'
+            lwid = 1
+            zord = 4
+            ptsiz = 40 / 2
+            ax.scatter(
+                truth,
+                fit,
+                facecolor=clr,
+                edgecolor=clr,
+                s=ptsiz,
+                zorder=zord + 1,
+            )
+            ax.errorbar(
+                truth, fit, yerr=error, fmt='.', color=clr, lw=lwid, zorder=zord
+            )
+
+        ax.set_xlabel(param + ' truth', fontsize=14)
+        ax.set_ylabel(param + ' fit', fontsize=14)
+
+        xrange = ax.get_xlim()
+        # overallmin = min(ax.get_xlim()[0],ax.get_ylim()[0])
+        overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
+
+        # plot equality as a dashed diagonal line
+        ax.plot([-10, 10000], [-10, 10000], 'k--', lw=1, zorder=1)
+        if param == 'T':  # show T prior (from 0.75 to 1.5 times Teq)
+            ax.plot(
+                [-10, 10000], [-10 * 0.75, 10000 * 0.75], 'k:', lw=1, zorder=1
+            )
+            ax.plot(
+                [-10, 10000], [-10 * 1.5, 10000 * 1.5], 'k:', lw=1, zorder=1
+            )
+
+        # ax.set_xlim(overallmin,overallmax)
+        # ax.set_ylim(overallmin,overallmax)
+        if 0:
+            if param == 'T':  # the prior for T varies between targets
+                ax.set_xlim(0, overallmax)
+                ax.set_ylim(0, overallmax)
+            elif param not in prior_ranges:
+                ax.set_xlim(xrange)
+                if param == '[N/O]':
+                    ax.set_ylim(-6, 6)
+                else:
+                    log.warning(
+                        '--< Cerb.analysis: Parameter missing from prior_range 2: %s >--',
+                        param,
+                    )
+            else:
+                # actually, don't use prior range for X/H and X/O on x-axis
+                # ax.set_xlim(prior_ranges[param][0],prior_ranges[param][1])
+                ax.set_xlim(xrange)
+                ax.set_ylim(prior_ranges[param][0], prior_ranges[param][1])
+
+        plt.title(
+            param + ' retrieval for ' + str(len(fit_errors[param])) + ' planets'
+        )
+
+        # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
+        ax2 = figure.add_subplot(1, 2, 2)
+
+        errors = np.array(fit_errors[param])
+        ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+        if len(errors) > 0:
+            # the histogram range has to go past the data range or you get a vertical line on the right
+            lower = errors.min() / 1.5
+            upper = errors.max() * 1.5
+            # print('uncertainty range (logged)',param,lower,upper)
+            plt.hist(
+                errors,
+                range=(lower, upper),
+                bins=1000,
+                cumulative=True,
+                density=True,
+                histtype='step',
+                color='black',
+                zorder=1,
+                label='',
+            )
+            plt.title(
+                'cumulative histogram of ' + str(len(errors)) + ' planets'
+            )
+            ax2.semilogx()
+            ax2.set_xlim(lower, upper)
+        ax2.set_ylim(0, 1)
+        ax2.set_ylabel('fraction of planets', fontsize=14)
+
+        figure.tight_layout()
+
+        if savetodisk:
+            plt.savefig(
+                saveDir
+                + 'fitVStruth_'
+                + filt
+                + '_'
+                + param.replace('/', ':')
+                + '.png'
+            )
+        plot_statevectors.append(save_plot_tosv(figure))
+        if verbose:
+            plt.show()
+        plt.close(figure)
+    return plot_statevectors
+
+
+# --------------------------------------------------------------------
