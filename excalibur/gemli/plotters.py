@@ -323,23 +323,25 @@ def plot_overallsample_fits_vs_truths(
         figure = plt.figure(figsize=(11, 5))
         ax = figure.add_subplot(1, 2, 1)
 
-        for truth, fit, error in zip(
-            truth_values[param], fit_values[param], fit_errors[param]
+        for truth, fit, error, errorsys in zip(
+                truth_values[param],
+                fit_values[param],
+                fit_errors[param],
+                fit_errorssys[param]
         ):
-            clr = 'k'
-            lwid = 1
-            zord = 4
-            ptsiz = 40 / 2
             ax.scatter(
                 truth,
                 fit,
-                facecolor=clr,
-                edgecolor=clr,
-                s=ptsiz,
-                zorder=zord + 1,
+                facecolor='k',
+                edgecolor='k',
+                s=20,
+                zorder=3,
             )
             ax.errorbar(
-                truth, fit, yerr=error, fmt='.', color=clr, lw=lwid, zorder=zord
+                truth, fit, yerr=error, fmt='.', color='k', lw=1, zorder=2
+            )
+            ax.errorbar(
+                truth, fit, yerr=errorsys, fmt='.', color='r', lw=1, zorder=2
             )
 
         ax.set_xlabel(param + ' truth', fontsize=14)
@@ -358,27 +360,6 @@ def plot_overallsample_fits_vs_truths(
             ax.plot(
                 [-10, 10000], [-10 * 1.5, 10000 * 1.5], 'k:', lw=1, zorder=1
             )
-
-        # ax.set_xlim(overallmin,overallmax)
-        # ax.set_ylim(overallmin,overallmax)
-        if 0:
-            if param == 'T':  # the prior for T varies between targets
-                ax.set_xlim(0, overallmax)
-                ax.set_ylim(0, overallmax)
-            elif param not in prior_ranges:
-                ax.set_xlim(xrange)
-                if param == '[N/O]':
-                    ax.set_ylim(-6, 6)
-                else:
-                    log.warning(
-                        '--< Cerb.analysis: Parameter missing from prior_range 2: %s >--',
-                        param,
-                    )
-            else:
-                # actually, don't use prior range for X/H and X/O on x-axis
-                # ax.set_xlim(prior_ranges[param][0],prior_ranges[param][1])
-                ax.set_xlim(xrange)
-                ax.set_ylim(prior_ranges[param][0], prior_ranges[param][1])
 
         plt.title(
             param + ' retrieval for ' + str(len(fit_errors[param])) + ' planets'
