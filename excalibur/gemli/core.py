@@ -482,6 +482,9 @@ def mlfit(
                     truth_params[molecule] = np.log10(
                         np.mean(10.0 ** mixratioprofiles[molecule])
                     )
+                # explicitly include CO2 when it's missing?
+                if 'CO2' not in truth_params:
+                    truth_params['CO2'] = -10
             else:
                 truth_params, _, _, _ = crbutil.crbce(
                     pressure,
@@ -1115,9 +1118,22 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             else:
                 truthparam = MLparam
 
-            reformatMLtruths[MLparam] = np.array(
-                [MLtruth[truthparam] for MLtruth in MLtruths]
-            )
+            # ah wait this is a little tricky.
+            # molecules don't exactly match (true has N2, but not CO2)
+            # add in some conditionals
+            if truthparam in MLtruths[0]:
+                reformatMLtruths[MLparam] = np.array(
+                    [MLtruth[truthparam] for MLtruth in MLtruths]
+                )
+            else:
+                log.warning(
+                    '>-- GEMLI.ANALYSIS: parameter %s has no truth  %s %s',
+                    truthparam,
+                    trgt,
+                    planet_letter,
+                )
+            print('param MLparam', truthparam, MLparam)
+            print('mlresult params', MLresults[0].keys())
             reformatMLresults[MLparam] = np.array(
                 [MLresult[MLparam] for MLresult in MLresults]
             )
@@ -1144,17 +1160,19 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         )
 
         # Add to SV
-        out['data']['params'] = dict(MLparams)
-        out['data']['truths'] = dict(MLtruths)
-        out['data']['values'] = dict(MLresults)
-        out['data']['errors'] = dict(MLerrors)
-        out['data']['errorssys'] = dict(MLerrorssys)
+        out['data']['params'] = MLparams
+        out['data']['truths'] = MLtruths
+        out['data']['values'] = MLresults
+        out['data']['errors'] = MLerrors
+        out['data']['errorssys'] = MLerrorssys
         for param, plot in zip(MLparams, plotarray):
             out['data']['plot_' + param] = plot
 
     out['data']['targetlistnames'] = [
         targetlist['targetlistname'] for targetlist in analysistargetlists
     ]
+
+    # print('keys in out at the end', out['data'].keys())
 
     out['STATUS'].append(True)
     return out['STATUS'][-1]

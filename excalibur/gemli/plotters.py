@@ -322,10 +322,10 @@ def plot_overallsample_fits_vs_truths(
             ax = figure.add_subplot(1, 2, 1)
 
             for truth, fit, error, errorsys in zip(
-                    truth_values[param],
-                    fit_values[param],
-                    fit_errors[param],
-                    fit_errorssys[param],
+                truth_values[param],
+                fit_values[param],
+                fit_errors[param],
+                fit_errorssys[param],
             ):
                 ax.scatter(
                     truth,
@@ -339,7 +339,13 @@ def plot_overallsample_fits_vs_truths(
                     truth, fit, yerr=error, fmt='.', color='k', lw=1, zorder=2
                 )
                 ax.errorbar(
-                    truth, fit, yerr=errorsys, fmt='.', color='r', lw=1, zorder=2
+                    truth,
+                    fit,
+                    yerr=errorsys,
+                    fmt='.',
+                    color='r',
+                    lw=1,
+                    zorder=2,
                 )
 
             # plot equality as a dashed diagonal line
@@ -352,7 +358,10 @@ def plot_overallsample_fits_vs_truths(
             ax.set_xlabel(param + ' truth', fontsize=14)
             ax.set_ylabel(param + ' fit', fontsize=14)
             plt.title(
-                param + ' retrieval for ' + str(len(fit_errors[param])) + ' planets'
+                param
+                + ' retrieval for '
+                + str(len(fit_errors[param]))
+                + ' planets'
             )
 
             # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
