@@ -1155,7 +1155,6 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             filt,
             saveDir=save_dir,
             verbose=verbose,
-            savetodisk=True,  
         )
         # verbose doesn't show plots on screen when inside a personal pipeline
         # use 'savetodisk' instead (while debugging)
