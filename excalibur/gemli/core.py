@@ -1125,10 +1125,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 )
             else:
                 log.warning(
-                    '>-- GEMLI.ANALYSIS: parameter %s has no truth  %s %s',
+                    '>-- GEMLI.ANALYSIS: parameter %s has no truth',
                     truthparam,
-                    trgt,
-                    planet_letter,
                 )
             # print('param MLparam', truthparam, MLparam)
             # print('mlresult params', MLresults[0].keys())
@@ -1158,7 +1156,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         )
         # verbose doesn't show plots on screen when inside a personal pipeline
         # use 'savetodisk' instead (while debugging)
-        #    savetodisk=True,  
+        #    savetodisk=True,
         # )
 
         # Add to SV
