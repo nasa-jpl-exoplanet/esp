@@ -934,8 +934,7 @@ def mlfit(
                     ML_param_names_forprint,
                     MLtestSample_input_params,
                     MLfit_results,
-                    # verbose=False,
-                    verbose=verbose,  # asdf
+                    verbose=verbose,
                 )
 
                 # _______________CORNER PLOT________________
@@ -1072,9 +1071,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                     trgt,
                 )
             else:
-                print(
-                    'target with valid data format for this filter:', filt, trgt
-                )
+                # print('target with valid data format for this filter:',
+                #       filt, trgt)
                 mlfit_result = aspects[trgt][svname + '.' + filt]
 
                 # verify SV succeeded for target
@@ -1132,8 +1130,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                     trgt,
                     planet_letter,
                 )
-            print('param MLparam', truthparam, MLparam)
-            print('mlresult params', MLresults[0].keys())
+            # print('param MLparam', truthparam, MLparam)
+            # print('mlresult params', MLresults[0].keys())
             reformatMLresults[MLparam] = np.array(
                 [MLresult[MLparam] for MLresult in MLresults]
             )
@@ -1157,7 +1155,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             filt,
             saveDir=save_dir,
             verbose=verbose,
+            savetodisk=True,  
         )
+        # verbose doesn't show plots on screen when inside a personal pipeline
+        # use 'savetodisk' instead (while debugging)
+        #    savetodisk=True,  
+        # )
 
         # Add to SV
         out['data']['params'] = MLparams

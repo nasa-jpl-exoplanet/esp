@@ -246,7 +246,7 @@ def plot_ML_spectrumfit(
             truthprint = 'CO$_2$ = zero'
         else:
             truthprint = ''
-            print('NOPE. no truth for param:', param)
+            # print('NOPE. no truth for param:', param)
         plt.text(
             xlims[1] + xoffset + xoffsettruth * (xlims[1] - xlims[0]),
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
@@ -333,7 +333,7 @@ def plot_overallsample_fits_vs_truths(
                     facecolor='k',
                     edgecolor='k',
                     s=20,
-                    zorder=3,
+                    zorder=4,
                 )
                 ax.errorbar(
                     truth, fit, yerr=error, fmt='.', color='k', lw=1, zorder=2
@@ -343,9 +343,9 @@ def plot_overallsample_fits_vs_truths(
                     fit,
                     yerr=errorsys,
                     fmt='.',
-                    color='r',
+                    color='b',
                     lw=1,
-                    zorder=2,
+                    zorder=3,
                 )
 
             # plot equality as a dashed diagonal line
