@@ -436,7 +436,7 @@ def flaredetection(
     '''
     find flares in a whitelight phasecurve
     '''
-    flare_results = detect_flares(
+    flare_results, flare_plot = detect_flares(
         whitelight=whitelight,
         fin=fin,
         fltr=fltr,
@@ -446,6 +446,16 @@ def flaredetection(
         show_plots=True,
     )
 
-    out['data'] = flare_results
+    # for p in self['data'].keys():
+    #    for ivisit in range(len(self['data'][p])):
+
+    # need to loop over planets and loop over visits
+
+    planetletter = 'b'
+    out['data'][planetletter] = {}
+    # out['data'][planetletter].append({})
+    out['data'][planetletter]['flare_results'] = flare_results
+    out['data'][planetletter]['plot_lightcurve'] = flare_plot
+
     out['STATUS'].append(True)
     return bool(flare_results)
