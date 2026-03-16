@@ -15,10 +15,8 @@ import excalibur.transit.core as trncore
 import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
 from excalibur.util.plotters import (
     save_plot_myfit,
-    save_plot_tosv,
     plot_residual_fft,
 )
-from excalibur.phasecurve.plotters import plot_phasecurve
 from excalibur.phasecurve.flare_det import detect_flares
 
 from collections import namedtuple
@@ -429,7 +427,6 @@ def flaredetection(
     out,
     fltr,
     target=None,
-    rid=9999,
     stellar_params=None,
     verbose=False,
 ):
@@ -441,9 +438,8 @@ def flaredetection(
         fin=fin,
         fltr=fltr,
         target=target,
-        rid=rid,
         stellar_params=stellar_params,
-        show_plots=True,
+        show_plots=verbose,
     )
 
     # for p in self['data'].keys():

@@ -54,9 +54,8 @@ def get_transits(
     dir: str | None,
     whitelight: dict,
     target: str,
-    rid: int,
-    verify: bool = False,
     priors: dict,
+    verify: bool = False,
 ) -> dict:
     """
     Creates a JSON file of transit timestamps across all visits for each planet in target star.
@@ -67,7 +66,6 @@ def get_transits(
                          Retrieved by retrieving value for 'data' key, resulting in each planet mapped to its visits.
                          Eg. whitelight = {'b': [visit1, visit2, ...], 'c': [visit1, visit2, ...], ...}
     - target (str): Name of target star.
-    - rid (int): Run ID of whitelight.
     - verify (bool): If True, saves images for each planet's visits in a subdirectory in dir with shaded transits to verify timestamps.
     - priors (dict): prior system info
 
@@ -313,7 +311,6 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     Fit Mendoza 2022's model to the given flare,
     sampling parameters peak time, full width at half-maximum, and amplitude.
     """
-    verbose = True
 
     # --< MODEL >--
     def mycall(tpeak=np.float128, fwhm=np.float128, ampl=np.float128):

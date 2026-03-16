@@ -1,3 +1,10 @@
+'''phasecurve core ds'''
+
+# Heritage code shame:
+# pylint: disable=invalid-name
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements
+
+# -- IMPORTS -- ------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -112,7 +119,6 @@ def detect_flares(
     fin,
     fltr,
     target=None,
-    rid=9999,
     stellar_params=None,
     show_plots=True,
     verify_transits=False,
@@ -128,9 +134,8 @@ def detect_flares(
         dir=None,
         whitelight=whitelight_data,
         target=target_name,
-        rid=rid,
-        verify=verify_transits,
         priors=priors,
+        verify=verify_transits,
     )
 
     quiescent_luminosity = None
