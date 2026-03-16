@@ -6,7 +6,9 @@ from altaipony.fakeflares import flare_model_mendoza2022 as model
 
 from excalibur.util import elca
 
-from .flare_det_utils import (
+from excalibur.util.plotters import save_plot_tosv
+
+from excalibur.phasecurve.flare_det_utils import (
     fit_flare_model,
     get_area_under_lc,
     get_flare_times,
@@ -14,7 +16,6 @@ from .flare_det_utils import (
     plot_params,
     plot_threshold,
 )
-
 
 PC_TO_M = 3.08567758149e16
 C_LIGHT = 2.99792458e8
@@ -63,7 +64,10 @@ def _normalize_priors(fin):
 
 
 def _resolve_distance_pc(priors, stellar_params):
-    if stellar_params is not None and stellar_params.get('distance_pc') is not None:
+    if (
+        stellar_params is not None
+        and stellar_params.get('distance_pc') is not None
+    ):
         return stellar_params['distance_pc']
     return priors.get('dist')
 
@@ -151,7 +155,9 @@ def detect_flares(
                 params.get('distance_pc') is None
                 and priors.get('dist') is not None
             ):
-                print(f'Using distance from system priors: {distance_pc:.3f} pc')
+                print(
+                    f'Using distance from system priors: {distance_pc:.3f} pc'
+                )
             if flux_estimated:
                 print(
                     'Estimated flux_density_mjy from priors '
@@ -169,10 +175,7 @@ def detect_flares(
                 'Using bandpass: '
                 f'lambda_c={lambda_c_m:.3e} m, bandwidth={bandwidth_m:.3e} m'
             )
-            print(
-                'Band quiescent luminosity: '
-                f'{quiescent_luminosity:.2e} W'
-            )
+            print('Band quiescent luminosity: ' f'{quiescent_luminosity:.2e} W')
     else:
         print(
             'Absolute luminosity/energy not computed: '
@@ -188,9 +191,7 @@ def detect_flares(
 
         for idx, thisvisit in enumerate(visits_list):
             print('-----------------------------------------------------')
-            print(
-                f'Planet {planet} visit {idx} in {target_name} ({fltr})'
-            )
+            print(f'Planet {planet} visit {idx} in {target_name} ({fltr})')
             print('-----------------------------------------------------')
 
             base_time = thisvisit['time'][0]
@@ -207,7 +208,9 @@ def detect_flares(
             )
             flc = FlareLightCurve(time=bt, flux=bf, flux_err=bstds)
             flcd = flc.detrend('savgol')
-            ft = np.asarray(flcd.time.jd if len(bt) != len(flcd.time.jd) else bt)
+            ft = np.asarray(
+                flcd.time.jd if len(bt) != len(flcd.time.jd) else bt
+            )
             ff = np.asarray(flcd.detrended_flux)
             fstds = np.asarray(flcd.detrended_flux_err)
             med = np.asarray(flcd.it_med)
@@ -251,7 +254,9 @@ def detect_flares(
             for index, (start, stop) in enumerate(
                 zip(flares['tstart'], flares['tstop'])
             ):
-                print(f'Fitting flare {index} from {start:.6f} to {stop:.6f}...')
+                print(
+                    f'Fitting flare {index} from {start:.6f} to {stop:.6f}...'
+                )
 
                 buf = 0.01
                 start_buf = start - buf
@@ -308,9 +313,7 @@ def detect_flares(
                     f'  Observed duration: {obs_duration_days:.4f} days '
                     f'({obs_duration_min:.1f} min)'
                 )
-                print(
-                    f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)'
-                )
+                print(f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)')
 
                 model_ax.plot(masked_time, masked_flux, label='Data')
                 model_ax.plot(masked_time, fin_flux, label='Model')
@@ -381,7 +384,9 @@ def detect_flares(
                     e_bol_ergs = e_band_ergs * c_bol
                     peak_flare_luminosity = ampl * quiescent_luminosity
                     flare_data['quiescent_luminosity_w'] = quiescent_luminosity
-                    flare_data['peak_flare_luminosity_w'] = peak_flare_luminosity
+                    flare_data['peak_flare_luminosity_w'] = (
+                        peak_flare_luminosity
+                    )
                     flare_data['E_band_ergs'] = e_band_ergs
                     flare_data['E_bol_ergs'] = e_bol_ergs
                     print(
@@ -402,7 +407,9 @@ def detect_flares(
                         '  Absolute luminosity/energy not computed: '
                         'stellar_params not provided.'
                     )
-                    caption_lines.append('Absolute luminosity/energy not computed')
+                    caption_lines.append(
+                        'Absolute luminosity/energy not computed'
+                    )
 
                 res_ax.text(
                     start_buf + 0.001,
@@ -434,4 +441,6 @@ def detect_flares(
         if show_plots:
             plt.show()
 
-    return results
+    savedFigure = save_plot_tosv(all_flares_fig)
+
+    return results, savedFigure
