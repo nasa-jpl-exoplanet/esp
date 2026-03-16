@@ -94,6 +94,12 @@ def plot_spectrum(
         zorder=2,
     )
     plt.ylim(yrange)
+    if plottype == 'Ariel':
+        plt.xlim(0.0, 8.0)
+    else:
+        xlims = plt.xlim()
+        plt.xlim(0.0, xlims[1])
+    xlims = plt.xlim()
 
     # calculate the baseline and total range
     #  use this to omit molecules that are not contributing
@@ -108,7 +114,7 @@ def plot_spectrum(
     if plottype == 'Ariel':
         negligibletextloc = 6.8
     else:
-        negligibletextloc = 0.95
+        negligibletextloc = xlims[1] * 0.85
     for imole, molecule in enumerate(molecules):
         colorlist = [
             'red',
@@ -167,9 +173,10 @@ def plot_spectrum(
     if plottype == 'Ariel':
         plt.xlim(0.0, 8.0)
     else:
-        # legend doesn't come up without this? huh?
-        plt.xlim(0.3, 1.1)  # this doesnt work (no legend)
-        # plt.xlim(0.0, 8.0)  # this works (huh?!)
+        # plt.xlim(0.3, 1.1)
+        xlims = plt.xlim()
+        plt.xlim(0.0, xlims[1])
+
     plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
     # add a scale-height-normalized flux scale on the right axis
@@ -322,16 +329,19 @@ def plot_spectrum_topmolecules(
             lw=2,
             zorder=2,
         )
+        moleculetextloc = wavelengthedge_high[-1] * 1.03
         plt.text(
-            7.9,
+            moleculetextloc,
             moleculeYpos[imole],
             thisMolecule,
             color=moleculeColor,
             fontsize=12,
             verticalalignment='center',
         )
-    if plottype == 'Ariel':
-        plt.xlim(0, 8.5)
+    # if plottype == 'Ariel':
+    #     plt.xlim(0, 8.5)
+    xlims = plt.xlim()
+    plt.xlim(0, xlims[1] * 1.08)
     plt.ylim(yrange[0], nextMoleculeYpos)
     # plt.legend(loc='center left', bbox_to_anchor=(1.16, 0.48))
 
