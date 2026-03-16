@@ -1,4 +1,4 @@
-'''phasecurve core ds'''
+'''phasecurve flare_det ds'''
 
 # Heritage code shame:
 # pylint: disable=invalid-name
@@ -120,8 +120,7 @@ def detect_flares(
     fltr,
     target=None,
     stellar_params=None,
-    show_plots=True,
-    verify_transits=False,
+    verbose=False,
 ):
     '''
     Detect and characterize flares in Spitzer phase-curve white-light data.
@@ -131,11 +130,8 @@ def detect_flares(
     target_name = _coerce_target_name(target, whitelight)
 
     transits = get_transits(
-        dir=None,
         whitelight=whitelight_data,
-        target=target_name,
         priors=priors,
-        verify=verify_transits,
     )
 
     quiescent_luminosity = None
@@ -164,11 +160,12 @@ def detect_flares(
                     f'Using distance from system priors: {distance_pc:.3f} pc'
                 )
             if flux_estimated:
-                print(
-                    'Estimated flux_density_mjy from priors '
-                    f'(Kmag={priors.get("Kmag")}, T*={priors.get("T*")} K): '
-                    f'{flux_density_mjy:.3f} mJy'
-                )
+                if verbose:
+                    print(
+                        'Estimated flux_density_mjy from priors '
+                        f'(Kmag={priors.get("Kmag")}, T*={priors.get("T*")} K): '
+                        f'{flux_density_mjy:.3f} mJy'
+                    )
             quiescent_luminosity = calculate_quiescent_luminosity(
                 flux_density_mjy=flux_density_mjy,
                 distance_pc=distance_pc,
@@ -176,11 +173,12 @@ def detect_flares(
                 bandwidth_m=bandwidth_m,
             )
             c_bol = params.get('c_bol', 100.0)
-            print(
-                'Using bandpass: '
-                f'lambda_c={lambda_c_m:.3e} m, bandwidth={bandwidth_m:.3e} m'
-            )
-            print('Band quiescent luminosity: ' f'{quiescent_luminosity:.2e} W')
+            if verbose:
+                print(
+                    'Using bandpass: '
+                    f'lambda_c={lambda_c_m:.3e} m, bandwidth={bandwidth_m:.3e} m'
+                )
+                print('Band quiescent luminosity: ' f'{quiescent_luminosity:.2e} W')
     else:
         print(
             'Absolute luminosity/energy not computed: '
@@ -195,9 +193,10 @@ def detect_flares(
         results[planet] = []
 
         for idx, thisvisit in enumerate(visits_list):
-            print('-----------------------------------------------------')
-            print(f'Planet {planet} visit {idx} in {target_name} ({fltr})')
-            print('-----------------------------------------------------')
+            if verbose:
+                print('-----------------------------------------------------')
+                print(f'Planet {planet} visit {idx} in {target_name} ({fltr})')
+                print('-----------------------------------------------------')
 
             base_time = thisvisit['time'][0]
             time = np.array(thisvisit['time']) - base_time
@@ -227,7 +226,8 @@ def detect_flares(
             if visit_transits.size:
                 visit_transits = visit_transits - base_time
 
-            print('Finding flares...')
+            if verbose:
+                print('Finding flares...')
             flares, isflares, threshold = get_flare_times(
                 bt=ft,
                 flcd=flcd,
@@ -254,14 +254,16 @@ def detect_flares(
 
             flare_results = []
             nflares = len(flares['tstart'])
-            print(f'Detected {nflares} flare(s) for {planet} visit {idx}')
+            if verbose:
+                print(f'Detected {nflares} flare(s) for {planet} visit {idx}')
 
             for index, (start, stop) in enumerate(
                 zip(flares['tstart'], flares['tstop'])
             ):
-                print(
-                    f'Fitting flare {index} from {start:.6f} to {stop:.6f}...'
-                )
+                if verbose:
+                    print(
+                        f'Fitting flare {index} from {start:.6f} to {stop:.6f}...'
+                    )
 
                 buf = 0.01
                 start_buf = start - buf
@@ -314,11 +316,12 @@ def detect_flares(
                 )
 
                 fwhm_min = fwhm * MIN_PER_DAY
-                print(
-                    f'  Observed duration: {obs_duration_days:.4f} days '
-                    f'({obs_duration_min:.1f} min)'
-                )
-                print(f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)')
+                if verbose:
+                    print(
+                        f'  Observed duration: {obs_duration_days:.4f} days '
+                        f'({obs_duration_min:.1f} min)'
+                    )
+                    print(f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)')
 
                 model_ax.plot(masked_time, masked_flux, label='Data')
                 model_ax.plot(masked_time, fin_flux, label='Model')
@@ -368,7 +371,8 @@ def detect_flares(
                     f'Integrated Area: {area:.2f} +/- {error:.2f}',
                     f'Equivalent Duration: {ed_seconds:.2f} s',
                 ]
-                print(f' Equivalent duration: {ed_seconds:.2f} s')
+                if verbose:
+                    print(f' Equivalent duration: {ed_seconds:.2f} s')
 
                 flare_data = {
                     'start': start + base_time,
@@ -394,12 +398,13 @@ def detect_flares(
                     )
                     flare_data['E_band_ergs'] = e_band_ergs
                     flare_data['E_bol_ergs'] = e_bol_ergs
-                    print(
-                        '  Peak flare luminosity in band: '
-                        f'{peak_flare_luminosity:.2e} W'
-                    )
-                    print(f'  E_band ({fltr}): {e_band_ergs:.2e} ergs')
-                    print(f'  E_bol (C_bol={c_bol:.1f}): {e_bol_ergs:.2e} ergs')
+                    if verbose:
+                        print(
+                            '  Peak flare luminosity in band: '
+                            f'{peak_flare_luminosity:.2e} W'
+                        )
+                        print(f'  E_band ({fltr}): {e_band_ergs:.2e} ergs')
+                        print(f'  E_bol (C_bol={c_bol:.1f}): {e_bol_ergs:.2e} ergs')
                     caption_lines.append(
                         f'Peak flare L: {peak_flare_luminosity:.2e} W'
                     )
@@ -436,16 +441,22 @@ def detect_flares(
                     'flares': flare_results,
                 }
             )
-            print()
+            if verbose:
+                print()
 
+    print('any figures?', any_figures)
+    print('show plots?', verbose)
     if any_figures:
         all_flares_ax.set_title(f'All flares in {target_name} ({fltr})')
         all_flares_ax.set_xlabel('Relative Time [days]')
         all_flares_ax.set_ylabel('Relative Flux')
         all_flares_ax.legend()
-        if show_plots:
+        if verbose:
+            print('YEAH ITS SHOWING!!')
             plt.show()
 
     savedFigure = save_plot_tosv(all_flares_fig)
+
+    print('results', results)
 
     return results, savedFigure

@@ -439,7 +439,7 @@ def flaredetection(
         fltr=fltr,
         target=target,
         stellar_params=stellar_params,
-        show_plots=verbose,
+        verbose=verbose,
     )
 
     # for p in self['data'].keys():

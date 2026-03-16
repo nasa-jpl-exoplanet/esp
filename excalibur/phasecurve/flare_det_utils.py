@@ -1,5 +1,12 @@
+'''phasecurve flare_det_utils ds'''
+
+# Heritage code shame:
+# pylint: disable=invalid-name
+# pylint: disable=too-many-locals,too-many-statements,too-many-positional-arguments,too-many-branches
+
+# -- IMPORTS -- ------------------------------------------------------
 import numpy as np
-import scipy.integrate as integrate
+from scipy import  integrate
 from collections import defaultdict
 import os, json
 
@@ -44,42 +51,22 @@ import excalibur.system.core as syscore
 
 #     return flares, all_isflare, N1_arr
 
-
-import numpy as np
-
-import os, pickle
-
-
 def get_transits(
-    dir: str | None,
     whitelight: dict,
-    target: str,
     priors: dict,
-    verify: bool = False,
 ) -> dict:
     """
     Creates a JSON file of transit timestamps across all visits for each planet in target star.
 
     Parameters:
-    - dir (str): Directory path where transit file will be saved.
     - whitelight (dict): Data loaded from pipeline for target star.
                          Retrieved by retrieving value for 'data' key, resulting in each planet mapped to its visits.
                          Eg. whitelight = {'b': [visit1, visit2, ...], 'c': [visit1, visit2, ...], ...}
-    - target (str): Name of target star.
-    - verify (bool): If True, saves images for each planet's visits in a subdirectory in dir with shaded transits to verify timestamps.
     - priors (dict): prior system info
 
     Returns:
     - (str) Path of created transit file
     """
-    if verify and dir is None:
-        raise ValueError('verify=True requires an output directory')
-
-    if verify:
-        os.makedirs(dir, exist_ok=True)
-        img_dir = os.path.join(dir, "images")
-        os.makedirs(img_dir, exist_ok=True)
-        print(f"Verify transits turned ON: storing images in {img_dir}")
 
     ssc = syscore.ssconstants()
     planets = whitelight.keys()
@@ -168,37 +155,28 @@ def get_transits(
                     t_start, t_stop = time[start], time[stop]
                     all_transits[planet][idx].append((t_start, t_stop))
 
-            if verify:
-                # plot light curve smoothed with 5-min bins
-                plt.figure(figsize=(12, 5))
-                plt.plot(time, fluxd)
-
-                # shade transits
-                for p, transit_list in transits.items():
-                    for start, stop in transit_list:
-                        t_start, t_stop = time[start], time[stop]
-                        plt.axvspan(t_start, t_stop, color='red', alpha=0.3)
-
-                plt.xlabel(f"Time -{thisvisit['time'][0]} [day]")
-                plt.ylabel('5-min Relative Flux')
-                plt.title(
-                    f"Smoothed light curve of visit {idx} to planet {planet}"
-                )
-                plt.savefig(
-                    os.path.join(img_dir, f"planet_{planet}_visit_{idx}.png")
-                )
+            # if verify:
+            #    # plot light curve smoothed with 5-min bins
+            #    plt.figure(figsize=(12, 5))
+            #    plt.plot(time, fluxd)
+            #    # shade transits
+            #    for p, transit_list in transits.items():
+            #        for start, stop in transit_list:
+            #            t_start, t_stop = time[start], time[stop]
+            #            plt.axvspan(t_start, t_stop, color='red', alpha=0.3)
+            #    plt.xlabel(f"Time -{thisvisit['time'][0]} [day]")
+            #    plt.ylabel('5-min Relative Flux')
+            #    plt.title(
+            #        f"Smoothed light curve of visit {idx} to planet {planet}"
+            #    )
+            #    # plt.savefig(
+            #    #    os.path.join(img_dir, f"planet_{planet}_visit_{idx}.png")
+            #    # )
 
     plain_transits = {
         planet: {idx: windows for idx, windows in visits.items()}
         for planet, visits in all_transits.items()
     }
-
-    if dir is not None:
-        os.makedirs(dir, exist_ok=True)
-        transits_path = os.path.join(dir, "transits.json")
-        with open(transits_path, 'w') as f:
-            json.dump(plain_transits, f, indent=4)
-        print(f"Saved transit windows to {transits_path}")
 
     return plain_transits
 
@@ -343,8 +321,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     # --< PYMC THINGS >--
     def LL(arg1):  # log likelihood
         fwm = mycall(*arg1)
-        norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(sigma)
-        out = -(((data - fwm) / sigma) ** 2) / 2e0 - norm
+        norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(pymcsigma)
+        out = -(((data - fwm) / pymcsigma) ** 2) / 2e0 - norm
         return out
 
     class faketensor(pg.Op):
@@ -374,12 +352,12 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     # ndata = int(1e4)
     # global xdata
     # xdata = np.arange(ndata)
-    global sigma
-    sigma = masked_err
-    # sigma = np.array(thisvisit['err'][mask])
-    # sigma = np.std(masked_flux[-500:])
-    # sigma = 1e-1
-    # noise = sigma*np.random.normal(size=ndata)
+    global pymcsigma
+    pymcsigma = masked_err
+    # pymcsigma = np.array(thisvisit['err'][mask])
+    # pymcsigma = np.std(masked_flux[-500:])
+    # pymcsigma = 1e-1
+    # noise = pymcsigma*np.random.normal(size=ndata)
     global data
     # data = xdata*5e-1 + 5e-1 + noise
     data = masked_flux
