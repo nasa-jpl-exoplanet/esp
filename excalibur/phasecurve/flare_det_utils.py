@@ -14,6 +14,7 @@ from excalibur.util import elca
 from excalibur.system import algorithms as sysalg
 from excalibur.util.time import time2z
 import excalibur.system.core as syscore
+
 # from .notebook_utils import *
 
 # from esp.excalibur.util import elca
@@ -48,40 +49,6 @@ import numpy as np
 
 import os, pickle
 
-import os, pickle, glob, fnmatch
-
-def load_pickled_sv(target, rid, type, prod, filter, cornichonpath):
-    """
-    Returns (obj, path) for the requested SV pickle.
-    Tries exact paths, then recursive search, with helpful diagnostics.
-    """
-    # 1) Try exact common names
-    candidates = [
-        os.path.join(cornichonpath, f"{target}.{rid}.{type}.{prod}.{filter}.pickle"),
-        os.path.join(cornichonpath, f"{target}.{rid}.{type}.{prod}.{filter}.pkl"),
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            with open(p, "rb") as f:
-                return pickle.load(f), p
-
-    # 2) Recursive search
-    pattern = f"{target}.{rid}.{type}.{prod}.{filter}.pick*"
-    for root, _, files in os.walk(cornichonpath):
-        for name in files:
-            if fnmatch.fnmatch(name, pattern):
-                p = os.path.join(root, name)
-                with open(p, "rb") as f:
-                    return pickle.load(f), p
-
-    # 3) Diagnostics: show close matches
-    nearby = sorted(glob.glob(os.path.join(cornichonpath, f"{target}.{rid}.{type}.*.pick*")))
-    raise FileNotFoundError(
-        f"Could not find {pattern} under {cornichonpath}.\n"
-        f"Nearby files:\n- " + "\n- ".join(os.path.basename(x) for x in nearby)
-    )
-
-
 
 def get_transits(
     dir: str | None,
@@ -89,7 +56,7 @@ def get_transits(
     target: str,
     rid: int,
     verify: bool = False,
-    priors: dict | None = None,
+    priors: dict,
 ) -> dict:
     """
     Creates a JSON file of transit timestamps across all visits for each planet in target star.
@@ -101,9 +68,8 @@ def get_transits(
                          Eg. whitelight = {'b': [visit1, visit2, ...], 'c': [visit1, visit2, ...], ...}
     - target (str): Name of target star.
     - rid (int): Run ID of whitelight.
-    - verify (bool): If True, saves images for each planet's visits in a subdirectory in dir with shaded transits
-                     to verify timestamps.
-    - priors (dict|None): If provided, use these priors and DO NOT call loadtarget().
+    - verify (bool): If True, saves images for each planet's visits in a subdirectory in dir with shaded transits to verify timestamps.
+    - priors (dict): prior system info
 
     Returns:
     - (str) Path of created transit file
@@ -116,18 +82,6 @@ def get_transits(
         img_dir = os.path.join(dir, "images")
         os.makedirs(img_dir, exist_ok=True)
         print(f"Verify transits turned ON: storing images in {img_dir}")
-
-    # Get priors for planets
-    if priors is None:
-        print("No priors passed in; loading priors via loadtarget()...")
-        sv_type = 'system'
-        prod = 'Finalize'
-        filt = 'parameters'
-        # NOTE: set cornichonpath to your actual pickled SV root if different from `dir`
-        norm_sv = loadtarget(target, rid, sv_type, prod, filt, fromdatabase=False, cornichonpath=dir)
-        priors = norm_sv['priors']
-    else:
-        print("Using priors passed to get_transits().")
 
     ssc = syscore.ssconstants()
     planets = whitelight.keys()
@@ -160,21 +114,16 @@ def get_transits(
                 period = planet_priors['period']
                 ecc = planet_priors['ecc']
 
-                z, sft = time2z(
-                    time,
-                    inclination,
-                    tknot,
-                    sma,
-                    period,
-                    ecc
-                )
+                z, sft = time2z(time, inclination, tknot, sma, period, ecc)
 
                 z_dict[p] = z
                 sft_dict[p] = sft
 
             # find timestamps where transit/eclipse occurs
             s_rad = priors['R*']
-            rjup_to_rsun = 69911 / 695700  # Jupiter mean radius [km] / Sun mean radius [km]
+            rjup_to_rsun = (
+                69911 / 695700
+            )  # Jupiter mean radius [km] / Sun mean radius [km]
 
             # find indices where planet is transiting/eclipsing
             timestamps = defaultdict(list)
@@ -183,7 +132,9 @@ def get_transits(
                 p_rad = priors[p]['rp']
                 z_lim = 1 + p_rad / s_rad * rjup_to_rsun
 
-                mask = (np.array(z_planet) <= z_lim) & (np.array(z_planet) >= -z_lim)
+                mask = (np.array(z_planet) <= z_lim) & (
+                    np.array(z_planet) >= -z_lim
+                )
                 timestamps[p] = list(np.where(mask)[0])
 
             # extract start and stop indices of transits/eclipses
@@ -204,7 +155,10 @@ def get_transits(
             for p, limits_p in limits.items():
                 for i in range(0, len(limits_p), 2):
                     lim_start, lim_stop = limits_p[i], limits_p[i + 1]
-                    sft_start, sft_stop = sft_dict[p][lim_start], sft_dict[p][lim_stop]
+                    sft_start, sft_stop = (
+                        sft_dict[p][lim_start],
+                        sft_dict[p][lim_stop],
+                    )
 
                     # sft crosses 0 from negative to positive for transits
                     if sft_start < 0 and sft_stop > 0:
@@ -229,8 +183,12 @@ def get_transits(
 
                 plt.xlabel(f"Time -{thisvisit['time'][0]} [day]")
                 plt.ylabel('5-min Relative Flux')
-                plt.title(f"Smoothed light curve of visit {idx} to planet {planet}")
-                plt.savefig(os.path.join(img_dir, f"planet_{planet}_visit_{idx}.png"))
+                plt.title(
+                    f"Smoothed light curve of visit {idx} to planet {planet}"
+                )
+                plt.savefig(
+                    os.path.join(img_dir, f"planet_{planet}_visit_{idx}.png")
+                )
 
     plain_transits = {
         planet: {idx: windows for idx, windows in visits.items()}
@@ -259,14 +217,13 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 
     # Scale sigma in transit windows so it emulates N1 -> N1+diff
     # (since thresholds compare T1 > N1, raising sigma tightens detection equivalently)
-    scale = (N1 + diff) / max(N1, 1)   # avoid division by zero
+    scale = (N1 + diff) / max(N1, 1)  # avoid division by zero
     sigma_adj = sigma.copy()
     sigma_adj[transit_mask] *= scale
 
     # Call find_flares with scalar N1, N2; sigma carries the local tightening
     res = flcd.find_flares(
-        N1=N1, N2=N2, N3=N3, sigma=sigma_adj,
-        addtail=True, tailthreshdiff=1
+        N1=N1, N2=N2, N3=N3, sigma=sigma_adj, addtail=True, tailthreshdiff=1
     )
 
     # Normalize return style:
@@ -288,38 +245,48 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
     if flares_tbl is not None:
         try:
             # pandas DataFrame already?
-            if hasattr(flares_tbl, "columns") and ("tstart" in flares_tbl.columns) and ("tstop" in flares_tbl.columns):
+            if (
+                hasattr(flares_tbl, "columns")
+                and ("tstart" in flares_tbl.columns)
+                and ("tstop" in flares_tbl.columns)
+            ):
                 flares_df = flares_tbl.sort_values(by="tstart", ascending=True)
                 tstart = np.asarray(flares_df["tstart"].values, dtype=float)
-                tstop  = np.asarray(flares_df["tstop"].values,  dtype=float)
+                tstop = np.asarray(flares_df["tstop"].values, dtype=float)
             # astropy Table
-            elif hasattr(flares_tbl, "colnames") and ("tstart" in flares_tbl.colnames) and ("tstop" in flares_tbl.colnames):
+            elif (
+                hasattr(flares_tbl, "colnames")
+                and ("tstart" in flares_tbl.colnames)
+                and ("tstop" in flares_tbl.colnames)
+            ):
                 # try to_pandas if present; otherwise read columns directly
                 try:
                     flares_df = flares_tbl.to_pandas()
-                    flares_df = flares_df.sort_values(by="tstart", ascending=True)
+                    flares_df = flares_df.sort_values(
+                        by="tstart", ascending=True
+                    )
                     tstart = np.asarray(flares_df["tstart"].values, dtype=float)
-                    tstop  = np.asarray(flares_df["tstop"].values,  dtype=float)
+                    tstop = np.asarray(flares_df["tstop"].values, dtype=float)
                 except Exception:
                     tstart = np.asarray(flares_tbl["tstart"], dtype=float)
-                    tstop  = np.asarray(flares_tbl["tstop"],  dtype=float)
+                    tstop = np.asarray(flares_tbl["tstop"], dtype=float)
                     if tstart.size:
                         order = np.argsort(tstart)
                         tstart, tstop = tstart[order], tstop[order]
             else:
                 tstart = np.array([], dtype=float)
-                tstop  = np.array([], dtype=float)
+                tstop = np.array([], dtype=float)
         except Exception:
             tstart = np.array([], dtype=float)
-            tstop  = np.array([], dtype=float)
+            tstop = np.array([], dtype=float)
     else:
         tstart = np.array([], dtype=float)
-        tstop  = np.array([], dtype=float)
+        tstop = np.array([], dtype=float)
 
     # Pack into dict
     if tstart.size:
         flares_dict["tstart"] = tstart.tolist()
-        flares_dict["tstop"]  = tstop.tolist()
+        flares_dict["tstop"] = tstop.tolist()
 
     # --- build boolean mask aligned to bt for plotting ---
     isflares_mask = np.zeros_like(bt, dtype=bool)
@@ -333,42 +300,51 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
     return flares_dict, isflares_mask, threshold
 
 
-
 def get_area_under_lc(model, tpeak, fwhm, ampl, start, stop):
-    """ Computes area under the flare model with integration. """
-    area, error = integrate.quad(lambda t: model(t, tpeak=tpeak, fwhm=fwhm, ampl=ampl), start, stop)
+    """Computes area under the flare model with integration."""
+    area, error = integrate.quad(
+        lambda t: model(t, tpeak=tpeak, fwhm=fwhm, ampl=ampl), start, stop
+    )
     return area, error
+
 
 def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     """
-        Fit Mendoza 2022's model to the given flare,
-        sampling parameters peak time, full width at half-maximum, and amplitude. 
+    Fit Mendoza 2022's model to the given flare,
+    sampling parameters peak time, full width at half-maximum, and amplitude.
     """
     verbose = True
 
     # --< MODEL >--
     def mycall(tpeak=np.float128, fwhm=np.float128, ampl=np.float128):
-        params = {'tpeak':tpeak, 'fwhm':fwhm, 'ampl':ampl} # parameters to be retrieved
-        out = myfavRT(params) # model
+        params = {
+            'tpeak': tpeak,
+            'fwhm': fwhm,
+            'ampl': ampl,
+        }  # parameters to be retrieved
+        out = myfavRT(params)  # model
         return out
 
-    def myfavRT(arg={'tpeak':np.float128, 'fwhm':np.float128, 'ampl':np.float128}): # RT = relative transfer
+    def myfavRT(
+        arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
+    ):  # RT = relative transfer
         """
-            A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
-            and can be parameterized by three parameters: center time (tpeak), FWHM, and ampitude
+        A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
+        and can be parameterized by three parameters: center time (tpeak), FWHM, and ampitude
         """
         tpeak = arg['tpeak']
         fwhm = arg['fwhm']
         ampl = arg['ampl']
-        
+
         # out = arg['a'] * xdata + arg['b']
         # out = gauss(t=masked_time, tpeak=tpeak, dur=fwhm, ampl=ampl)
         out = model(t=masked_time, tpeak=tpeak, fwhm=fwhm, ampl=ampl)
         return out
+
     # --< >--
 
     # --< PYMC THINGS >--
-    def LL(arg1): # log likelihood
+    def LL(arg1):  # log likelihood
         fwm = mycall(*arg1)
         norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(sigma)
         out = -(((data - fwm) / sigma) ** 2) / 2e0 - norm
@@ -380,16 +356,22 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)
 
-        def perform(self, node:pg.Apply,
-                    inputs:list[np.ndarray],
-                    outputs:list[list[None]]) -> None:
+        def perform(
+            self,
+            node: pg.Apply,
+            inputs: list[np.ndarray],
+            outputs: list[list[None]],
+        ) -> None:
             outputs[0][0] = np.asarray(LL(inputs))
             return
+
         pass
 
     fkt = faketensor()
+
     def fakeshell(tensordata, flatargs):
         return fkt(flatargs)
+
     # --< >--
 
     # ndata = int(1e4)
@@ -412,48 +394,71 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         # flatargs = []
         # flatargs.extend(arg1)
         tpeak = pm.Uniform('tpeak', lower=start, upper=stop)
-        fwhm = pm.Uniform('fwhm', lower=0, upper=stop-start)
+        fwhm = pm.Uniform('fwhm', lower=0, upper=stop - start)
         ampl = pm.Uniform('ampl', lower=0, upper=max(masked_flux))
         # fwhm = pm.HalfNormal('fwhm', lower=0, upper=stop-start)
         # ampl = pm.HalfNormal('ampl', sigma=np.std(masked_flux))
         flatargs = [tpeak, fwhm, ampl]
-        
-        likelihood = pm.CustomDist("likelihood",
-                                flatargs,
-                                observed=data,
-                                logp=fakeshell)
+
+        likelihood = pm.CustomDist(
+            "likelihood", flatargs, observed=data, logp=fakeshell
+        )
         step = pm.Metropolis()
-        trace = pm.sample(chlen, step=step, tune=int(chlen/2),
-                        chains=1, cores=1, compute_convergence_checks=False, progressbar=True)
+        trace = pm.sample(
+            chlen,
+            step=step,
+            tune=int(chlen / 2),
+            chains=1,
+            cores=1,
+            compute_convergence_checks=False,
+            progressbar=True,
+        )
 
         pm.plot_trace(trace)
-    
+
     fin_params = {}
     for key in trace['posterior']:
         # get median
         flat_samples = trace['posterior'][key].values.flatten()
         median = np.median(flat_samples)
         fin_params[key] = median
-        
+
     return fin_params
 
+
 def plot_params(ax, tpeak, fwhm, ampl):
-    ''' Plot parameters of the flare model fit on the given axis. '''
+    '''Plot parameters of the flare model fit on the given axis.'''
     ax.axhline(y=0, color='black', linestyle='--')
     ax.axvline(x=tpeak, color='red', label=f'Peak time={tpeak:.3f}')
-    ax.hlines(y=0, xmin=tpeak - fwhm / 2, xmax=tpeak + fwhm / 2, color='magenta', label=f'Full width half maximum={fwhm:.3f}')
-    ax.vlines(x=tpeak, ymin=0, ymax=ampl, color='yellow', label=f'Amplitude={ampl:.3f}')
+    ax.hlines(
+        y=0,
+        xmin=tpeak - fwhm / 2,
+        xmax=tpeak + fwhm / 2,
+        color='magenta',
+        label=f'Full width half maximum={fwhm:.3f}',
+    )
+    ax.vlines(
+        x=tpeak,
+        ymin=0,
+        ymax=ampl,
+        color='yellow',
+        label=f'Amplitude={ampl:.3f}',
+    )
+
 
 def plot_threshold(ax, bt, bf, med, threshold, isflares):
-    ''' Plot the threshold for flare detection on the given axis. '''
+    '''Plot the threshold for flare detection on the given axis.'''
     # plot median and threshold
     ax.plot(bt, med, color='orange', label='Local scatter', zorder=2)
-    ax.plot(bt, threshold, color='magenta', label='Detection threshold', zorder=3)
+    ax.plot(
+        bt, threshold, color='magenta', label='Detection threshold', zorder=3
+    )
 
     # plot flux data points with colors relative to threshold
     above = np.array(isflares)
     ax.scatter(bt[~above], bf[~above], color='black', zorder=4)
     ax.scatter(bt[above], bf[above], color='red', zorder=5)
+
 
 def find_flare_overlaps(all_flares):
     flare_groups = defaultdict(list)
@@ -466,19 +471,26 @@ def find_flare_overlaps(all_flares):
                 added = False
                 print(f"Checking flare {flare_id}...")
 
-                if not flare_groups: # empty dictionary
-                    print(f"Adding first flare {flare_id} with start {start} and stop {stop}.")
+                if not flare_groups:  # empty dictionary
+                    print(
+                        f"Adding first flare {flare_id} with start {start} and stop {stop}."
+                    )
                     flare_groups[(start, stop)].append(flare_id)
                 else:
                     for start_iter, stop_iter in flare_groups.keys():
                         # overlap detected
                         if start < stop_iter and stop > start_iter:
                             key = start_iter, stop_iter
-                            print(f"Overlap detected between {flare} and {flare_groups[key]}.")
-                            
+                            print(
+                                f"Overlap detected between {flare} and {flare_groups[key]}."
+                            )
+
                             # recalibrate start and stop
                             if start < start_iter or stop > stop_iter:
-                                new_key = (min(start, start_iter), max(stop, stop_iter))
+                                new_key = (
+                                    min(start, start_iter),
+                                    max(stop, stop_iter),
+                                )
                                 flare_groups[new_key] = flare_groups.pop(key)
                                 key = new_key
 
@@ -486,21 +498,24 @@ def find_flare_overlaps(all_flares):
                             flare_groups[key].append(flare_id)
                             added = True
                             break
-                    
-                    if not added: # no overlap detected
-                        print(f"Adding unique flare {flare_id} with start {start} and stop {stop}.")
+
+                    if not added:  # no overlap detected
+                        print(
+                            f"Adding unique flare {flare_id} with start {start} and stop {stop}."
+                        )
                         flare_groups[(start, stop)].append(flare_id)
-    
+
     return flare_groups
 
+
 def merge_flares(short, long):
-    """ 
-    Takes the union of flares detected in short cadence data with those in long cadence data. 
-    
+    """
+    Takes the union of flares detected in short cadence data with those in long cadence data.
+
     Parameters:
     - flares_short_cad (DataFrame): Short cadence (1-min) flare times, sorted by start time.
     - flares_long_cad (DataFrame): Long cadence (5-min) flare times, sorted by start time.
-    
+
     Returns:
     - merged (list of tuples): Adjusted flare start and stop times to maximize overlap.
     """
@@ -508,21 +523,23 @@ def merge_flares(short, long):
 
     print(f"# of short cadence flares: {len(short)}")
     print(f"# of long cadence flares: {len(long)}")
-    
+
     for long_start, long_stop in zip(long['tstart'], long['tstop']):
         added = False
 
         # adjust start and stop times to maximize partial overlap with short-cadence detections
         for short_start, short_stop in zip(short['tstart'], short['tstop']):
             if (short_start < long_start) and (short_stop > long_start):
-                print(f"Detected flare overlap: short ({short_start}, {short_stop}) with long ({long_start}, {long_stop})")
+                print(
+                    f"Detected flare overlap: short ({short_start}, {short_stop}) with long ({long_start}, {long_stop})"
+                )
                 # adjust start and stop times to maximize overlap
                 # ensures that the merged flare covers the full duration of both detections
                 merged_start = min(long_start, short_start)
                 merged_stop = max(long_stop, short_stop)
                 merged.append((merged_start, merged_stop))
                 added = True
-                break # only add each long cadence flare once
+                break  # only add each long cadence flare once
 
         # if no overlap with short cadence data, keep long cadence detection as is
         if not added:
