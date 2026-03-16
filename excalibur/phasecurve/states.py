@@ -125,9 +125,16 @@ class FlaresSV(ExcaliburSV):
         if self['STATUS'][-1]:
             for p in self['data'].keys():
                 for ivisit in range(len(self['data'][p])):
-                    visitor.add_image(
-                        '...', ' ', self['data'][p][ivisit]['plot_lightcurve']
-                    )
+                    visit_data = self['data'][p][ivisit]
+                    if 'plot_lightcurve' in visit_data:
+                        visitor.add_image(
+                            '...', ' ', visit_data['plot_lightcurve']
+                        )
+                    elif 'n_flares' in visit_data:
+                        visitor.add_declaration(
+                            f'{p} visit {visit_data["visit"]}: '
+                            f'{visit_data["n_flares"]} flare(s)'
+                        )
         return
 
 
