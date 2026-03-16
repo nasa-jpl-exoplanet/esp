@@ -246,7 +246,7 @@ def plot_ML_spectrumfit(
             truthprint = 'CO$_2$ = zero'
         else:
             truthprint = ''
-            print('NOPE. no truth for param:', param)
+            # print('NOPE. no truth for param:', param)
         plt.text(
             xlims[1] + xoffset + xoffsettruth * (xlims[1] - xlims[0]),
             ylims[0] + (ylims[1] - ylims[0]) * yloc,
@@ -295,6 +295,120 @@ def plot_ML_spectrumfit(
         plt.savefig(saveDir + 'bestFit_' + filt + '_' + trgt + ' ' + p + '.png')
 
     return save_plot_tosv(figgy), figgy
+
+
+# --------------------------------------------------------------------
+def plot_overallsample_fits_vs_truths(
+    params,
+    truth_values,
+    fit_values,
+    fit_errors,
+    fit_errorssys,
+    filt,
+    saveDir='./',
+    savetodisk=False,
+    verbose=False,
+):
+    '''
+    Compare the retrieved values against the original inputs
+    Also (optionally) show a histogram of the uncertainty values
+    '''
+
+    plot_statevectors = []
+    for param in params:
+        # make sure that the MLparam exists in the truth set (no CO2 in TEA)
+        if param in truth_values:
+            figure = plt.figure(figsize=(11, 5))
+            ax = figure.add_subplot(1, 2, 1)
+
+            for truth, fit, error, errorsys in zip(
+                truth_values[param],
+                fit_values[param],
+                fit_errors[param],
+                fit_errorssys[param],
+            ):
+                ax.scatter(
+                    truth,
+                    fit,
+                    facecolor='k',
+                    edgecolor='k',
+                    s=20,
+                    zorder=4,
+                )
+                ax.errorbar(
+                    truth, fit, yerr=error, fmt='.', color='k', lw=1, zorder=2
+                )
+                ax.errorbar(
+                    truth,
+                    fit,
+                    yerr=errorsys,
+                    fmt='.',
+                    color='b',
+                    lw=1,
+                    zorder=3,
+                )
+
+            # plot equality as a dashed diagonal line
+            overallmin = min(ax.get_xlim()[0], ax.get_ylim()[0])
+            overallmax = max(ax.get_xlim()[1], ax.get_ylim()[1])
+            ax.plot([-10, 10000], [-10, 10000], 'k--', lw=1, zorder=1)
+            ax.set_xlim(overallmin, overallmax)
+            ax.set_ylim(overallmin, overallmax)
+
+            ax.set_xlabel(param + ' truth', fontsize=14)
+            ax.set_ylabel(param + ' fit', fontsize=14)
+            plt.title(
+                param
+                + ' retrieval for '
+                + str(len(fit_errors[param]))
+                + ' planets'
+            )
+
+            # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
+            ax2 = figure.add_subplot(1, 2, 2)
+
+            errors = np.array(fit_errors[param])
+            ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+            if len(errors) > 0:
+                # the histogram range has to go past the data range or you get a vertical line on the right
+                lower = errors.min() / 1.5
+                upper = errors.max() * 1.5
+                # print('uncertainty range (logged)',param,lower,upper)
+                plt.hist(
+                    errors,
+                    range=(lower, upper),
+                    bins=1000,
+                    cumulative=True,
+                    density=True,
+                    histtype='step',
+                    color='black',
+                    zorder=1,
+                    label='',
+                )
+                plt.title(
+                    'cumulative histogram of ' + str(len(errors)) + ' planets'
+                )
+                ax2.semilogx()
+                ax2.set_xlim(lower, upper)
+            ax2.set_ylim(0, 1)
+            ax2.set_ylabel('fraction of planets', fontsize=14)
+
+            figure.tight_layout()
+
+            if savetodisk:
+                plt.savefig(
+                    saveDir
+                    + 'fitVStruth_'
+                    + filt
+                    + '_'
+                    + param.replace('/', ':')
+                    + '.png'
+                )
+            plot_statevectors.append(save_plot_tosv(figure))
+            if verbose:
+                plt.show()
+            plt.close(figure)
+    return plot_statevectors
 
 
 # --------------------------------------------------------------------
