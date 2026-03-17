@@ -52,6 +52,7 @@ import excalibur.system.core as syscore
 
 #     return flares, all_isflare, N1_arr
 
+
 def get_transits(
     whitelight: dict,
     priors: dict,
@@ -350,8 +351,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     fkt = faketensor()
 
     # def fakeshell(tensordata, flatargs):  # tensordata not used
-    def fakeshell(_, flatargs):
-        return fkt(flatargs)
+    # actually fakeshell isn't used (now that unused likelihood commented out)
+    # def fakeshell(_, flatargs):
+    #    return fkt(flatargs)
 
     # --< >--
 

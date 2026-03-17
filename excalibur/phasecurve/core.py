@@ -434,9 +434,9 @@ def flaredetection(
     find flares in a whitelight phasecurve
     '''
     flare_results = detect_flares(
-        whitelight=whitelight,
-        fin=fin,
-        fltr=fltr,
+        whitelight,
+        fin,
+        fltr,
         out,
         target=target,
         stellar_params=stellar_params,
