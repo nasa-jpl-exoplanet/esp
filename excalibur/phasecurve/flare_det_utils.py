@@ -336,6 +336,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             inputs = [pt.as_tensor(a) for a in flatargs]
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)
+
         def perform(
             self,
             node: pg.Apply,
@@ -344,7 +345,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         ) -> None:
             outputs[0][0] = np.asarray(LL(inputs))
             return
+
         pass
+
     fkt = faketensor()
 
     # def fakeshell(tensordata, flatargs):  # tensordata not used
