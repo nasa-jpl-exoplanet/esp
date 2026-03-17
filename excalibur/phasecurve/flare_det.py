@@ -24,6 +24,10 @@ from excalibur.phasecurve.flare_det_utils import (
     plot_threshold,
 )
 
+import logging
+
+log = logging.getLogger(__name__)
+
 PC_TO_M = 3.08567758149e16
 C_LIGHT = 2.99792458e8
 JY_TO_W_PER_M2_PER_HZ = 1e-26
@@ -148,9 +152,8 @@ def detect_flares(
 
     if flux_density_mjy is not None:
         if distance_pc is None:
-            print(
-                'Absolute luminosity/energy not computed: '
-                'no distance_pc found in stellar_params or system priors.'
+            log.warning(
+                'Absolute luminosity/energy not computed: no distance_pc found in stellar_params or system priors.'
             )
         else:
             if (
