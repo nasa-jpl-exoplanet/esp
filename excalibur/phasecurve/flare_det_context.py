@@ -33,7 +33,7 @@ def ctxtupdt(
     '''
     Update global context for pymc deterministics
     '''
-    excalibur.phasecurve.flare_det_context.ctxt = CONTEXT(
+    excalibur.phasecurve.flare_det_utils.ctxt = CONTEXT(
         data=data,
         sigma=sigma,
     )
