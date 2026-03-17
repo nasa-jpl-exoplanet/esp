@@ -17,8 +17,9 @@ from collections import defaultdict
 # import matplotlib.pyplot as plt
 
 import pymc as pm
-import pytensor.graph as pg
-import pytensor.tensor as pt
+
+# import pytensor.graph as pg
+# import pytensor.tensor as pt
 
 # from altaipony.flarelc import FlareLightCurve
 from excalibur.util import elca
@@ -325,11 +326,11 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     # --< >--
 
     # --< PYMC THINGS >--
-    def LL(arg1):  # log likelihood
-        fwm = mycall(*arg1)
-        norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(pymcsigma)
-        out = -(((data - fwm) / pymcsigma) ** 2) / 2e0 - norm
-        return out
+    # def LL(arg1):  # log likelihood
+    #    fwm = mycall(*arg1)
+    #    norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(pymcsigma)
+    #    out = -(((data - fwm) / pymcsigma) ** 2) / 2e0 - norm
+    #    return out
 
     # class faketensor(pg.Op):
     #    def make_node(self, flatargs) -> pg.Apply:
@@ -373,9 +374,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         # arg1 = pm.Uniform('slope', lower=-1e1, upper=1e1, shape=3) # priors
         # flatargs = []
         # flatargs.extend(arg1)
-        tpeak = pm.Uniform('tpeak', lower=start, upper=stop)
-        fwhm = pm.Uniform('fwhm', lower=0, upper=stop - start)
-        ampl = pm.Uniform('ampl', lower=0, upper=max(masked_flux))
+        # tpeak = pm.Uniform('tpeak', lower=start, upper=stop)
+        # fwhm = pm.Uniform('fwhm', lower=0, upper=stop - start)
+        # ampl = pm.Uniform('ampl', lower=0, upper=max(masked_flux))
         # fwhm = pm.HalfNormal('fwhm', lower=0, upper=stop-start)
         # ampl = pm.HalfNormal('ampl', sigma=np.std(masked_flux))
 
