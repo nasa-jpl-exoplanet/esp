@@ -454,6 +454,9 @@ def detect_flares(
         if verbose:
             print('YEAH ITS SHOWING!!')
             plt.show()
+            input('pause until input1')
+            all_flares_fig.show()
+            input('pause until input2')
 
     savedFigure = save_plot_tosv(all_flares_fig)
 

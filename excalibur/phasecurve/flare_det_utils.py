@@ -2,30 +2,27 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-locals,too-many-statements,too-many-positional-arguments,too-many-branches
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
 from scipy import  integrate
 from collections import defaultdict
-import os, json
+import os
+# import json
 
-import pdb
 import pymc as pm
 import pytensor.graph as pg
 import pytensor.tensor as pt
 import matplotlib.pyplot as plt
 
-from altaipony.flarelc import FlareLightCurve
+# from altaipony.flarelc import FlareLightCurve
 from excalibur.util import elca
-from excalibur.system import algorithms as sysalg
+# from excalibur.system import algorithms as sysalg
 from excalibur.util.time import time2z
 import excalibur.system.core as syscore
 
 # from .notebook_utils import *
-
-# from esp.excalibur.util import elca
-# from esp.excalibur.system import algorithms as sysalg
 
 # def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 #     # set higher threshold for all transit windows
@@ -36,7 +33,6 @@ import excalibur.system.core as syscore
 #         mask = (bt >= start) & (bt <= stop)
 #         N1_arr[mask] = N1 + diff
 #     N2_arr = N1_arr - 1
-#     import pdb; pdb.set_trace()
 
 #     # find flares and flare data point categorization relative to threshold
 #     flcd, isflares = flcd.find_flares(N1=N1_arr, N2=N2_arr, N3=N3, sigma=sigma,
@@ -205,11 +201,11 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
     # Normalize return style:
     # - newer AltaiPony: returns a FlareLightCurve (with .flares)
     # - older: may return a tuple (flcd_out, isflares_out, ...)
-    isflares_out = None
+    # isflares_out = None
     if isinstance(res, tuple):
         flcd_out = res[0]
-        if len(res) > 1:
-            isflares_out = res[1]
+        # if len(res) > 1:
+        #    isflares_out = res[1]
     else:
         flcd_out = res  # detections live here
 
@@ -344,7 +340,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
 
     fkt = faketensor()
 
-    def fakeshell(tensordata, flatargs):
+    # def fakeshell(tensordata, flatargs):  # tensordata not used
+    def fakeshell(_, flatargs):
         return fkt(flatargs)
 
     # --< >--
