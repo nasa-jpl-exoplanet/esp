@@ -2,19 +2,22 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals
+# pylint: disable=no-member
+# pylint: disable=broad-exception-caught
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks
+# no-member is for pm.plot_trace which is not in pymc
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
 from scipy import  integrate
 from collections import defaultdict
-import os
+# import os
 # import json
 
 import pymc as pm
 import pytensor.graph as pg
 import pytensor.tensor as pt
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # from altaipony.flarelc import FlareLightCurve
 from excalibur.util import elca
@@ -142,7 +145,7 @@ def get_transits(
                     )
 
                     # sft crosses 0 from negative to positive for transits
-                    if sft_start < 0 and sft_stop > 0:
+                    if sft_start < 0 < sft_stop:
                         transits[p].append((lim_start, lim_stop))
 
             # record transits
@@ -170,9 +173,11 @@ def get_transits(
             #    # )
 
     plain_transits = {
-        planet: {idx: windows for idx, windows in visits.items()}
-        for planet, visits in all_transits.items()
+        planet: dict(visits.items()) for planet, visits in all_transits.items()
     }
+    # 'unnecessary use of a comprehension' error
+    #    planet: {idx: windows for idx, windows in visits.items()}
+    #    for planet, visits in all_transits.items()
 
     return plain_transits
 
@@ -239,6 +244,7 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
                     )
                     tstart = np.asarray(flares_df["tstart"].values, dtype=float)
                     tstop = np.asarray(flares_df["tstop"].values, dtype=float)
+                # 'broad-exception-caught' error
                 except Exception:
                     tstart = np.asarray(flares_tbl["tstart"], dtype=float)
                     tstop = np.asarray(flares_tbl["tstop"], dtype=float)
@@ -248,6 +254,7 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
             else:
                 tstart = np.array([], dtype=float)
                 tstop = np.array([], dtype=float)
+        # 'broad-exception-caught' error
         except Exception:
             tstart = np.array([], dtype=float)
             tstop = np.array([], dtype=float)
@@ -360,7 +367,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     data = masked_flux
 
     chlen = int(5e4)
-    with pm.Model() as test:
+    with pm.Model():
         # define priors for parameters
         # arg1 = pm.Uniform('slope', lower=-1e1, upper=1e1, shape=3) # priors
         # flatargs = []
@@ -372,9 +379,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         # ampl = pm.HalfNormal('ampl', sigma=np.std(masked_flux))
         flatargs = [tpeak, fwhm, ampl]
 
-        likelihood = pm.CustomDist(
-            "likelihood", flatargs, observed=data, logp=fakeshell
-        )
+        # likelihood = pm.CustomDist(
+        #    "likelihood", flatargs, observed=data, logp=fakeshell
+        # )
         step = pm.Metropolis()
         trace = pm.sample(
             chlen,
@@ -501,7 +508,7 @@ def merge_flares(short, long):
 
         # adjust start and stop times to maximize partial overlap with short-cadence detections
         for short_start, short_stop in zip(short['tstart'], short['tstop']):
-            if (short_start < long_start) and (short_stop > long_start):
+            if short_start < long_start < short_stop:
                 print(
                     f"Detected flare overlap: short ({short_start}, {short_stop}) with long ({long_start}, {long_stop})"
                 )

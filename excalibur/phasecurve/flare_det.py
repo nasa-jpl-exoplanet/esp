@@ -239,7 +239,7 @@ def detect_flares(
                 transits=visit_transits,
             )
 
-            plt.figure(figsize=(12, 5))
+            fig2 = plt.figure(figsize=(12, 5))
             plt.plot(ft, ff, 'o', label='Detrended light curve')
             for start, stop in zip(flares['tstart'], flares['tstop']):
                 plt.axvspan(start, stop, color='green', alpha=0.3)
@@ -457,6 +457,10 @@ def detect_flares(
             input('pause until input1')
             all_flares_fig.show()
             input('pause until input2')
+            fig.show()
+            input('pause until input3')
+            fig2.show()
+            input('pause until input4')
 
     savedFigure = save_plot_tosv(all_flares_fig)
 
