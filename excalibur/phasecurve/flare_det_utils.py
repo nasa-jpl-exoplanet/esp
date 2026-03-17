@@ -27,8 +27,7 @@ from excalibur.util import elca
 from excalibur.util.time import time2z
 import excalibur.system.core as syscore
 
-from excalibur.cerberus.fmcontext import ctxtupdt
-from excalibur.cerberus.fmcontext import ctxtinit
+from excalibur.phasecurve.flare_det_context import ctxtupdt, ctxtinit
 
 ctxt = ctxtinit()
 
