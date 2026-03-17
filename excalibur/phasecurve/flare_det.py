@@ -178,7 +178,10 @@ def detect_flares(
                     'Using bandpass: '
                     f'lambda_c={lambda_c_m:.3e} m, bandwidth={bandwidth_m:.3e} m'
                 )
-                print('Band quiescent luminosity: ' f'{quiescent_luminosity:.2e} W')
+                print(
+                    'Band quiescent luminosity: '
+                    f'{quiescent_luminosity:.2e} W'
+                )
     else:
         print(
             'Absolute luminosity/energy not computed: '
@@ -321,7 +324,9 @@ def detect_flares(
                         f'  Observed duration: {obs_duration_days:.4f} days '
                         f'({obs_duration_min:.1f} min)'
                     )
-                    print(f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)')
+                    print(
+                        f'  FWHM from fit: {fwhm:.4f} days ({fwhm_min:.1f} min)'
+                    )
 
                 model_ax.plot(masked_time, masked_flux, label='Data')
                 model_ax.plot(masked_time, fin_flux, label='Model')
@@ -404,7 +409,9 @@ def detect_flares(
                             f'{peak_flare_luminosity:.2e} W'
                         )
                         print(f'  E_band ({fltr}): {e_band_ergs:.2e} ergs')
-                        print(f'  E_bol (C_bol={c_bol:.1f}): {e_bol_ergs:.2e} ergs')
+                        print(
+                            f'  E_bol (C_bol={c_bol:.1f}): {e_bol_ergs:.2e} ergs'
+                        )
                     caption_lines.append(
                         f'Peak flare L: {peak_flare_luminosity:.2e} W'
                     )

@@ -9,18 +9,20 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import numpy as np
-from scipy import  integrate
+from scipy import integrate
 from collections import defaultdict
+
 # import os
 # import json
+# import matplotlib.pyplot as plt
 
 import pymc as pm
 import pytensor.graph as pg
 import pytensor.tensor as pt
-# import matplotlib.pyplot as plt
 
 # from altaipony.flarelc import FlareLightCurve
 from excalibur.util import elca
+
 # from excalibur.system import algorithms as sysalg
 from excalibur.util.time import time2z
 import excalibur.system.core as syscore
