@@ -331,24 +331,21 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         out = -(((data - fwm) / pymcsigma) ** 2) / 2e0 - norm
         return out
 
-    class faketensor(pg.Op):
-        def make_node(self, flatargs) -> pg.Apply:
-            inputs = [pt.as_tensor(a) for a in flatargs]
-            outputs = [pt.vector()]
-            return pg.Apply(self, inputs, outputs)
-
-        def perform(
-            self,
-            node: pg.Apply,
-            inputs: list[np.ndarray],
-            outputs: list[list[None]],
-        ) -> None:
-            outputs[0][0] = np.asarray(LL(inputs))
-            return
-
-        pass
-
-    fkt = faketensor()
+    # class faketensor(pg.Op):
+    #    def make_node(self, flatargs) -> pg.Apply:
+    #        inputs = [pt.as_tensor(a) for a in flatargs]
+    #        outputs = [pt.vector()]
+    #        return pg.Apply(self, inputs, outputs)
+    #    def perform(
+    #        self,
+    #        node: pg.Apply,
+    #        inputs: list[np.ndarray],
+    #        outputs: list[list[None]],
+    #    ) -> None:
+    #        outputs[0][0] = np.asarray(LL(inputs))
+    #        return
+    #    pass
+    # fkt = faketensor()
 
     # def fakeshell(tensordata, flatargs):  # tensordata not used
     # actually fakeshell isn't used (now that unused likelihood commented out)
@@ -381,8 +378,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         ampl = pm.Uniform('ampl', lower=0, upper=max(masked_flux))
         # fwhm = pm.HalfNormal('fwhm', lower=0, upper=stop-start)
         # ampl = pm.HalfNormal('ampl', sigma=np.std(masked_flux))
-        flatargs = [tpeak, fwhm, ampl]
 
+        # flatargs = [tpeak, fwhm, ampl]
         # likelihood = pm.CustomDist(
         #    "likelihood", flatargs, observed=data, logp=fakeshell
         # )

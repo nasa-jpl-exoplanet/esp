@@ -196,7 +196,7 @@ def detect_flares(
     for planet, visits_list in whitelight_data.items():
         out['data'][planet] = []
         results[planet] = []
-        
+
         for idx, thisvisit in enumerate(visits_list):
             if verbose:
                 print('-----------------------------------------------------')
