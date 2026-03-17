@@ -27,7 +27,10 @@ from excalibur.util import elca
 from excalibur.util.time import time2z
 import excalibur.system.core as syscore
 
-# from .notebook_utils import *
+from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.cerberus.fmcontext import ctxtinit
+
+ctxt = ctxtinit()
 
 # def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 #     # set higher threshold for all transit windows
@@ -327,8 +330,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     # --< PYMC THINGS >--
     def LL(arg1):  # log likelihood
         fwm = mycall(*arg1)
-        norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(globalsigma)
-        out = -(((globaldata - fwm) / globalsigma) ** 2) / 2e0 - norm
+        norm = np.log(np.sqrt(2e0 * np.pi)) + np.log(ctxt.sigma)
+        out = -(((ctxt.data - fwm) / ctxt.sigma) ** 2) / 2e0 - norm
         return out
 
     class faketensor(pg.Op):
@@ -360,15 +363,19 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     # ndata = int(1e4)
     # global xdata
     # xdata = np.arange(ndata)
-    global globalsigma
-    globalsigma = masked_err
+    # global globalsigma
+    # globalsigma = masked_err
     # globalsigma = np.array(thisvisit['err'][mask])
     # globalsigma = np.std(masked_flux[-500:])
     # globalsigma = 1e-1
     # noise = globalsigma*np.random.normal(size=ndata)
-    global globaldata
+    # global globaldata
     # globaldata = xdata*5e-1 + 5e-1 + noise
-    globaldata = masked_flux
+    # globaldata = masked_flux
+    ctxtupdt(
+        data=masked_flux,
+        sigma=masked_err,
+    )
 
     chlen = int(5e4)
     with pm.Model():
@@ -384,7 +391,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
 
         flatargs = [tpeak, fwhm, ampl]
         _ = pm.CustomDist(
-            "likelihood", flatargs, observed=globaldata, logp=fakeshell
+            "likelihood", flatargs, observed=ctxt.data, logp=fakeshell
         )
         step = pm.Metropolis()
         trace = pm.sample(
