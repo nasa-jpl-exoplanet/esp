@@ -118,6 +118,7 @@ def detect_flares(
     whitelight,
     fin,
     fltr,
+    out,
     target=None,
     stellar_params=None,
     verbose=False,
@@ -193,8 +194,9 @@ def detect_flares(
     any_figures = False
 
     for planet, visits_list in whitelight_data.items():
+        out['data'][planet] = []
         results[planet] = []
-
+        
         for idx, thisvisit in enumerate(visits_list):
             if verbose:
                 print('-----------------------------------------------------')
@@ -451,6 +453,16 @@ def detect_flares(
             if verbose:
                 print()
 
+            out['data'][planet].append(
+                {
+                    'visit': idx,
+                    'n_flares': nflares,
+                    'flares': flare_results,
+                }
+            )
+            flare_plot = save_plot_tosv(all_flares_fig)
+            out['data'][planet][-1]['plot_lightcurve'] = flare_plot
+
     print('any figures?', any_figures)
     print('show plots?', verbose)
     if any_figures:
@@ -469,8 +481,5 @@ def detect_flares(
             fig2.show()
             input('pause until input4')
 
-    savedFigure = save_plot_tosv(all_flares_fig)
-
     print('results', results)
-
-    return results, savedFigure
+    return results
