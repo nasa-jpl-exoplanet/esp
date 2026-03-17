@@ -380,7 +380,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         # ampl = pm.HalfNormal('ampl', sigma=np.std(masked_flux))
 
         flatargs = [tpeak, fwhm, ampl]
-        likelihood = pm.CustomDist(
+        _ = pm.CustomDist(
             "likelihood", flatargs, observed=globaldata, logp=fakeshell
         )
         step = pm.Metropolis()
