@@ -339,6 +339,12 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)
 
+        def R_op(self, *_args, **_keywords):
+            raise NotImplementedError('not expecting this method to be used')
+
+        def grad(self, *_args, **_keywords):
+            raise NotImplementedError('not expecting this method to be used')
+
         def perform(
             self,
             node: pg.Apply,
