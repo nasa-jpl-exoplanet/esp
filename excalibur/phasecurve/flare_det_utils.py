@@ -316,7 +316,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         tpeak = arg['tpeak']
         fwhm = arg['fwhm']
         ampl = arg['ampl']
-            
+
 
         # out = arg['a'] * xdata + arg['b']
         # out = gauss(t=masked_time, tpeak=tpeak, dur=fwhm, ampl=ampl)
