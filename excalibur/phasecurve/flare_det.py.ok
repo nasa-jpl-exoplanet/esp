@@ -258,10 +258,6 @@ def detect_flares(
             plt.ylabel('Relative Flux')
             plt.xlim(ft[0], ft[-1])
             plt.legend()
-            if verbose:
-                print('YEAH ITS SHOWING2!!')
-                fig2.show()
-            plt.close(fig2)
             any_figures = True
 
             flare_results = []
@@ -446,10 +442,6 @@ def detect_flares(
                 )
                 res_ax.legend()
                 fig.subplots_adjust(hspace=0.4, wspace=0.4)
-                if verbose:
-                    print('YEAH ITS SHOWING4!!')
-                    fig.show()
-                plt.close(fig)
 
                 any_figures = True
 
