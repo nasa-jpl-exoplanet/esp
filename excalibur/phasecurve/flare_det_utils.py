@@ -349,9 +349,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             self,
             node: pg.Apply,
             inputs: list[np.ndarray],
-            outputs_storage: list[list[None]],
+            output_storage: list[list[None]],
         ) -> None:
-            outputs_storage[0][0] = np.asarray(LL(inputs))
+            output_storage[0][0] = np.asarray(LL(inputs))
             return
 
         pass
