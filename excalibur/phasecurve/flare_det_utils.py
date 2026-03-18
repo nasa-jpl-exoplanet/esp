@@ -308,6 +308,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         out = myfavRT(params)  # model
         return out
 
+    # def myfavRT(
+    #     arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
+    # ):  # RT = relative transfer
     def myfavRT(arg):  # RT = relative transfer
         """
         A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
@@ -316,7 +319,6 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         tpeak = arg['tpeak']
         fwhm = arg['fwhm']
         ampl = arg['ampl']
-
 
         # out = arg['a'] * xdata + arg['b']
         # out = gauss(t=masked_time, tpeak=tpeak, dur=fwhm, ampl=ampl)
@@ -333,7 +335,7 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         return out
 
     class faketensor(pg.Op):
-        def make_node(self, *flatargs) -> pg.Apply:
+        def make_node(self, flatargs) -> pg.Apply:
             inputs = [pt.as_tensor(a) for a in flatargs]
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)
