@@ -20,10 +20,8 @@ if __name__ == "__main__":
             -1
         ]  # -1 to run them all
         subtasks = excalibur.eclipse.bot.Actor('eclipse', 4, rid, tn)
-
-        subtasks.do(NAME)
         pass
-
+    subtasks.do(NAME)
     dawgie.db.close()
     dawgie.security.finalize()
     pass
