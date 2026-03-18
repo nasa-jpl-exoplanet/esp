@@ -20,8 +20,8 @@ if __name__ == "__main__":
             -1
         ]  # -1 to run them all
         subtasks = excalibur.data.bot.Actor('data', 4, rid, tn)
+        subtasks.do(NAME)
+        dawgie.db.close()
+        dawgie.security.finalize()
         pass
-    subtasks.do(NAME)
-    dawgie.db.close()
-    dawgie.security.finalize()
     pass
