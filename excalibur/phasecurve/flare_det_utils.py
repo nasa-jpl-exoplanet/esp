@@ -311,7 +311,6 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
     def myfavRT(
         arg={'tpeak': 0, 'fwhm': 0, 'ampl': 0}
     ):  # RT = relative transfer
-#        arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
         """
         A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
         and can be parameterized by three parameters: center time (tpeak), FWHM, and ampitude
