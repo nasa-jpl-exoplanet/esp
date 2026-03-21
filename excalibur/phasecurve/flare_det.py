@@ -260,6 +260,7 @@ def detect_flares(
             plt.legend()
             if verbose:
                 print('YEAH ITS SHOWING2!!')
+                plt.show()
                 fig2.show()
             plt.close(fig2)
             any_figures = True
@@ -448,6 +449,7 @@ def detect_flares(
                 fig.subplots_adjust(hspace=0.4, wspace=0.4)
                 if verbose:
                     print('YEAH ITS SHOWING4!!')
+                    plt.show()
                     fig.show()
                 plt.close(fig)
 
