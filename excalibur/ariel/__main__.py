@@ -11,9 +11,11 @@ import excalibur.ariel.bot
 
 # ------------- ------------------------------------------------------
 
-rid, tn = main_start()
+if __name__ == "__main__":
+    rid, tn = main_start()
 
-excalibur.ariel.bot.Actor('ariel', 4, rid, tn).do()
+    excalibur.ariel.bot.Actor('ariel', 4, rid, tn).do()
 
-dawgie.db.close()
-dawgie.security.finalize()
+    dawgie.db.close()
+    dawgie.security.finalize()
+    pass

@@ -1,7 +1,7 @@
 altaipony        # for flare detection
 astropy
 astroquery
-dawgie==2.0.2
+dawgie==2.1.0-rc08
 deprecated
 h5py
 joblib
