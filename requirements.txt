@@ -10,6 +10,7 @@ lmfit
 matplotlib
 numexpr          # used to limit cores it uses preventing thrashing
 numpy
+pandas<3
 photutils
 pymc
 pyvo
