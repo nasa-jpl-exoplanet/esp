@@ -1,4 +1,4 @@
-git+https://github.com/gbryden/altaipony.git
+altaipony @ git+https://github.com/gbryden/altaipony.git
 astropy
 astroquery
 dawgie==2.1.0-rc08
