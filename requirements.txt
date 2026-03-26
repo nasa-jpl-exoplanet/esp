@@ -1,4 +1,4 @@
-altaipony        # for flare detection
+altaipony @ git+https://github.com/gbryden/altaipony.git
 astropy
 astroquery
 dawgie==2.1.0-rc08
@@ -10,7 +10,6 @@ lmfit
 matplotlib
 numexpr          # used to limit cores it uses preventing thrashing
 numpy
-pandas<3
 photutils
 pymc
 pyvo
