@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 as base
+FROM ubuntu:24.04 AS base
 COPY . /tmp/esp
 ENV MPLCONFIGDIR=/tmp
 ENV PATH=/usr/local/esp/bin:$PATH
@@ -29,18 +29,18 @@ RUN set -ex && \
     mkdir -p /proj/data/ldtk && chmod 777 /proj/data/ldtk && \
     rm -rf /tmp/esp
 
-FROM base as server
+FROM base AS server
 ENV HOME=/tmp
 ENTRYPOINT python -m dawgie.pl \
     --context=excalibur.context \
     -l "${EXCALIBUR_USER}.log" -L "${EXCALIBUR_LOG_LEVEL}" -p 8080
 
-FROM base as tools
+FROM base AS tools
 ENV DAWGIE_DOCKERIZED_AE_GIT_REVISION=irrelevant
 ENV HOME=/tmp
 ENTRYPOINT ["python", "-m"]
 
-FROM base as worker
+FROM base AS worker
 COPY . /proj/src/ae
 ARG AE_VER=undefined
 ENV DAWGIE_DOCKERIZED_AE_GIT_REVISION=$AE_VER
