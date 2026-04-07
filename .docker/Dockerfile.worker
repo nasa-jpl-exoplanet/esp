@@ -15,4 +15,4 @@ ENTRYPOINT ["python", "-m", "dawgie.pl.worker", \
             "-g", "/proj/gnupg", \
             "-i", "0", \
             "-n", "excalibur.jpl.nasa.gov", \
-            "-p", "8081"]
+            "-p", "${DAWGIE_WORKER_PORT}"]
