@@ -49,11 +49,11 @@ ENV NUMEXPR_NUM_THREADS=1
 ENV NUMEXPR_MAX_THREADS=1
 ENV OMP_NUM_THREADS=1
 ENV PYTHONPATH=/proj/src/ae
-ENTRYPOINT ["python", "-m", "dawgie.pl.worker", \
-            "-a", "/proj/src/ae/excalibur", \
-            "-b", "excalibur", \
-            "-c", "cluster", \
-            "-g", "/proj/gnupg", \
-            "-i", "0", \
-            "-n", "excalibur.jpl.nasa.gov", \
-            "-p", "${DAWGIE_WORKER_PORT}"]
+ENTRYPOINT python -m dawgie.pl.worker \
+            -a /proj/src/ae/excalibur \
+            -b excalibur \
+            -c cluster \
+            -g /proj/gnupg \
+            -i 0 \
+            -n excalibur.jpl.nasa.gov \
+            -p ${DAWGIE_WORKER_PORT}
