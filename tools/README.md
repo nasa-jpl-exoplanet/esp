@@ -59,7 +59,7 @@ Execute a development task in the private pipeline context started with `pp_star
 
 This script has two required and one optional values:
 1. `<task name>` is the python package name after excalibur. For instance, if we wanted to run the python packaage `excalibur.cerberus` we would supply `cerberus` as the first argument to the tool.
-1. `<target name>` is exactly that. Each star is a target so we would supply the star name as [known by the pipeline](https://excalibur.jpl.nasa.gov:8080/pages/database/targets) like 'GJ 1214'.
+1. `<target name>` is exactly that. Each star is a target so we would supply the star name as [known by the pipeline](https://excalibur.jpl.nasa.gov/api/database/targets) like 'GJ 1214'.
 1. `<environment profile>` is the set of environment variables that define one pipeline from another. If not provided, it defaults to the username via `${USER}`.
 
 and one optional via an environment variable:
@@ -88,7 +88,7 @@ To reset your private pipeline with archive: `DAWGIE_ARCHIVE=true pp_reset.sh`
 To reset operational pipline: `pp_reset.sh ops`
 
 The script triggers off these environment variables:
-- `DAWGIE_SFE_PORT` - probably already defined in your bash profile and can be overriden by using the script argument. Default if not defined 8080.
+- `DAWGIE_SFE_PORT` - probably already defined in your bash profile and can be overriden by using the script argument. Default if not defined 8443.
 - `EXCALIBUR_HOST` - for private pipelines, use computer name running the pipeline like mentor3. Default if not defined is localhost.
 - `DAWGIE_SSL_PEM_MYSELF` - should default to your certificate and will use the one you have defined in your bash profile. Default if not defined /proj/sdp/${EXCALIBUR_USER}/certs/excalibur_identity.pem.
 
