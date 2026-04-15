@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-lines,too-many-return-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
 import copy
@@ -146,8 +146,7 @@ def _align_lc_to_cadences(lc, cadenceno):
     in_bounds = match_idx < len(sorted_cadenceno)
     valid = np.zeros_like(in_bounds)
     valid[in_bounds] = (
-        sorted_cadenceno[match_idx[in_bounds]]
-        == target_cadenceno[in_bounds]
+        sorted_cadenceno[match_idx[in_bounds]] == target_cadenceno[in_bounds]
     )
     if not np.all(valid):
         missing = target_cadenceno[~valid]
@@ -158,9 +157,7 @@ def _align_lc_to_cadences(lc, cadenceno):
         if valid_positions.size:
             first_valid = valid_positions[0]
             last_valid = valid_positions[-1]
-            edge_only_missing = np.all(
-                valid[first_valid : last_valid + 1]
-            )
+            edge_only_missing = np.all(valid[first_valid : last_valid + 1])
         if not edge_only_missing:
             raise ValueError(
                 'Could not realign detrended light curve to all original '
@@ -206,14 +203,15 @@ def _detrend_savgol_aligned(
 
     reverse_counts = np.zeros_like(lcn.flux, dtype='int')
     for k in range(1, len(lcn.flux)):
-        reverse_counts[-k] = mask[-k] * (
-            reverse_counts[-(k - 1)] + mask[-k]
-        )
+        reverse_counts[-k] = mask[-k] * (reverse_counts[-(k - 1)] + mask[-k])
 
-    istart_i = np.where(
-        (reverse_counts[1:] >= 1)
-        & (reverse_counts[:-1] - reverse_counts[1:] < 0)
-    )[0] + 1
+    istart_i = (
+        np.where(
+            (reverse_counts[1:] >= 1)
+            & (reverse_counts[:-1] - reverse_counts[1:] < 0)
+        )[0]
+        + 1
+    )
     istop_i = istart_i + reverse_counts[istart_i] - 1
     candidates = list(zip(istart_i, istop_i))
 
@@ -293,8 +291,8 @@ def _detrend_savgol_aligned(
         aligned_lcrsf['time'] = original_time
     og_flux_values = _as_numpy(og_flux)
     og_flux_err_values = _as_numpy(og_flux_err)
-    aligned_lcrsf.detrended_flux = (
-        _as_numpy(aligned_lcrsf.flux) * np.nanmedian(og_flux_values)
+    aligned_lcrsf.detrended_flux = _as_numpy(aligned_lcrsf.flux) * np.nanmedian(
+        og_flux_values
     )
     aligned_lcrsf.detrended_flux_err = og_flux_err_values
 
@@ -628,12 +626,15 @@ def _write_visit_summary_files(
         visit_lines.extend(['', f'Error: {visit_result["error"]}'])
     elif visit_result.get('flares'):
         for flare_index, flare in enumerate(visit_result['flares']):
-            visit_lines.extend([''] + _flare_summary_lines(
-                flare_index,
-                flare,
-                fltr,
-                c_bol=c_bol,
-            ))
+            visit_lines.extend(
+                ['']
+                + _flare_summary_lines(
+                    flare_index,
+                    flare,
+                    fltr,
+                    c_bol=c_bol,
+                )
+            )
             flare_summary_path = os.path.join(
                 visit_dir,
                 f'flare_{flare_index:02d}_summary.txt',
@@ -681,7 +682,9 @@ def _write_planet_summary_file(
     visit_results,
     c_bol=None,
 ):
-    planet_dir = _ensure_directory(os.path.join(results_dir, _sanitize_label(planet)))
+    planet_dir = _ensure_directory(
+        os.path.join(results_dir, _sanitize_label(planet))
+    )
     flare_count = sum(visit.get('n_flares', 0) for visit in visit_results)
     error_count = sum(1 for visit in visit_results if visit.get('error'))
     lines = [
@@ -710,15 +713,20 @@ def _write_planet_summary_file(
             lines.append('No flares detected in this visit.')
             continue
         for flare_index, flare in enumerate(visit_result['flares']):
-            lines.extend([''] + _prefix_lines(
-                _flare_summary_lines(flare_index, flare, fltr, c_bol=c_bol),
-                '  ',
-            ))
+            lines.extend(
+                ['']
+                + _prefix_lines(
+                    _flare_summary_lines(flare_index, flare, fltr, c_bol=c_bol),
+                    '  ',
+                )
+            )
 
     _write_text_file(os.path.join(planet_dir, 'grand_summary.txt'), lines)
 
 
-def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR):
+def _compute_observation_segments(
+    time_values, gap_factor=OBSERVATION_GAP_FACTOR
+):
     times = _as_numpy(time_values).astype(float)
     times = times[np.isfinite(times)]
     if not len(times):
@@ -759,7 +767,9 @@ def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR
     seg_stops = np.concatenate((split_indices + 1, [len(times)]))
 
     segments = []
-    for seg_index, (start_idx, stop_idx) in enumerate(zip(seg_starts, seg_stops)):
+    for seg_index, (start_idx, stop_idx) in enumerate(
+        zip(seg_starts, seg_stops)
+    ):
         seg_times = times[start_idx:stop_idx]
         seg_diffs = np.diff(seg_times)
         seg_positive_diffs = seg_diffs[seg_diffs > 0]
@@ -795,7 +805,9 @@ def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR
                 'gap_index': gap_index,
                 'gap_start_raw': float(times[split_idx]),
                 'gap_end_raw': float(times[split_idx + 1]),
-                'gap_duration_days': float(times[split_idx + 1] - times[split_idx]),
+                'gap_duration_days': float(
+                    times[split_idx + 1] - times[split_idx]
+                ),
             }
         )
 
@@ -1107,14 +1119,13 @@ def _export_results_bundle(
 
     frequency_products = _build_frequency_products(observation_rows, flare_rows)
     group_lookup = {
-        row['flare_id']: row for row in frequency_products['annotated_flare_rows']
+        row['flare_id']: row
+        for row in frequency_products['annotated_flare_rows']
     }
     for flare_row in flare_rows:
         group_row = group_lookup.get(flare_row['flare_id'], {})
         flare_row['overlap_group_id'] = group_row.get('overlap_group_id', '')
-        flare_row['overlap_group_size'] = group_row.get(
-            'overlap_group_size', 1
-        )
+        flare_row['overlap_group_size'] = group_row.get('overlap_group_size', 1)
 
     run_summary_lines = [
         f'Target: {target_name}',
@@ -1441,9 +1452,11 @@ def detect_flares(
                         results[planet].append(completed_visit_result)
                         out_visit_result = copy.deepcopy(completed_visit_result)
                         if not example_plots_attached:
-                            example_plots_attached = _attach_example_visit_plots(
-                                out_visit_result,
-                                visit_output_dir,
+                            example_plots_attached = (
+                                _attach_example_visit_plots(
+                                    out_visit_result,
+                                    visit_output_dir,
+                                )
                             )
                         out['data'][planet].append(out_visit_result)
                         resumed_visit_count += 1
@@ -1455,9 +1468,7 @@ def detect_flares(
                             )
                         continue
 
-                visit_output_dir = _ensure_directory(
-                    visit_output_dir
-                )
+                visit_output_dir = _ensure_directory(visit_output_dir)
 
             fig = None
             fig2 = None
@@ -1577,9 +1588,7 @@ def detect_flares(
                     thres_ax.set_title(
                         f'Flare {index} in {target_name} {planet} visit {idx}'
                     )
-                    thres_ax.set_xlabel(
-                        f'Time - {thisvisit["time"][0]} [days]'
-                    )
+                    thres_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                     thres_ax.set_ylabel('Raw Relative Flux')
                     thres_ax.set_xlim(start_buf, stop_buf)
                     thres_ax.set_ylim(min(bf) - buf, max(bf) + buf)
@@ -1701,10 +1710,7 @@ def detect_flares(
                         'ED_err_days': error,
                     }
 
-                    if (
-                        quiescent_luminosity is not None
-                        and c_bol is not None
-                    ):
+                    if quiescent_luminosity is not None and c_bol is not None:
                         e_band_joules = ed_seconds * quiescent_luminosity
                         e_band_ergs = e_band_joules * 1.0e7
                         e_bol_ergs = e_band_ergs * c_bol
@@ -1722,9 +1728,7 @@ def detect_flares(
                                 '  Peak flare luminosity in band: '
                                 f'{peak_flare_luminosity:.2e} W'
                             )
-                            print(
-                                f'  E_band ({fltr}): {e_band_ergs:.2e} ergs'
-                            )
+                            print(f'  E_band ({fltr}): {e_band_ergs:.2e} ergs')
                             print(
                                 f'  E_bol (C_bol={c_bol:.1f}): '
                                 f'{e_bol_ergs:.2e} ergs'
@@ -1732,9 +1736,7 @@ def detect_flares(
                         caption_lines.append(
                             f'Peak flare L: {peak_flare_luminosity:.2e} W'
                         )
-                        caption_lines.append(
-                            f'E_band: {e_band_ergs:.2e} ergs'
-                        )
+                        caption_lines.append(f'E_band: {e_band_ergs:.2e} ergs')
                         caption_lines.append(
                             f'E_bol: {e_bol_ergs:.2e} ergs '
                             f'(C_bol={c_bol:.1f})'
@@ -1926,9 +1928,7 @@ def detect_flares(
             'flare_frequency_per_hour': (
                 frequency_products['flare_frequency_per_hour']
             ),
-            'unique_flare_intervals': len(
-                frequency_products['flare_groups']
-            ),
+            'unique_flare_intervals': len(frequency_products['flare_groups']),
             'detected_flare_rows': len(flare_rows),
         }
         results['summary'] = copy.deepcopy(out['data']['frequency_summary'])

@@ -131,7 +131,9 @@ class FlaresSV(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            metadata = self['data']['metadata'] if 'metadata' in self['data'] else {}
+            metadata = (
+                self['data']['metadata'] if 'metadata' in self['data'] else {}
+            )
             if metadata:
                 visitor.add_declaration(
                     f'Flare detection results for '
@@ -180,7 +182,9 @@ class FlaresSV(ExcaliburSV):
                             'planet': p,
                             'visit': visit_data.get('visit', ivisit),
                             'n_flares': visit_data.get('n_flares', 0),
-                            'status': 'error' if visit_data.get('error') else 'ok',
+                            'status': (
+                                'error' if visit_data.get('error') else 'ok'
+                            ),
                             'error': visit_data.get('error', ''),
                         }
                     )
@@ -262,7 +266,9 @@ class FlaresSV(ExcaliburSV):
                     for col_index, key in enumerate(
                         ['planet', 'visit', 'n_flares', 'status', 'error']
                     ):
-                        visit_table.get_cell(row_index, col_index).add_primitive(
+                        visit_table.get_cell(
+                            row_index, col_index
+                        ).add_primitive(
                             self._format_value(visit_row.get(key, ''))
                         )
 
@@ -288,7 +294,9 @@ class FlaresSV(ExcaliburSV):
                 )
                 for row_index, flare_row in enumerate(flare_rows):
                     for col_index, key in enumerate(flare_columns):
-                        flare_table.get_cell(row_index, col_index).add_primitive(
+                        flare_table.get_cell(
+                            row_index, col_index
+                        ).add_primitive(
                             self._format_value(flare_row.get(key, ''))
                         )
         return

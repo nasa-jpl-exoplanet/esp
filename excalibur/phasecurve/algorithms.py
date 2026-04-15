@@ -3,6 +3,7 @@
 # Heritage code shame:
 # pylint: disable=duplicate-code
 # pylint: disable=invalid-name
+# pylint: disable=too-many-positional-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
