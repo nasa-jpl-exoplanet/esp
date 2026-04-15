@@ -11,10 +11,11 @@
 import numpy as np
 from scipy import integrate
 from collections import defaultdict
+import logging
 
 # import os
 # import json
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import pymc as pm
 import pytensor.graph as pg
@@ -22,6 +23,7 @@ import pytensor.tensor as pt
 
 # from altaipony.flarelc import FlareLightCurve
 from excalibur.util import elca
+from excalibur.util.plotters import save_plot_tosv
 
 # from excalibur.system import algorithms as sysalg
 from excalibur.util.time import time2z
@@ -30,6 +32,7 @@ import excalibur.system.core as syscore
 from excalibur.phasecurve.flare_det_context import ctxtupdt, ctxtinit
 
 ctxt = ctxtinit()
+log = logging.getLogger(__name__)
 
 # def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 #     # set higher threshold for all transit windows
@@ -204,9 +207,29 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
     sigma_adj[transit_mask] *= scale
 
     # Call find_flares with scalar N1, N2; sigma carries the local tightening
-    res = flcd.find_flares(
-        N1=N1, N2=N2, N3=N3, sigma=sigma_adj, addtail=True, tailthreshdiff=1
-    )
+    try:
+        res = flcd.find_flares(
+            N1=N1,
+            N2=N2,
+            N3=N3,
+            sigma=sigma_adj,
+            addtail=True,
+            tailthreshdiff=1,
+        )
+    except IndexError as exc:
+        if 'out of bounds' not in str(exc):
+            raise
+        log.warning(
+            'Altaipony flare tail extension exceeded the light-curve segment; '
+            'retrying flare detection without tail extension.'
+        )
+        res = flcd.find_flares(
+            N1=N1,
+            N2=N2,
+            N3=N3,
+            sigma=sigma_adj,
+            addtail=False,
+        )
 
     # Normalize return style:
     # - newer AltaiPony: returns a FlareLightCurve (with .flares)
@@ -292,7 +315,38 @@ def get_area_under_lc(model, tpeak, fwhm, ampl, start, stop):
     return area, error
 
 
-def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
+def _posterior_plot_bytes(trace):
+    try:
+        posterior_axes = pm.plot_trace(trace)
+        axes = np.asarray(posterior_axes, dtype=object).ravel()
+        posterior_fig = None
+        for axis in axes:
+            if hasattr(axis, 'figure'):
+                posterior_fig = axis.figure
+                break
+        if posterior_fig is None:
+            return None
+        try:
+            return save_plot_tosv(posterior_fig)
+        finally:
+            plt.close(posterior_fig)
+    except Exception:  # pragma: no cover
+        log.warning(
+            'Could not generate posterior plot for flare fit.',
+            exc_info=True,
+        )
+        return None
+
+
+def fit_flare_model(
+    masked_time,
+    masked_flux,
+    masked_err,
+    model,
+    start,
+    stop,
+    include_posterior_plot=False,
+):
     """
     Fit Mendoza 2022's model to the given flare,
     sampling parameters peak time, full width at half-maximum, and amplitude.
@@ -308,10 +362,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         out = myfavRT(params)  # model
         return out
 
-    # def myfavRT(
-    #     arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
-    # ):  # RT = relative transfer
-    def myfavRT(arg):  # RT = relative transfer
+    def myfavRT(
+        arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
+    ):  # RT = relative transfer
         """
         A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
         and can be parameterized by three parameters: center time (tpeak), FWHM, and ampitude
@@ -335,8 +388,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         return out
 
     class faketensor(pg.Op):
-        def make_node(self, *flatargs) -> pg.Apply:
-            inputs = [pt.as_tensor(a) for a in flatargs[0]]
+        def make_node(self, flatargs) -> pg.Apply:
+            inputs = [pt.as_tensor(a) for a in flatargs]
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)
 
@@ -350,9 +403,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             self,
             node: pg.Apply,
             inputs: list[np.ndarray],
-            output_storage: list[list[None]],
+            outputs: list[list[None]],
         ) -> None:
-            output_storage[0][0] = np.asarray(LL(inputs))
+            outputs[0][0] = np.asarray(LL(inputs))
             return
 
         pass
@@ -409,8 +462,9 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
             compute_convergence_checks=False,
             progressbar=True,
         )
-
-        pm.plot_trace(trace)
+        posterior_plot = None
+        if include_posterior_plot:
+            posterior_plot = _posterior_plot_bytes(trace)
 
     fin_params = {}
     for key in trace['posterior']:
@@ -419,6 +473,8 @@ def fit_flare_model(masked_time, masked_flux, masked_err, model, start, stop):
         median = np.median(flat_samples)
         fin_params[key] = median
 
+    if include_posterior_plot:
+        return fin_params, posterior_plot
     return fin_params
 
 
