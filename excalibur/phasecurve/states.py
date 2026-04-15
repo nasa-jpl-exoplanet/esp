@@ -118,22 +118,178 @@ class FlaresSV(ExcaliburSV):
 
     def __init__(self, name):
         '''__init__ ds'''
-        ExcaliburSV.__init__(self, name, dawgie.VERSION(1, 1, 1))
+        ExcaliburSV.__init__(self, name, dawgie.VERSION(1, 2, 0))
+
+    @staticmethod
+    def _format_value(value):
+        if value is None or value == '':
+            return 'N/A'
+        if isinstance(value, float):
+            return f'{value:.6g}'
+        return str(value)
 
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
+            metadata = self['data']['metadata'] if 'metadata' in self['data'] else {}
+            if metadata:
+                visitor.add_declaration(
+                    f'Flare detection results for '
+                    f'{metadata.get("target", "UNKNOWN_TARGET")} '
+                    f'({metadata.get("filter", self.name())})'
+                )
+                visitor.add_declaration(
+                    'Distance [pc]: '
+                    f'{self._format_value(metadata.get("distance_pc"))}; '
+                    'Flux density [mJy]: '
+                    f'{self._format_value(metadata.get("flux_density_mjy"))}; '
+                    'Quiescent luminosity [W]: '
+                    f'{self._format_value(metadata.get("quiescent_luminosity_w"))}; '
+                    'C_bol: '
+                    f'{self._format_value(metadata.get("c_bol"))}'
+                )
+                if metadata.get('results_dir'):
+                    visitor.add_declaration(
+                        f'Results directory: {metadata["results_dir"]}'
+                    )
+
+            if 'frequency_summary' in self['data']:
+                summary = self['data']['frequency_summary']
+                visitor.add_declaration(
+                    'Flare frequency [1/day]: '
+                    f'{self._format_value(summary.get("flare_frequency_per_day"))}; '
+                    'Flare frequency [1/hour]: '
+                    f'{self._format_value(summary.get("flare_frequency_per_hour"))}; '
+                    'Total observed time [days]: '
+                    f'{self._format_value(summary.get("total_observed_time_days"))}; '
+                    'Unique flare intervals: '
+                    f'{self._format_value(summary.get("unique_flare_intervals"))}; '
+                    'Detected flare rows: '
+                    f'{self._format_value(summary.get("detected_flare_rows"))}'
+                )
+
+            visit_rows = []
+            flare_rows = []
             for p in self['data'].keys():
+                if p in ('target', 'filter', 'metadata', 'frequency_summary'):
+                    continue
                 for ivisit in range(len(self['data'][p])):
                     visit_data = self['data'][p][ivisit]
+                    visit_rows.append(
+                        {
+                            'planet': p,
+                            'visit': visit_data.get('visit', ivisit),
+                            'n_flares': visit_data.get('n_flares', 0),
+                            'status': 'error' if visit_data.get('error') else 'ok',
+                            'error': visit_data.get('error', ''),
+                        }
+                    )
+                    visitor.add_declaration(
+                        f'{p} visit {visit_data.get("visit", ivisit)}: '
+                        f'{visit_data.get("n_flares", 0)} flare(s)'
+                    )
                     if 'plot_lightcurve' in visit_data:
                         visitor.add_image(
-                            '...', ' ', visit_data['plot_lightcurve']
+                            '...',
+                            (
+                                f'Example detrended light curve: {p} '
+                                f'visit {visit_data.get("visit", ivisit)}'
+                            ),
+                            visit_data['plot_lightcurve'],
                         )
-                    elif 'n_flares' in visit_data:
-                        visitor.add_declaration(
-                            f'{p} visit {visit_data["visit"]}: '
-                            f'{visit_data["n_flares"]} flare(s)'
+                    for flare_index, flare_data in enumerate(
+                        visit_data.get('flares', [])
+                    ):
+                        flare_rows.append(
+                            {
+                                'planet': p,
+                                'visit': visit_data.get('visit', ivisit),
+                                'flare': flare_index,
+                                'start': flare_data.get('start', ''),
+                                'stop': flare_data.get('stop', ''),
+                                'tpeak': flare_data.get('tpeak', ''),
+                                'observed_duration_minutes': flare_data.get(
+                                    'observed_duration_minutes',
+                                    '',
+                                ),
+                                'fwhm_minutes': flare_data.get(
+                                    'fwhm_minutes',
+                                    '',
+                                ),
+                                'ampl': flare_data.get('ampl', ''),
+                                'ED_seconds': flare_data.get('ED_seconds', ''),
+                                'peak_flare_luminosity_w': flare_data.get(
+                                    'peak_flare_luminosity_w',
+                                    '',
+                                ),
+                                'E_band_ergs': flare_data.get(
+                                    'E_band_ergs',
+                                    '',
+                                ),
+                                'E_bol_ergs': flare_data.get(
+                                    'E_bol_ergs',
+                                    '',
+                                ),
+                            }
+                        )
+                        if 'plot_fit' in flare_data:
+                            visitor.add_image(
+                                '...',
+                                (
+                                    f'Example flare fit: {p} '
+                                    f'visit {visit_data.get("visit", ivisit)} '
+                                    f'flare {flare_index}'
+                                ),
+                                flare_data['plot_fit'],
+                            )
+                        if 'plot_posterior' in flare_data:
+                            visitor.add_image(
+                                '...',
+                                (
+                                    f'Example flare posterior: {p} '
+                                    f'visit {visit_data.get("visit", ivisit)} '
+                                    f'flare {flare_index}'
+                                ),
+                                flare_data['plot_posterior'],
+                            )
+
+            if visit_rows:
+                visit_table = visitor.add_table(
+                    clabels=['planet', 'visit', 'n_flares', 'status', 'error'],
+                    rows=len(visit_rows),
+                )
+                for row_index, visit_row in enumerate(visit_rows):
+                    for col_index, key in enumerate(
+                        ['planet', 'visit', 'n_flares', 'status', 'error']
+                    ):
+                        visit_table.get_cell(row_index, col_index).add_primitive(
+                            self._format_value(visit_row.get(key, ''))
+                        )
+
+            if flare_rows:
+                flare_columns = [
+                    'planet',
+                    'visit',
+                    'flare',
+                    'start',
+                    'stop',
+                    'tpeak',
+                    'observed_duration_minutes',
+                    'fwhm_minutes',
+                    'ampl',
+                    'ED_seconds',
+                    'peak_flare_luminosity_w',
+                    'E_band_ergs',
+                    'E_bol_ergs',
+                ]
+                flare_table = visitor.add_table(
+                    clabels=flare_columns,
+                    rows=len(flare_rows),
+                )
+                for row_index, flare_row in enumerate(flare_rows):
+                    for col_index, key in enumerate(flare_columns):
+                        flare_table.get_cell(row_index, col_index).add_primitive(
+                            self._format_value(flare_row.get(key, ''))
                         )
         return
 
