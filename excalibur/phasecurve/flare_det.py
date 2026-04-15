@@ -729,7 +729,7 @@ def _compute_observation_segments(
 ):
     times = _as_numpy(time_values).astype(float)
     times = times[np.isfinite(times)]
-    if not len(times):
+    if not times:
         return [], [], {}
 
     times = np.unique(np.sort(times))
