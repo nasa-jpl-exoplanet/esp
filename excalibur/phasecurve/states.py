@@ -1,7 +1,7 @@
 '''Phasecurve Database Products View'''
 
 # Heritage code shame:
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,too-many-branches
 
 # -- IMPORTS -- ------------------------------------------------------
 
