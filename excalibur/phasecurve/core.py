@@ -428,6 +428,10 @@ def flaredetection(
     fltr,
     target=None,
     stellar_params=None,
+    results_dir=None,
+    resume_completed=True,
+    force_rerun=False,
+    show_plots=False,
     verbose=False,
 ):
     '''
@@ -440,6 +444,10 @@ def flaredetection(
         out,
         target=target,
         stellar_params=stellar_params,
+        results_dir=results_dir,
+        resume_completed=resume_completed,
+        force_rerun=force_rerun,
+        show_plots=show_plots,
         verbose=verbose,
     )
 
