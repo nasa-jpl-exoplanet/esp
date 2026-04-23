@@ -444,7 +444,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             'lbllen': 20,
             'proginprompt': True,
         }
-        for thisdet, _ in allvisits.item():
+        for thisdet, _ in allvisits.items():
             allnorms[thisdet] = {}
             allnwaves[thisdet] = {}
             allz[thisdet] = {}
