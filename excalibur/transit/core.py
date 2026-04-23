@@ -426,7 +426,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     )
                     pass
                 plt.ylabel('[DN]', fontsize=20)
-                plt.xlabel('Wavelength [$\mu$m]', fontsize=20)
+                plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
                 plt.legend(fontsize=18)
                 plt.tick_params(labelsize=18)
                 plt.show()
@@ -444,7 +444,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             'lbllen': 20,
             'proginprompt': True,
         }
-        for thisdet in allvisits:
+        for thisdet, _ in allvisits.item():
             allnorms[thisdet] = {}
             allnwaves[thisdet] = {}
             allz[thisdet] = {}
@@ -483,7 +483,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
                     seldet & selvis
                 ][valid]
-                if False:
+                if verbose:
                     plt.figure(figsize=(12, 9))
                     plt.title(name, fontsize=20)
                     for w, s in zip(
@@ -491,7 +491,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     ):
                         plt.plot(w, s)
                         pass
-                    plt.xlabel('Wavelength [$\mu$m]', fontsize=20)
+                    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass
