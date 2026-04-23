@@ -295,28 +295,44 @@ def normversion():
     1.1.7: new sigma clip for spitzer
     1.1.8: added jwst filter
     1.1.9: NIRSPEC
+    1.1.10: JWST Template per visit and speed things up by a factor of 100
     '''
-    return dawgie.VERSION(1, 1, 9)
+    return dawgie.VERSION(1, 1, 10)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
     '''
-    JWST spectra normalization
+    GMR: JWST spectra normalization
+    [I]:cal:[DICT]:data.calibration SV as dict
+    [I]:tme:[DICT]:data.timing SV as dict
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I]:ext:[STR]:SV extension i.e. 'JWST-NIRSPEC-NRS-F290LP-G395H'
+    [I/O]:out:[SV]:NormSV() see states.py
+          out['data'][p]:[DICT]:output/planet
+          out['data'][p]['visits'][det]:[STR]:visit number/detector
+          out['data'][p]['nspec'][det][v]:[ARRAY]:normalized spectrum/detector/visit
+          out['data'][p]['wave'][det][v]:[ARRAY]:wavelengths/detector/visit
+          out['data'][p]['z'][det][v]:[ARRAY]:separation/detector/visit
+          out['data'][p]['time'][det][v]:[ARRAY]:time/detector/visit
+          out['data'][p]['phase'][det][v]:[ARRAY]:phase/detector/visit
+          out['data'][p]['wavet'][det][v]:[ARRAY]:template wavelength/detector/visit
+          out['data'][p]['template'][det][v]:[ARRAY]:template/detector/visit
+    [I]:selftype:[STR]:'transit' or 'eclipse'
+    [OPT]:verbose:[BOOL]:plots
+    [OPT]:test:[INT]:array truncation max index for tests
     '''
     normed = False
-    if test:
-        cal['data']['SPECTRUM'] = cal['data']['SPECTRUM'][:200]
-        cal['data']['WAVE'] = cal['data']['WAVE'][:200]
-        cal['data']['DET'] = cal['data']['DET'][:200]
-        cal['data']['IGNORED'] = cal['data']['IGNORED'][:200]
-        tme['data']['c']['z'] = tme['data']['c']['z'][:200]
+    if test is not None:
+        cal['data']['SPECTRUM'] = cal['data']['SPECTRUM'][:test]
+        cal['data']['WAVE'] = cal['data']['WAVE'][:test]
+        cal['data']['DET'] = cal['data']['DET'][:test]
+        cal['data']['IGNORED'] = cal['data']['IGNORED'][:test]
         pass
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
     spectra = np.array(cal['data']['SPECTRUM'])
     wave = np.array(cal['data']['WAVE'])
 
-    # TEMPLATES
     wavetemplate = []
     for thisdet in np.unique(cal['data']['DET']):
         if verbose:
@@ -331,85 +347,164 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=False):
         for pnet in tme['data'].keys()
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
-    allzp = [tme['data'][p]['z'] for _, p in enumerate(events)]
-    allrps = [
-        priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
-        for _, p in enumerate(events)
-    ]
-    alloot = [
-        np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)
-    ]
-    oot = np.logical_and.reduce(alloot, 0).astype(np.bool)
 
     for p in events:
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
         out['data'][p] = {}
-        mttref = priors[p]['t0']
-        if mttref > 2400000.5:
-            mttref -= 2400000.5
+        if test is not None:
+            tme['data'][p]['z'] = tme['data'][p]['z'][:test]
+            tme['data'][p]['visits'] = tme['data'][p]['visits'][:test]
             pass
+        visp = tme['data'][p]['visits']
+        rp = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+        # TEMPLATES
         allwavet = {}
         alltemplates = {}
+        allvisits = {}
         for thisdet in np.unique(cal['data']['DET']):
-            select = np.array([d in [thisdet] for d in cal['data']['DET']])
-            soot = oot[select]
-            wavet, template = scube(
-                spectra[select][soot],
-                wave[select][soot],
-                name=thisdet,
-                verbose=verbose,
-            )
-            alltemplates[thisdet] = np.array(template)
-            allwavet[thisdet] = np.array(wavet)
+            alltemplates[thisdet] = {}
+            allwavet[thisdet] = {}
+            allvisits[thisdet] = {}
+            seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
+            for thisvis in np.unique(visp):
+                strvis = str(int(thisvis))
+                selvis = visp == thisvis
+                zdetvis = tme['data'][p]['z'][seldet & selvis]
+                neg = np.min(zdetvis) < 0
+                pos = np.max(zdetvis) > 0
+                intransit = np.sum(abs(zdetvis) < 1.0) > 3
+                if neg and pos and intransit:
+                    orderme = np.argsort(
+                        tme['data'][p]['time'][seldet & selvis]
+                    )
+                    dt = np.diff(
+                        tme['data'][p]['time'][seldet & selvis][orderme]
+                    )
+                    # Multi observations per visit
+                    thr = np.max(np.unique(dt))
+                    if thr > 1e1 * np.median(dt):
+                        if np.all(
+                            zdetvis[orderme][: list(dt).index(thr) + 1] < 0
+                        ):
+                            nanme = (
+                                np.arange(orderme.size)
+                                < list(dt).index(thr) + 1
+                            )
+                            pass
+                        else:
+                            nanme = (
+                                np.arange(orderme.size)
+                                > list(dt).index(thr) + 1
+                            )
+                            pass
+                        znan = zdetvis[orderme]
+                        znan[nanme] = np.nan
+                        zdetvis[orderme] = znan
+                        pass
+                    oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
+                    wavet, template = scube(
+                        spectra[seldet & selvis][oot],
+                        wave[seldet & selvis][oot],
+                        name=thisdet + ' [' + strvis + ']',
+                        verbose=verbose,
+                    )
+                    alltemplates[thisdet][strvis] = np.array(template)
+                    allwavet[thisdet][strvis] = np.array(wavet)
+                    allvisits[thisdet][strvis] = np.isfinite(zdetvis)
+                    pass
+                pass
+            if verbose:
+                plt.figure(figsize=(12, 9))
+                for thisvis in allvisits[thisdet]:
+                    plt.plot(
+                        allwavet[thisdet][thisvis],
+                        alltemplates[thisdet][thisvis],
+                        '.',
+                        label=thisvis,
+                    )
+                    pass
+                plt.ylabel('[DN]', fontsize=20)
+                plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                plt.legend(fontsize=18)
+                plt.tick_params(labelsize=18)
+                plt.show()
+                pass
             pass
-
         # NORM
-        allnorms = []
-        allnwaves = []
+        allnorms = {}
+        allnwaves = {}
+        allz = {}
+        allt = {}
+        allp = {}
         argsdict = {
             'progbar': verbose,
             'progsizemax': 35,
-            'lbllen': 15,
+            'lbllen': 20,
             'proginprompt': True,
         }
-        progbar = nerdclub.Progressbar(argsdict, '>-- NORM ', wave)
-        for ws, s, det in zip(wave, spectra, cal['data']['DET']):
-            t = alltemplates[det]
-            w = allwavet[det]
-            dw = np.nanmedian(np.diff(w)) / 2.0
-
-            norms = []
-            wnorms = []
-            for thisw, thiss in zip(ws, s):
-                dist = list(abs(w - thisw))
-                if np.nanmin(dist) < dw:
-                    norms.append(thiss / t[dist.index(np.min(dist))])
-                    wnorms.append(thisw)
+        for thisdet, _ in allvisits.items():
+            allnorms[thisdet] = {}
+            allnwaves[thisdet] = {}
+            allz[thisdet] = {}
+            allt[thisdet] = {}
+            allp[thisdet] = {}
+            seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
+            for thisvis in allvisits[thisdet]:
+                name = thisdet + ' [' + thisvis + ']'
+                selvis = visp == int(thisvis)
+                valid = allvisits[thisdet][thisvis]
+                divideme = np.nan * wave[seldet & selvis][valid][0]
+                progbar = nerdclub.Progressbar(
+                    argsdict, '>-- NORM ' + name, divideme
+                )
+                for idiv, _ in enumerate(divideme):
+                    # GMR: Assumes subpixel pointing stability during the whole transit
+                    thiswave = wave[seldet & selvis][valid][0][idiv]
+                    if np.isfinite(thiswave):
+                        thisdiff = np.abs(allwavet[thisdet][thisvis] - thiswave)
+                        itemp = list(thisdiff).index(np.nanmin(thisdiff))
+                        divideme[idiv] = alltemplates[thisdet][thisvis][itemp]
+                        pass
+                    progbar.update()
+                    pass
+                progbar.close()
+                allnorms[thisdet][thisvis] = (
+                    np.array(spectra[seldet & selvis][valid]) / divideme
+                )
+                allnwaves[thisdet][thisvis] = wave[seldet & selvis][valid]
+                allz[thisdet][thisvis] = tme['data'][p]['z'][seldet & selvis][
+                    valid
+                ]
+                allt[thisdet][thisvis] = tme['data'][p]['time'][
+                    seldet & selvis
+                ][valid]
+                allp[thisdet][thisvis] = tme['data'][p]['phase'][
+                    seldet & selvis
+                ][valid]
+                if verbose:
+                    plt.figure(figsize=(12, 9))
+                    plt.title(name, fontsize=20)
+                    for w, s in zip(
+                        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
+                    ):
+                        plt.plot(w, s)
+                        pass
+                    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                    plt.tick_params(labelsize=18)
+                    plt.show()
                     pass
                 pass
-            allnorms.append(np.array(norms))
-            allnwaves.append(np.array(wnorms))
-            progbar.update()
             pass
-        progbar.close()
-
-        out['data'][p]['visits'] = tme['data'][p]['visits']
+        out['data'][p]['visits'] = allvisits
         out['data'][p]['nspec'] = allnorms
         out['data'][p]['wave'] = allnwaves
-        out['data'][p]['z'] = tme['data'][p]['z']
-        out['data'][p]['time'] = tme['data'][p]['time']
-        out['data'][p]['phase'] = tme['data'][p]['phase']
+        out['data'][p]['z'] = allz
+        out['data'][p]['time'] = allt
+        out['data'][p]['phase'] = allp
         out['data'][p]['wavet'] = allwavet
         out['data'][p]['template'] = alltemplates
-        if verbose:
-            plt.figure(figsize=(12, 9))
-            for w, s in zip(allnwaves, allnorms):
-                plt.plot(w, s)
-                pass
-            plt.show()
-            pass
         pass
     _ = ext
     out['STATUS'].append(True)
@@ -1215,7 +1310,7 @@ def scube(allspec, allwaves, name='', verbose=False):
     argsdict = {
         'progbar': verbose,
         'progsizemax': 35,
-        'lbllen': 15,
+        'lbllen': 20,
         'proginprompt': True,
     }
     progbar = nerdclub.Progressbar(argsdict, '>-- SCUBE ' + name, zwve)
