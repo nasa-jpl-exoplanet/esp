@@ -311,15 +311,19 @@ def plot_overallsample_fits_vs_truths(
 ):
     '''
     Compare the retrieved values against the original inputs
+    Also show a histogram of (fit-truth)/uncertainty
     Also (optionally) show a histogram of the uncertainty values
     '''
+
+    # compare histogram against a bell curve (Gaussian statistics)
+    gaussianDist = np.random.normal(size=10000)
 
     plot_statevectors = []
     for param in params:
         # make sure that the MLparam exists in the truth set (no CO2 in TEA)
         if param in truth_values:
-            figure = plt.figure(figsize=(11, 5))
-            ax = figure.add_subplot(1, 2, 1)
+            figure = plt.figure(figsize=(16, 5))
+            ax = figure.add_subplot(1, 3, 1)
 
             for truth, fit, error, errorsys in zip(
                 truth_values[param],
@@ -364,11 +368,75 @@ def plot_overallsample_fits_vs_truths(
                 + ' planets'
             )
 
-            # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
-            ax2 = figure.add_subplot(1, 2, 2)
+            # CHI (fit-truth)/error HISTOGRAMS IN SECOND PANEL
+            ax2 = figure.add_subplot(1, 3, 2)
+
+            chi_instrumental = (
+                fit_values[param] - truth_values[param]
+            ) / fit_errors[param]
+            chi_systematic = (
+                fit_values[param] - truth_values[param]
+            ) / fit_errorssys[param]
+            lowend = np.min(chi_instrumental)
+            highend = np.max(chi_instrumental)
+            #lowend = np.min(np.concatenate((chi_instrumental, chi_systematic)))
+            #highend = np.max(np.concatenate((chi_instrumental, chi_systematic)))
+            #print('lowend', lowend)
+            #print('highend', highend)
+            lowend = np.min((-5, np.ceil(lowend)))
+            highend = np.max((5, np.trunc(lowend)))
+            #print('lowend', lowend)
+            #print('highend', highend)
+            #print('# of bins', int(highend - lowend))
+            plt.hist(
+                chi_instrumental,
+                range=(lowend, highend),
+                bins=int(highend - lowend),
+                density=True,
+                histtype='step',
+                color='black',
+                zorder=1,
+                label='instrument noise',
+            )
+            plt.hist(
+                chi_systematic,
+                range=(lowend, highend),
+                bins=int(highend - lowend),
+                density=True,
+                histtype='step',
+                color='red',
+                zorder=2,
+                label='systematic noise',
+            )
+
+            # plot a bell curve for comparison
+            plt.hist(
+                gaussianDist,
+                range=(lowend, highend),
+                bins=int(highend - lowend),
+                density=True,
+                histtype='step',
+                linestyle='--',
+                color='grey',
+                zorder=3,
+                label='Gaussian',
+            )
+            # ax2.set_xlim(overallmin, overallmax)
+
+            ax2.set_xlabel(param + ' truth', fontsize=14)
+            ax2.set_ylabel(param + ' fit', fontsize=14)
+            plt.title(
+                param
+                + ' (fit-truth)/error for '
+                + str(len(fit_errors[param]))
+                + ' planets'
+            )
+
+            # UNCERTAINTY HISTOGRAMS IN THIRD PANEL
+            ax3 = figure.add_subplot(1, 3, 3)
 
             errors = np.array(fit_errors[param])
-            ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+            ax3.set_xlabel(param + ' uncertainty', fontsize=14)
             if len(errors) > 0:
                 # the histogram range has to go past the data range or you get a vertical line on the right
                 lower = errors.min() / 1.5
@@ -388,10 +456,10 @@ def plot_overallsample_fits_vs_truths(
                 plt.title(
                     'cumulative histogram of ' + str(len(errors)) + ' planets'
                 )
-                ax2.semilogx()
-                ax2.set_xlim(lower, upper)
-            ax2.set_ylim(0, 1)
-            ax2.set_ylabel('fraction of planets', fontsize=14)
+                ax3.semilogx()
+                ax3.set_xlim(lower, upper)
+            ax3.set_ylim(0, 1)
+            ax3.set_ylabel('fraction of planets', fontsize=14)
 
             figure.tight_layout()
 
