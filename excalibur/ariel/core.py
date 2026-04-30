@@ -239,6 +239,15 @@ def simulate_spectra(
                 targetplanet,
                 runtime_params,
             )
+
+            # old_ariel_instrument = load_ariel_instrument(
+            #    targetplanet,
+            #    runtime_params,
+            # )
+            # print('old Nvisits',old_ariel_instrument['nVisits'])
+            # print('new Nvisits',ariel_instrument['nVisits'])
+            # print('old median noise',np.median(old_ariel_instrument['noise']))
+            # print('new median noise',np.median(ariel_instrument['noise']))
         else:
             ariel_instrument = calculate_ariel_instrument(
                 targetplanet,

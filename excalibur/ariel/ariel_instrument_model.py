@@ -174,7 +174,7 @@ def load_arielrad_results(target, runtime_params):
     number of observed transits is taken into account later
     '''
     tier = runtime_params.tier
-    arielRad_version = runtime_params.arielRad
+    # arielRad_version = runtime_params.arielRad  # not yet implemented
     thorngren = runtime_params.thorngrenMassMetals
     chachan = runtime_params.chachanMassMetals
 
@@ -200,7 +200,7 @@ def load_arielrad_results(target, runtime_params):
         else:
             ariel_instrument = arielRad_fullresults['mmw_min']
 
-        nVisits = ariel_instrument['nVisits_tier'+str(tier)]
+        nVisits = ariel_instrument['nVisits_tier' + str(tier)]
         ariel_instrument['nVisits'] = nVisits
         log.info(
             '--< ArielRad/Tier-%s requires %s visits for %s >--',
@@ -212,8 +212,8 @@ def load_arielrad_results(target, runtime_params):
         for iwave in range(len(ariel_instrument['wavelow']) - 1):
             # fix the overlap in the wavelength bins at 1.95um
             if (
-                    ariel_instrument['wavehigh'][iwave]
-                    > ariel_instrument['wavelow'][iwave + 1] * 1.00001
+                ariel_instrument['wavehigh'][iwave]
+                > ariel_instrument['wavelow'][iwave + 1] * 1.00001
             ):
                 # print('spectral channels overlap!!',iwave,
                 #      ariel_instrument['wavehigh'][iwave],
@@ -225,6 +225,7 @@ def load_arielrad_results(target, runtime_params):
                 )
 
     return ariel_instrument
+
 
 # ---------------------------- ---------------------------------------
 def load_ariel_instrument(target, runtime_params):
