@@ -3,6 +3,7 @@
 # Heritage code shame:
 # pylint: disable=duplicate-code
 # pylint: disable=invalid-name
+# pylint: disable=too-many-positional-arguments,too-many-arguments
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -212,7 +213,7 @@ class pcflaredetection(dawgie.Algorithm):
     '''
 
     def __init__(self, wlpc=pcwhitelight()):
-        self._version_ = dawgie.VERSION(1, 1, 2)
+        self._version_ = dawgie.VERSION(1, 2, 0)
         self._type = 'phasecurve'
         self._wlpc = wlpc
         self.__rt = rtalg.Autofill()
@@ -241,6 +242,7 @@ class pcflaredetection(dawgie.Algorithm):
         vfin, sfin = checksv(fin)
 
         svupdate = []
+        target = repr(self).split('.')[1]
         # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
         #     stop here if it is not a runtime target
         #     self.__rt.proceed(fltr)
@@ -254,7 +256,11 @@ class pcflaredetection(dawgie.Algorithm):
                     '--< %s FLARE DETECTION: %s >--', self._type.upper(), fltr
                 )
                 update = self._flaredetection(
-                    phasecurve, fin, self.__out[index], index
+                    phasecurve,
+                    fin,
+                    self.__out[index],
+                    index,
+                    target=target,
                 )
                 pass
             else:
@@ -275,8 +281,14 @@ class pcflaredetection(dawgie.Algorithm):
             )
         return
 
-    def _flaredetection(self, wlpc, fin, out, index):
-        flares = phccore.flaredetection(wlpc, fin, out, fltrs[index])
+    def _flaredetection(self, wlpc, fin, out, index, target=None):
+        flares = phccore.flaredetection(
+            wlpc,
+            fin,
+            out,
+            fltrs[index],
+            target=target,
+        )
         return flares
 
     def _failure(self, errstr):

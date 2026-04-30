@@ -116,14 +116,13 @@ class MLfit(dawgie.Algorithm):
             # allowed_filters = self.__rt.sv_as_dict()['status']['allowed_filter_names']
             # print('allowed filters in cerb.results',allowed_filters)
 
-            # just one filter, while debugging:
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-            # for fltr in ['Ariel-sim']:
-            for fltr in self.__rt.sv_as_dict()['status'][
-                'allowed_filter_names'
-            ]:
+            # for fltr in self.__rt.sv_as_dict()['status'][
+            #    'allowed_filter_names'
+            # ]:
+            # only run for Arielsim; needs to have truth spectrum/params
+            for fltr in ['Ariel-sim']:
                 # stop here if it is not a runtime target
-                self.__rt.proceed(fltr)
+                # self.__rt.proceed(fltr)
 
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 vatm, satm = checksv(self.__atm.sv_as_dict()[fltr])
@@ -170,8 +169,8 @@ class MLfit(dawgie.Algorithm):
                     update = self._mlfit(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
-                        runtime_params,
                         only_these_planets,
+                        runtime_params,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -208,6 +207,7 @@ class MLfit(dawgie.Algorithm):
         self,
         trgt,
         fltr,
+        only_these_planets,
         runtime_params,
         fin,
         ancil,
@@ -215,9 +215,9 @@ class MLfit(dawgie.Algorithm):
         crbatmos,
         spectrum,
         index,
-        only_these_planets,
     ):
         '''Core code call'''
+
         mlfitout = gemlicore.mlfit(
             trgt,
             fltr,
@@ -291,25 +291,25 @@ class Analysis(dawgie.Analyzer):
         if len(aspects) == 0:
             log.warning('--< GEMLI ANALYSIS: contains no targets >--')
         else:
-            # determine which filters have results from cerb.atmos (in aspects)
+            # determine which filters have results from gemli.mlfit (in aspects)
             #  (you have to loop through all targets, since filters vary by target)
             fwr = []
+            # print('looping through aspect to get filters')
             for trgt in aspects:
+                # print('checking target', trgt)
                 for fltr in fltrs:
                     if (fltr not in fwr) and (
-                        'gemli.atmos.' + fltr in aspects[trgt]
+                        'gemli.mlfit.' + fltr in aspects[trgt]
                     ):
-                        # print('This filter exists in the cerb.atmos aspect:',fltr,trgt)
+                        # print('This filter exists in gemli.mlfit aspect:',fltr,trgt)
                         fwr.append(fltr)
             if not fwr:
                 log.warning(
                     '--< GEMLI ANALYSIS: NO FILTERS WITH ATMOS DATA!!!>--'
                 )
 
-            # fwr = ['Ariel-sim']  # just one filter, while debugging
-            # fwr =['HST-WFC3-IR-G141-SCAN']  # just one filter, while debugging
-
             # only consider filters that have cerb.atmos results loaded in as an aspect
+            # fwr = ['Ariel-sim']  # (it should actually only be just this filter)
             for fltr in fwr:
                 # if 'gemli.atmos.'+fltr not in aspects[trgt]:
                 #    log.warning('--< GEMLI ANALYSIS: %s not found IMPOSSIBLE!!!!>--', fltr)

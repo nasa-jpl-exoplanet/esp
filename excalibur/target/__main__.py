@@ -11,21 +11,22 @@ from excalibur.util.main import main_start
 import excalibur.target.bot
 
 # ------------- ------------------------------------------------------
+if __name__ == "__main__":
+    rid, tn = main_start()
 
-rid, tn = main_start()
+    if tn in ['', '__all__']:
+        NAME = ['create', None][-1]  # -1 to run them all
+        subtasks = excalibur.target.bot.Agent('target', 4, rid)
+        pass
+    elif rid == 0:
+        NAME = ['scrape_regression', None][-1]  # -1 to run them all
+        subtasks = excalibur.target.bot.Regress('target', 4, tn)
+    else:
+        NAME = ['autofill', 'scrape', None][-1]  # -1 to run them all
+        subtasks = excalibur.target.bot.Actor('target', 4, rid, tn)
+        pass
 
-if tn in ['', '__all__']:
-    NAME = ['create', None][-1]  # -1 to run them all
-    subtasks = excalibur.target.bot.Agent('target', 4, rid)
+    subtasks.do(NAME)
+    dawgie.db.close()
+    dawgie.security.finalize()
     pass
-elif rid == 0:
-    NAME = ['scrape_regression', None][-1]  # -1 to run them all
-    subtasks = excalibur.target.bot.Regress('target', 4, tn)
-else:
-    NAME = ['autofill', 'scrape', None][-1]  # -1 to run them all
-    subtasks = excalibur.target.bot.Actor('target', 4, rid, tn)
-    pass
-
-subtasks.do(NAME)
-dawgie.db.close()
-dawgie.security.finalize()

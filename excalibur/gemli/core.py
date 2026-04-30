@@ -21,19 +21,16 @@ from excalibur.cerberus.plotters import (
     rebin_data,
     plot_corner,
     plot_spectrumfit,
-    plot_fits_vs_truths,
-    plot_fit_uncertainties,
-    plot_mass_vs_metals,
 )
 from excalibur.gemli.plotters import (
     plot_ML_fits_vs_truths,
     plot_ML_spectrumfit,
+    plot_overallsample_fits_vs_truths,
 )
 
 import logging
 import os
 import numpy as np
-from collections import defaultdict
 
 log = logging.getLogger(__name__)
 
@@ -76,11 +73,11 @@ def mlfit(
     trgt,
     filt,
     runtime_params,
-    fin,
-    anc,
-    xsl,
-    atm,
-    spc,
+    sysfin,
+    ancillary,
+    cerbxsl,
+    cerbatmos,
+    arielsim,
     out,
     only_these_planets=None,
     verbose=False,
@@ -89,18 +86,15 @@ def mlfit(
     Plot out the results from gemli.atmos()
     trgt [INPUT]: target name
     filt [INPUT]: filter
-    fin [INPUT]: system.finalize.parameters
-    anc [INPUT]: ancillary.finalize.parameters
-    xls [INPUT]: cerberus.xslib.data
-    atm [INPUT]: cerberus.atmos.data
-    spectrum [INPUT]: ariel.simspectrum.parameters
+    sysfin [INPUT]: system.finalize.parameters
+    ancillary [INPUT]: ancillary.finalize.parameters
+    cerbxls [INPUT]: cerberus.xslib.data
+    cerbatm [INPUT]: cerberus.atmos.data
+    arielsim [INPUT]: ariel.simspectrum.parameters
     out [INPUT/OUTPUT]
     verbose [OPTIONAL]: verbosity
     '''
     ssc = syscore.ssconstants(mks=True)
-
-    cerbatmos = atm['data']
-    cerbxsl = xsl['data']
 
     crbhzlib = {'PROFILE': []}
     hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
@@ -111,7 +105,7 @@ def mlfit(
 
     completed_at_least_one_planet = False
 
-    for p in fin['priors']['planets']:
+    for p in sysfin['priors']['planets']:
 
         # TEC,TEA params - X/H, C/O, N/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
@@ -138,12 +132,12 @@ def mlfit(
 
             # if verbose:
             #    print('Ariel-sim INPUT PARAMETERS')
-            #    print('  ', fin['priors'].keys())
-            #    print('  ', fin['priors'][p].keys())
-            #    print('  Rp', fin['priors'][p]['rp'])
-            #    print('  Mp', fin['priors'][p]['mass'])
-            #    print('  Rs', fin['priors']['R*'])
-            #    print('  ', spc['data'][p].keys())
+            #    print('  ', sysfin['priors'].keys())
+            #    print('  ', sysfin['priors'][p].keys())
+            #    print('  Rp', sysfin['priors'][p]['rp'])
+            #    print('  Mp', sysfin['priors'][p]['mass'])
+            #    print('  Rs', sysfin['priors']['R*'])
+            #    print('  ', arielsim['data'][p].keys())
             #    print()
 
             ML_param_names = [
@@ -207,28 +201,28 @@ def mlfit(
             realspectrum = True
             # realspectrum = False
             if realspectrum:
-                Rs = fin['priors']['R*']
-                Mp = fin['priors'][p]['mass']
+                Rs = sysfin['priors']['R*']
+                Mp = sysfin['priors'][p]['mass']
 
                 # oops actually which spectrum to use?
                 # maybe just use the cerberus one?
                 # but we want to do ML without cerberus, right? so use ariel-sim
 
-                # print(' uppkeys', spc['data'][p][arielModel].keys())
-                # print(' truekeys', spc['data'][p][arielModel]['true_spectrum'].keys())
-                true_spectrum = spc['data'][p][arielModel]['true_spectrum']
+                # print(' uppkeys', arielsim['data'][p][arielModel].keys())
+                # print(' truekeys', arielsim['data'][p][arielModel]['true_spectrum'].keys())
+                true_spectrum = arielsim['data'][p][arielModel]['true_spectrum']
                 # observed_spectrum = true_spectrum['fluxDepth']
                 # print('spec,err', np.mean(observed_spectrum), 0)
                 # print(' # of waves', len(observed_spectrum))
 
-                observed_spectrum = spc['data'][p][arielModel]['ES'] ** 2
+                observed_spectrum = arielsim['data'][p][arielModel]['ES'] ** 2
                 #  not used:
                 # observed_spectrum_error = (
                 #    2
-                #    * spc['data'][p][arielModel]['ES']
-                #    * spc['data'][p][arielModel]['ESerr']
+                #    * arielsim['data'][p][arielModel]['ES']
+                #    * arielsim['data'][p][arielModel]['ESerr']
                 # )
-                # print('dict check', spc['data'][p][arielModel].keys())
+                # print('dict check', arielsim['data'][p][arielModel].keys())
                 # print(
                 #    'spec,err',
                 #    np.mean(observed_spectrum),
@@ -258,8 +252,8 @@ def mlfit(
                 # Mp = MLtestsample_spectra[jtest][numwaves + 3]
                 Rs = MLtestsample_spectra[jtest][-2]
                 Mp = MLtestsample_spectra[jtest][-1]
-            if verbose:
-                print(' trying Rs,Mp = ', Rs, Mp)
+            # if verbose:
+            #    print(' trying Rs,Mp = ', Rs, Mp)
 
             # pred = predict_params_from_spectrum(
             #     fluxDepth_ex, Rs, Mp, models, scaler, ML_param_names
@@ -334,20 +328,20 @@ def mlfit(
                     ML_mixratio[param[3:]] = ML_param_results[param]
             # print('ML_mixratio for forwardmodel call', ML_mixratio)
 
-            true_spectrum = spc['data'][p][arielModel]['true_spectrum']
+            true_spectrum = arielsim['data'][p][arielModel]['true_spectrum']
             # print('true keys', true_spectrum.keys())
             truth_spectrum = {
                 'depth': true_spectrum['fluxDepth'],
                 'wavelength': true_spectrum['wavelength_um'],
             }
-            # print('obs keys', spc['data'][p][arielModel].keys())
+            # print('obs keys', arielsim['data'][p][arielModel].keys())
             transitdata = {}
-            transitdata['wavelength'] = spc['data'][p]['WB']
-            transitdata['depth'] = spc['data'][p][arielModel]['ES'] ** 2
+            transitdata['wavelength'] = arielsim['data'][p]['WB']
+            transitdata['depth'] = arielsim['data'][p][arielModel]['ES'] ** 2
             transitdata['error'] = (
                 2
-                * spc['data'][p][arielModel]['ES']
-                * spc['data'][p][arielModel]['ESerr']
+                * arielsim['data'][p][arielModel]['ES']
+                * arielsim['data'][p][arielModel]['ESerr']
             )
             transitdata = rebin_data(transitdata)
 
@@ -407,7 +401,7 @@ def mlfit(
             # print('Rp (RJup)', Rp)
             Rp = ML_param_results['Rp'] * ssc['Rjup']
             # print('Rp (cgs) for ML', Rp)
-            # Rp = fin['priors'][p]['rp'] * ssc['Rjup']
+            # Rp = sysfin['priors'][p]['rp'] * ssc['Rjup']
             # print('IGNORING ML Rp; using system.finalize prior', Rp)
 
             fmc = crbFM().crbmodel(
@@ -422,7 +416,7 @@ def mlfit(
                 xsecs=cerbxsl[p]['XSECS'],
                 qtgrid=cerbxsl[p]['QTGRID'],
                 wgrid=transitdata['wavelength'],
-                orbp=fin['priors'],
+                orbp=sysfin['priors'],
                 hzlib=crbhzlib,
                 planet=p,
                 knownspecies=runtime_params.knownspecies,
@@ -454,9 +448,9 @@ def mlfit(
             # )
             # print('average depth after  normalizing', np.average(ML_best_fit))
 
-            # print('arielsim keys', spc['data'][p][arielModel].keys())
+            # print('arielsim keys', arielsim['data'][p][arielModel].keys())
             # print('cerb keys', cerbatmos[p].keys())
-            # print('arielsim stuff', spc['data'][p][arielModel]['model_params'])
+            # print('arielsim stuff', arielsim['data'][p][arielModel]['model_params'])
             # print('cerb stuff', cerbatmos[p]['MODELPARNAMES']) TEC and TEA; XtoH,CtoO
             # print('cerb stuff', cerbatmos[p]['TRUTH_MODELPARAMS'])
             # print('cerb stuff', cerbatmos[p]['TEC'].keys()) prior_ranges MCTRACE
@@ -472,9 +466,9 @@ def mlfit(
             )
             pressure = pgrid[::-1]
             # ok I confirm that these are the same thing
-            model_params = spc['data'][p][arielModel]['model_params']
+            model_params = arielsim['data'][p][arielModel]['model_params']
             model_params = cerbatmos[p]['TRUTH_MODELPARAMS']
-            print('model_params', model_params)
+            # print('model_params', model_params)
             if 'TEA' in arielModel:
                 tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                 mixratioprofiles = crbutil.calcTEA(
@@ -488,6 +482,9 @@ def mlfit(
                     truth_params[molecule] = np.log10(
                         np.mean(10.0 ** mixratioprofiles[molecule])
                     )
+                # explicitly include CO2 when it's missing?
+                if 'CO2' not in truth_params:
+                    truth_params['CO2'] = -10
             else:
                 truth_params, _, _, _ = crbutil.crbce(
                     pressure,
@@ -521,8 +518,8 @@ def mlfit(
                 ML_param_results,
                 ML_uncertainties_systematic,
                 ML_uncertainties_instrument,
-                fin['priors'],
-                anc['data'][p],
+                sysfin['priors'],
+                ancillary['data'][p],
                 filt,
                 trgt,
                 p,
@@ -672,7 +669,7 @@ def mlfit(
                 # print('fit results; T:',tpr)
                 # print('fit results; mdplist:',mdp)
 
-                rp0 = fin['priors'][p]['rp'] * ssc['Rjup']
+                rp0 = sysfin['priors'][p]['rp'] * ssc['Rjup']
                 # print('Rp (cgs) cerberus', rp0)
 
                 if model_name in ['TEC', 'TEA']:
@@ -749,7 +746,7 @@ def mlfit(
                     xsecs=cerbxsl[p]['XSECS'],
                     qtgrid=cerbxsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
-                    orbp=fin['priors'],
+                    orbp=sysfin['priors'],
                     hzlib=crbhzlib,
                     planet=p,
                     knownspecies=runtime_params.knownspecies,
@@ -857,7 +854,7 @@ def mlfit(
                         xsecs=cerbxsl[p]['XSECS'],
                         qtgrid=cerbxsl[p]['QTGRID'],
                         wgrid=transitdata['wavelength'],
-                        orbp=fin['priors'],
+                        orbp=sysfin['priors'],
                         hzlib=crbhzlib,
                         cheq=tceqdict,
                         planet=p,
@@ -917,8 +914,8 @@ def mlfit(
                         patmos_best_fit,
                         spectrumarray,
                         truth_spectrum,
-                        fin['priors'],
-                        anc['data'][p],
+                        sysfin['priors'],
+                        ancillary['data'][p],
                         cerbatmos[p],
                         filt,
                         model_name,
@@ -928,17 +925,16 @@ def mlfit(
                     )
                 )
 
-                if verbose:
-                    print('paramValues median  ', param_values_median)
-                    print('paramValues bestFit ', param_values_best_fit)
+                # if verbose:
+                #    print('paramValues median  ', param_values_median)
+                #    print('paramValues bestFit ', param_values_best_fit)
 
                 # _______________ML fit-vs-truth PLOT________________
                 out['data'][p]['plot_MLfitvstruth'], _ = plot_ML_fits_vs_truths(
                     ML_param_names_forprint,
                     MLtestSample_input_params,
                     MLfit_results,
-                    # verbose=False,
-                    verbose=verbose,  # asdf
+                    verbose=verbose,
                 )
 
                 # _______________CORNER PLOT________________
@@ -989,16 +985,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         len(aspecttargets),
     )
 
-    svname = 'gemli.atmos'
+    svname = 'gemli.mlfit'
 
     alltargetlists = get_target_lists()
-
-    # set prior_ranges to avoid possible used-before-assignment problem
-    # (ideally it is read in, but possibly not if there's mistake/old formatting)
-    # the normal call doesn't work well here actually. and it creates nodes
-    # darn.  have to just set something arbitrary
-    # _, prior_ranges = addPriors(priorRangeTable, runtime_params, model, modparlbl[model])
-    prior_ranges = None
 
     # allow for analysis of multiple target lists
     analysistargetlists = []
@@ -1054,18 +1043,17 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         #    'targets':alltargetlists['G141']})
 
     for targetlist in analysistargetlists:
-        # print('  running targetlist=',targetlist['targetlistname'])
-        param_names = []
-        masses = []
-        stellar_fehs = []
-        truth_values = defaultdict(list)
-        fit_values = defaultdict(list)
-        fit_errors = defaultdict(list)
-        fit_errors2sided = defaultdict(list)
+        if verbose:
+            print('  running targetlist=', targetlist['targetlistname'])
+        MLparams = []
+        MLresults = []
+        MLtruths = []
+        MLerrors = []
+        MLerrorssys = []
 
-        # FIXMEE: move to config file and fix this code
         for trgt in targetlist['targets']:
-            # print('        cycling through targets',trgt)
+            if verbose:
+                print('        cycling through targets', trgt)
             if trgt not in aspecttargets:
                 log.warning(
                     '--< GEMLI ANALYSIS: TARGET NOT IN ASPECT %s %s >--',
@@ -1074,7 +1062,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 )
             elif svname + '.' + filt not in aspects[trgt]:
                 # some targets don't have this filter; no problem
-                # log.warning('--< NO CERB.ATMOS for this FILTER+TARGET %s %s >--',filt,trgt)
+                # log.warning('--< NO GEMLI.MLFIT for this FILTER+TARGET %s %s >--',filt,trgt)
                 pass
             elif 'STATUS' not in aspects[trgt][svname + '.' + filt]:
                 log.warning(
@@ -1083,291 +1071,108 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                     trgt,
                 )
             else:
-                # print('target with valid data format for this filter:',filt,trgt)
-                atmos_fit = aspects[trgt][svname + '.' + filt]
-
-                # if 'stellar_params' in atmosFit['data']:  # strange. this doesn't work
-                if 'stellar_params' in atmos_fit['data'].keys():
-                    stellar_feh = atmos_fit['data']['stellar_params']['FEH*']
-                else:
-                    stellar_feh = 0
-                    log.warning('--< GEMLI ANALYSIS: no FEH* for %s >--', trgt)
+                # print('target with valid data format for this filter:',
+                #       filt, trgt)
+                mlfit_result = aspects[trgt][svname + '.' + filt]
 
                 # verify SV succeeded for target
-                if not atmos_fit['STATUS'][-1]:
+                if not mlfit_result['STATUS'][-1]:
                     log.warning(
-                        '--< GEMLI ANALYSIS: STATUS IS FALSE FOR CERB.ATMOS %s %s >--',
+                        '--< GEMLI ANALYSIS: STATUS IS FALSE FOR GEMLI.MLFIT %s %s >--',
                         filt,
                         trgt,
                     )
                 else:
-                    for planet_letter in atmos_fit['data'].keys():
-                        # print(trgt,atmosFit['data'][planet_letter]['MODELPARNAMES'])
-                        # print(trgt,atmosFit['data'][planet_letter]['planet_params'])
-
-                        # print('   keys:',atmosFit['data'][planet_letter].keys())
+                    for planet_letter in mlfit_result['data'].keys():
+                        # print('   keys:',mlfit_result['data'][planet_letter].keys())
                         if (
-                            planet_letter == 'stellar_params'
-                        ):  # this is not a planet letter
-                            pass
-
-                        elif (
                             analysisplanetlist
                             and trgt + ' ' + planet_letter
                             not in analysisplanetlist['planets']
                         ):
                             # print(' DROP: Ariel doesnt observe this planet',trgt+' '+planet_letter)
                             pass
-
-                        elif (
-                            'TEC'
-                            not in atmos_fit['data'][planet_letter][
-                                'MODELPARNAMES'
-                            ]
-                        ):
-                            log.warning(
-                                '--< GEMLI ANALYSIS: BIG PROBLEM theres no TEC model! %s %s >--',
-                                filt,
-                                trgt,
-                            )
-                        elif (
-                            'prior_ranges'
-                            not in atmos_fit['data'][planet_letter]['TEC']
-                        ):
-                            log.warning(
-                                '--< GEMLI ANALYSIS: SKIP (no prior info) - %s %s >--',
-                                filt,
-                                trgt,
-                            )
                         else:
-                            if (
-                                'planet_params'
-                                in atmos_fit['data'][planet_letter]
-                            ):
-                                masses.append(
-                                    atmos_fit['data'][planet_letter][
-                                        'planet_params'
-                                    ]['mass']
-                                )
-                            else:
-                                masses.append(666)
+                            mlfitresult = mlfit_result['data'][planet_letter]
+                            MLparams = mlfitresult['ML_param_names']
+                            MLresults.append(mlfitresult['ML_param_results'])
+                            MLtruths.append(mlfitresult['truth_params'])
+                            MLerrors.append(
+                                mlfitresult['ML_uncertainties_instrument']
+                            )
+                            MLerrorssys.append(
+                                mlfitresult['ML_uncertainties_systematic']
+                            )
+        # rearrange to standard plotting format as in cerberus
+        # (a dict of lists, rather than list of dicts)
+        reformatMLtruths = {}
+        reformatMLresults = {}
+        reformatMLerrors = {}
+        reformatMLerrorssys = {}
+        for MLparam in MLparams:
+            # truth params mixing ratio names don't start with 'mlp'
+            if MLparam.startswith('mlp'):
+                truthparam = MLparam[3:]
+            else:
+                truthparam = MLparam
 
-                            stellar_fehs.append(stellar_feh)
+            # ah wait this is a little tricky.
+            # molecules don't exactly match (true has N2, but not CO2)
+            # add in some conditionals
+            if truthparam in MLtruths[0]:
+                reformatMLtruths[MLparam] = np.array(
+                    [MLtruth[truthparam] for MLtruth in MLtruths]
+                )
+            else:
+                log.warning(
+                    '>-- GEMLI.ANALYSIS: parameter %s has no truth',
+                    truthparam,
+                )
+            # print('param MLparam', truthparam, MLparam)
+            # print('mlresult params', MLresults[0].keys())
+            reformatMLresults[MLparam] = np.array(
+                [MLresult[MLparam] for MLresult in MLresults]
+            )
+            reformatMLerrors[MLparam] = np.array(
+                [MLerror[MLparam] for MLerror in MLerrors]
+            )
+            reformatMLerrorssys[MLparam] = np.array(
+                [MLerrorsys[MLparam] for MLerrorsys in MLerrorssys]
+            )
 
-                            # (prior range should be the same for all the targets)
-                            prior_ranges = atmos_fit['data'][planet_letter][
-                                'TEC'
-                            ]['prior_ranges']
-
-                            all_traces = []
-                            all_keys = []
-                            for key in atmos_fit['data'][planet_letter]['TEC'][
-                                'MCTRACE'
-                            ]:
-                                all_traces.append(
-                                    atmos_fit['data'][planet_letter]['TEC'][
-                                        'MCTRACE'
-                                    ][key]
-                                )
-
-                                if key in ('TEC[0]', 'TEC'):
-                                    all_keys.append('[X/H]')
-                                elif key == 'TEC[1]':
-                                    all_keys.append('[C/O]')
-                                elif key == 'TEC[2]':
-                                    all_keys.append('[N/O]')
-                                else:
-                                    all_keys.append(key)
-
-                            for key, trace in zip(all_keys, all_traces):
-                                if key not in param_names:
-                                    param_names.append(key)
-                                med = np.median(trace)
-                                fit_values[key].append(med)
-                                lo = np.percentile(np.array(trace), 16)
-                                hi = np.percentile(np.array(trace), 84)
-                                fit_errors[key].append((hi - lo) / 2)
-                                fit_errors2sided[key].append(
-                                    [med - lo, hi - med]
-                                )
-                                if verbose:
-                                    if key == '[N/O]' and (hi - lo) / 2 < 2:
-                                        print(
-                                            'N/O',
-                                            trgt,
-                                            np.median(trace),
-                                            (hi - lo) / 2,
-                                        )
-                            if (
-                                'TRUTH_MODELPARAMS'
-                                in atmos_fit['data'][planet_letter].keys()
-                            ) and (
-                                isinstance(
-                                    atmos_fit['data'][planet_letter][
-                                        'TRUTH_MODELPARAMS'
-                                    ],
-                                    dict,
-                                )
-                            ):
-                                truth_params = atmos_fit['data'][planet_letter][
-                                    'TRUTH_MODELPARAMS'
-                                ].keys()
-                                # print('truth keys:',truth_params)
-                            else:
-                                truth_params = []
-
-                            for trueparam, fitparam in zip(
-                                ['Teq', 'metallicity', 'C/O', 'N/O', 'Mp'],
-                                ['T', '[X/H]', '[C/O]', '[N/O]', 'Mp'],
-                            ):
-                                if trueparam in truth_params:
-                                    true_value = float(
-                                        atmos_fit['data'][planet_letter][
-                                            'TRUTH_MODELPARAMS'
-                                        ][trueparam]
-                                    )
-                                    # (metallicity and C/O do not have to be converted to log-solar)
-                                    # if trueparam=='metallicity':
-                                    #    true_value = np.log10(true_value)
-                                    # elif trueparam=='C/O':
-                                    #    true_value = np.log10(true_value/0.54951)  # solar is C/O=0.55
-                                    # elif trueparam=='N/O':
-                                    #     true_value = true_value
-                                    if (
-                                        fitparam == '[N/O]'
-                                        and true_value == 666
-                                    ):
-                                        truth_values[fitparam].append(0)
-                                    else:
-                                        truth_values[fitparam].append(
-                                            true_value
-                                        )
-
-                                    if verbose:
-                                        if (
-                                            trueparam == 'Teq'
-                                            and true_value > 3333
-                                        ):
-                                            print(
-                                                'strangely high T',
-                                                trgt,
-                                                true_value,
-                                            )
-                                        if (
-                                            trueparam == 'metallicity'
-                                            and true_value > 66
-                                        ):
-                                            print(
-                                                'strangely high [X/H]',
-                                                trgt,
-                                                true_value,
-                                            )
-                                            print(
-                                                'atmosFit',
-                                                atmos_fit['data'][
-                                                    planet_letter
-                                                ],
-                                            )
-                                        if (
-                                            trueparam == 'C/O'
-                                            and true_value > 0.5
-                                        ):
-                                            print(
-                                                'strangely high [C/O]',
-                                                trgt,
-                                                true_value,
-                                            )
-
-                                elif trueparam == 'Mp':
-                                    # if the planet mass is not in the Truth dictionary, pull it from system
-                                    # print(' input keys',atmosFit['data'][planet_letter]['planet_params'])
-                                    # print(' planet mass from system params:',
-                                    #      atmosFit['data'][planet_letter]['planet_params']['mass'])
-                                    truth_values[fitparam].append(
-                                        atmos_fit['data'][planet_letter][
-                                            'planet_params'
-                                        ]['mass']
-                                    )
-                                elif trueparam == 'N/O':
-                                    truth_values[fitparam].append(0)
-                                else:
-                                    truth_values[fitparam].append(666)
-
-        # plot analysis of the results.  save as png and as state vector for states/view
+        # set path for optional saving plot to disk
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
-        fit_co_plot = False
-        fit_no_plot = False
-        if 'sim' in filt:
-            # for simulated data, compare retrieval against the truth
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
-            # jenkins doesn't like to have a triple-packed return here because it's fussy
-            plotarray = plot_fits_vs_truths(
-                truth_values,
-                fit_values,
-                fit_errors,
-                prior_ranges,
-                filt,
-                saveDir=save_dir,
-                verbose=verbose,
-            )
-            # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
-            if len(plotarray) > 2:
-                fit_co_plot = plotarray[2]
-            if len(plotarray) > 3:
-                fit_no_plot = plotarray[3]
-        else:
-            # for real data, make a histogram of the retrieved uncertainties
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
-            plotarray = plot_fit_uncertainties(
-                fit_values,
-                fit_errors,
-                prior_ranges,
-                filt,
-                saveDir=save_dir,
-                verbose=verbose,
-            )
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
-            if len(plotarray) > 2:
-                fit_co_plot = plotarray[2]
-            if len(plotarray) > 3:
-                fit_no_plot = plotarray[3]
 
-        mass_metals_plot, _ = plot_mass_vs_metals(
-            truth_values['Mp'],
-            stellar_fehs,
-            truth_values,
-            fit_values,
-            fit_errors2sided,
-            prior_ranges,
+        # for simulated data, compare retrieval against the truth
+        plotarray = plot_overallsample_fits_vs_truths(
+            MLparams,
+            reformatMLtruths,
+            reformatMLresults,
+            reformatMLerrors,
+            reformatMLerrorssys,
             filt,
             saveDir=save_dir,
             verbose=verbose,
         )
-
-        # save the analysis as .csv file? (in /proj/data/spreadsheets/)
-        # savesv(aspects, targetlist)
-
-        # targetlistname = targetlist['targetlistname']
+        # verbose doesn't show plots on screen when inside a personal pipeline
+        # use 'savetodisk' instead (while debugging)
+        #    savetodisk=True,
+        # )
 
         # Add to SV
-        out['data']['truths'] = dict(truth_values)
-        out['data']['values'] = dict(fit_values)
-        out['data']['errors'] = dict(fit_errors)
-        out['data']['plot_mass_v_metals'] = mass_metals_plot
-        out['data']['plot_fitT'] = fit_t_plot
-        out['data']['plot_fitMetal'] = fit_metalplot
-        if fit_co_plot:
-            out['data']['plot_fitCO'] = fit_co_plot
-        if fit_no_plot:
-            out['data']['plot_fitNO'] = fit_no_plot
+        out['data']['params'] = MLparams
+        out['data']['truths'] = MLtruths
+        out['data']['values'] = MLresults
+        out['data']['errors'] = MLerrors
+        out['data']['errorssys'] = MLerrorssys
+        for param, plot in zip(MLparams, plotarray):
+            out['data']['plot_' + param] = plot
 
-        out['data']['params'] = param_names
     out['data']['targetlistnames'] = [
         targetlist['targetlistname'] for targetlist in analysistargetlists
     ]
+
+    # print('keys in out at the end', out['data'].keys())
 
     out['STATUS'].append(True)
     return out['STATUS'][-1]
