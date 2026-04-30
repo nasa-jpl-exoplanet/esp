@@ -3741,11 +3741,15 @@ def orbital(*whiteparams):
         if ctxt.gttv:
             midtransits = ctxt.gttv
             pass
+        imnodes = None
+        lcnodes = None
         pass
     elif ('inc' in ctxt.fixedpars) and 'ttv' not in ctxt.fixedpars:
         r, atk, avs, aos, aoi = whiteparams
         inclination = ctxt.fixedpars['inc']
         midtransits = atk
+        imnodes = None
+        lcnodes = None
         pass
     elif not ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, icln, avs, aos, aoi = whiteparams
@@ -3754,11 +3758,15 @@ def orbital(*whiteparams):
         if ctxt.gttv:
             midtransits = ctxt.gttv
             pass
+        imnodes = None
+        lcnodes = None
         pass
     elif not (('inc' in ctxt.fixedpars) or ('ttv' in ctxt.fixedpars)):
         r, atk, icln, avs, aos, aoi = whiteparams
         inclination = icln
         midtransits = atk
+        imnodes = None
+        lcnodes = None
         pass
     else:  # Jump the building
         midtransits = None
