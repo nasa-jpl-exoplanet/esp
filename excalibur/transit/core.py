@@ -526,6 +526,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
+    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
