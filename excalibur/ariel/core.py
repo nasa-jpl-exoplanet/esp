@@ -338,7 +338,8 @@ def simulate_spectra(
             uncertainties = ariel_instrument['noise']
             # use #-of-visits our ArielRad calculation, not from Edwards table
             visits = ariel_instrument['nVisits']
-            # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
+            if verbose:
+                print('# of visits:', visits, '   tier:', tier)
 
             uncertainties /= np.sqrt(float(visits))
 
