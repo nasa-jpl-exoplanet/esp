@@ -2006,7 +2006,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
           out['data'][p][det]['prewhite_sep']:[LIST] prewhite separation
           out['data'][p][det]['valid']:[LIST] valid channels per spectrum
           out['data'][p][det]['whiteld']:[LIST] white LD coefficients
-          out['data'][p][det]['mcpost']:[PYMC] post stats      
+          out['data'][p][det]['mcpost']:[PYMC] post stats
     [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
                     i.e one of [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
@@ -2034,16 +2034,17 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                 validl = []
                 stdl = []
                 for wvs, nsp, tim, sep in zip(
-                        nrm['data'][pln]['wave'][det][vis],
-                        nrm['data'][pln]['nspec'][det][vis],
-                        nrm['data'][pln]['time'][det][vis],
-                        nrm['data'][pln]['z'][det][vis],
+                    nrm['data'][pln]['wave'][det][vis],
+                    nrm['data'][pln]['nspec'][det][vis],
+                    nrm['data'][pln]['time'][det][vis],
+                    nrm['data'][pln]['z'][det][vis],
                 ):
                     select = (wvs >= lwv) & (wvs <= mwv)
                     if np.sum(select):
                         if verbose:
                             prclist = [
-                                np.nanpercentile(np.abs(1e0 - nsp), p) for p in prc
+                                np.nanpercentile(np.abs(1e0 - nsp), p)
+                                for p in prc
                             ]
                             slist = [
                                 np.abs(1e0 - nsp) <= thisp for thisp in prclist
@@ -2076,7 +2077,10 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     pass
                 if verbose:
                     plt.figure(figsize=(12, 9))
-                    plt.title(target + pln + ': ' + det + ' [' + vis + ']', fontsize=20)
+                    plt.title(
+                        pln + ': ' + det + ' [' + vis + ']',
+                        fontsize=20,
+                    )
                     plt.errorbar(whttim, wht, yerr=whterr, fmt='o')
                     plt.tick_params(labelsize=18)
                     plt.show()
@@ -2086,11 +2090,13 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                 out['data'][pln][det]['prewhite_time'] = whttim
                 out['data'][pln][det]['prewhite_sep'] = whtsep
                 out['data'][pln][det]['valid'] = validl
-                g1, g2, g3, g4 = ldtl(priors['T*'],
-                                      priors['FEH*'],
-                                      priors['LOGG*'],
-                                      [np.nanmin(nrm['data'][pln]['wave'][det][vis])],
-                                      [np.nanmax(nrm['data'][pln]['wave'][det][vis])])
+                g1, g2, g3, g4 = ldtl(
+                    priors['T*'],
+                    priors['FEH*'],
+                    priors['LOGG*'],
+                    [np.nanmin(nrm['data'][pln]['wave'][det][vis])],
+                    [np.nanmax(nrm['data'][pln]['wave'][det][vis])],
+                )
                 out['data'][pln][det]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
                 # PRIORS
                 rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
@@ -2099,7 +2105,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     tmjd -= 2400000.5
                     pass
                 fixedpars = {}
-                if priors[pln]['inc'] == 90.:
+                if priors[pln]['inc'] == 90.0:
                     fixedpars['inc'] = priors[pln]['inc']
                     pass
                 imorder = 2
@@ -2111,9 +2117,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                 with pymc.Model():
                     # RP/RS
                     pymcrprs = pymc.Uniform(
-                        'rprs',
-                        lower=rpors / 2e0,
-                        upper=rpors * 2e0
+                        'rprs', lower=rpors / 2e0, upper=rpors * 2e0
                     )
                     prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
                     prior_center['rprs'] = rpors
@@ -2122,27 +2126,32 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     # TKNOT
                     pymctknot = pymc.Uniform(
                         'tknot',
-                        lower=tmjd+100.*priors[pln]['t0_lowerr'],
-                        upper=tmjd+100.*priors[pln]['t0_uperr']
+                        lower=tmjd + 100.0 * priors[pln]['t0_lowerr'],
+                        upper=tmjd + 100.0 * priors[pln]['t0_uperr'],
                     )
-                    prior_ranges['t0'] = [tmjd+100.*priors[pln]['t0_lowerr'],
-                                          tmjd+100.*priors[pln]['t0_uperr']]
+                    prior_ranges['t0'] = [
+                        tmjd + 100.0 * priors[pln]['t0_lowerr'],
+                        tmjd + 100.0 * priors[pln]['t0_uperr'],
+                    ]
                     prior_center['t0'] = tmjd
                     nodes.append(pymctknot)
                     nodeshape.append(1)
                     # INCLINATION
                     if 'inc' not in fixedpars:
                         incl = priors[pln]['inc']
-                        if incl > 90: incl = 180. - incl
-                        inclup = incl + 3.*priors[pln]['inc_uperr']
-                        if inclup > 90: inclup = 90
+                        if incl > 90:
+                            incl = 180.0 - incl
+                            pass
+                        inclup = min(incl + 3.0 * priors[pln]['inc_uperr'], 90)
                         pymcinc = pymc.Uniform(
                             'inc',
-                            lower=incl + 3.*priors[pln]['inc_lowerr'],
-                            upper=inclup
+                            lower=incl + 3.0 * priors[pln]['inc_lowerr'],
+                            upper=inclup,
                         )
-                        prior_ranges['inc'] = [incl + 3.*priors[pln]['inc_lowerr'],
-                                               inclup]
+                        prior_ranges['inc'] = [
+                            incl + 3.0 * priors[pln]['inc_lowerr'],
+                            inclup,
+                        ]
                         prior_center['inc'] = incl
                         nodes.append(pymcinc)
                         nodeshape.append(1)
@@ -2150,12 +2159,12 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     # INSTRUMENT MODEL - ALWAYS LAST
                     for coef in np.arange(imorder):
                         pymcim = pymc.Uniform(
-                            'IM'+str(int(coef)),
-                            lower=-1.,
-                            upper=1.,
+                            'IM' + str(int(coef)),
+                            lower=-1.0,
+                            upper=1.0,
                         )
-                        prior_ranges['IM'+str(int(coef))] = [-1., 1.]
-                        prior_center['IM'+str(int(coef))] = 0
+                        prior_ranges['IM' + str(int(coef))] = [-1.0, 1.0]
+                        prior_center['IM' + str(int(coef))] = 0
                         nodes.append(pymcim)
                         pymcim = None
                         pass
@@ -2169,7 +2178,9 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         g3=g3,
                         g4=g4,
                         period=priors[pln]['period'],
-                        smaors=priors[pln]['sma'] / priors['R*'] / ssc['Rsun/AU'],
+                        smaors=priors[pln]['sma']
+                        / priors['R*']
+                        / ssc['Rsun/AU'],
                         time=nrm['data'][pln]['time'][det][vis],
                         tmjd=tmjd,
                         visits=nrm['data'][pln]['visits'][det],
@@ -2178,10 +2189,11 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         mcmcdat=wht,
                         mcmcsig=whterr,
                         nodeshape=nodeshape,
-                        selectfit=np.array([True]*len(wht)),
+                        selectfit=np.array([True] * len(wht)),
                     )
                     # FIXED ORBITAL SOLUTION
                     TensorModel = TensorShell()
+
                     def LogLH(_, nodes):
                         '''
                         GMR: Fill in model tensor shell
@@ -2195,7 +2207,8 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         nodes,
                         observed=wht,
                         logp=LogLH,
-                    )                    
+                    )
+                    _ = rtp.sliceSampler
                     log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
@@ -2211,11 +2224,12 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     pass
                 pass
             out['data'][pln]['mcpost'] = mcpost
-            out['data'][pln]['mctrace'] = mctrace
+            out['data'][pln]['mctrace'] = trace
             out['STATUS'].append(True)
             pass
         pass
     return True
+
 
 def ldtl(T, M, G, mumin, mumax):
     '''
@@ -2229,6 +2243,11 @@ def ldtl(T, M, G, mumin, mumax):
     [O]:[ARRAY,ARRAY,ARRAY,ARRAY]:4 LDs same array length than mumin and mumax
     '''
     # SOPHIA S MODEL AND LD COMPUTATION HERE
+    _ = T
+    _ = M
+    _ = G
+    _ = mumin
+    _ = mumax
     out = [3.7479351], [-6.59634188], [5.65796194], [-1.80955517]
     return out
 
@@ -3705,14 +3724,15 @@ def orbital(*whiteparams):
     jwstflag = False
     if not ctxt.orbits:  # JWST
         # GMR:JWST
-        imnodes = whiteparams[-ctxt.nodeshape[-1]:]
-        lcnodes = whiteparams[:-ctxt.nodeshape[-1]]
+        imnodes = whiteparams[-ctxt.nodeshape[-1] :]
+        lcnodes = whiteparams[: -ctxt.nodeshape[-1]]
         jwstflag = True
         midtransits = None
         inclination = None
         avs = None
         aos = None
         aoi = None
+        r = None
         pass
     elif ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, avs, aos, aoi = whiteparams
@@ -3747,6 +3767,8 @@ def orbital(*whiteparams):
         avs = None
         aos = None
         aoi = None
+        imnodes = None
+        lcnodes = None
         log.error('!!! No parameter passed in orbital() !!!')
         pass
     out = []
@@ -3799,7 +3821,7 @@ def orbital(*whiteparams):
             pass
         else:
             t2zt0 = float(lcnodes[1])
-            pass        
+            pass
         omz, _pmph = tm.time2z(
             ctxt.time,
             t2zinc,
@@ -3815,11 +3837,12 @@ def orbital(*whiteparams):
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
             g4=ctxt.g4[0],
-        )*orbitalim(ctxt.time, imnodes)
+        ) * orbitalim(ctxt.time, imnodes)
         pass
 
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
     return out
+
 
 def orbitalim(ts, imnodes):
     '''
@@ -3828,10 +3851,11 @@ def orbitalim(ts, imnodes):
     [I]:imnodes:[ARRAY]:polynomial coefficients, decreasing powers
     [O]:[ARRAY]:polynomial evaluation
     '''
-    coeffs = [c for c in imnodes]
+    coeffs = [float(c) for c in imnodes]
     p = np.poly1d(coeffs)
     out = p(ts - np.nanmean(ts))
     return out
+
 
 def lcmodel(*specparams):
     '''
