@@ -193,7 +193,9 @@ def load_arielrad_results(target, runtime_params):
             noise_model_filename,
         )
     else:
-        with open(noise_model_dir + noise_model_filename, 'r') as f:
+        with open(
+                noise_model_dir + noise_model_filename, 'r', encoding='utf-8'
+        ) as f:
             # arielRad_fullresults = pickle.load(f)
             arielRad_fullresults = json.load(f)
 
