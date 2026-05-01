@@ -9,6 +9,9 @@
 # -- IMPORTS -- ------------------------------------------------------
 import os
 import numpy as np
+
+# import pickle
+import json
 import logging
 
 import excalibur
@@ -16,7 +19,7 @@ import excalibur
 import h5py
 from astropy.io.misc.hdf5 import read_table_hdf5
 
-# asdf
+# (eventually import arielrad and run directly; for now just read pre-calc table)
 # from arielrad.api.run_target import run_target
 import astropy.units as u
 
@@ -92,6 +95,8 @@ def calculate_ariel_instrument(
 
     # Run the simulation
     noise_table, output_dict, nobs, _ = [{}, {}, {}, {}]
+    # (eventually import arielrad and run directly;
+    #  for now just read pre-calculated results)
     # noise_table, output_dict, nobs, info = run_target(
     #    target_dict=arielrad_params,
     #    run_config='/proj/sdp/data/arielrad/runConfig.xml',
@@ -158,6 +163,81 @@ def calculate_ariel_instrument(
             '--< ARIELSIM: target not in SNR files; failing to simulate spectrum  for %s >--',
             target,
         )
+
+    return ariel_instrument
+
+
+# ---------------------------- ---------------------------------------
+def load_arielrad_results(target, runtime_params):
+    '''
+    NEW 2026 VERSION WHERE EACH PLANET HAS ITS OWN ARIELRAD RESULTS FILE
+    Load in the output from ArielRad - uncertainty as a function of wavelength
+    Uncertainty is for a single visit;
+    number of observed transits is taken into account later
+    '''
+    tier = runtime_params.tier
+    # arielRad_version = runtime_params.arielRad  # not yet implemented
+    thorngren = runtime_params.thorngrenMassMetals
+    chachan = runtime_params.chachanMassMetals
+
+    ariel_instrument = None
+
+    noise_model_dir = excalibur.context['data_dir'] + '/arielrad/RESULTS/'
+    # noise_model_filename = 'ArielRad_' + target + '.pkl'
+    noise_model_filename = 'ArielRad_' + target + '.json'
+
+    if not os.path.isfile(noise_model_dir + noise_model_filename):
+        log.error(
+            '--< ARIELSIM ERROR: SNR file missing for %s  %s >--',
+            target,
+            noise_model_filename,
+        )
+    else:
+        with open(
+            noise_model_dir + noise_model_filename, 'r', encoding='utf-8'
+        ) as f:
+            # arielRad_fullresults = pickle.load(f)
+            arielRad_fullresults = json.load(f)
+
+        if chachan:
+            ariel_instrument = arielRad_fullresults['chachan']
+        elif thorngren:
+            ariel_instrument = arielRad_fullresults['thorngren']
+        else:
+            ariel_instrument = arielRad_fullresults['mmw_min']
+
+        nVisits = ariel_instrument['nVisits_tier' + str(tier)]
+        ariel_instrument['nVisits'] = nVisits
+        log.info(
+            '--< ArielRad/Tier-%s requires %s visits for %s >--',
+            str(tier),
+            str(nVisits),
+            target,
+        )
+
+        # with ophidiophobia-related change to json formatted input file,
+        #  have to convert back to numpy
+        ariel_instrument['wavelength'] = np.array(
+            ariel_instrument['wavelength']
+        )
+        ariel_instrument['wavelow'] = np.array(ariel_instrument['wavelow'])
+        ariel_instrument['wavehigh'] = np.array(ariel_instrument['wavehigh'])
+        ariel_instrument['noise'] = np.array(ariel_instrument['noise'])
+
+        for iwave in range(len(ariel_instrument['wavelow']) - 1):
+            # fix the overlap in the wavelength bins at 1.95um
+            if (
+                ariel_instrument['wavehigh'][iwave]
+                > ariel_instrument['wavelow'][iwave + 1] * 1.00001
+            ):
+                # print('spectral channels overlap!!',iwave,
+                #      ariel_instrument['wavehigh'][iwave],
+                #      ariel_instrument['wavelow'][iwave+1])
+                # log.info('--< ARIELSIM adjusting wavelength grid: %s wave=%s >--',
+                #         target,ariel_instrument['wavelength'][iwave])
+                ariel_instrument['wavehigh'][iwave] = (
+                    ariel_instrument['wavelow'][iwave + 1] * 0.99999
+                )
 
     return ariel_instrument
 
@@ -333,7 +413,7 @@ def load_ariel_instrument(target, runtime_params):
 
     if not ariel_instrument:
         log.warning(
-            '--< ARIELSIM: target not in SNR files; failing to simulate spectrum  for %s >--',
+            '--< ARIELSIM: target not in SNR files; failing to simulate spectrum for %s >--',
             target,
         )
 
