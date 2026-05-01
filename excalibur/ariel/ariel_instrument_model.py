@@ -9,7 +9,9 @@
 # -- IMPORTS -- ------------------------------------------------------
 import os
 import numpy as np
-import pickle
+
+# import pickle
+import json
 import logging
 
 import excalibur
@@ -181,7 +183,8 @@ def load_arielrad_results(target, runtime_params):
     ariel_instrument = None
 
     noise_model_dir = excalibur.context['data_dir'] + '/arielrad/RESULTS/'
-    noise_model_filename = 'ArielRad_' + target + '.pkl'
+    # noise_model_filename = 'ArielRad_' + target + '.pkl'
+    noise_model_filename = 'ArielRad_' + target + '.json'
 
     if not os.path.isfile(noise_model_dir + noise_model_filename):
         log.error(
@@ -190,8 +193,9 @@ def load_arielrad_results(target, runtime_params):
             noise_model_filename,
         )
     else:
-        with open(noise_model_dir + noise_model_filename, 'rb') as f:
-            arielRad_fullresults = pickle.load(f)
+        with open(noise_model_dir + noise_model_filename, 'r') as f:
+            # arielRad_fullresults = pickle.load(f)
+            arielRad_fullresults = json.load(f)
 
         if chachan:
             ariel_instrument = arielRad_fullresults['chachan']
@@ -208,6 +212,15 @@ def load_arielrad_results(target, runtime_params):
             str(nVisits),
             target,
         )
+
+        # with ophidiophobia-related change to json formatted input file,
+        #  have to convert back to numpy
+        ariel_instrument['wavelength'] = np.array(
+            ariel_instrument['wavelength']
+        )
+        ariel_instrument['wavelow'] = np.array(ariel_instrument['wavelow'])
+        ariel_instrument['wavehigh'] = np.array(ariel_instrument['wavehigh'])
+        ariel_instrument['noise'] = np.array(ariel_instrument['noise'])
 
         for iwave in range(len(ariel_instrument['wavelow']) - 1):
             # fix the overlap in the wavelength bins at 1.95um
