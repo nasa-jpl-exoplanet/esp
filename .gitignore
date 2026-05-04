@@ -9,3 +9,7 @@ __pycache__
 notes.txt
 .coverage*
 .cache/
+
+# Phasecurve flare backup files
+excalibur/phasecurve/*_backup.py
+excalibur/phasecurve/flare_det_backup_*.py
