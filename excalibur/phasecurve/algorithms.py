@@ -13,6 +13,7 @@ import logging
 import excalibur
 import excalibur.phasecurve.states as phcstates
 import excalibur.phasecurve.core as phccore
+import excalibur.transit.algorithms as trnalg
 
 # import excalibur.transit as trn
 # import excalibur.data.core as trncore
@@ -211,10 +212,15 @@ class pcflaredetection(dawgie.Algorithm):
     looks for flares in whitelight phasecurve data
     '''
 
-    def __init__(self, wlpc=pcwhitelight()):
-        self._version_ = dawgie.VERSION(1, 2, 0)
+    def __init__(
+        self,
+        wlpc=pcwhitelight(),
+        trnnrm=trnalg.Normalization(),
+    ):
+        self._version_ = dawgie.VERSION(1, 3, 0)
         self._type = 'phasecurve'
         self._wlpc = wlpc
+        self._trnnrm = trnnrm
         self.__rt = rtalg.Autofill()
         self.__fin = sysalg.Finalize()
         self.__out = [phcstates.FlaresSV(fltr) for fltr in fltrs]
@@ -229,6 +235,10 @@ class pcflaredetection(dawgie.Algorithm):
                 fetch('excalibur.phasecurve').task,
                 self._wlpc,
             ),
+            dawgie.ALG_REF(
+                fetch('excalibur.transit').task,
+                self._trnnrm,
+            ),
             dawgie.ALG_REF(sys.task, self.__fin),
         ] + self.__rt.refs_for_proceed()
 
@@ -242,18 +252,29 @@ class pcflaredetection(dawgie.Algorithm):
 
         svupdate = []
         target = repr(self).split('.')[1]
-        # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
-        #     stop here if it is not a runtime target
-        #     self.__rt.proceed(fltr)
-        for fltr in ['Spitzer-IRAC-IR-36-SUB', 'Spitzer-IRAC-IR-45-SUB']:
+        for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
+            self.__rt.proceed(fltr)
             update = False
             index = fltrs.index(fltr)
-            phasecurve = self._wlpc.sv_as_dict()[fltr]
-            vwlpc, swlpc = checksv(phasecurve)
-            if vwlpc and vfin:
+
+            if not self._supports_flare_detection(fltr):
+                continue
+
+            phasecurve, source_name = self._flare_input(fltr)
+            vphasecurve, sphasecurve = checksv(phasecurve)
+            if vphasecurve and vfin:
                 log.info(
                     '--< %s FLARE DETECTION: %s >--', self._type.upper(), fltr
                 )
+                if 'NIRSPEC' in fltr:
+                    log.info(
+                        '--< %s FLARE DETECTION: %s >-- %s',
+                        self._type.upper(),
+                        fltr,
+                        'JWST flare adapter not implemented yet; '
+                        'skipping for now.',
+                    )
+                    continue
                 update = self._flaredetection(
                     phasecurve,
                     fin,
@@ -263,7 +284,11 @@ class pcflaredetection(dawgie.Algorithm):
                 )
                 pass
             else:
-                errstr = [m for m in [swlpc, sfin] if m is not None]
+                errstr = [
+                    m for m in [sphasecurve, sfin] if m is not None
+                ]
+                if not errstr:
+                    errstr = [f'No flare input available from {source_name}']
                 self._failure(errstr[0])
                 pass
             if update:
@@ -279,6 +304,19 @@ class pcflaredetection(dawgie.Algorithm):
                 f'No output created for PHASECURVE.{self.name()}'
             )
         return
+
+    def _supports_flare_detection(self, fltr):
+        return ('Spitzer' in fltr) or ('NIRSPEC' in fltr)
+
+    def _flare_input(self, fltr):
+        if 'Spitzer' in fltr:
+            return self._wlpc.sv_as_dict()[fltr], 'phasecurve.pcwhitelight'
+        if 'NIRSPEC' in fltr:
+            return (
+                self._trnnrm.sv_as_dict()[fltr],
+                'transit.normalization',
+            )
+        raise KeyError(f'Unsupported flare-detection filter: {fltr}')
 
     def _flaredetection(self, wlpc, fin, out, index, target=None):
         flares = phccore.flaredetection(
