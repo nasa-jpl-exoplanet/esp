@@ -10,6 +10,7 @@ lmfit
 matplotlib
 numexpr          # used to limit cores it uses preventing thrashing
 numpy
+OpenSSL==26.0.0  # 26.0.2 breaks the world so needs testing
 photutils
 pymc
 pyvo
