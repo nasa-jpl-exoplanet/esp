@@ -2244,13 +2244,219 @@ def ldtl(T, M, G, mumin, mumax):
     [O]:[ARRAY,ARRAY,ARRAY,ARRAY]:4 LDs same array length than mumin and mumax
     '''
     # SOPHIA S MODEL AND LD COMPUTATION HERE
-    _ = T
-    _ = M
-    _ = G
-    _ = mumin
-    _ = mumax
-    out = [3.7479351], [-6.59634188], [5.65796194], [-1.80955517]
-    return out
+    import lmfit
+    
+    mh = np.array([-0.05, -0.1, -0.15, -0.2, -0.25, -0.3, -0.35, -0.4, -0.45, -0.5, -0.55, -0.6, -0.65, -0.7, -0.75, -0.8, -0.85, -0.9, -0.95, 
+               -1.0, -1.1, -1.2, -1.3, -1.4, -1.5, -1.6, -1.7, -1.8, -1.9, -2.0, -2.1, -2.2, -2.3, -2.4, -2.5, -3.0, -3.5, -4.0, -4.5, -5.0, 
+              0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
+
+    teff = np.array([3500, 3600, 3700, 3800, 3900, 4000, 4100, 4200, 4300, 4400, 4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 
+                5600, 5700, 5800, 5900, 6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700, 6800, 6900, 7000, 7100, 7200, 7300, 7400, 7500, 7600, 
+                7700, 7800, 7900, 8000, 8100, 8200, 8300, 8400, 8500, 8600, 8700, 8800, 8900, 9000])
+
+    logg = np.array([3.0, 3.5, 4.0, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.0])
+
+    logg_input = G
+    mh_input = M
+    teff_input = T
+    
+    mh_input = mh[np.abs(mh - mh_input).argmin()]
+    teff_input = teff[np.abs(teff - teff_input).argmin()]
+    logg_input = logg[np.abs(logg - logg_input).argmin()]
+
+    set_type = "set1"
+    output_data = "disk_integrated_spectra"
+
+    class ReadData:
+        def read_model_atmosphere(self, mh, teff, logg, set_type):
+            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_model_atmosphere.dat"
+            return np.genfromtxt(file_name, skip_header=2, skip_footer=23)
+
+        def read_clv_spectra(self, mh, teff, logg, set_type):
+            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            data = np.loadtxt(file_name, skiprows=2)
+            return data[:, 0], data[:, 1:]
+
+        def read_disk_integrated_spectra(self, mh, teff, logg, set_type):
+            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_flux_spectra.dat"
+            return np.loadtxt(file_name, skiprows=1, unpack=True)
+    
+        def read_mu_positions(self, mh, teff, logg, set_type):
+            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            f = open(file_name, "r")
+            data = f.readlines()
+            muval = data[1].split()[2:]
+            return np.array(muval).astype(float)
+    
+    data = ReadData()
+    wln, spectra = data.read_clv_spectra(mh_input, teff_input, logg_input, "set1")
+    mu = data.read_mu_positions(mh_input, teff_input, logg_input, "set1")
+
+    def nonlinearld(mu, u1, u2, u3, u4):
+            model = 1e0 - u1*(1e0 - mu**0.5) - u2*(1e0 - mu) - u3*(1e0 - mu**1.5) - u4*(1. - mu**2.)
+            return model
+
+    def ldotl(mu, u1, u2, u3, u4):
+            model = 1e0 - u1*(1e0 - mu**0.5) - u2*(1e0 - mu) - u3*(1e0 - mu**0.1) - u4*(1. - mu**2.)
+            return model
+
+    def power_2(mu, u1, u2, u3, u4):
+            model = 1e0 - u1*(1e0 - mu**0.5) - u2*(1e0 - mu) - u3*(1e0 - mu**0.2) - u4*(1. - mu**2.)
+            return model
+
+    def power_3(mu, u1, u2, u3, u4):
+            model = 1e0 - u1*(1e0 - mu**0.5) - u2*(1e0 - mu) - u3*(1e0 - mu**0.3) - u4*(1. - mu**2.)
+            return model
+    
+    def power_01(mu, u1, u2, u3, u4):
+            model = 1e0 - u1*(1e0 - mu**0.5) - u2*(1e0 - mu) - u3*(1e0 - mu**0.01) - u4*(1. - mu**2.)
+            return model
+
+            
+    def nlldx(params, x, data=None, weights=None):
+            gamma1 = params['gamma1'].value
+            gamma2 = params['gamma2'].value
+            gamma3 = params['gamma3'].value
+            gamma4 = params['gamma4'].value
+            model = nonlinearld(x, gamma1, gamma2, gamma3, gamma4)
+            if data is None: return model
+            if weights is None: return data - model
+            return (data - model)/weights
+
+    def ldotlldx(params, x, data=None, weights=None):
+            gamma1 = params['gamma1'].value
+            gamma2 = params['gamma2'].value
+            gamma3 = params['gamma3'].value
+            gamma4 = params['gamma4'].value
+            model = ldotl(x, gamma1, gamma2, gamma3, gamma4)
+            if data is None: return model
+            if weights is None: return data - model
+            return (data - model)/weights
+
+
+    def power_2x(params, x, data=None, weights=None):
+            gamma1 = params['gamma1'].value
+            gamma2 = params['gamma2'].value
+            gamma3 = params['gamma3'].value
+            gamma4 = params['gamma4'].value
+            model = power_2(x, gamma1, gamma2, gamma3, gamma4)
+            if data is None: return model
+            if weights is None: return data - model
+            return (data - model)/weights
+
+    def power_3x(params, x, data=None, weights=None):
+            gamma1 = params['gamma1'].value
+            gamma2 = params['gamma2'].value
+            gamma3 = params['gamma3'].value
+            gamma4 = params['gamma4'].value
+            model = power_3(x, gamma1, gamma2, gamma3, gamma4)
+            if data is None: return model
+            if weights is None: return data - model
+            return (data - model)/weights
+
+    def power_01x(params, x, data=None, weights=None):
+            gamma1 = params['gamma1'].value
+            gamma2 = params['gamma2'].value
+            gamma3 = params['gamma3'].value
+            gamma4 = params['gamma4'].value
+            model = power_01(x, gamma1, gamma2, gamma3, gamma4)
+            if data is None: return model
+            if weights is None: return data - model
+            return (data - model)/weights  
+    
+    mumin_angstrom = np.array(mumin)*1e4
+    mumax_angstrom = np.array(mumax)*1e4
+
+    mu_min = wln[np.abs(wln - mumin_angstrom).argmin()]
+    mu_max = wln[np.abs(wln - mumax_angstrom).argmin()]
+
+    mulow = np.where(wln == mu_min)
+    min_mu = mulow[0].astype(int)
+    muhigh = np.where(wln == mu_max)
+    max_mu = muhigh[0].astype(int)
+    
+    spec = np.mean(spectra[int(min_mu[0]):int(max_mu[0])], axis=0)
+    test = spec / np.max(spec)
+
+    params = lmfit.Parameters()
+    params.add('gamma1', value=2.5e-1)
+    params.add('gamma2', value=2.5e-1)
+    params.add('gamma3', value=2.5e-1)
+    params.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+    out = lmfit.minimize(nlldx, params, args=(mu, test))
+
+    par1 = lmfit.Parameters()
+    par1.add('gamma1', value=2.5e-1)
+    par1.add('gamma2', value=2.5e-1)
+    par1.add('gamma3', value=2.5e-1)
+    par1.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+    outpar1 = lmfit.minimize(ldotlldx, par1, args=(mu[:], test[:]))
+
+    par2 = lmfit.Parameters()
+    par2.add('gamma1', value=2.5e-1)
+    par2.add('gamma2', value=2.5e-1)
+    par2.add('gamma3', value=2.5e-1)
+    par2.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+    outpar2 = lmfit.minimize(power_2x, par2, args=(mu[:], test[:]))
+
+    par3 = lmfit.Parameters()
+    par3.add('gamma1', value=2.5e-1)
+    par3.add('gamma2', value=2.5e-1)
+    par3.add('gamma3', value=2.5e-1)
+    par3.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+    outpar3 = lmfit.minimize(power_3x, par3, args=(mu[:], test[:]))
+
+    par01 = lmfit.Parameters()
+    par01.add('gamma1', value=2.5e-1)
+    par01.add('gamma2', value=2.5e-1)
+    par01.add('gamma3', value=2.5e-1)
+    par01.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+    outpar01 = lmfit.minimize(power_01x, par01, args=(mu[:], test[:]))
+
+    sum4NL = sum(spec - np.max(spec)* nonlinearld(mu, out.params['gamma1'].value, 
+                                    out.params['gamma2'].value, 
+                                    out.params['gamma3'].value, 
+                                    out.params['gamma4'].value))
+
+    sumldotl = sum(spec - np.max(spec)* ldotl(mu, outpar1.params['gamma1'].value, 
+                                    outpar1.params['gamma2'].value, 
+                                    outpar1.params['gamma3'].value, 
+                                    outpar1.params['gamma4'].value))
+
+    sum02 = sum(spec - np.max(spec)* power_2(mu, outpar2.params['gamma1'].value, 
+                                    outpar2.params['gamma2'].value, 
+                                    outpar2.params['gamma3'].value, 
+                                    outpar2.params['gamma4'].value))
+
+    sum03 = sum(spec - np.max(spec)* power_3(mu, outpar3.params['gamma1'].value, 
+                                    outpar3.params['gamma2'].value, 
+                                    outpar3.params['gamma3'].value, 
+                                    outpar3.params['gamma4'].value))
+
+    sum001 = sum(spec - np.max(spec)* power_01(mu, outpar01.params['gamma1'].value, 
+                                    outpar01.params['gamma2'].value, 
+                                    outpar01.params['gamma3'].value, 
+                                    outpar01.params['gamma4'].value))
+    
+    best = min(("4NL", abs(sum4NL)),
+                   ("LDOTL", abs(sumldotl)), 
+                   ("0.2", abs(sum02)), 
+                   ("0.3", abs(sum03)), 
+                   ("0.01", abs(sum001)),
+                   key=lambda x: x[1]
+                  )
+    
+    fourNL = [out.params['gamma1'].value], [out.params['gamma2'].value], [out.params['gamma3'].value], [out.params['gamma4'].value]
+    LDOTL = [outpar1.params['gamma1'].value], [outpar1.params['gamma2'].value], [outpar1.params['gamma3'].value], [outpar1.params['gamma4'].value]
+    zero2 = [outpar2.params['gamma1'].value], [outpar2.params['gamma2'].value], [outpar2.params['gamma3'].value], [outpar2.params['gamma4'].value]
+    zero3 = [outpar3.params['gamma1'].value], [outpar3.params['gamma2'].value], [outpar3.params['gamma3'].value], [outpar3.params['gamma4'].value]
+    zero01 = [outpar01.params['gamma1'].value], [outpar01.params['gamma2'].value], [outpar01.params['gamma3'].value], [outpar01.params['gamma4'].value]
+
+    
+    val = {'4NL': fourNL, 'LDOTL': LDOTL, '0.2': zero2, '0.3': zero3, '0.01': zero01}
+    fav = val[best[0]]
+    import pdb; pdb.set_trace()
+    return fav
 
 
 def whitelight(
