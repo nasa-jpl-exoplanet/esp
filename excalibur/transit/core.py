@@ -2363,12 +2363,16 @@ def ldtl(T, M, G, mumin, mumax):
             if data is None: return model
             if weights is None: return data - model
             return (data - model)/weights  
-    
-    mumin_angstrom = np.array(mumin)*1e4
-    mumax_angstrom = np.array(mumax)*1e4
 
-    mu_min = wln[np.abs(wln - mumin_angstrom).argmin()]
-    mu_max = wln[np.abs(wln - mumax_angstrom).argmin()]
+    # Units for original wavelengths provided by MPSA are assumed to be in nm
+    # based on data selection explanation in Witzke et al. 2021 
+    # (doi: 10.1051/0004-6361/202140275). Sub-section 4.7: Speed-Up and Portability.
+    
+    mumin_nm = np.array(mumin)*1e3
+    mumax_nm = np.array(mumax)*1e3
+
+    mu_min = wln[np.abs(wln - mumin_nm).argmin()]
+    mu_max = wln[np.abs(wln - mumax_nm).argmin()]
 
     mulow = np.where(wln == mu_min)
     min_mu = mulow[0].astype(int)
@@ -2455,7 +2459,6 @@ def ldtl(T, M, G, mumin, mumax):
     
     val = {'4NL': fourNL, 'LDOTL': LDOTL, '0.2': zero2, '0.3': zero3, '0.01': zero01}
     fav = val[best[0]]
-    import pdb; pdb.set_trace()
     return fav
 
 
