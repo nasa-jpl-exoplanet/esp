@@ -30,6 +30,10 @@ RUN set -ex && \
     rm -rf /tmp/esp
 
 FROM base AS server
+WORKDIR /proj/site
+RUN git clone https://github.com/nasa-jpl-exoplanet/ESP-UI.git . && \
+    rm -rf node_modules .git .gitignore .idea package* proxy.config.js && \
+    chmod 777 -R assets
 ENV HOME=/tmp
 ENTRYPOINT python -m dawgie.pl \
     --context=excalibur.context \
