@@ -1,12 +1,11 @@
 '''target targetlists ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
-# pylint: disable=too-many-branches,too-many-lines
+# xpylint: disable=invalid-name
+# xpylint: disable=too-many-branches,too-many-lines
 
 import excalibur
 import os
-import csv
 import logging
 
 log = logging.getLogger(__name__)
@@ -27,8 +26,7 @@ def get_target_lists():
         'JWST': 'JWST',
         'Spitzer': 'Spitzer',
         'ariel_Aug2024_2years': 'stars_tier2_thorngren_aug2024',
-        'ariel_Aug2024_2years_withPlanetletters':
-        'planets_tier2_thorngren_aug2024',
+        'ariel_Aug2024_2years_withPlanetletters': 'planets_tier2_thorngren_aug2024',
         'ariel_Nov2024_2years': 'stars_tier2_thorngren_nov2024',
         'ariel_Nov2024_2years_withPlanetletters': 'planets_tier2_thorngren_nov2024',
         'ariel_Nov2024_2yearsTier1': 'stars_tier1_thorngren_nov2024',
@@ -37,33 +35,61 @@ def get_target_lists():
     }
 
     targetlists = {}
-    for listname in targetlist_filenames:
+    for listname, filename in targetlist_filenames.items():
         targetlists[listname] = []
 
-        filename = targetlist_filenames[listname]
         if os.path.isfile(targetlistdir + filename + '.txt'):
-            with open(targetlistdir + filename + '.txt', 'r') as data:
+            with open(
+                targetlistdir + filename + '.txt', 'r', encoding='utf-8'
+            ) as data:
                 lines = data.readlines()
                 for line in lines:
                     if line.startswith('#'):
                         # print('skipping a comment')
                         pass
                     else:
-                        target = line.split('#')[0].split(',')[0].strip()
-                        # print(target)
+                        target = str(line.split('#')[0].split(',')[0].strip())
+                        print(len(target), target)
                         targetlists[listname].append(target)
         else:
             print('target list missing:', targetlistdir + filename)
-        #print(targetlists[listname])
+        # print(targetlists[listname])
 
-    for targetlist in targetlists:
-        print('# of targets:',targetlist,len(targetlists[targetlist]))
+    for targetlist, targets in targetlists.items():
+        print('# of targets:', targetlist, len(targets))
 
     return targetlists
 
 
 # --------------------------------------------------------------------
-        
+
+
+def read_ArielMCS_info(filename='Ariel_MCS_Known_2024-02-14.csv'):
+    '''
+    Load in the MCS table with all the Ariel target info
+    The most recent file is 2/14/24, but also consider the 11/20/23 file
+    '''
+
+    arielDir = excalibur.context['data_dir'] + '/ariel/'
+
+    listofDictionaries = []
+
+    if not os.path.isfile(arielDir + filename):
+        log.warning('--< PROBLEM: Ariel MCS table not found : %s >--', filename)
+    else:
+        with open(arielDir + filename, 'r', encoding='ascii') as file:
+            csvFile = csv.DictReader(file)
+
+            # print('starting to read',filename)
+            for line in csvFile:
+                listofDictionaries.append(line)
+
+    return listofDictionaries
+
+
+# --------------------------------------------------------------------
+
+
 def targetlist_ArielMCSknown(
     filedate='Nov2023', maxVisits=666, transitCategoryOnly=False
 ):
@@ -126,6 +152,8 @@ def targetlist_ArielMCSknown(
 
 
 # --------------------------------------------------------------------
+
+
 def arielAliases():
     '''
     Some of the names in Ariel MCS are different from in Excalibur.
@@ -145,5 +173,3 @@ def arielAliases():
     }
 
     return aliases
-
-
