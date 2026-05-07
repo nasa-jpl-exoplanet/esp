@@ -39,6 +39,8 @@ def get_target_lists():
         'ariel_May2026_chachan_withPlanetletters': 'planets_tier2_chachan_may2026',
         'ariel_stars_tier2': 'stars_tier2',
         'ariel_planets_tier2': 'planets_tier2',
+        'ariel_stars_tier1': 'stars_tier1',
+        'ariel_planets_tier1': 'planets_tier1',
     }
 
     targetlists = {}
