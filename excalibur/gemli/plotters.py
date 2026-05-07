@@ -372,15 +372,13 @@ def plot_overallsample_fits_vs_truths(
             # CHI (fit-truth)/error HISTOGRAMS IN SECOND PANEL
             ax2 = figure.add_subplot(1, 3, 2)
 
-            chi_instrumental = (
-                fit_values[param] - truth_values[param]
-            ) / fit_errors[param]
-            chi_systematic = (
-                fit_values[param] - truth_values[param]
-            ) / fit_errorssys[param]
-            chi_overall = (
-                fit_values[param] - truth_values[param]
-            ) / np.sqrt(fit_errors[param]**2 + fit_errorssys[param]**2)
+            # chi_instrumental = (fit_values[param] - truth_values[param]
+            #                    ) / fit_errors[param]
+            # chi_systematic = (fit_values[param] - truth_values[param]
+            #                  ) / fit_errorssys[param]
+            chi_overall = (fit_values[param] - truth_values[param]) / np.sqrt(
+                fit_errors[param] ** 2 + fit_errorssys[param] ** 2
+            )
             lowend = np.min(chi_overall)
             highend = np.max(chi_overall)
             # print('lowend', lowend)
@@ -399,7 +397,7 @@ def plot_overallsample_fits_vs_truths(
                 color='black',
                 zorder=1,
                 lw=2,
-                #label='instrument noise',
+                # label='instrument noise',
             )
             # chi_instrumental,
             # label='instrument noise',
