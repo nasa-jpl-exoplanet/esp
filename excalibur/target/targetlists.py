@@ -48,15 +48,15 @@ def get_target_lists():
                         # print('skipping a comment')
                         pass
                     else:
-                        target = str(line.split('#')[0].split(',')[0].strip())
-                        print(len(target), target)
+                        target = line.replace("'", "")
+                        target = target.split('#')[0].split(',')[0].strip()
                         targetlists[listname].append(target)
         else:
             print('target list missing:', targetlistdir + filename)
         # print(targetlists[listname])
 
-    for targetlist, targets in targetlists.items():
-        print('# of targets:', targetlist, len(targets))
+    # for targetlist, targets in targetlists.items():
+    #    print('# of targets:', targetlist, len(targets))
 
     return targetlists
 
