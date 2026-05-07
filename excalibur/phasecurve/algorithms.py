@@ -217,7 +217,7 @@ class pcflaredetection(dawgie.Algorithm):
         wlpc=pcwhitelight(),
         trnnrm=trnalg.Normalization(),
     ):
-        self._version_ = dawgie.VERSION(1, 3, 0)
+        self._version_ = dawgie.VERSION(1, 3, 1)
         self._type = 'phasecurve'
         self._wlpc = wlpc
         self._trnnrm = trnnrm
@@ -266,15 +266,6 @@ class pcflaredetection(dawgie.Algorithm):
                 log.info(
                     '--< %s FLARE DETECTION: %s >--', self._type.upper(), fltr
                 )
-                if 'NIRSPEC' in fltr:
-                    log.info(
-                        '--< %s FLARE DETECTION: %s >-- %s',
-                        self._type.upper(),
-                        fltr,
-                        'JWST flare adapter not implemented yet; '
-                        'skipping for now.',
-                    )
-                    continue
                 update = self._flaredetection(
                     phasecurve,
                     fin,

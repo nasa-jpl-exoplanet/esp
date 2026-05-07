@@ -78,8 +78,105 @@ def _coerce_target_name(target, whitelight):
 
 def _normalize_whitelight(whitelight):
     if 'data' in whitelight:
-        return whitelight['data']
-    return whitelight
+        whitelight = whitelight['data']
+    return _adapt_jwst_normalization_input(whitelight)
+
+
+def _looks_like_jwst_normalization_planet(planet_data):
+    if not isinstance(planet_data, dict):
+        return False
+    return {'visits', 'nspec', 'time'}.issubset(planet_data.keys())
+
+
+def _coerce_visit_id(visit_value, default_idx):
+    try:
+        return int(visit_value)
+    except (TypeError, ValueError):
+        return int(default_idx)
+
+
+def _collapse_jwst_visit(visit_id, cadence_rows):
+    time_values = []
+    flux_values = []
+    err_values = []
+
+    for time_value, spectrum in cadence_rows:
+        spectrum = np.asarray(spectrum, dtype=float)
+        finite = np.isfinite(spectrum)
+        if not np.any(finite):
+            continue
+
+        flux_value = float(np.nanmean(spectrum[finite]))
+        if not np.isfinite(flux_value) or flux_value == 0.0:
+            continue
+
+        if np.count_nonzero(finite) > 1:
+            err_value = float(np.nanstd(spectrum[finite]))
+        else:
+            err_value = np.nan
+
+        time_value = float(np.asarray(time_value, dtype=float))
+        if not np.isfinite(time_value):
+            continue
+
+        time_values.append(time_value)
+        flux_values.append(flux_value)
+        err_values.append(err_value)
+
+    if not time_values:
+        return None
+
+    flux_array = np.asarray(flux_values, dtype=float)
+    err_array = np.asarray(err_values, dtype=float)
+    valid_err = np.isfinite(err_array) & (err_array > 0)
+    fallback_err = np.nanmedian(err_array[valid_err]) if np.any(valid_err) else 0.0
+    if not np.isfinite(fallback_err) or fallback_err <= 0:
+        fallback_err = np.nanstd(flux_array)
+    if not np.isfinite(fallback_err) or fallback_err <= 0:
+        fallback_err = 1e-6
+    err_array[~valid_err] = fallback_err
+
+    return {
+        'visit_index': int(visit_id),
+        'time': np.asarray(time_values, dtype=float),
+        'flux': flux_array,
+        'err': err_array,
+        'detrended': flux_array.copy(),
+    }
+
+
+def _adapt_jwst_normalization_input(whitelight):
+    if not isinstance(whitelight, dict):
+        return whitelight
+
+    if not any(
+        _looks_like_jwst_normalization_planet(planet_data)
+        for planet_data in whitelight.values()
+    ):
+        return whitelight
+
+    adapted = {}
+    for planet, planet_data in whitelight.items():
+        if not _looks_like_jwst_normalization_planet(planet_data):
+            continue
+
+        grouped_rows = {}
+        visits = planet_data.get('visits', [])
+        times = planet_data.get('time', [])
+        spectra = planet_data.get('nspec', [])
+        for idx, (visit_value, time_value, spectrum) in enumerate(
+            zip(visits, times, spectra)
+        ):
+            visit_id = _coerce_visit_id(visit_value, idx)
+            grouped_rows.setdefault(visit_id, []).append((time_value, spectrum))
+
+        adapted[planet] = []
+        for visit_id, cadence_rows in grouped_rows.items():
+            visit_data = _collapse_jwst_visit(visit_id, cadence_rows)
+            if visit_data is not None:
+                adapted[planet].append(visit_data)
+
+    return adapted
 
 
 def _normalize_priors(fin):
@@ -1343,7 +1440,7 @@ def detect_flares(
     verbose=False,
 ):
     '''
-    Detect and characterize flares in Spitzer phase-curve white-light data.
+    Detect and characterize flares in white-light visit data.
     '''
     whitelight_data = _normalize_whitelight(whitelight)
     priors = _normalize_priors(fin)
@@ -1505,7 +1602,7 @@ def detect_flares(
                 med = np.asarray(flcd.it_med)
 
                 visit_transits = np.asarray(
-                    transits.get(planet, {}).get(idx, []),
+                    transits.get(planet, {}).get(visit_label, []),
                     dtype=float,
                 )
                 if visit_transits.size:
