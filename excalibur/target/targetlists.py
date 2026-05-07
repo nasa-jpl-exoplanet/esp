@@ -1,8 +1,8 @@
 '''target targetlists ds'''
 
 # Heritage code shame:
-# xpylint: disable=invalid-name
-# xpylint: disable=too-many-branches,too-many-lines
+# pylint: disable=invalid-name
+# pylint: disable=too-many-branches
 
 import excalibur
 import os
