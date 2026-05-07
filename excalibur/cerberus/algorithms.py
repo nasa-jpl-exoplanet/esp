@@ -457,7 +457,7 @@ class Results(dawgie.Algorithm):
                         targetlistcheck = False
 
                     if targetlistcheck:
-                        planetlist = alltargetlists['ariel_planets_tier2]
+                        planetlist = alltargetlists['ariel_planets_tier2']
                         for planet in planetlist:
                             if planet.startswith(target + ' '):
                                 only_these_planets.append(planet[-1])
