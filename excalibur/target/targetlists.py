@@ -6,6 +6,7 @@
 
 import excalibur
 import os
+import csv
 import logging
 
 log = logging.getLogger(__name__)
@@ -25,13 +26,19 @@ def get_target_lists():
         'G141': 'HST_G141',
         'JWST': 'JWST',
         'Spitzer': 'Spitzer',
+        'ariel_massesNeeded': 'planets_arielROSESmassneeded',
         'ariel_Aug2024_2years': 'stars_tier2_thorngren_aug2024',
         'ariel_Aug2024_2years_withPlanetletters': 'planets_tier2_thorngren_aug2024',
         'ariel_Nov2024_2years': 'stars_tier2_thorngren_nov2024',
         'ariel_Nov2024_2years_withPlanetletters': 'planets_tier2_thorngren_nov2024',
         'ariel_Nov2024_2yearsTier1': 'stars_tier1_thorngren_nov2024',
         'ariel_Nov2024_2yearsTier1_withPlanetletters': 'planets_tier1_thorngren_nov2024',
-        'ariel_massesNeeded': 'planets_arielROSESmassneeded',
+        'ariel_May2026_thorngren': 'stars_tier2_thorngren_may2024',
+        'ariel_May2026_thorngren_withPlanetletters': 'planets_tier2_thorngren_may2024',
+        'ariel_May2026_chachan': 'stars_tier2_chachan_may2024',
+        'ariel_May2026_chachan_withPlanetletters': 'planets_tier2_chachan_may2024',
+        'ariel_stars_tier2': 'stars_tier2',
+        'ariel_planets_tier2': 'planets_tier2',
     }
 
     targetlists = {}
