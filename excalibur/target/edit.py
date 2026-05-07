@@ -966,7 +966,6 @@ def targetlist():
     K2-206 :
     K2-208 :
     K2-216 :
-    K2-216 :
     K2-217 :
     K2-219 :
     K2-220 :
@@ -1416,7 +1415,6 @@ def targetlist():
     BD+20 594 :
     BD-14 3065 A :
     CoRoT-20 :
-    CoRoT-32 :
     EPIC 201595106 :
     EPIC 206024342 :
     EPIC 212587672 :
@@ -1530,12 +1528,8 @@ def targetlist():
     Kepler-122 :
     Kepler-130 :
     Kepler-131 :
-    Kepler-1311 :
-    Kepler-1312 :
-    Kepler-1313 :
     Kepler-1326 :
     Kepler-134 :
-    Kepler-138 :
     Kepler-139 :
     Kepler-142 :
     Kepler-1442 :
@@ -1756,7 +1750,6 @@ def targetlist():
     TOI-2537 :
     TOI-2545 :
     TOI-2580 :
-    TOI-260 :
     TOI-261 :
     TOI-2714 :
     TOI-2719 :
@@ -1881,7 +1874,6 @@ def targetlist():
     WASP-194 :
     WASP-195 :
     WASP-197 :
-    GJ 341 :
     NGTS-34 :
     NGTS-35 :
     TOI-1648 :
@@ -1900,7 +1892,6 @@ def targetlist():
     TOI-5728 :
     TOI-5736 :
     TOI-6041 :
-    TOI-6255 :
     TOI-6448 :
     TOI-7166 :
     TOI-7510 :
