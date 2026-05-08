@@ -71,6 +71,7 @@ from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
 
 # LADY OF THE LAKE
 import os
+
 stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
 
 log = logging.getLogger(__name__)
@@ -2259,6 +2260,7 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         Kostogryzet al. 2022
         https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
         '''
+
         def read_model_atmosphere(self, mh, teff, logg, set_type):
             '''
             https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
@@ -2290,10 +2292,11 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
             data = f.readlines()
             muval = data[1].split()[2:]
             return np.array(muval).astype(float)
+
         pass
 
     # LIMB DARKENING MODEL
-    def ldotl(mu, u1, u2, u3, u4, pws=[0.5, 1., 0.1, 2.]):
+    def ldotl(mu, u1, u2, u3, u4, pws=[0.5, 1.0, 0.1, 2.0]):
         '''
         S. Grusnis
         Generalisation of nonlinearld to arbitrary powers
@@ -2302,10 +2305,10 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         pws = [0.5, 1., 0.1, 2.] GMR
         pws = [0.5, 1, 0.01, 2.] Grusnis
         '''
-        xtn1 = u1*(1e0 - mu**pws[0])
-        xtn2 = u2*(1e0 - mu**pws[1])
-        xtn3 = u3*(1e0 - mu**pws[2])
-        xtn4 = u4*(1e0 - mu**pws[3])
+        xtn1 = u1 * (1e0 - mu ** pws[0])
+        xtn2 = u2 * (1e0 - mu ** pws[1])
+        xtn3 = u3 * (1e0 - mu ** pws[2])
+        xtn4 = u4 * (1e0 - mu ** pws[3])
         model = 1e0 - xtn1 - xtn2 - xtn3 - xtn4
         return model
 
@@ -2320,9 +2323,11 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         p3 = params['p3'].value
         p4 = params['p4'].value
         model = ldotl(x, gamma1, gamma2, gamma3, gamma4, pws=[p1, p2, p3, p4])
-        if data is None: return model
-        if weights is None: return data - model
-        return (data - model)/weights
+        if data is None:
+            return model
+        if weights is None:
+            return data - model
+        return (data - model) / weights
 
     mhgrid = np.loadtxt(os.path.join(stllib, 'grid_mh.txt'))
     teffgrid = np.loadtxt(os.path.join(stllib, 'grid_teff.txt'))
@@ -2334,7 +2339,9 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
 
     output_data = "disk_integrated_spectra"
     data = ReadData()
-    wln, spectra = data.read_clv_spectra(mh_input, teff_input, logg_input, set_type)
+    wln, spectra = data.read_clv_spectra(
+        mh_input, teff_input, logg_input, set_type
+    )
     mu = data.read_mu_positions(mh_input, teff_input, logg_input, set_type)
 
     # LOOP OVER WAVELENGTHS BINS
@@ -2343,19 +2350,20 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         # Units for original wavelengths provided by MPSA are assumed to be in nm
         # based on data selection explanation in Witzke et al. 2021
         # (doi: 10.1051/0004-6361/202140275). Sub-section 4.7: Speed-Up and Portability.
-        mumin_nm = thismumin*1e3
-        mumax_nm = thismumax*1e3
+        mumin_nm = thismumin * 1e3
+        mumax_nm = thismumax * 1e3
         mu_min = wln[np.abs(wln - mumin_nm).argmin()]
         mu_max = wln[np.abs(wln - mumax_nm).argmin()]
         select = (wln >= mu_min) & (wln <= mu_max)
         spec = np.mean(spectra[select], axis=0)
         test = spec / np.max(spec)
-        allpws = [[0.5, 1., 1.5, 2.],  # 4NL
-                  [0.5, 1., 0.1, 2.],  # GMR
-                  [0.5, 1., 0.2, 2.],  # Grusnis
-                  [0.5, 1., 0.3, 2.],  # Grusnis
-                  [0.5, 1., 0.01, 2.],  # Grusnis
-                  ]
+        allpws = [
+            [0.5, 1.0, 1.5, 2.0],  # 4NL
+            [0.5, 1.0, 0.1, 2.0],  # GMR
+            [0.5, 1.0, 0.2, 2.0],  # Grusnis
+            [0.5, 1.0, 0.3, 2.0],  # Grusnis
+            [0.5, 1.0, 0.01, 2.0],  # Grusnis
+        ]
         allouts = []
         for tp in allpws:
             params = None
@@ -2373,28 +2381,39 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         allres = []
         alllds = []
         for to in allouts:
-            tps = [to.params['p1'].value,
-                   to.params['p2'].value,
-                   to.params['p3'].value,
-                   to.params['p4'].value]
-            alllds.append([to.params['gamma1'].value, 
-                           to.params['gamma2'].value, 
-                           to.params['gamma3'].value, 
-                           to.params['gamma4'].value])
-            allres.append(np.sum(spec - np.max(spec)*ldotl(mu, *alllds[-1], pws=tps)))
+            tps = [
+                to.params['p1'].value,
+                to.params['p2'].value,
+                to.params['p3'].value,
+                to.params['p4'].value,
+            ]
+            alllds.append(
+                [
+                    to.params['gamma1'].value,
+                    to.params['gamma2'].value,
+                    to.params['gamma3'].value,
+                    to.params['gamma4'].value,
+                ]
+            )
+            allres.append(
+                np.sum(spec - np.max(spec) * ldotl(mu, *alllds[-1], pws=tps))
+            )
             pass
-        best = min(("4NL", abs(allres[0])),
-                   ("GMR", abs(allres[1])), 
-                   ("SG0.2", abs(allres[2])), 
-                   ("SG0.3", abs(allres[3])), 
-                   ("SG0.01", abs(allres[4])),
-                   key=lambda x: x[1]
-                   )
-        val = {"4NL": alllds[0],
-               "GMR": alllds[1],
-               "SG0.2": alllds[2],
-               "SG0.3": alllds[3],
-               "SG0.01": alllds[4]}
+        best = min(
+            ("4NL", abs(allres[0])),
+            ("GMR", abs(allres[1])),
+            ("SG0.2", abs(allres[2])),
+            ("SG0.3", abs(allres[3])),
+            ("SG0.01", abs(allres[4])),
+            key=lambda x: x[1],
+        )
+        val = {
+            "4NL": alllds[0],
+            "GMR": alllds[1],
+            "SG0.2": alllds[2],
+            "SG0.3": alllds[3],
+            "SG0.01": alllds[4],
+        }
         allfav.append(val[best[0]])
         pass
     allfav = np.array(allfav).T
