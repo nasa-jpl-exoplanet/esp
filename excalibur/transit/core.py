@@ -2288,15 +2288,14 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
             https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
             '''
             file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
-            f = open(file_name, "r")
-            data = f.readlines()
+            with open(file_name, "r") as f:
+                data = f.readlines()
             muval = data[1].split()[2:]
             return np.array(muval).astype(float)
-
         pass
 
     # LIMB DARKENING MODEL
-    def ldotl(mu, u1, u2, u3, u4, pws=[0.5, 1.0, 0.1, 2.0]):
+    def ldotl(mu, u1, u2, u3, u4, pws=None):
         '''
         S. Grusnis
         Generalisation of nonlinearld to arbitrary powers
@@ -2305,6 +2304,8 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         pws = [0.5, 1., 0.1, 2.] GMR
         pws = [0.5, 1, 0.01, 2.] Grusnis
         '''
+        if pws is None:
+            pws = [0.5, 1.0, 0.1, 2.0]
         xtn1 = u1 * (1e0 - mu ** pws[0])
         xtn2 = u2 * (1e0 - mu ** pws[1])
         xtn3 = u3 * (1e0 - mu ** pws[2])
@@ -2337,7 +2338,7 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
     teff_input = int(teffgrid[np.abs(teffgrid - T).argmin()])
     logg_input = logggrid[np.abs(logggrid - G).argmin()]
 
-    output_data = "disk_integrated_spectra"
+    # output_data = "disk_integrated_spectra"
     data = ReadData()
     wln, spectra = data.read_clv_spectra(
         mh_input, teff_input, logg_input, set_type
