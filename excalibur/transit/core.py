@@ -2252,39 +2252,7 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
     [OPT]:set_type:stellar grid type i.e. 'set1' or 'set2'
     [O]:[ARRAY,ARRAY,ARRAY,ARRAY]:4 LDs same array length than mumin and mumax
     '''
-<<<<<<< HEAD
-    # SOPHIA S MODEL AND LD COMPUTATION HERE
-    import lmfit
-    
-    mh = np.array([-0.05, -0.1, -0.15, -0.2, -0.25, -0.3, -0.35, -0.4, -0.45, -0.5, -0.55, -0.6, -0.65, -0.7, -0.75, -0.8, -0.85, -0.9, -0.95, 
-               -1.0, -1.1, -1.2, -1.3, -1.4, -1.5, -1.6, -1.7, -1.8, -1.9, -2.0, -2.1, -2.2, -2.3, -2.4, -2.5, -3.0, -3.5, -4.0, -4.5, -5.0, 
-              0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
 
-    teff = np.array([3500, 3600, 3700, 3800, 3900, 4000, 4100, 4200, 4300, 4400, 4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 
-                5600, 5700, 5800, 5900, 6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700, 6800, 6900, 7000, 7100, 7200, 7300, 7400, 7500, 7600, 
-                7700, 7800, 7900, 8000, 8100, 8200, 8300, 8400, 8500, 8600, 8700, 8800, 8900, 9000])
-
-    logg = np.array([3.0, 3.5, 4.0, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.0])
-
-    logg_input = G
-    mh_input = M
-    teff_input = T
-    
-    mh_input = mh[np.abs(mh - mh_input).argmin()]
-    teff_input = teff[np.abs(teff - teff_input).argmin()]
-    logg_input = logg[np.abs(logg - logg_input).argmin()]
-
-    set_type = "set1"
-    output_data = "disk_integrated_spectra"
-
-    class ReadData:
-        def read_model_atmosphere(self, mh, teff, logg, set_type):
-            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_model_atmosphere.dat"
-            return np.genfromtxt(file_name, skip_header=2, skip_footer=23)
-
-        def read_clv_spectra(self, mh, teff, logg, set_type):
-            file_name = f"/proj/sdp/data/MPS-ATLAS/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
-=======
     # MPS-ATLAS UTILS from Kostogryzet al. 2022
     class ReadData:
         '''
