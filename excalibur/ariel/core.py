@@ -21,6 +21,7 @@ from excalibur.ariel.metallicity import (
 from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.ariel_instrument_model import (
     load_ariel_instrument,
+    load_arielrad_results,
     calculate_ariel_instrument,
 )
 from excalibur.ariel.forward_models import make_cerberus_atmos
@@ -223,14 +224,30 @@ def simulate_spectra(
             # use HD 209458 SNR as a default for test cases
             targetplanet = 'HD 209458 b'
 
-        # select old ArielRad (results read from a table) or new (results calculated internally)
-        oldArielRad = True
-        # oldArielRad = False
-        if oldArielRad:
+        # select old ArielRad format (results read from a large table) or
+        # newer ArielRad format (separate file for each target) or
+        # run current ArielRad (results calculated internally)
+        oldArielRadformat = False
+        newArielRadformat = True
+        if oldArielRadformat:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
                 runtime_params,
             )
+        elif newArielRadformat:
+            ariel_instrument = load_arielrad_results(
+                targetplanet,
+                runtime_params,
+            )
+
+            # old_ariel_instrument = load_ariel_instrument(
+            #    targetplanet,
+            #    runtime_params,
+            # )
+            # print('old Nvisits',old_ariel_instrument['nVisits'])
+            # print('new Nvisits',ariel_instrument['nVisits'])
+            # print('old median noise',np.median(old_ariel_instrument['noise']))
+            # print('new median noise',np.median(ariel_instrument['noise']))
         else:
             ariel_instrument = calculate_ariel_instrument(
                 targetplanet,
@@ -330,7 +347,8 @@ def simulate_spectra(
             uncertainties = ariel_instrument['noise']
             # use #-of-visits our ArielRad calculation, not from Edwards table
             visits = ariel_instrument['nVisits']
-            # print('# of visits:',visits,'  tier',tier,'  ',target+' '+planet_letter)
+            if verbose:
+                print('# of visits:', visits, '   tier:', tier)
 
             uncertainties /= np.sqrt(float(visits))
 
