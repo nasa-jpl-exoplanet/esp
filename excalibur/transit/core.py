@@ -2288,10 +2288,11 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
             https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
             '''
             file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
-            with open(file_name, "r") as f:
+            with open(file_name, "r", encoding="utf-8") as f:
                 data = f.readlines()
             muval = data[1].split()[2:]
             return np.array(muval).astype(float)
+
         pass
 
     # LIMB DARKENING MODEL
