@@ -827,6 +827,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
+    rawloc = tim['data']['RAWLOC']
+    calloc = tim['data']['CALLOC']
     iexist = {}
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, iexist, raws=True, verbose=verbose)
