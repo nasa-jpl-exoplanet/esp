@@ -11,7 +11,9 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
+import dawgie.context
 
+import excalibur
 import excalibur.data.core as datcore
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
@@ -62,9 +64,15 @@ except ImportError:
 
 from collections import namedtuple
 
-# LDTK BS
+# LDTK
+# We should get rid of the imports + the parts of the code that are still calling this
 from ldtk import LDPSetCreator, BoxcarFilter
 from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
+
+# LADY OF THE LAKE
+import os
+
+stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -526,6 +534,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
+    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
@@ -2231,25 +2240,187 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
     return True
 
 
-def ldtl(T, M, G, mumin, mumax):
+def ldtl(T, M, G, mumin, mumax, set_type="set1"):
     '''
-    S. GRUSNIS:Limb Darkening coefficients
+    S. GRUSNIS:LaDy of The Lake
+    Limb darkening coefficients computation using
     MPS-ATLAS Library:Witzke et al. 2021, Kostogryz et al. 2022
     [I]:T:[FLOAT]:stellar temperature in [K] 3500 to 9000
     [I]:M:[FLOAT]:stellar metallicity in [dex] -5 to 1.5
     [I]:G:[FLOAT]:stellar gravity in log10[cm.s-2] 3.0 to 5.0
     [I]:mumin:[ARRAY]:min(bandpass) in microns
     [I]:mumax:[ARRAY]:max(bandpass) in microns
+    [OPT]:set_type:stellar grid type i.e. 'set1' or 'set2'
     [O]:[ARRAY,ARRAY,ARRAY,ARRAY]:4 LDs same array length than mumin and mumax
     '''
-    # SOPHIA S MODEL AND LD COMPUTATION HERE
-    _ = T
-    _ = M
-    _ = G
-    _ = mumin
-    _ = mumax
-    out = [3.7479351], [-6.59634188], [5.65796194], [-1.80955517]
-    return out
+
+    # MPS-ATLAS UTILS from Kostogryzet al. 2022
+    class ReadData:
+        '''
+        Kostogryzet al. 2022
+        https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+        '''
+
+        def read_model_atmosphere(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_model_atmosphere.dat"
+            return np.genfromtxt(file_name, skip_header=2, skip_footer=23)
+
+        def read_clv_spectra(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            data = np.loadtxt(file_name, skiprows=2)
+            return data[:, 0], data[:, 1:]
+
+        def read_disk_integrated_spectra(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_flux_spectra.dat"
+            return np.loadtxt(file_name, skiprows=1, unpack=True)
+
+        def read_mu_positions(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            with open(file_name, "r", encoding="utf-8") as f:
+                data = f.readlines()
+            muval = data[1].split()[2:]
+            return np.array(muval).astype(float)
+
+        pass
+
+    # LIMB DARKENING MODEL
+    def ldotl(mu, u1, u2, u3, u4, pws=None):
+        '''
+        S. Grusnis
+        Generalisation of nonlinearld to arbitrary powers
+        pws = [0.5, 1., 1.5, 2.] 4NL Claret et al., 2000
+        https://articles.adsabs.harvard.edu/pdf/2000A%26A...363.1081C
+        pws = [0.5, 1., 0.1, 2.] GMR
+        pws = [0.5, 1, 0.01, 2.] Grusnis
+        '''
+        if pws is None:
+            pws = [0.5, 1.0, 0.1, 2.0]
+        xtn1 = u1 * (1e0 - mu ** pws[0])
+        xtn2 = u2 * (1e0 - mu ** pws[1])
+        xtn3 = u3 * (1e0 - mu ** pws[2])
+        xtn4 = u4 * (1e0 - mu ** pws[3])
+        model = 1e0 - xtn1 - xtn2 - xtn3 - xtn4
+        return model
+
+    # LMFIT MODEL
+    def ldotlldx(params, x, data=None, weights=None):
+        gamma1 = params['gamma1'].value
+        gamma2 = params['gamma2'].value
+        gamma3 = params['gamma3'].value
+        gamma4 = params['gamma4'].value
+        p1 = params['p1'].value
+        p2 = params['p2'].value
+        p3 = params['p3'].value
+        p4 = params['p4'].value
+        model = ldotl(x, gamma1, gamma2, gamma3, gamma4, pws=[p1, p2, p3, p4])
+        if data is None:
+            return model
+        if weights is None:
+            return data - model
+        return (data - model) / weights
+
+    mhgrid = np.loadtxt(os.path.join(stllib, 'grid_mh.txt'))
+    teffgrid = np.loadtxt(os.path.join(stllib, 'grid_teff.txt'))
+    logggrid = np.loadtxt(os.path.join(stllib, 'grid_logg.txt'))
+    # Nearest Neighbor, no interpolation
+    mh_input = mhgrid[np.abs(mhgrid - M).argmin()]
+    teff_input = int(teffgrid[np.abs(teffgrid - T).argmin()])
+    logg_input = logggrid[np.abs(logggrid - G).argmin()]
+
+    # output_data = "disk_integrated_spectra"
+    data = ReadData()
+    wln, spectra = data.read_clv_spectra(
+        mh_input, teff_input, logg_input, set_type
+    )
+    mu = data.read_mu_positions(mh_input, teff_input, logg_input, set_type)
+
+    # LOOP OVER WAVELENGTHS BINS
+    allfav = []
+    for thismumin, thismumax in zip(mumin, mumax):
+        # Units for original wavelengths provided by MPSA are assumed to be in nm
+        # based on data selection explanation in Witzke et al. 2021
+        # (doi: 10.1051/0004-6361/202140275). Sub-section 4.7: Speed-Up and Portability.
+        mumin_nm = thismumin * 1e3
+        mumax_nm = thismumax * 1e3
+        mu_min = wln[np.abs(wln - mumin_nm).argmin()]
+        mu_max = wln[np.abs(wln - mumax_nm).argmin()]
+        select = (wln >= mu_min) & (wln <= mu_max)
+        spec = np.mean(spectra[select], axis=0)
+        test = spec / np.max(spec)
+        allpws = [
+            [0.5, 1.0, 1.5, 2.0],  # 4NL
+            [0.5, 1.0, 0.1, 2.0],  # GMR
+            [0.5, 1.0, 0.2, 2.0],  # Grusnis
+            [0.5, 1.0, 0.3, 2.0],  # Grusnis
+            [0.5, 1.0, 0.01, 2.0],  # Grusnis
+        ]
+        allouts = []
+        for tp in allpws:
+            params = None
+            params = lm.Parameters()
+            params.add('p1', value=tp[0], vary=False)
+            params.add('p2', value=tp[1], vary=False)
+            params.add('p3', value=tp[2], vary=False)
+            params.add('p4', value=tp[3], vary=False)
+            params.add('gamma1', value=2.5e-1)
+            params.add('gamma2', value=2.5e-1)
+            params.add('gamma3', value=2.5e-1)
+            params.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+            allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
+            pass
+        allres = []
+        alllds = []
+        for to in allouts:
+            tps = [
+                to.params['p1'].value,
+                to.params['p2'].value,
+                to.params['p3'].value,
+                to.params['p4'].value,
+            ]
+            alllds.append(
+                [
+                    to.params['gamma1'].value,
+                    to.params['gamma2'].value,
+                    to.params['gamma3'].value,
+                    to.params['gamma4'].value,
+                ]
+            )
+            allres.append(
+                np.sum(spec - np.max(spec) * ldotl(mu, *alllds[-1], pws=tps))
+            )
+            pass
+        best = min(
+            ("4NL", abs(allres[0])),
+            ("GMR", abs(allres[1])),
+            ("SG0.2", abs(allres[2])),
+            ("SG0.3", abs(allres[3])),
+            ("SG0.01", abs(allres[4])),
+            key=lambda x: x[1],
+        )
+        val = {
+            "4NL": alllds[0],
+            "GMR": alllds[1],
+            "SG0.2": alllds[2],
+            "SG0.3": alllds[3],
+            "SG0.01": alllds[4],
+        }
+        allfav.append(val[best[0]])
+        pass
+    allfav = np.array(allfav).T
+    # GMR: We wanna save which model was selected somewhere
+    return allfav
 
 
 def whitelight(
