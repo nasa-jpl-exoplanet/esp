@@ -54,13 +54,13 @@ def calculate_ariel_instrument(
         system_params[planet_letter]['trandur'] = 2.0
     if system_params['dist'] == '':
         log.error('ArielRad Input Error: MISSING DISTANCE!!! %s', target)
-        system_params['dist'] = '666'
+        system_params['dist'] = 666
     if system_params[planet_letter]['impact'] == '':
         log.error('ArielRad Input Error: MISSING IMPACT PARAM!!! %s', target)
-        system_params[planet_letter]['impact'] = '0'
+        system_params[planet_letter]['impact'] = 0
     if system_params['M*'] == '':
         log.error('ArielRad Input Error: MISSING STAR MASS!!! %s', target)
-        system_params['M*'] = '1'
+        system_params['M*'] = 1
 
     # SYSTEM PARAMS NEEDED FOR ARIELRAD:
     arielrad_params = {

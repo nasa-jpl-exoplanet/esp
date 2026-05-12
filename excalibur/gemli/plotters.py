@@ -317,6 +317,7 @@ def plot_overallsample_fits_vs_truths(
 
     # compare histogram against a bell curve (Gaussian statistics)
     gaussianDist = np.random.normal(size=10000)
+    gaussianDist = np.concatenate((gaussianDist, -gaussianDist))
 
     plot_statevectors = []
     for param in params:
@@ -371,16 +372,15 @@ def plot_overallsample_fits_vs_truths(
             # CHI (fit-truth)/error HISTOGRAMS IN SECOND PANEL
             ax2 = figure.add_subplot(1, 3, 2)
 
-            chi_instrumental = (
-                fit_values[param] - truth_values[param]
-            ) / fit_errors[param]
-            chi_systematic = (
-                fit_values[param] - truth_values[param]
-            ) / fit_errorssys[param]
-            lowend = np.min(chi_instrumental)
-            highend = np.max(chi_instrumental)
-            # lowend = np.min(np.concatenate((chi_instrumental, chi_systematic)))
-            # highend = np.max(np.concatenate((chi_instrumental, chi_systematic)))
+            # chi_instrumental = (fit_values[param] - truth_values[param]
+            #                    ) / fit_errors[param]
+            # chi_systematic = (fit_values[param] - truth_values[param]
+            #                  ) / fit_errorssys[param]
+            chi_overall = (fit_values[param] - truth_values[param]) / np.sqrt(
+                fit_errors[param] ** 2 + fit_errorssys[param] ** 2
+            )
+            lowend = np.min(chi_overall)
+            highend = np.max(chi_overall)
             # print('lowend', lowend)
             # print('highend', highend)
             lowend = np.min((-5, np.ceil(lowend)))
@@ -389,25 +389,20 @@ def plot_overallsample_fits_vs_truths(
             # print('highend', highend)
             # print('# of bins', int(highend - lowend))
             plt.hist(
-                chi_instrumental,
+                chi_overall,
                 range=(lowend, highend),
                 bins=int(highend - lowend),
                 density=True,
                 histtype='step',
                 color='black',
                 zorder=1,
-                label='instrument noise',
+                lw=2,
+                # label='instrument noise',
             )
-            plt.hist(
-                chi_systematic,
-                range=(lowend, highend),
-                bins=int(highend - lowend),
-                density=True,
-                histtype='step',
-                color='red',
-                zorder=2,
-                label='systematic noise',
-            )
+            # chi_instrumental,
+            # label='instrument noise',
+            # chi_systematic,
+            # label='systematic noise',
 
             # plot a bell curve for comparison
             plt.hist(
@@ -421,7 +416,7 @@ def plot_overallsample_fits_vs_truths(
                 zorder=3,
                 label='Gaussian',
             )
-            # ax2.set_xlim(overallmin, overallmax)
+            ax2.set_xlim(lowend - 0.5, highend + 0.5)
 
             ax2.set_xlabel(param + ' truth', fontsize=14)
             ax2.set_ylabel(param + ' fit', fontsize=14)

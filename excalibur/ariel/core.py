@@ -208,15 +208,6 @@ def simulate_spectra(
             ) % 1000000
         np.random.seed(intFromTarget)
 
-        # check for Ariel targets that are not in excalibur
-        # from excalibur.target.targetlists import targetlist_ArielMCSknown_transitCategory
-        # targs = targetlist_ArielMCSknown_transitCategory()
-        # import excalibur.target.edit as trgedit
-        # excaliburTargets = trgedit.targetlist.__doc__
-        # for targ in targs:
-        #     if targ[:-2] not in excaliburTargets:
-        #         print('ADD NEW TARGET:',targ)
-
         # load in the wavelength bins and the noise model
         # there is a separate SNR file for each planet
         targetplanet = target + ' ' + planet_letter
