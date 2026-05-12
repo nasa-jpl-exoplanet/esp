@@ -2976,22 +2976,29 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
-def vecistar(xrs, g1, g2, g3, g4):
+def vecistar(xrs, g1, g2, g3, g4, a1=0.5, a2=1.0, a3=0.01, a4=2.0):
     '''
     G. ROUDIER: Stellar surface extinction model
+    C. BERNARDIN: Normalization of the LD law
     '''
     ldnorm = (
-        (-g1 / 10e0 - g2 / 6e0 - 3e0 * g3 / 14e0 - g4 / 4e0 + 5e-1)
+        (
+            -a1 * g1 / 2e0 / (4e0 + a1)
+            - a2 * g2 / 2e0 / (4e0 + a2)
+            - a3 * g2 / 2e0 / (4e0 + a3)
+            - a4 * g2 / 2e0 / (4e0 + a4)
+            + 5e-1
+        )
         * 2e0
         * np.pi
     )
     select = xrs < 1e0
     mu = np.zeros(xrs.shape)
     mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 4e0)
-    s1 = g1 * (1e0 - mu)
-    s2 = g2 * (1e0 - mu**2)
-    s3 = g3 * (1e0 - mu**3)
-    s4 = g4 * (1e0 - mu**4)
+    s1 = g1 * (1e0 - mu**a1)
+    s2 = g2 * (1e0 - mu**a2)
+    s3 = g3 * (1e0 - mu**a3)
+    s4 = g4 * (1e0 - mu**a4)
     outld = (1e0 - (s1 + s2 + s3 + s4)) / ldnorm
     return outld
 
