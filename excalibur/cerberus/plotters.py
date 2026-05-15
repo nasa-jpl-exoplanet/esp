@@ -529,6 +529,7 @@ def plot_corner(
     if truth_params is not None:
         truths = []
         for thiskey in allkeys:
+            # print('going through truth keys', thiskey)
             if thiskey == 'T':
                 truths.append(truth_params['Teq'])
             elif thiskey == '[X/H]':
@@ -539,6 +540,10 @@ def plot_corner(
                 truths.append(truth_params['C/O'])
             elif thiskey == '[N/O]':
                 truths.append(0)
+            elif thiskey in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+                truths.append(666666)
+            elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
+                truths.append(1)
             elif thiskey in truth_params.keys():
                 truths.append(truth_params[thiskey])
             else:
