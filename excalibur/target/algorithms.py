@@ -71,9 +71,7 @@ class Create(dawgie.Analyzer):
     def run(self, aspects: dawgie.Aspect):
         '''Top level algorithm call'''
 
-        trgcore.scrapeids(
-            aspects.ds(), self.__out[0], WEB, gen_ids=GEN_IDS
-        )
+        trgcore.scrapeids(aspects.ds(), self.__out[0], WEB, gen_ids=GEN_IDS)
         update = trgcore.createfltrs(self.__out[1])
         if update:
             excalibur.lagger()
