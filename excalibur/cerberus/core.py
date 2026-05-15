@@ -1202,7 +1202,7 @@ def atmos(
                         # save the logLikelihood values for each pymc step
                         pymc.Deterministic(
                             "saved logLikelihood",
-                            pytensr.sum(LogLH(tspectrum[cleanup], nodes))
+                            pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                         )
                         # --------------
                         pass
@@ -1338,7 +1338,7 @@ def atmos(
                             # save the logLikelihood values for each pymc step
                             pymc.Deterministic(
                                 "saved logLikelihood",
-                                pytensr.sum(LogLH(tspectrum[cleanup], nodes))
+                                pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                             )
                             # --------------
                         pass
@@ -1437,11 +1437,13 @@ def atmos(
                     if key == 'saved logLikelihood':
                         all_keys.append('$\\chi^2$')
                         # don't forget the -2 to convert from logL to chi2
-                        all_traces[-1] = -2. * all_traces[-1]
+                        all_traces[-1] = -2.0 * all_traces[-1]
 
                         # switch from chi2 to reduced chi2
                         all_keys[-1] = '$\\chi^2_{red}$'
-                        degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
+                        degrees_of_freedom = len(tspectrum[cleanup]) - len(
+                            nodes
+                        )
                         all_traces[-1] = all_traces[-1] / degrees_of_freedom
                     elif model == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
