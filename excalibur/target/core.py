@@ -25,8 +25,6 @@ import astropy.io.fits as pyfits
 import urllib.request as urlrequest
 import urllib3.exceptions
 
-from collections import namedtuple
-
 from importlib import import_module as fetch  # avoid cicular dependencies
 
 import logging
