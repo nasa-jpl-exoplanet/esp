@@ -72,7 +72,9 @@ def LogLikelihood(inputs):
     # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
 
     # normalize the log(Likelihood); as a constant, it shouldn't have any effect
-    Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
-    out -= Norm
+    # actually let's not normalize it, since it should be no effect anyway
+    # then we just have the output as chi^2, more or less; useful for cornerplot
+    # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
+    # out -= Norm
 
     return out
