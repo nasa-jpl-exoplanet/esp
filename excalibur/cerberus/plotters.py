@@ -480,6 +480,10 @@ def plot_corner(
                 paramValues_bestFit.append(tceqdict['NtoO'])
             elif mixratio and param in mixratio:
                 paramValues_bestFit.append(mixratio[param])
+            elif param in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+                paramValues_bestFit.append(666666)
+            elif param in ['chi2reduced', '$\\chi^2_{red}$']:
+                paramValues_bestFit.append(1)
             else:
                 log.warning('--< ERROR: param not in list: %s >--', param)
         # print('best fit values in corner plot',paramValues_bestFit)
@@ -488,12 +492,12 @@ def plot_corner(
     # print(' params inside of corner plotting',allkeys)
     # print('medians inside of corner plotting',mcmcMedian)
     # print('bestfit inside of corner plotting',paramValues_bestFit)
-    lo = np.nanpercentile(np.array(alltraces), 16, axis=1)
-    hi = np.nanpercentile(np.array(alltraces), 84, axis=1)
+    lo = np.nanpercentile(np.array(profiletraces), 16, axis=1)
+    hi = np.nanpercentile(np.array(profiletraces), 84, axis=1)
     # span = hi - lo
     # Careful!  These are not actually the prior ranges; they're the range of walker values
-    priorlo = np.nanmin(np.array(alltraces), axis=1)
-    priorhi = np.nanmax(np.array(alltraces), axis=1)
+    priorlo = np.nanmin(np.array(profiletraces), axis=1)
+    priorhi = np.nanmax(np.array(profiletraces), axis=1)
     # OK fixed now. prior ranges are saved as output from atmos and then passed in here
     for ikey, key in enumerate(allkeys):
         # print('param:',key)
