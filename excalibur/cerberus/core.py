@@ -56,6 +56,7 @@ from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 
 import pymc
+import pytensor.tensor as pytensr
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -1198,6 +1199,11 @@ def atmos(
                             observed=tspectrum[cleanup],
                             logp=LogLH,
                         )
+                        # save the logLikelihood values for each pymc step
+                        pymc.Deterministic(
+                            "saved logLikelihood",
+                            pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                        )
                         # --------------
                         pass
                     else:
@@ -1322,11 +1328,17 @@ def atmos(
 
                             TensorModel = TensorShell()
 
-                            _ = pymc.CustomDist(
+                            pymc.CustomDist(
                                 "likelihood for cloudy spectrum",
                                 nodes,
                                 observed=tspectrum[cleanup],
                                 logp=LogLH,
+                            )
+
+                            # save the logLikelihood values for each pymc step
+                            pymc.Deterministic(
+                                "saved logLikelihood",
+                                pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                             )
                             # --------------
                         pass
@@ -1361,6 +1373,16 @@ def atmos(
 
                 # N_TEC = len(trace.posterior.TEC_dim_0)
                 # print('# of TEC parameters',N_TEC)
+
+                # note that likelihood results -chi2/2, so multiply by -2
+                saved_chi2s = -2 * trace.posterior['saved logLikelihood'].values
+                print('shape of loglikelihoods', saved_chi2s.shape)
+                out['data'][p][model]['saved logLikelihood'] = saved_chi2s
+                degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
+                # print('DOF', degrees_of_freedom,
+                #      len(tspectrum[cleanup]), len(nodes))
+                chi2reduced = saved_chi2s / degrees_of_freedom
+                out['data'][p][model]['chi2reduced'] = chi2reduced
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
@@ -1412,7 +1434,18 @@ def atmos(
                 for key, thistrace in mctrace.items():
                     # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
-                    if model == 'TEC':
+                    if key == 'saved logLikelihood':
+                        all_keys.append('$\\chi^2$')
+                        # don't forget the -2 to convert from logL to chi2
+                        all_traces[-1] = -2.0 * all_traces[-1]
+
+                        # switch from chi2 to reduced chi2
+                        all_keys[-1] = '$\\chi^2_{red}$'
+                        degrees_of_freedom = len(tspectrum[cleanup]) - len(
+                            nodes
+                        )
+                        all_traces[-1] = all_traces[-1] / degrees_of_freedom
+                    elif model == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
@@ -2251,6 +2284,20 @@ def results(
                     ) % 100000
                 np.random.seed(int_from_target)
 
+                # try to get best log-likelihood directly from main run
+                # rather than looping over a re-calculated sample of models
+                # asdf asdf
+                # print('median params',
+                #      tpr,
+                #      ctp,
+                #      hazescale,
+                #      hazeloc,
+                #      hazethick,
+                #      tceqdict,
+                #      mixratio,
+                #      )
+                # print('chi2 from posterior medians', ch2model)
+
                 chi2best = chi2model
                 patmos_best_fit = patmos_model
                 param_values_best_fit = param_values_profiled
@@ -2347,11 +2394,21 @@ def results(
                         patmos_modelrand - transitdata['depth'][okPart]
                     ) / transitdata['error'][okPart]
                     chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # print('chi2 for a random walker', chi2modelrand)
+                    # print('chi2 from sample toward best', ch2modelrand)
                     # print('chi2modelrand', chi2modelrand)
                     # print('chi2best', chi2best)
                     if chi2modelrand < chi2best:
                         # print('  using this as best', chi2modelrand)
+                        # asdf asdf
+                        # print('best param',
+                        #      tpr,
+                        #      ctp,
+                        #      hazescale,
+                        #      hazeloc,
+                        #      hazethick,
+                        #      tceqdict,
+                        #      mixratio,
+                        #      )
                         chi2best = chi2modelrand
                         patmos_best_fit = patmos_modelrand
                         param_values_best_fit = (
