@@ -1200,9 +1200,16 @@ def atmos(
                             logp=LogLH,
                         )
                         # save the logLikelihood values for each pymc step
+                        # pymc.Deterministic(
+                        #    "saved logLikelihood",
+                        #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                        # )
+                        # save the chi-squared values for each pymc step
+                        # (mulitply the logLikelihood by -2)
                         pymc.Deterministic(
-                            "saved logLikelihood",
-                            pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                            "saved chi2",
+                            -2.0
+                            * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                         )
                         # --------------
                         pass
@@ -1336,9 +1343,16 @@ def atmos(
                             )
 
                             # save the logLikelihood values for each pymc step
+                            # pymc.Deterministic(
+                            #    "saved logLikelihood",
+                            #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                            # )
+                            # save the chi-squared values for each pymc step
+                            # (mulitply the logLikelihood by -2)
                             pymc.Deterministic(
-                                "saved logLikelihood",
-                                pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                                "saved chi2",
+                                -2.0
+                                * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                             )
                             # --------------
                         pass
@@ -1374,15 +1388,17 @@ def atmos(
                 # N_TEC = len(trace.posterior.TEC_dim_0)
                 # print('# of TEC parameters',N_TEC)
 
-                # note that likelihood results -chi2/2, so multiply by -2
-                saved_chi2s = -2 * trace.posterior['saved logLikelihood'].values
-                print('shape of loglikelihoods', saved_chi2s.shape)
-                out['data'][p][model]['saved logLikelihood'] = saved_chi2s
+                saved_chi2s = trace.posterior['saved chi2'].values
+                # print('shape of loglikelihoods', saved_chi2s.shape)
+                # have to unravel these, to match the unraveled pymc traces
+                out['data'][p][model]['chi2'] = np.ravel(saved_chi2s, order='F')
                 degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
                 # print('DOF', degrees_of_freedom,
                 #      len(tspectrum[cleanup]), len(nodes))
                 chi2reduced = saved_chi2s / degrees_of_freedom
-                out['data'][p][model]['chi2reduced'] = chi2reduced
+                out['data'][p][model]['chi2reduced'] = np.ravel(
+                    chi2reduced, order='F'
+                )
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
@@ -1434,10 +1450,8 @@ def atmos(
                 for key, thistrace in mctrace.items():
                     # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
-                    if key == 'saved logLikelihood':
+                    if key == 'saved chi2':
                         all_keys.append('$\\chi^2$')
-                        # don't forget the -2 to convert from logL to chi2
-                        all_traces[-1] = -2.0 * all_traces[-1]
 
                         # switch from chi2 to reduced chi2
                         all_keys[-1] = '$\\chi^2_{red}$'
@@ -1914,7 +1928,6 @@ def results(
                 trgt,
                 p,
             )
-
         else:
             out['data'][p] = {}
 
@@ -1939,7 +1952,25 @@ def results(
                 for key in atm[p][model_name]['MCTRACE']:
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(atm[p][model_name]['MCTRACE'][key])
-                    if model_name == 'TEC':
+                    if key == 'saved chi2':
+                        chi2values = all_traces[-1]
+                        all_keys.append('$\\chi^2$')
+
+                        # switch from chi2 to reduced chi2
+                        all_keys[-1] = '$\\chi^2_{red}$'
+
+                        degrees_of_freedom = (
+                            len(atm[p]['WAVELENGTH'])
+                            - len(atm[p][model_name]['MCTRACE'])
+                            + 1
+                        )
+                        # print('degrees of freedom',
+                        #      degrees_of_freedom,
+                        #      len(atm[p]['WAVELENGTH']),
+                        #      len(atm[p][model_name]['MCTRACE']))
+                        all_traces[-1] = chi2values / degrees_of_freedom
+
+                    elif model_name == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
@@ -1975,21 +2006,25 @@ def results(
                 # print('all_keys',all_keys)
 
                 # remove the traced phase space that is excluded by profiling
-                profile_trace, applied_limits = apply_profiling(
+                profile_mask, applied_limits = apply_profiling(
                     trgt + ' ' + p, profiling_limits, all_traces, all_keys
                 )
-                keepers = np.where(profile_trace == 1)
+                keepers = np.where(profile_mask == 1)
                 # don't do profiling if it excludes every single walker
                 if len(keepers[0]) == 0:
                     log.warning(
                         '--< Profiling removes everything! %s >--', trgt
                     )
-                    keepers = np.where(profile_trace == 0)
+                    keepers = np.where(profile_mask == 0)
                 profiled_traces = []
                 for key in atm[p][model_name]['MCTRACE']:
-                    profiled_traces.append(
-                        atm[p][model_name]['MCTRACE'][key][keepers]
-                    )
+                    if key == 'saved chi2':
+                        chi2values = atm[p][model_name]['MCTRACE'][key][keepers]
+                        profiled_traces.append(chi2values / degrees_of_freedom)
+                    else:
+                        profiled_traces.append(
+                            atm[p][model_name]['MCTRACE'][key][keepers]
+                        )
                 profiled_traces = np.array(profiled_traces)
 
                 # make note of the bounds placed on each parameter
@@ -2286,17 +2321,9 @@ def results(
 
                 # try to get best log-likelihood directly from main run
                 # rather than looping over a re-calculated sample of models
-                # asdf asdf
-                # print('median params',
-                #      tpr,
-                #      ctp,
-                #      hazescale,
-                #      hazeloc,
-                #      hazethick,
-                #      tceqdict,
-                #      mixratio,
-                #      )
-                # print('chi2 from posterior medians', ch2model)
+                chi2values = atm[p][model_name]['chi2reduced']
+                print(chi2values.shape)
+                ibest = np.where(chi2values == np.min(chi2values))
 
                 chi2best = chi2model
                 patmos_best_fit = patmos_model
@@ -2394,21 +2421,10 @@ def results(
                         patmos_modelrand - transitdata['depth'][okPart]
                     ) / transitdata['error'][okPart]
                     chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # print('chi2 from sample toward best', ch2modelrand)
-                    # print('chi2modelrand', chi2modelrand)
-                    # print('chi2best', chi2best)
+                    # print('chi2 from sample toward best', chi2modelrand)
                     if chi2modelrand < chi2best:
                         # print('  using this as best', chi2modelrand)
-                        # asdf asdf
-                        # print('best param',
-                        #      tpr,
-                        #      ctp,
-                        #      hazescale,
-                        #      hazeloc,
-                        #      hazethick,
-                        #      tceqdict,
-                        #      mixratio,
-                        #      )
+                        # print('best param',tpr,tceqdict)
                         chi2best = chi2modelrand
                         patmos_best_fit = patmos_modelrand
                         param_values_best_fit = (
@@ -2450,7 +2466,7 @@ def results(
 
                 if verbose:
                     print('paramValues median  ', param_values_median)
-                    print('paramValues profiled', param_values_profiled)
+                    # print('paramValues profiled', param_values_profiled)
                     print('paramValues bestFit ', param_values_best_fit)
 
                 # _______________CORNER PLOT________________
@@ -2484,6 +2500,7 @@ def results(
                         trgt,
                         p,
                         saveDir=save_dir,
+                        verbose=verbose,
                     )
                 )
 
@@ -2500,6 +2517,7 @@ def results(
                     trgt,
                     p,
                     saveDir=save_dir,
+                    verbose=verbose,
                 )
 
             out['target'].append(trgt)
