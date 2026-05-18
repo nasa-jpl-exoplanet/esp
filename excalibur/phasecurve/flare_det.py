@@ -53,6 +53,10 @@ OBSERVATION_GAP_FACTOR = 10.0
 VISIT_COMPLETION_FILENAME = 'visit_status.json'
 
 
+def _is_mapping_like(value):
+    return all(hasattr(value, attr) for attr in ('keys', 'get', 'items'))
+
+
 def calculate_quiescent_luminosity(
     flux_density_mjy,
     distance_pc,
@@ -76,16 +80,40 @@ def _coerce_target_name(target, whitelight):
     return whitelight.get('target', 'UNKNOWN_TARGET')
 
 
-def _normalize_whitelight(whitelight):
+def _planet_keys_from_priors(priors):
+    planet_keys = []
+    for key, value in priors.items():
+        if not _is_mapping_like(value):
+            continue
+        if {'period', 't0', 'inc', 'ecc', 'rp', 'sma'}.issubset(value.keys()):
+            planet_keys.append(key)
+    return planet_keys
+
+
+def _normalize_whitelight(whitelight, priors=None):
     if 'data' in whitelight:
         whitelight = whitelight['data']
-    return _adapt_jwst_normalization_input(whitelight)
+
+    if _looks_like_jwst_normalization_planet(whitelight):
+        planet_keys = _planet_keys_from_priors(priors or {})
+        if len(planet_keys) == 1:
+            return {
+                planet_keys[0]: _adapt_jwst_normalization_planet(
+                    whitelight,
+                    priors=priors,
+                    planet=planet_keys[0],
+                )
+            }
+
+    return _adapt_jwst_normalization_input(whitelight, priors=priors)
 
 
 def _looks_like_jwst_normalization_planet(planet_data):
-    if not isinstance(planet_data, dict):
+    if not _is_mapping_like(planet_data):
         return False
-    return {'visits', 'nspec', 'time'}.issubset(planet_data.keys())
+    if not {'visits', 'nspec'}.issubset(planet_data.keys()):
+        return False
+    return ('time' in planet_data) or ('phase' in planet_data)
 
 
 def _coerce_visit_id(visit_value, default_idx):
@@ -145,8 +173,53 @@ def _collapse_jwst_visit(visit_id, cadence_rows):
     }
 
 
-def _adapt_jwst_normalization_input(whitelight):
-    if not isinstance(whitelight, dict):
+def _jwst_cadence_times(planet_data, priors=None, planet=None):
+    times = planet_data.get('time')
+    if times is not None:
+        return times
+
+    phase = planet_data.get('phase')
+    if phase is None or priors is None or planet not in priors:
+        return []
+
+    planet_priors = priors[planet]
+    if 'period' not in planet_priors or 't0' not in planet_priors:
+        return []
+
+    return (
+        np.asarray(phase, dtype=float) * float(planet_priors['period'])
+        + float(planet_priors['t0'])
+    )
+
+
+def _adapt_jwst_normalization_planet(planet_data, priors=None, planet=None):
+    if not _looks_like_jwst_normalization_planet(planet_data):
+        return planet_data
+
+    grouped_rows = {}
+    visits = planet_data.get('visits', [])
+    times = _jwst_cadence_times(
+        planet_data,
+        priors=priors,
+        planet=planet,
+    )
+    spectra = planet_data.get('nspec', [])
+    for idx, (visit_value, time_value, spectrum) in enumerate(
+        zip(visits, times, spectra)
+    ):
+        visit_id = _coerce_visit_id(visit_value, idx)
+        grouped_rows.setdefault(visit_id, []).append((time_value, spectrum))
+
+    adapted_visits = []
+    for visit_id, cadence_rows in grouped_rows.items():
+        visit_data = _collapse_jwst_visit(visit_id, cadence_rows)
+        if visit_data is not None:
+            adapted_visits.append(visit_data)
+    return adapted_visits
+
+
+def _adapt_jwst_normalization_input(whitelight, priors=None):
+    if not _is_mapping_like(whitelight):
         return whitelight
 
     if not any(
@@ -160,21 +233,11 @@ def _adapt_jwst_normalization_input(whitelight):
         if not _looks_like_jwst_normalization_planet(planet_data):
             continue
 
-        grouped_rows = {}
-        visits = planet_data.get('visits', [])
-        times = planet_data.get('time', [])
-        spectra = planet_data.get('nspec', [])
-        for idx, (visit_value, time_value, spectrum) in enumerate(
-            zip(visits, times, spectra)
-        ):
-            visit_id = _coerce_visit_id(visit_value, idx)
-            grouped_rows.setdefault(visit_id, []).append((time_value, spectrum))
-
-        adapted[planet] = []
-        for visit_id, cadence_rows in grouped_rows.items():
-            visit_data = _collapse_jwst_visit(visit_id, cadence_rows)
-            if visit_data is not None:
-                adapted[planet].append(visit_data)
+        adapted[planet] = _adapt_jwst_normalization_planet(
+            planet_data,
+            priors=priors,
+            planet=planet,
+        )
 
     return adapted
 
@@ -1442,8 +1505,8 @@ def detect_flares(
     '''
     Detect and characterize flares in white-light visit data.
     '''
-    whitelight_data = _normalize_whitelight(whitelight)
     priors = _normalize_priors(fin)
+    whitelight_data = _normalize_whitelight(whitelight, priors=priors)
     target_name = _coerce_target_name(target, whitelight)
     if results_dir is not None:
         results_dir = _ensure_directory(results_dir)
@@ -1531,6 +1594,8 @@ def detect_flares(
     example_plots_attached = False
 
     for planet, visits_list in whitelight_data.items():
+        visits_list = _adapt_jwst_normalization_planet(visits_list)
+        whitelight_data[planet] = visits_list
         out['data'][planet] = []
         results[planet] = []
 

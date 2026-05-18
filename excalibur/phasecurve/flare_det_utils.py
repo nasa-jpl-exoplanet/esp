@@ -34,6 +34,137 @@ from excalibur.phasecurve.flare_det_context import ctxtupdt, ctxtinit
 ctxt = ctxtinit()
 log = logging.getLogger(__name__)
 
+
+def _is_mapping_like(value):
+    return all(hasattr(value, attr) for attr in ('keys', 'get', 'items'))
+
+
+def _looks_like_jwst_normalization_planet(planet_data):
+    if not _is_mapping_like(planet_data):
+        return False
+    if not {'visits', 'nspec'}.issubset(planet_data.keys()):
+        return False
+    return ('time' in planet_data) or ('phase' in planet_data)
+
+
+def _planet_keys_from_priors(priors):
+    planet_keys = []
+    for key, value in priors.items():
+        if not _is_mapping_like(value):
+            continue
+        if {'period', 't0', 'inc', 'ecc', 'rp', 'sma'}.issubset(value.keys()):
+            planet_keys.append(key)
+    return planet_keys
+
+
+def _normalize_transit_input(whitelight, priors):
+    if not _is_mapping_like(whitelight):
+        return whitelight
+
+    if 'data' in whitelight:
+        whitelight = whitelight['data']
+
+    if _looks_like_jwst_normalization_planet(whitelight):
+        planet_keys = _planet_keys_from_priors(priors)
+        if len(planet_keys) == 1:
+            return {planet_keys[0]: whitelight}
+
+    return whitelight
+
+
+def _coerce_visit_label(visit_value, default_idx):
+    try:
+        return int(visit_value)
+    except (TypeError, ValueError):
+        return int(default_idx)
+
+
+def _coerce_jwst_visits(visits):
+    if not _is_mapping_like(visits):
+        return visits
+    visits = dict(visits)
+    if 'time' in visits and 'detrended' in visits:
+        return [visits]
+    if not {'visits', 'nspec', 'time'}.issubset(visits.keys()):
+        nested_visits = []
+        for idx, (visit_label, visit_data) in enumerate(visits.items()):
+            if not _is_mapping_like(visit_data):
+                continue
+            if 'time' not in visit_data or 'detrended' not in visit_data:
+                continue
+            normalized_visit = dict(visit_data)
+            normalized_visit.setdefault(
+                'visit_index',
+                _coerce_visit_label(visit_label, idx),
+            )
+            nested_visits.append(normalized_visit)
+        return nested_visits or visits
+
+    grouped = {}
+    for idx, (visit_value, time_value, spectrum) in enumerate(
+        zip(
+            visits.get('visits', []),
+            visits.get('time', []),
+            visits.get('nspec', []),
+        )
+    ):
+        visit_label = _coerce_visit_label(visit_value, idx)
+        spectrum = np.asarray(spectrum, dtype=float)
+        finite = np.isfinite(spectrum)
+        if not np.any(finite):
+            continue
+
+        flux_value = float(np.nanmean(spectrum[finite]))
+        time_value = float(np.asarray(time_value, dtype=float))
+        if not np.isfinite(flux_value) or not np.isfinite(time_value):
+            continue
+
+        visit_data = grouped.setdefault(
+            visit_label,
+            {
+                'visit_index': visit_label,
+                'time': [],
+                'detrended': [],
+            },
+        )
+        visit_data['time'].append(time_value)
+        visit_data['detrended'].append(flux_value)
+
+    coerced = []
+    for visit_label in sorted(grouped):
+        visit_data = grouped[visit_label]
+        visit_data['time'] = np.asarray(visit_data['time'], dtype=float)
+        visit_data['detrended'] = np.asarray(
+            visit_data['detrended'],
+            dtype=float,
+        )
+        coerced.append(visit_data)
+    return coerced
+
+
+def _ensure_visit_dicts(visits):
+    visits = _coerce_jwst_visits(visits)
+    if not _is_mapping_like(visits):
+        return visits
+
+    visits = dict(visits)
+    if all(key in visits for key in ('visits', 'nspec', 'time')):
+        return _coerce_jwst_visits(dict(visits))
+
+    nested_visits = []
+    for idx, (visit_label, visit_data) in enumerate(visits.items()):
+        if not _is_mapping_like(visit_data):
+            continue
+        if 'time' not in visit_data or 'detrended' not in visit_data:
+            continue
+        normalized_visit = dict(visit_data)
+        normalized_visit.setdefault(
+            'visit_index',
+            _coerce_visit_label(visit_label, idx),
+        )
+        nested_visits.append(normalized_visit)
+    return nested_visits or visits
+
 # def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 #     # set higher threshold for all transit windows
 #     N1_arr = np.full_like(bt, N1, dtype=int)
@@ -75,6 +206,7 @@ def get_transits(
     - (str) Path of created transit file
     """
 
+    whitelight = _normalize_transit_input(whitelight, priors)
     ssc = syscore.ssconstants()
     planets = whitelight.keys()
 
@@ -83,6 +215,7 @@ def get_transits(
 
     # Iterate through planets in target star
     for planet, visits in whitelight.items():
+        visits = _ensure_visit_dicts(visits)
         # Iterate through visits in each planet
         for idx, thisvisit in enumerate(visits):
             visit_label = int(thisvisit.get('visit_index', idx))
