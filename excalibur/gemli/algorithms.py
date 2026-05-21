@@ -150,14 +150,12 @@ class MLfit(dawgie.Algorithm):
                     and runtime['cerberus_arielsample_tier'].value() == 2
                 ):
                     alltargetlists = get_target_lists()
-                    targetlist = alltargetlists['ariel_Nov2024_2years']
+                    targetlist = alltargetlists['ariel_stars_tier2']
                     if target not in targetlist:
                         targetlistcheck = False
 
                     if targetlistcheck:
-                        planetlist = alltargetlists[
-                            'ariel_Nov2024_2years_withPlanetletters'
-                        ]
+                        planetlist = alltargetlists['ariel_planets_tier2']
                         for planet in planetlist:
                             if planet.startswith(target + ' '):
                                 only_these_planets.append(planet[-1])

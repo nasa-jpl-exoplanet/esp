@@ -337,7 +337,7 @@ class WhiteLight(dawgie.Algorithm):
                 fin,
                 runtime_params,
                 out,
-                chainlen=runtime_params.sliceSampler,
+                chainlen=chain_length,
                 verbose=False,
             )
         else:

@@ -10,10 +10,11 @@ from excalibur.util.main import main_start
 import excalibur.hwo.bot
 
 # ------------- ------------------------------------------------------
+if __name__ == "__main__":
+    rid, tn = main_start()
 
-rid, tn = main_start()
+    excalibur.hwo.bot.Actor('hwo', 4, rid, tn).do()
 
-excalibur.hwo.bot.Actor('hwo', 4, rid, tn).do()
-
-dawgie.db.close()
-dawgie.security.finalize()
+    dawgie.db.close()
+    dawgie.security.finalize()
+    pass

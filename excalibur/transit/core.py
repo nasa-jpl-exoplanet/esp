@@ -11,7 +11,9 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
+import dawgie.context
 
+import excalibur
 import excalibur.data.core as datcore
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
@@ -62,9 +64,15 @@ except ImportError:
 
 from collections import namedtuple
 
-# LDTK BS
+# LDTK
+# We should get rid of the imports + the parts of the code that are still calling this
 from ldtk import LDPSetCreator, BoxcarFilter
 from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
+
+# LADY OF THE LAKE
+import os
+
+stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -232,7 +240,10 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
-
+    if not ctxt.orbits:  # JWST
+        newnodes = []
+        newnodes = inputs
+        pass
     if ctxt.spec:
         ForwardModel = lcmodel(*newnodes)
         pass
@@ -241,6 +252,7 @@ def LogLikelihood(inputs):
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
     Norm = np.log(2e0 * np.pi * np.array(ctxt.mcmcsig))
+    # OMG CI STYLE BELOW
     out = (
         -(
             (
@@ -295,28 +307,44 @@ def normversion():
     1.1.7: new sigma clip for spitzer
     1.1.8: added jwst filter
     1.1.9: NIRSPEC
+    1.1.10: JWST Template per visit and speed things up by a factor of 100
     '''
-    return dawgie.VERSION(1, 1, 9)
+    return dawgie.VERSION(1, 1, 10)
 
 
-def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=False):
+def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
     '''
-    JWST spectra normalization
+    GMR:JWST spectra normalization
+    [I]:cal:[DICT]:data.calibration SV as dict
+    [I]:tme:[DICT]:data.timing SV as dict
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I]:ext:[STR]:SV extension i.e. 'JWST-NIRSPEC-NRS-F290LP-G395H'
+    [I/O]:out:[SV]:NormSV() see states.py
+          out['data'][p]:[DICT]:output/planet
+          out['data'][p]['visits'][det]:[STR]:visit number/detector
+          out['data'][p]['nspec'][det][v]:[ARRAY]:normalized spectrum/detector/visit
+          out['data'][p]['wave'][det][v]:[ARRAY]:wavelengths/detector/visit
+          out['data'][p]['z'][det][v]:[ARRAY]:separation/detector/visit
+          out['data'][p]['time'][det][v]:[ARRAY]:time/detector/visit
+          out['data'][p]['phase'][det][v]:[ARRAY]:phase/detector/visit
+          out['data'][p]['wavet'][det][v]:[ARRAY]:template wavelength/detector/visit
+          out['data'][p]['template'][det][v]:[ARRAY]:template/detector/visit
+    [I]:selftype:[STR]:'transit' or 'eclipse'
+    [OPT]:verbose:[BOOL]:plots
+    [OPT]:test:[INT]:array truncation max index for tests
     '''
     normed = False
-    if test:
-        cal['data']['SPECTRUM'] = cal['data']['SPECTRUM'][:200]
-        cal['data']['WAVE'] = cal['data']['WAVE'][:200]
-        cal['data']['DET'] = cal['data']['DET'][:200]
-        cal['data']['IGNORED'] = cal['data']['IGNORED'][:200]
-        tme['data']['c']['z'] = tme['data']['c']['z'][:200]
+    if test is not None:
+        cal['data']['SPECTRUM'] = cal['data']['SPECTRUM'][:test]
+        cal['data']['WAVE'] = cal['data']['WAVE'][:test]
+        cal['data']['DET'] = cal['data']['DET'][:test]
+        cal['data']['IGNORED'] = cal['data']['IGNORED'][:test]
         pass
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
     spectra = np.array(cal['data']['SPECTRUM'])
     wave = np.array(cal['data']['WAVE'])
 
-    # TEMPLATES
     wavetemplate = []
     for thisdet in np.unique(cal['data']['DET']):
         if verbose:
@@ -331,85 +359,164 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=False):
         for pnet in tme['data'].keys()
         if (pnet in priors.keys()) and tme['data'][pnet][selftype]
     ]
-    allzp = [tme['data'][p]['z'] for _, p in enumerate(events)]
-    allrps = [
-        priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
-        for _, p in enumerate(events)
-    ]
-    alloot = [
-        np.abs(zp) > (1e0 + 2e0 * thisrp) for zp, thisrp in zip(allzp, allrps)
-    ]
-    oot = np.logical_and.reduce(alloot, 0).astype(np.bool)
 
     for p in events:
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
         out['data'][p] = {}
-        mttref = priors[p]['t0']
-        if mttref > 2400000.5:
-            mttref -= 2400000.5
+        if test is not None:
+            tme['data'][p]['z'] = tme['data'][p]['z'][:test]
+            tme['data'][p]['visits'] = tme['data'][p]['visits'][:test]
             pass
+        visp = tme['data'][p]['visits']
+        rp = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+        # TEMPLATES
         allwavet = {}
         alltemplates = {}
+        allvisits = {}
         for thisdet in np.unique(cal['data']['DET']):
-            select = np.array([d in [thisdet] for d in cal['data']['DET']])
-            soot = oot[select]
-            wavet, template = scube(
-                spectra[select][soot],
-                wave[select][soot],
-                name=thisdet,
-                verbose=verbose,
-            )
-            alltemplates[thisdet] = np.array(template)
-            allwavet[thisdet] = np.array(wavet)
+            alltemplates[thisdet] = {}
+            allwavet[thisdet] = {}
+            allvisits[thisdet] = {}
+            seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
+            for thisvis in np.unique(visp):
+                strvis = str(int(thisvis))
+                selvis = visp == thisvis
+                zdetvis = tme['data'][p]['z'][seldet & selvis]
+                neg = np.min(zdetvis) < 0
+                pos = np.max(zdetvis) > 0
+                intransit = np.sum(abs(zdetvis) < 1.0) > 3
+                if neg and pos and intransit:
+                    orderme = np.argsort(
+                        tme['data'][p]['time'][seldet & selvis]
+                    )
+                    dt = np.diff(
+                        tme['data'][p]['time'][seldet & selvis][orderme]
+                    )
+                    # Multi observations per visit
+                    thr = np.max(np.unique(dt))
+                    if thr > 1e1 * np.median(dt):
+                        if np.all(
+                            zdetvis[orderme][: list(dt).index(thr) + 1] < 0
+                        ):
+                            nanme = (
+                                np.arange(orderme.size)
+                                < list(dt).index(thr) + 1
+                            )
+                            pass
+                        else:
+                            nanme = (
+                                np.arange(orderme.size)
+                                > list(dt).index(thr) + 1
+                            )
+                            pass
+                        znan = zdetvis[orderme]
+                        znan[nanme] = np.nan
+                        zdetvis[orderme] = znan
+                        pass
+                    oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
+                    wavet, template = scube(
+                        spectra[seldet & selvis][oot],
+                        wave[seldet & selvis][oot],
+                        name=thisdet + ' [' + strvis + ']',
+                        verbose=verbose,
+                    )
+                    alltemplates[thisdet][strvis] = np.array(template)
+                    allwavet[thisdet][strvis] = np.array(wavet)
+                    allvisits[thisdet][strvis] = np.isfinite(zdetvis)
+                    pass
+                pass
+            if verbose:
+                plt.figure(figsize=(12, 9))
+                for thisvis in allvisits[thisdet]:
+                    plt.plot(
+                        allwavet[thisdet][thisvis],
+                        alltemplates[thisdet][thisvis],
+                        '.',
+                        label=thisvis,
+                    )
+                    pass
+                plt.ylabel('[DN]', fontsize=20)
+                plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                plt.legend(fontsize=18)
+                plt.tick_params(labelsize=18)
+                plt.show()
+                pass
             pass
-
         # NORM
-        allnorms = []
-        allnwaves = []
+        allnorms = {}
+        allnwaves = {}
+        allz = {}
+        allt = {}
+        allp = {}
         argsdict = {
             'progbar': verbose,
             'progsizemax': 35,
-            'lbllen': 15,
+            'lbllen': 20,
             'proginprompt': True,
         }
-        progbar = nerdclub.Progressbar(argsdict, '>-- NORM ', wave)
-        for ws, s, det in zip(wave, spectra, cal['data']['DET']):
-            t = alltemplates[det]
-            w = allwavet[det]
-            dw = np.nanmedian(np.diff(w)) / 2.0
-
-            norms = []
-            wnorms = []
-            for thisw, thiss in zip(ws, s):
-                dist = list(abs(w - thisw))
-                if np.nanmin(dist) < dw:
-                    norms.append(thiss / t[dist.index(np.min(dist))])
-                    wnorms.append(thisw)
+        for thisdet, _ in allvisits.items():
+            allnorms[thisdet] = {}
+            allnwaves[thisdet] = {}
+            allz[thisdet] = {}
+            allt[thisdet] = {}
+            allp[thisdet] = {}
+            seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
+            for thisvis in allvisits[thisdet]:
+                name = thisdet + ' [' + thisvis + ']'
+                selvis = visp == int(thisvis)
+                valid = allvisits[thisdet][thisvis]
+                divideme = np.nan * wave[seldet & selvis][valid][0]
+                progbar = nerdclub.Progressbar(
+                    argsdict, '>-- NORM ' + name, divideme
+                )
+                for idiv, _ in enumerate(divideme):
+                    # GMR: Assumes subpixel pointing stability during the whole transit
+                    thiswave = wave[seldet & selvis][valid][0][idiv]
+                    if np.isfinite(thiswave):
+                        thisdiff = np.abs(allwavet[thisdet][thisvis] - thiswave)
+                        itemp = list(thisdiff).index(np.nanmin(thisdiff))
+                        divideme[idiv] = alltemplates[thisdet][thisvis][itemp]
+                        pass
+                    progbar.update()
+                    pass
+                progbar.close()
+                allnorms[thisdet][thisvis] = (
+                    np.array(spectra[seldet & selvis][valid]) / divideme
+                )
+                allnwaves[thisdet][thisvis] = wave[seldet & selvis][valid]
+                allz[thisdet][thisvis] = tme['data'][p]['z'][seldet & selvis][
+                    valid
+                ]
+                allt[thisdet][thisvis] = tme['data'][p]['time'][
+                    seldet & selvis
+                ][valid]
+                allp[thisdet][thisvis] = tme['data'][p]['phase'][
+                    seldet & selvis
+                ][valid]
+                if verbose:
+                    plt.figure(figsize=(12, 9))
+                    plt.title(name, fontsize=20)
+                    for w, s in zip(
+                        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
+                    ):
+                        plt.plot(w, s)
+                        pass
+                    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                    plt.tick_params(labelsize=18)
+                    plt.show()
                     pass
                 pass
-            allnorms.append(np.array(norms))
-            allnwaves.append(np.array(wnorms))
-            progbar.update()
             pass
-        progbar.close()
-
-        out['data'][p]['visits'] = tme['data'][p]['visits']
+        out['data'][p]['visits'] = allvisits
         out['data'][p]['nspec'] = allnorms
         out['data'][p]['wave'] = allnwaves
-        out['data'][p]['z'] = tme['data'][p]['z']
-        out['data'][p]['time'] = tme['data'][p]['time']
-        out['data'][p]['phase'] = tme['data'][p]['phase']
+        out['data'][p]['z'] = allz
+        out['data'][p]['time'] = allt
+        out['data'][p]['phase'] = allp
         out['data'][p]['wavet'] = allwavet
         out['data'][p]['template'] = alltemplates
-        if verbose:
-            plt.figure(figsize=(12, 9))
-            for w, s in zip(allnwaves, allnorms):
-                plt.plot(w, s)
-                pass
-            plt.show()
-            pass
         pass
     _ = ext
     out['STATUS'].append(True)
@@ -427,6 +534,7 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
+    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
@@ -1215,7 +1323,7 @@ def scube(allspec, allwaves, name='', verbose=False):
     argsdict = {
         'progbar': verbose,
         'progsizemax': 35,
-        'lbllen': 15,
+        'lbllen': 20,
         'proginprompt': True,
     }
     progbar = nerdclub.Progressbar(argsdict, '>-- SCUBE ' + name, zwve)
@@ -1895,26 +2003,22 @@ def hstwhitelight(
 
 def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
     '''
-    GMR: JWST Whitelight
-    - nrm [INPUT] [SV]: transit.normalization
-    - fin [INPUT] [SV]: system.finalize
-    - rtp [INPUT] [SV]: runtime.autofill
-    - out [OUTPUT] [SV]: transit.whitelight
-    - thr [OPT] [INT]: percentile threshold for valid data in norm spectrum
-      i.e one of [100, 99, 95, 68, 50]
-    - verbose [OPT] [BOOL]: messages and plots
-
-    out: [DICT]
-    out['STATUS']: [LIST] Appending True for each planet / instrument added
-    out['data']: [DICT] Keys are planet names
-    out['data'][pln]: [DICT] Keys are detector names
-    out['data'][pln][instrument]: [DICT]
-    out['data'][pln][instrument]['prewhite']: [LIST] Whitelight before fit
-    out['data'][pln][instrument]['prewhite_err']: [LIST] prewhite errors
-    out['data'][pln][instrument]['prewhite_sep']: [LIST] prewhite separation
-    out['data'][pln][instrument]['valid'] : [LIST] valid channels per spectrum
-    out['data'][pln][instrument]['whiteld'] : [LIST] white LD coefficients
-    out['data'][pln][instrument]['mcpost'] : [PYMC] post stats
+    GMR:JWST Whitelight
+    [I]:nrm:[DICT]:transit.normalization SV as dict
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I]:rtp:[DICT]:runtime.autofill SV as dict
+    [I/O]:out:[SV]:WhitelightSV() see states.py
+          out['STATUS']:[LIST]:appending True for each planet/instrument added
+          out['data'][p][det]:[DICT]:output/planet/detector
+          out['data'][p][det]['prewhite']:[LIST] Whitelight before fit
+          out['data'][p][det]['prewhite_err']:[LIST] prewhite errors
+          out['data'][p][det]['prewhite_sep']:[LIST] prewhite separation
+          out['data'][p][det]['valid']:[LIST] valid channels per spectrum
+          out['data'][p][det]['whiteld']:[LIST] white LD coefficients
+          out['data'][p][det]['mcpost']:[PYMC] post stats
+    [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
+                    i.e one of [100, 99, 95, 68, 50]
+    [OPT]:verbose:[BOOL]:messages and plots
     '''
     planetloop = [
         thisp
@@ -1924,202 +2028,399 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
     prc = [100, 99, 95, 68, 50]
     priors = fin['priors'].copy()
     ssc = syscore.ssconstants()
-
     for pln in planetloop:
         out['data'][pln] = {}
-        for key in nrm['data'][pln]['wavet']:
-            out['data'][pln][key] = {}
-            lwv = np.nanmin(nrm['data'][pln]['wavet'][key])
-            mwv = np.nanmax(nrm['data'][pln]['wavet'][key])
-            wht = []
-            whterr = []
-            whtz = []
-            validl = []
-            stdl = []
-            for wvs, nsp, z in zip(
-                nrm['data'][pln]['wave'],
-                nrm['data'][pln]['nspec'],
-                nrm['data'][pln]['z'],
-            ):
-                select = (wvs >= lwv) & (wvs <= mwv)
-                if np.sum(select):
-                    if verbose:
-                        prclist = [
-                            np.nanpercentile(np.abs(1e0 - nsp), p) for p in prc
-                        ]
-                        slist = [
-                            np.abs(1e0 - nsp) <= thisp for thisp in prclist
-                        ]
-                        vldlist = [select & s for s in slist]
-                        pltavrl = [np.nanmean(nsp[v]) for v in vldlist]
-                        pltstdl = [np.nanstd(nsp[v]) for v in vldlist]
-                        errlist = [
-                            ps / np.sqrt(np.sum(v))
-                            for ps, v in zip(pltstdl, vldlist)
-                        ]
-
-                        # plt.figure()
-                        # plt.plot(prc, pltavrl)
-                        # plt.plot(prc, pltstdl)
-                        # plt.plot(prc, errlist)
-                        # plt.semilogy()
-                        # plt.show()
-
-                        validl.append(vldlist[prc.index(thr)])
-                        stdl.append(pltstdl[prc.index(thr)])
-                        wht.append(pltavrl[prc.index(thr)])
-                        whterr.append(errlist[prc.index(thr)])
+        for det in nrm['data'][pln]['wavet']:
+            out['data'][pln][det] = {}
+            for vis in nrm['data'][pln]['wavet'][det]:
+                out['data'][pln][det][vis] = {}
+                lwv = np.nanmin(nrm['data'][pln]['wavet'][det][vis])
+                mwv = np.nanmax(nrm['data'][pln]['wavet'][det][vis])
+                wht = []
+                whterr = []
+                whttim = []
+                whtsep = []
+                validl = []
+                stdl = []
+                for wvs, nsp, tim, sep in zip(
+                    nrm['data'][pln]['wave'][det][vis],
+                    nrm['data'][pln]['nspec'][det][vis],
+                    nrm['data'][pln]['time'][det][vis],
+                    nrm['data'][pln]['z'][det][vis],
+                ):
+                    select = (wvs >= lwv) & (wvs <= mwv)
+                    if np.sum(select):
+                        if verbose:
+                            prclist = [
+                                np.nanpercentile(np.abs(1e0 - nsp), p)
+                                for p in prc
+                            ]
+                            slist = [
+                                np.abs(1e0 - nsp) <= thisp for thisp in prclist
+                            ]
+                            vldlist = [select & s for s in slist]
+                            pltavrl = [np.nanmean(nsp[v]) for v in vldlist]
+                            pltstdl = [np.nanstd(nsp[v]) for v in vldlist]
+                            errlist = [
+                                ps / np.sqrt(np.sum(v))
+                                for ps, v in zip(pltstdl, vldlist)
+                            ]
+                            validl.append(vldlist[prc.index(thr)])
+                            stdl.append(pltstdl[prc.index(thr)])
+                            wht.append(pltavrl[prc.index(thr)])
+                            whterr.append(errlist[prc.index(thr)])
+                            pass
+                        else:
+                            s = np.abs(1e0 - nsp) <= np.nanpercentile(
+                                np.abs(1e0 - nsp), thr
+                            )
+                            validl.append(select & s)
+                            stdl.append(np.nanstd(nsp[select & s]))
+                            wht.append(np.nanmean(nsp[select & s]))
+                            # ERROR ESTIMATED ON DATA
+                            whterr.append(stdl[-1] / np.sqrt(np.sum(select)))
+                            pass
+                        whttim.append(tim)
+                        whtsep.append(sep)
                         pass
-                    else:
-                        s = np.abs(1e0 - nsp) <= np.nanpercentile(
-                            np.abs(1e0 - nsp), thr
+                    pass
+                if verbose:
+                    plt.figure(figsize=(12, 9))
+                    plt.title(
+                        pln + ': ' + det + ' [' + vis + ']',
+                        fontsize=20,
+                    )
+                    plt.errorbar(whttim, wht, yerr=whterr, fmt='o')
+                    plt.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                out['data'][pln][det]['prewhite'] = wht
+                out['data'][pln][det]['prewhite_err'] = whterr
+                out['data'][pln][det]['prewhite_time'] = whttim
+                out['data'][pln][det]['prewhite_sep'] = whtsep
+                out['data'][pln][det]['valid'] = validl
+                g1, g2, g3, g4 = ldtl(
+                    priors['T*'],
+                    priors['FEH*'],
+                    priors['LOGG*'],
+                    [np.nanmin(nrm['data'][pln]['wave'][det][vis])],
+                    [np.nanmax(nrm['data'][pln]['wave'][det][vis])],
+                )
+                out['data'][pln][det]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
+                # PRIORS
+                rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
+                tmjd = priors[pln]['t0']
+                if tmjd > 2400000.5:
+                    tmjd -= 2400000.5
+                    pass
+                fixedpars = {}
+                if priors[pln]['inc'] == 90.0:
+                    fixedpars['inc'] = priors[pln]['inc']
+                    pass
+                imorder = 2
+                nodes = []
+                nodeshape = []
+                prior_ranges = {}
+                prior_center = {}
+                # MCMC
+                with pymc.Model():
+                    # RP/RS
+                    pymcrprs = pymc.Uniform(
+                        'rprs', lower=rpors / 2e0, upper=rpors * 2e0
+                    )
+                    prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+                    prior_center['rprs'] = rpors
+                    nodes.append(pymcrprs)
+                    nodeshape.append(1)
+                    # TKNOT
+                    pymctknot = pymc.Uniform(
+                        'tknot',
+                        lower=tmjd + 100.0 * priors[pln]['t0_lowerr'],
+                        upper=tmjd + 100.0 * priors[pln]['t0_uperr'],
+                    )
+                    prior_ranges['t0'] = [
+                        tmjd + 100.0 * priors[pln]['t0_lowerr'],
+                        tmjd + 100.0 * priors[pln]['t0_uperr'],
+                    ]
+                    prior_center['t0'] = tmjd
+                    nodes.append(pymctknot)
+                    nodeshape.append(1)
+                    # INCLINATION
+                    if 'inc' not in fixedpars:
+                        incl = priors[pln]['inc']
+                        if incl > 90:
+                            incl = 180.0 - incl
+                            pass
+                        inclup = min(incl + 3.0 * priors[pln]['inc_uperr'], 90)
+                        pymcinc = pymc.Uniform(
+                            'inc',
+                            lower=incl + 3.0 * priors[pln]['inc_lowerr'],
+                            upper=inclup,
                         )
-                        validl.append(select & s)
-                        stdl.append(np.nanstd(nsp[select & s]))
-                        wht.append(np.nanmean(nsp[select & s]))
-                        # ERROR ESTIMATED ON DATA
-                        whterr.append(stdl[-1] / np.sqrt(np.sum(select)))
+                        prior_ranges['inc'] = [
+                            incl + 3.0 * priors[pln]['inc_lowerr'],
+                            inclup,
+                        ]
+                        prior_center['inc'] = incl
+                        nodes.append(pymcinc)
+                        nodeshape.append(1)
                         pass
-                    whtz.append(z)
-                    pass
-                pass
-            if verbose:
-                plt.figure()
-                plt.errorbar(whtz, wht, yerr=whterr, fmt='o')
-                plt.show()
-                pass
-            out['data'][pln][key]['prewhite'] = wht
-            out['data'][pln][key]['prewhite_err'] = whterr
-            out['data'][pln][key]['prewhite_sep'] = whtz
-            out['data'][pln][key]['valid'] = validl
+                    # INSTRUMENT MODEL - ALWAYS LAST
+                    for coef in np.arange(imorder):
+                        pymcim = pymc.Uniform(
+                            'IM' + str(int(coef)),
+                            lower=-1.0,
+                            upper=1.0,
+                        )
+                        prior_ranges['IM' + str(int(coef))] = [-1.0, 1.0]
+                        prior_center['IM' + str(int(coef))] = 0
+                        nodes.append(pymcim)
+                        pymcim = None
+                        pass
+                    nodeshape.append(imorder)
+                    # CONTEXT
+                    ctxtupdt(
+                        orbp=priors[pln],
+                        ecc=priors[pln]['ecc'],
+                        g1=g1,
+                        g2=g2,
+                        g3=g3,
+                        g4=g4,
+                        period=priors[pln]['period'],
+                        smaors=priors[pln]['sma']
+                        / priors['R*']
+                        / ssc['Rsun/AU'],
+                        time=nrm['data'][pln]['time'][det][vis],
+                        tmjd=tmjd,
+                        visits=nrm['data'][pln]['visits'][det],
+                        ginc=priors[pln]['inc'],
+                        fixedpars=fixedpars,
+                        mcmcdat=wht,
+                        mcmcsig=whterr,
+                        nodeshape=nodeshape,
+                        selectfit=np.array([True] * len(wht)),
+                    )
+                    # FIXED ORBITAL SOLUTION
+                    TensorModel = TensorShell()
 
-            # LIMB DARKENING
-            # GMR: This below will crash because the method integrate of
-            # BoxcarFilter of the LDTK package fails.
-            # We would need to fix filters.py from the package which is out of question
-            # Moving to Lady Of The Lake (Excalibur Limb Darkening code see )
-            # For whitelight implementation tryout, fixing LDs to some values
-            # obtained with a temporary and local fix to the code.
-            # def integrate(self, wavelengths, values):
-            #    w = self(wavelengths)
-            #    if all(w < 1e-10):
-            #        ix = searchsorted(wavelengths, 0.5*(self.wl_min+self.wl_max))
-            #        if ix > (len(w) - 1):
-            #            w[-1] = 1
-            #            pass
-            #        else:
-            #            w[ix] = 1
-            #            pass
-            #
-            # deltaw = mwv - np.mean([lwv, mwv])
-            # whiteld = createldgrid(
-            #    [lwv - deltaw, np.mean([lwv, mwv]) - deltaw, mwv - deltaw],
-            #    [lwv + deltaw, np.mean([lwv, mwv]) + deltaw, mwv + deltaw],
-            #    priors,
-            #    segmentation=int(10),
-            # )
-            # g1, g2, g3, g4 = whiteld['LD']
-            g1 = [3.7479351]
-            g2 = [-6.59634188]
-            g3 = [5.65796194]
-            g4 = [-1.80955517]
-            out['data'][pln][key]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
 
-            # PRIORS
-            rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
-            tmjd = priors[pln]['t0']
-            if tmjd > 2400000.5:
-                tmjd -= 2400000.5
-                pass
-            fixedpars = {}
-            fixedpars['inc'] = priors[pln]['inc']
-            fixedpars['ttv'] = tmjd
-
-            nodes = []
-            nodeshape = []
-            prior_ranges = {}
-            prior_center = {}
-
-            # MCMC
-            with pymc.Model():
-                rprs = pymc.Uniform(
-                    'rprs', lower=rpors / 2e0, upper=rpors * 2e0
-                )
-                prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
-                prior_center['rprs'] = rpors
-                nodes.append(rprs)
-                nodeshape.append(1)
-
-                ctxtupdt(
-                    orbp=priors[pln],
-                    ecc=priors[pln]['ecc'],
-                    g1=g1,
-                    g2=g2,
-                    g3=g3,
-                    g4=g4,
-                    period=priors[pln]['period'],
-                    smaors=priors[pln]['sma'] / priors['R*'] / ssc['Rsun/AU'],
-                    time=nrm['data'][pln]['time'],
-                    tmjd=tmjd,
-                    visits=nrm['data'][pln]['visits'],
-                    ginc=priors[pln]['inc'],
-                    fixedpars=fixedpars,
-                    mcmcdat=wht,
-                    mcmcsig=whterr,
-                    nodeshape=nodeshape,
-                    selectfit=np.array([True] * len(wht)),
-                )
-                # FIXED ORBITAL SOLUTION
-                TensorModel = TensorShell()
-
-                def LogLH(_, nodes):
-                    '''
-                    GMR: Fill in model tensor shell
-                    '''
-                    return TensorModel(nodes)
-
-                # GMR: CustomDist will only take a list that has consistent dims,
-                # hence the use of flatnodes
-                _ = pymc.CustomDist(
-                    "likelihood",
-                    nodes,
-                    observed=wht,
-                    logp=LogLH,
-                )
-                if rtp.sliceSampler:
-                    log.info('>--< WHITELIGHT SAMPLER: Slice >--')
-                    sampler = pymc.Slice()
-                    pass
-                else:
+                    # GMR: CustomDist will only take a list that has consistent dims,
+                    # hence the use of flatnodes
+                    _ = pymc.CustomDist(
+                        "likelihood",
+                        nodes,
+                        observed=wht,
+                        logp=LogLH,
+                    )
+                    _ = rtp.sliceSampler
                     log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
+                    trace = pymc.sample(
+                        chainlen,
+                        cores=4,
+                        tune=int(chainlen / 2),
+                        compute_convergence_checks=False,
+                        step=sampler,
+                        progressbar=verbose,
+                    )
+                    mcpost = pymc.stats.summary(trace)
                     pass
-                trace = pymc.sample(
-                    chainlen,
-                    cores=4,
-                    tune=int(chainlen / 2),
-                    compute_convergence_checks=False,
-                    step=sampler,
-                    progressbar=verbose,
-                )
-                mcpost = pymc.stats.summary(trace)
                 pass
-            # out['data'][p]['postlc'] = postlc
-            # out['data'][p]['postim'] = postim
-            # out['data'][p]['postsep'] = postsep
-            # out['data'][p]['postphase'] = postphase
-            # out['data'][p]['postflatphase'] = postflatphase
-            # out['data'][p]['modelphase'] = modelphase
-            # out['data'][p]['modellc'] = modellc
             out['data'][pln]['mcpost'] = mcpost
-            # out['data'][p]['mctrace'] = mctrace
-            # out['data'][p]['tauwhite'] = tauwhite
-
+            out['data'][pln]['mctrace'] = trace
             out['STATUS'].append(True)
             pass
         pass
     return True
+
+
+def ldtl(T, M, G, mumin, mumax, set_type="set1"):
+    '''
+    S. GRUSNIS:LaDy of The Lake
+    Limb darkening coefficients computation using
+    MPS-ATLAS Library:Witzke et al. 2021, Kostogryz et al. 2022
+    [I]:T:[FLOAT]:stellar temperature in [K] 3500 to 9000
+    [I]:M:[FLOAT]:stellar metallicity in [dex] -5 to 1.5
+    [I]:G:[FLOAT]:stellar gravity in log10[cm.s-2] 3.0 to 5.0
+    [I]:mumin:[ARRAY]:min(bandpass) in microns
+    [I]:mumax:[ARRAY]:max(bandpass) in microns
+    [OPT]:set_type:stellar grid type i.e. 'set1' or 'set2'
+    [O]:[ARRAY,ARRAY,ARRAY,ARRAY]:4 LDs same array length than mumin and mumax
+    '''
+
+    # MPS-ATLAS UTILS from Kostogryzet al. 2022
+    class ReadData:
+        '''
+        Kostogryzet al. 2022
+        https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+        '''
+
+        def read_model_atmosphere(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_model_atmosphere.dat"
+            return np.genfromtxt(file_name, skip_header=2, skip_footer=23)
+
+        def read_clv_spectra(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            data = np.loadtxt(file_name, skiprows=2)
+            return data[:, 0], data[:, 1:]
+
+        def read_disk_integrated_spectra(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_flux_spectra.dat"
+            return np.loadtxt(file_name, skiprows=1, unpack=True)
+
+        def read_mu_positions(self, mh, teff, logg, set_type):
+            '''
+            https://edmond.mpg.de/dataset.xhtml?persistentId=doi:10.17617/3.NJ56TR
+            '''
+            file_name = f"{stllib}/{set_type}/MH{mh}/teff{teff}/logg{logg}/mpsa_intensity_spectra.dat"
+            with open(file_name, "r", encoding="utf-8") as f:
+                data = f.readlines()
+            muval = data[1].split()[2:]
+            return np.array(muval).astype(float)
+
+        pass
+
+    # LIMB DARKENING MODEL
+    def ldotl(mu, u1, u2, u3, u4, pws=None):
+        '''
+        S. Grusnis
+        Generalisation of nonlinearld to arbitrary powers
+        pws = [0.5, 1., 1.5, 2.] 4NL Claret et al., 2000
+        https://articles.adsabs.harvard.edu/pdf/2000A%26A...363.1081C
+        pws = [0.5, 1., 0.1, 2.] GMR
+        pws = [0.5, 1, 0.01, 2.] Grusnis
+        '''
+        if pws is None:
+            pws = [0.5, 1.0, 0.1, 2.0]
+        xtn1 = u1 * (1e0 - mu ** pws[0])
+        xtn2 = u2 * (1e0 - mu ** pws[1])
+        xtn3 = u3 * (1e0 - mu ** pws[2])
+        xtn4 = u4 * (1e0 - mu ** pws[3])
+        model = 1e0 - xtn1 - xtn2 - xtn3 - xtn4
+        return model
+
+    # LMFIT MODEL
+    def ldotlldx(params, x, data=None, weights=None):
+        gamma1 = params['gamma1'].value
+        gamma2 = params['gamma2'].value
+        gamma3 = params['gamma3'].value
+        gamma4 = params['gamma4'].value
+        p1 = params['p1'].value
+        p2 = params['p2'].value
+        p3 = params['p3'].value
+        p4 = params['p4'].value
+        model = ldotl(x, gamma1, gamma2, gamma3, gamma4, pws=[p1, p2, p3, p4])
+        if data is None:
+            return model
+        if weights is None:
+            return data - model
+        return (data - model) / weights
+
+    mhgrid = np.loadtxt(os.path.join(stllib, 'grid_mh.txt'))
+    teffgrid = np.loadtxt(os.path.join(stllib, 'grid_teff.txt'))
+    logggrid = np.loadtxt(os.path.join(stllib, 'grid_logg.txt'))
+    # Nearest Neighbor, no interpolation
+    mh_input = mhgrid[np.abs(mhgrid - M).argmin()]
+    teff_input = int(teffgrid[np.abs(teffgrid - T).argmin()])
+    logg_input = logggrid[np.abs(logggrid - G).argmin()]
+
+    # output_data = "disk_integrated_spectra"
+    data = ReadData()
+    wln, spectra = data.read_clv_spectra(
+        mh_input, teff_input, logg_input, set_type
+    )
+    mu = data.read_mu_positions(mh_input, teff_input, logg_input, set_type)
+
+    # LOOP OVER WAVELENGTHS BINS
+    allfav = []
+    for thismumin, thismumax in zip(mumin, mumax):
+        # Units for original wavelengths provided by MPSA are assumed to be in nm
+        # based on data selection explanation in Witzke et al. 2021
+        # (doi: 10.1051/0004-6361/202140275). Sub-section 4.7: Speed-Up and Portability.
+        mumin_nm = thismumin * 1e3
+        mumax_nm = thismumax * 1e3
+        mu_min = wln[np.abs(wln - mumin_nm).argmin()]
+        mu_max = wln[np.abs(wln - mumax_nm).argmin()]
+        select = (wln >= mu_min) & (wln <= mu_max)
+        spec = np.mean(spectra[select], axis=0)
+        test = spec / np.max(spec)
+        allpws = [
+            [0.5, 1.0, 1.5, 2.0],  # 4NL
+            [0.5, 1.0, 0.1, 2.0],  # GMR
+            [0.5, 1.0, 0.2, 2.0],  # Grusnis
+            [0.5, 1.0, 0.3, 2.0],  # Grusnis
+            [0.5, 1.0, 0.01, 2.0],  # Grusnis
+        ]
+        allouts = []
+        for tp in allpws:
+            params = None
+            params = lm.Parameters()
+            params.add('p1', value=tp[0], vary=False)
+            params.add('p2', value=tp[1], vary=False)
+            params.add('p3', value=tp[2], vary=False)
+            params.add('p4', value=tp[3], vary=False)
+            params.add('gamma1', value=2.5e-1)
+            params.add('gamma2', value=2.5e-1)
+            params.add('gamma3', value=2.5e-1)
+            params.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
+            allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
+            pass
+        allres = []
+        alllds = []
+        for to in allouts:
+            tps = [
+                to.params['p1'].value,
+                to.params['p2'].value,
+                to.params['p3'].value,
+                to.params['p4'].value,
+            ]
+            alllds.append(
+                [
+                    to.params['gamma1'].value,
+                    to.params['gamma2'].value,
+                    to.params['gamma3'].value,
+                    to.params['gamma4'].value,
+                ]
+            )
+            allres.append(
+                np.sum(spec - np.max(spec) * ldotl(mu, *alllds[-1], pws=tps))
+            )
+            pass
+        best = min(
+            ("4NL", abs(allres[0])),
+            ("GMR", abs(allres[1])),
+            ("SG0.2", abs(allres[2])),
+            ("SG0.3", abs(allres[3])),
+            ("SG0.01", abs(allres[4])),
+            key=lambda x: x[1],
+        )
+        val = {
+            "4NL": alllds[0],
+            "GMR": alllds[1],
+            "SG0.2": alllds[2],
+            "SG0.3": alllds[3],
+            "SG0.01": alllds[4],
+        }
+        allfav.append(val[best[0]])
+        pass
+    allfav = np.array(allfav).T
+    # GMR: We wanna save which model was selected somewhere
+    return allfav
 
 
 def whitelight(
@@ -2675,22 +2976,29 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
-def vecistar(xrs, g1, g2, g3, g4):
+def vecistar(xrs, g1, g2, g3, g4, a1=0.5, a2=1.0, a3=0.01, a4=2.0):
     '''
     G. ROUDIER: Stellar surface extinction model
+    C. BERNARDIN: Normalization of the LD law
     '''
     ldnorm = (
-        (-g1 / 10e0 - g2 / 6e0 - 3e0 * g3 / 14e0 - g4 / 4e0 + 5e-1)
+        (
+            -a1 * g1 / 2e0 / (4e0 + a1)
+            - a2 * g2 / 2e0 / (4e0 + a2)
+            - a3 * g2 / 2e0 / (4e0 + a3)
+            - a4 * g2 / 2e0 / (4e0 + a4)
+            + 5e-1
+        )
         * 2e0
         * np.pi
     )
     select = xrs < 1e0
     mu = np.zeros(xrs.shape)
     mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 4e0)
-    s1 = g1 * (1e0 - mu)
-    s2 = g2 * (1e0 - mu**2)
-    s3 = g3 * (1e0 - mu**3)
-    s4 = g4 * (1e0 - mu**4)
+    s1 = g1 * (1e0 - mu**a1)
+    s2 = g2 * (1e0 - mu**a2)
+    s3 = g3 * (1e0 - mu**a3)
+    s4 = g4 * (1e0 - mu**a4)
     outld = (1e0 - (s1 + s2 + s3 + s4)) / ldnorm
     return outld
 
@@ -3592,15 +3900,17 @@ def orbital(*whiteparams):
     G. ROUDIER: Orbital model
     '''
     jwstflag = False
-    if not ctxt.orbits:
+    if not ctxt.orbits:  # JWST
         # GMR:JWST
-        r = whiteparams
+        imnodes = whiteparams[-ctxt.nodeshape[-1] :]
+        lcnodes = whiteparams[: -ctxt.nodeshape[-1]]
         jwstflag = True
         midtransits = None
         inclination = None
         avs = None
         aos = None
         aoi = None
+        r = None
         pass
     elif ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, avs, aos, aoi = whiteparams
@@ -3609,11 +3919,15 @@ def orbital(*whiteparams):
         if ctxt.gttv:
             midtransits = ctxt.gttv
             pass
+        imnodes = None
+        lcnodes = None
         pass
     elif ('inc' in ctxt.fixedpars) and 'ttv' not in ctxt.fixedpars:
         r, atk, avs, aos, aoi = whiteparams
         inclination = ctxt.fixedpars['inc']
         midtransits = atk
+        imnodes = None
+        lcnodes = None
         pass
     elif not ('inc' in ctxt.fixedpars) and ('ttv' in ctxt.fixedpars):
         r, icln, avs, aos, aoi = whiteparams
@@ -3622,11 +3936,15 @@ def orbital(*whiteparams):
         if ctxt.gttv:
             midtransits = ctxt.gttv
             pass
+        imnodes = None
+        lcnodes = None
         pass
     elif not (('inc' in ctxt.fixedpars) or ('ttv' in ctxt.fixedpars)):
         r, atk, icln, avs, aos, aoi = whiteparams
         inclination = icln
         midtransits = atk
+        imnodes = None
+        lcnodes = None
         pass
     else:  # Jump the building
         midtransits = None
@@ -3635,6 +3953,8 @@ def orbital(*whiteparams):
         avs = None
         aos = None
         aoi = None
+        imnodes = None
+        lcnodes = None
         log.error('!!! No parameter passed in orbital() !!!')
         pass
     out = []
@@ -3676,25 +3996,50 @@ def orbital(*whiteparams):
         pass
     else:
         # JWST
+        if 'inc' in ctxt.fixedpars:
+            t2zinc = ctxt.fixedpars['inc']
+            pass
+        else:
+            t2zinc = float(lcnodes[2])
+            pass
+        if 't0' in ctxt.fixedpars:
+            t2zt0 = ctxt.fixedpars['t0']
+            pass
+        else:
+            t2zt0 = float(lcnodes[1])
+            pass
         omz, _pmph = tm.time2z(
             ctxt.time,
-            ctxt.ginc,
-            ctxt.tmjd,
+            t2zinc,
+            t2zt0,
             ctxt.smaors,
             ctxt.period,
             ctxt.ecc,
         )
         out = tldlc(
             abs(omz),
-            float(r[0]),
+            float(lcnodes[0]),
             g1=ctxt.g1[0],
             g2=ctxt.g2[0],
             g3=ctxt.g3[0],
             g4=ctxt.g4[0],
-        )
+        ) * orbitalim(ctxt.time, imnodes)
         pass
 
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
+    return out
+
+
+def orbitalim(ts, imnodes):
+    '''
+    S.Grusnis, C. Bernardin: JWST instrument model
+    [I]:ts:[ARRAY]:time stamps
+    [I]:imnodes:[ARRAY]:polynomial coefficients, decreasing powers
+    [O]:[ARRAY]:polynomial evaluation
+    '''
+    coeffs = [float(c) for c in imnodes]
+    p = np.poly1d(coeffs)
+    out = p(ts - np.nanmean(ts))
     return out
 
 

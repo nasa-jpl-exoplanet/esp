@@ -79,5 +79,5 @@ You definitely need it if you're going to command the main pipeline to run tasks
  For Safari, you import it via Keychain Access (in /Applications/Utilities)
  For Chrome, requires .p12 file.
 
-Note that for commanding the main pipeline, you need to use port 8085 instead of port 8080 (in the excalibur URL).
+Note that for commanding the main pipeline, you need to use port 8443 instead of port 443 (default https port) in the excalibur URL.
 

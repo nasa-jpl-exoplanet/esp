@@ -2495,29 +2495,25 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             #  *** Tier-2 (259 planets) ***
             analysistargetlists.append(
                 {
-                    'targetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                    'targets': alltargetlists['ariel_Nov2024_2years'],
+                    'targetlistname': '2-year science time (Tier-2); Chachan mmw',
+                    'targets': alltargetlists['ariel_stars_tier2'],
                 }
             )
             analysisplanetlist = {
-                'planetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                'planets': alltargetlists[
-                    'ariel_Nov2024_2years_withPlanetletters'
-                ],
+                'planetlistname': '2-year science time (Tier-2); Chachan mmw',
+                'planets': alltargetlists['ariel_planets_tier2'],
             }
         elif runtime_params.tier == 1:
             #  *** Tier-1 (626 planets) ***
             analysistargetlists.append(
                 {
-                    'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
-                    'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+                    'targetlistname': '2-year science time (Tier-1); Chachan mmw',
+                    'targets': alltargetlists['ariel_stars_tier1'],
                 }
             )
             analysisplanetlist = {
-                'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
-                'planets': alltargetlists[
-                    'ariel_Nov2024_2yearsTier1_withPlanetletters'
-                ],
+                'planetlistname': '2-year science time (Tier-1); Chachan mmw',
+                'planets': alltargetlists['ariel_planets_tier1'],
             }
         else:
             log.error(

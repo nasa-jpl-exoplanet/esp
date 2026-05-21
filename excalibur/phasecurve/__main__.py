@@ -12,17 +12,19 @@ from excalibur.util.main import main_start
 import excalibur.phasecurve.bot
 
 # ------------- ------------------------------------------------------
+if __name__ == "__main__":
+    rid, tn = main_start()
 
-rid, tn = main_start()
+    if tn in ["", "__all__"]:
+        pass
+    else:
+        name = os.environ.get("PHASECURVE_SUBTASK")
+        if name in (None, "", "all", "None"):
+            name = None
+        subtasks = excalibur.phasecurve.bot.Actor("phasecurve", 4, rid, tn)
+        subtasks.do(name)
+        pass
 
-if tn in ['', '__all__']:
+    dawgie.db.close()
+    dawgie.security.finalize()
     pass
-else:
-    NAME = os.environ.get('PHASECURVE_SUBTASK')
-    if NAME in (None, '', 'all', 'None'):
-        NAME = None
-    SUBTASKS = excalibur.phasecurve.bot.Actor('phasecurve', 4, rid, tn)
-    SUBTASKS.do(NAME)
-
-dawgie.db.close()
-dawgie.security.finalize()

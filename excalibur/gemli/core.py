@@ -127,18 +127,7 @@ def mlfit(
         else:
             out['data'][p] = {}
 
-            # **** NEW CODE START HERE ****
             # print('START MLFit for planet:', p)
-
-            # if verbose:
-            #    print('Ariel-sim INPUT PARAMETERS')
-            #    print('  ', sysfin['priors'].keys())
-            #    print('  ', sysfin['priors'][p].keys())
-            #    print('  Rp', sysfin['priors'][p]['rp'])
-            #    print('  Mp', sysfin['priors'][p]['mass'])
-            #    print('  Rs', sysfin['priors']['R*'])
-            #    print('  ', arielsim['data'][p].keys())
-            #    print()
 
             ML_param_names = [
                 'Teq',
@@ -314,13 +303,6 @@ def mlfit(
             # and then see how much the ML param results vary
             # (and then compare this uncertainty against the intrinsic ML uncert)
 
-            # TEST TEST TEST
-            #  increase the metallicity by some factor
-            # for param in ML_param_names:
-            #    if param.startswith('mlp'):
-            #        ML_param_results[param] += 1.5
-            # TEST TEST TEST
-
             # calculate the spectrum for the resulting best-fit mixratios
             ML_mixratio = {}
             for param in ML_param_names:
@@ -345,8 +327,7 @@ def mlfit(
             )
             transitdata = rebin_data(transitdata)
 
-            nrandomSample = 1000  # this is fast, so can do a lot itk
-            # nrandomSample = 11
+            nrandomSample = 1000  # this is fast, so can do many no problem
             np.random.seed(123)  # make the results reproduciblea
             instrumentNoise = transitdata['error'] * np.random.normal(
                 size=(nrandomSample, len(transitdata['wavelength']))
@@ -379,26 +360,18 @@ def mlfit(
                     dict(zip(ML_param_names, ML_param_results_noised))
                 )
             # now check the range of ML results for each parameter
-            # print('len check',len(ML_param_results_noised))
-            # if 1:
             ML_uncertainties_instrument = {}
             for param in ML_param_names:
-                # for instance in ML_param_results_noisedlist:
-                #    print('check', instance)
-                # print('param', param)
                 values = [
                     instance[param] for instance in ML_param_results_noisedlist
                 ]
                 ML_uncertainties_instrument[param] = np.std(values)
 
             # print('uncertainty from the instrument', ML_uncertainties_instrument)
-            # exit('asdf')
 
             # calculate the spectrum based on the best-fit ML model
             #  the best-fit model provided Tp, Rp, & mixing ratios
             #  set clouds/haze to zero
-            # Rp = 10.**ML_param_results['Rp'] * ssc['Rearth']
-            # print('Rp (RJup)', Rp)
             Rp = ML_param_results['Rp'] * ssc['Rjup']
             # print('Rp (cgs) for ML', Rp)
             # Rp = sysfin['priors'][p]['rp'] * ssc['Rjup']
@@ -525,8 +498,6 @@ def mlfit(
                 p,
                 verbose=verbose,
             )
-
-            # **** NEW CODE END HERE ****
 
             # limit results to just the TEC model?  No, not for HST/G141
             # but do verify that TEC exists at least
@@ -950,8 +921,6 @@ def mlfit(
                     trgt,
                     p,
                     bins=runtime_params.cornerBins,
-                    verbose=False,
-                    # verbose=verbose,  # asdf
                     saveDir=save_dir,
                 )
             out['target'].append(trgt)
@@ -996,32 +965,28 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
     if filt == 'Ariel-sim':
         if runtime_params.tier == 2:
-            #  *** Tier-2 (259 planets) ***
+            #  *** Tier-2 (~259 planets) ***
             analysistargetlists.append(
                 {
-                    'targetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                    'targets': alltargetlists['ariel_Nov2024_2years'],
+                    'targetlistname': '2-year science time (Tier-2); Chachan mmw',
+                    'targets': alltargetlists['ariel_stars_tier2'],
                 }
             )
             analysisplanetlist = {
-                'planetlistname': '2-year science time (Tier-2); Thorngren mmw (Nov.2024)',
-                'planets': alltargetlists[
-                    'ariel_Nov2024_2years_withPlanetletters'
-                ],
+                'planetlistname': '2-year science time (Tier-2); Chachan mmw',
+                'planets': alltargetlists['ariel_planets_tier2'],
             }
         elif runtime_params.tier == 1:
-            #  *** Tier-1 (626 planets) ***
+            #  *** Tier-1 (~626 planets) ***
             analysistargetlists.append(
                 {
-                    'targetlistname': '2-year science time (Tier-1); Thorngren mmw (Nov.2024)',
-                    'targets': alltargetlists['ariel_Nov2024_2yearsTier1'],
+                    'targetlistname': '2-year science time (Tier-1); Chachan',
+                    'targets': alltargetlists['ariel_stars_tier1'],
                 }
             )
             analysisplanetlist = {
-                'planetlistname': '2-year science time (Tier-1); Thorngren mmw (Aug.2024)',
-                'planets': alltargetlists[
-                    'ariel_Nov2024_2yearsTier1_withPlanetletters'
-                ],
+                'planetlistname': '2-year science time (Tier-1); Chachan mmw',
+                'planets': alltargetlists['ariel_planets_tier1'],
             }
         else:
             log.error(

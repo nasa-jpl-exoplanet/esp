@@ -34,4 +34,4 @@ fi
 
 myself=${DAWGIE_SSL_PEM_MYSELF:-/proj/sdp/${EXCALIBUR_USER:-${USER:-nouser}}/certs/excalibur_identity.pem}
 
-curl -XPOST --cert ${myself} "https://${EXCALIBUR_HOST:-localhost}:${DAWGIE_SFE_PORT:-9995}/app/reset?archive=${DAWGIE_ARCHIVE:-false}"
+curl -XPOST --cert ${myself} "https://${EXCALIBUR_HOST:-localhost}:${DAWGIE_SFE_PORT:-9995}/api/cmd/reset?archive=${DAWGIE_ARCHIVE:-false}"

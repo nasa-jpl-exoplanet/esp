@@ -42,8 +42,8 @@ if 'EXCALIBUR_PRIVATE_PIPELINE_INDEPENDENT' in os.environ:
     setattr(dawgie.db, 'targets', targets)
     test = excalibur.runtime.algorithms.Create()
     test.run(FakeDawgie())
-else:
-
+    pass
+elif __name__ == "__main__":
     rid, tn = main_start()
 
     if tn in ['', '__all__']:
