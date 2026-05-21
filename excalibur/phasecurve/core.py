@@ -17,6 +17,7 @@ from excalibur.util.plotters import (
     save_plot_myfit,
     plot_residual_fft,
 )
+from excalibur.phasecurve.plotters import plot_phasecurve
 from excalibur.phasecurve.flare_det import detect_flares
 
 from collections import namedtuple
@@ -427,21 +428,22 @@ def flaredetection(
     out,
     fltr,
     target=None,
-    stellar_params=None,
     results_dir=None,
     resume_completed=True,
     force_rerun=False,
     show_plots=False,
+    rid=9999,
+    stellar_params=None,
     verbose=False,
 ):
     '''
     find flares in a whitelight phasecurve
     '''
     flare_results = detect_flares(
-        whitelight,
-        fin,
-        fltr,
-        out,
+        whitelight=whitelight,
+        fin=fin,
+        fltr=fltr,
+        out=out,
         target=target,
         stellar_params=stellar_params,
         results_dir=results_dir,
@@ -451,5 +453,6 @@ def flaredetection(
         verbose=verbose,
     )
 
+    out['data'] = flare_results
     out['STATUS'].append(True)
     return bool(flare_results)
