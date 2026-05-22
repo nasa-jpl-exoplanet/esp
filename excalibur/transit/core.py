@@ -2936,7 +2936,7 @@ def whitelight(
 
 # ----------------------- --------------------------------------------
 # -- TRANSIT LIMB DARKENED LIGHT CURVE -- ----------------------------
-def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
+def tldlc(z, rprs, g1=0., g2=0., g3=0., g4=0., g5=0., g6=0., g7=0., g8=0., nint=int(100**2)):
     '''
     G. ROUDIER: Light curve model
     z: Separation in [R*]
@@ -2967,7 +2967,7 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
     extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
     occulted = vecoccs(znot, extxrs, rprs)
     diffocc = np.diff(occulted, axis=0)
-    si = vecistar(xrs, g1, g2, g3, g4)
+    si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
     drop = np.sum(diffocc * si, axis=0)
     inldlc = 1.0 - drop
     ldlc[~select] = np.array(inldlc)
@@ -2976,30 +2976,45 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
-def vecistar(xrs, g1, g2, g3, g4, a1=0.5, a2=1.0, a3=0.01, a4=2.0):
+def vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8, 
+             a1=0.5, a2=1.0, a3=1.5, a4=2.0, a5=1.0,
+             a6=2.0, a7=3.0, a8=4.0):
     '''
     G. ROUDIER: Stellar surface extinction model
-    C. BERNARDIN: Normalization of the LD law
-    '''
+    '''    
     ldnorm = (
-        (
-            - a1 * g1 / 2e0 / (2e0 + a1)
-            - a2 * g2 / 2e0 / (2e0 + a2)
-            - a3 * g3 / 2e0 / (2e0 + a3)
-            - a4 * g4 / 2e0 / (2e0 + a4)
-            + 5e-1
-        )
-        * 2e0
-        * np.pi
+        ( - a1 * g1 / 2e0 / (2e0+a1) 
+          - a2 * g2 / 2e0 / (2e0+a2) 
+          - a3 * g3 / 2e0 / (2e0+a3) 
+          - a4 * g4 / 2e0 / (2e0+a4) 
+          + g5 / (a5+2e0)**2
+          + g6 / (a6+2e0)**2
+          + g7 / (a7+2e0)**2
+          + g8 / (a8+2e0)**2
+          + 5e-1)
+                 * 2e0
+                 * np.pi
     )
+    
     select = xrs < 1e0
     mu = np.zeros(xrs.shape)
+    mu[select] = xrs[select] 
     mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 2e0)
     s1 = g1 * (1e0 - mu**a1)
     s2 = g2 * (1e0 - mu**a2)
     s3 = g3 * (1e0 - mu**a3)
     s4 = g4 * (1e0 - mu**a4)
-    outld = (1e0 - (s1 + s2 + s3 + s4)) / ldnorm
+
+    s5 = np.zeros(xrs.shape)
+    s6 = np.zeros(xrs.shape)
+    s7 = np.zeros(xrs.shape)
+    s8 = np.zeros(xrs.shape)
+    s5[select] = g5 * mu[select]**a5 * np.log(mu[select])
+    s6[select] = g6 * mu[select]**a6 * np.log(mu[select])
+    s7[select] = g7 * mu[select]**a7 * np.log(mu[select])
+    s8[select] = g8 * mu[select]**a8 * np.log(mu[select])
+
+    outld = (1e0 - (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8)) / ldnorm
     return outld
 
 
