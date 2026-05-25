@@ -63,7 +63,7 @@ def worker(args):
             f'Server failsd to complete request api/schedule/status because: {full["msg"]}'
         )
         return 1
-    current = full['context']['workers']
+    current = full['content']['workers']
     current['idle'] = int(current['idle'])
     current['busy'] = int(current['busy'])
     response = requests.get(
@@ -79,7 +79,7 @@ def worker(args):
         )
         return 1
     current['wip'] = sorted(
-        task.split('duration')[0].strip() for task in full['context']
+        task.split('duration')[0].strip() for task in full['content']
     )
     current['reported'] = False
     alive = current['idle'] + current['busy']
