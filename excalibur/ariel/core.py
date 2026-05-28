@@ -170,6 +170,8 @@ def simulate_spectra(
         'cerberusNoclouds',
         'cerberusTEANoclouds',
         'cerberuslowmmwNoclouds',
+        'cerberusGemliNoclouds',
+        'cerberusWaterNoclouds',
     ]
 
     if testTarget:
@@ -362,7 +364,37 @@ def simulate_spectra(
                     chemistry = 'TEC'
 
                 # ABUNDANCES
-                if 'lowmmw' in atmosModel:
+                mixratio = {}
+                print('checking for gemli or water', atmosModel)
+                if 'Gemli' in atmosModel or 'Water' in atmosModel:
+                    model_params['metallicity'] = metallicity_planet_dex
+                    model_params['C/O'] = np.log10(
+                        CtoO_planet_linear / solarCtoO
+                    )
+                    mixratio, _, _, _ = crbutil.crbce(
+                        pressure,
+                        model_params['Teq'],
+                        X2Hr=model_params['metallicity'],
+                        C2Or=model_params['C/O'],
+                    )
+                    print('mixratio!!!', mixratio)
+                    # to match gemli molecules, add CO2
+                    mixratio['CO2'] = mixratio['N2']
+                    # to match gemli molecules, drop N2
+                    mixratio.pop('N2')
+                    print('mixratio!!!', mixratio)
+
+                    if 'Water' in atmosModel:
+                        molecules = list(mixratio.keys())
+                        for molecule in molecules:
+                            if molecule != 'H2O':
+                                mixratio.pop(molecule)
+                        print('mixratio just water!!!', mixratio)
+
+                    for molecule in mixratio:
+                        model_params[molecule] = mixratio[molecule]
+
+                elif 'lowmmw' in atmosModel:
                     # print(' - using a low mmw')
                     model_params['metallicity'] = 0.0  # dex
                     model_params['C/O'] = 0.0  # [C/O] (relative to solar)
@@ -414,7 +446,6 @@ def simulate_spectra(
 
                 fluxDepth_by_molecule = {}
                 moleculeProfiles = {}
-                mixratio = {}
 
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
@@ -504,6 +535,7 @@ def simulate_spectra(
                         xslib,
                         planet_letter,
                         chemistry=chemistry,
+                        mixratios=mixratio,
                     )
                     # pressures should be the same thing as pressure
                     if np.any(pressures != pressure):
@@ -511,41 +543,43 @@ def simulate_spectra(
 
                     # save the mixing ratios for this model
                     # (to compare against FREE chemistry case (especially gemli)
-                    if useTEA:
-                        T = model_params['Teq']
-                        tempCoeffs = [
-                            0,
-                            T,
-                            0,
-                            1,
-                            0,
-                            -1,
-                            1,
-                            0,
-                            -1,
-                            1,
-                        ]
-                        mixratioprofiles = crbutil.calcTEA(
-                            tempCoeffs,
-                            pressure,
-                            metallicity=10.0 ** model_params['metallicity'],
-                            C_O=0.55 * 10.0 ** model_params['C/O'],
-                        )
-                        mixratio = {}
-                        for molecule in mixratioprofiles:
-                            mixratio[molecule] = np.log10(
-                                np.mean(10.0 ** mixratioprofiles[molecule])
+                    # only calculate here if it's not set already as fixed value
+                    if not mixratio:
+                        if useTEA:
+                            T = model_params['Teq']
+                            tempCoeffs = [
+                                0,
+                                T,
+                                0,
+                                1,
+                                0,
+                                -1,
+                                1,
+                                0,
+                                -1,
+                                1,
+                            ]
+                            mixratioprofiles = crbutil.calcTEA(
+                                tempCoeffs,
+                                pressure,
+                                metallicity=10.0 ** model_params['metallicity'],
+                                C_O=0.55 * 10.0 ** model_params['C/O'],
                             )
-                    else:
-                        mixratio, _, _, _ = crbutil.crbce(
-                            pressure,
-                            model_params['Teq'],
-                            X2Hr=model_params['metallicity'],
-                            C2Or=model_params['C/O'],
-                            # X2Hr=10.0 ** model_params['metallicity'],
-                            # C2Or=0.55 * 10.0 ** model_params['C/O'],
-                        )
-                    # print('mixratio!', useTEA, mixratio)
+                            mixratio = {}
+                            for molecule in mixratioprofiles:
+                                mixratio[molecule] = np.log10(
+                                    np.mean(10.0 ** mixratioprofiles[molecule])
+                                )
+                        else:
+                            mixratio, _, _, _ = crbutil.crbce(
+                                pressure,
+                                model_params['Teq'],
+                                X2Hr=model_params['metallicity'],
+                                C2Or=model_params['C/O'],
+                                # X2Hr=10.0 ** model_params['metallicity'],
+                                # C2Or=0.55 * 10.0 ** model_params['C/O'],
+                            )
+                        # print('mixratio!', useTEA, mixratio)
 
                 elif 'taurex' in atmosModel:
                     log.error('ERROR: taurex no longer an option')
@@ -624,6 +658,7 @@ def simulate_spectra(
 
                 # save the mixing ratio (to compare against gemli free chemistry)
                 out['data'][planet_letter][atmosModel]['mixratio'] = mixratio
+                # print('mixratio saved at the bottom', mixratio)
 
                 # cerberus also wants the scale height, to normalize the spectrum
                 #  keep Hs as it's own param (not inside of system_ or model_param
