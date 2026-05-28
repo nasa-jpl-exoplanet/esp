@@ -15,7 +15,6 @@ import excalibur
 
 import h5py
 from astropy.io.misc.hdf5 import read_table_hdf5
-# import scipy.constants as const
 import astropy.constants as const
 import astropy.units as u
 
@@ -34,7 +33,7 @@ def load_hwo_instrument(target, system_params):
 
     def reso_range(start, finish, res):
         '''
-        Builds a wavelength grid with specified endpoints and resolution (returns the midpoints of each bin)
+        Builds a wavelength grid with specified endpoints and resolution
         '''
         wl_low = [start]
         res = 1.0 / res
@@ -42,17 +41,10 @@ def load_hwo_instrument(target, system_params):
         while wl_high[-1] < finish:
             wl_low.append(wl_high[-1])
             wl_high.append(wl_low[-1] + (wl_low[-1] * res))
-
-        # print('wl_low', wl_low)
-        # print('wl_low', np.array(wl_low) / u.um)
-        # print('wl_high', wl_high / u.um)
-        # print('wl_high', (wl_high / u.um).decompose())
-        # print(' combo', np.array([wl_low / u.um, wl_high / u.um]))
         bins = np.array([wl_low, wl_high]).T
 
         return bins
 
-    # print('available system parameters:', system_params.keys())
     Tstar = system_params['T*'] * u.K
     Rstar = system_params['R*'] * const.R_sun
     d = system_params['dist'] * u.pc
@@ -82,18 +74,6 @@ def load_hwo_instrument(target, system_params):
     bin_widths = bin_widths * u.um
 
     optical_thruput = 0.626  # from 2 XeLiF and 17 Ag surfaces measured at 1 micron; based on EAC1 (no 0.5 from polarizer/dichroic, no IFS loss)
-
-    # print('constant units check', const.c)
-    # c = const.c * u.m / u.s
-    # h = const.h * u.J / u.Hz
-    # k = const.k_B * u.J / u.K
-    # c = const.c
-    # h = const.h
-    # k = const.k_B
-    # print('c',c)
-    # print('h',h)
-    # print('k',k)
-    # exit('test')
     
     # star properties
     BB = (
