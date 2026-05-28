@@ -264,7 +264,12 @@ class crbFM:
         else:
             # DISEQ case
             mmw, fH2, fHe = getmmw(mxr)
-            pass
+
+            # mixing ratio is a fixed value for all atmospheric pressures
+            for molecule in mixratio:
+                mixratioprofiles[molecule] = np.full((len(pressure)),
+                                                     mixratio[molecule])
+
         mmw = mmw * cst.m_p  # [kg]
 
         if debug:
