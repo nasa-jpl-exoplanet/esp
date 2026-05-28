@@ -57,7 +57,7 @@ def load_hwo_instrument(target, system_params):
     tel_diameter = 7.2 * u.m  # circumscribed diameter of EAC1
     obsc_fact = 0.9  # correction factor for tel area, due to obscuration (if on-axis) and segemented mirrors
     tel_area = (
-        np.pi * (tel_diameter / 2) ** 2 * obsc_fact  
+        np.pi * (tel_diameter / 2) ** 2 * obsc_fact
     )  # telescope collecting area
 
     wavelow = 0.2  # minimum wavelength
