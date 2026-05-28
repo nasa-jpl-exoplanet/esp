@@ -7,14 +7,8 @@
 # no-member is for astropy.units
 
 # -- IMPORTS -- ------------------------------------------------------
-import os
 import numpy as np
 import logging
-
-import excalibur
-
-import h5py
-from astropy.io.misc.hdf5 import read_table_hdf5
 import astropy.constants as const
 import astropy.units as u
 
