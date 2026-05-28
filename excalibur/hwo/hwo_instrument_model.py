@@ -1,4 +1,4 @@
-'''hwo hwo ds'''
+"""hwo hwo ds"""
 
 # Heritage code shame:
 # pylint: disable=invalid-name,no-member
@@ -23,18 +23,19 @@ log = logging.getLogger(__name__)
 
 # ---------------------------- ---------------------------------------
 
+
 def load_hwo_instrument(target, system_params):
-    '''
+    """
     Load in the HWO instrument response - uncertainty as a function of wavelength
 
     Uncertainty is for a single visit;
     number of observed transits is taken into account later
-    '''
+    """
 
     def reso_range(start, finish, res):
-        '''
+        """
         Builds a wavelength grid with specified endpoints and resolution
-        '''
+        """
         wl_low = [start]
         res = 1.0 / res
         wl_high = [start + (start * res)]
@@ -45,20 +46,17 @@ def load_hwo_instrument(target, system_params):
 
         return bins
 
-    Tstar = system_params['T*'] * u.K
-    Rstar = system_params['R*'] * const.R_sun
-    d = system_params['dist'] * u.pc
-    
+    Tstar = system_params["T*"] * u.K
+    Rstar = system_params["R*"] * const.R_sun
+    d = system_params["dist"] * u.pc
+
     planet_letter = target[-1]
-    # print('available planet parameters:', system_params[planet_letter].keys())
-    transit_duration = system_params[planet_letter]['trandur'] * u.hr
+    transit_duration = system_params[planet_letter]["trandur"] * u.hr
 
     # assumed instrument parameters
     tel_diameter = 7.2 * u.m  # circumscribed diameter of EAC1
     obsc_fact = 0.9  # correction factor for tel area, due to obscuration (if on-axis) and segemented mirrors
-    tel_area = (
-        np.pi * (tel_diameter / 2) ** 2 * obsc_fact
-    )  # telescope collecting area
+    tel_area = np.pi * (tel_diameter / 2) ** 2 * obsc_fact  # telescope collecting area
 
     wavelow = 0.2  # minimum wavelength
     wavehigh = 1.8  # maximum wavelength
@@ -71,7 +69,7 @@ def load_hwo_instrument(target, system_params):
     bin_widths = bin_widths * u.um
 
     optical_thruput = 0.626  # from 2 XeLiF and 17 Ag surfaces measured at 1 micron; based on EAC1 (no 0.5 from polarizer/dichroic, no IFS loss)
-    
+
     # star properties
     BB = (
         2
@@ -104,16 +102,16 @@ def load_hwo_instrument(target, system_params):
         1 / photons_in_transit + 1 / photons_out_transit
     )  # shot noise per bin
     shotnoise = shotnoise.decompose()
-    
+
     nVisits = 1  # number of visits
 
     hwo_instrument = {
-        'nVisits': nVisits,
-        'transitDuration': transit_in,
-        'wavelength': wavelength / u.um,
-        'wavelow': wavelength_bins[:, 0],
-        'wavehigh': wavelength_bins[:, 1],
-        'noise': shotnoise,
+        "nVisits": nVisits,
+        "transitDuration": transit_in,
+        "wavelength": wavelength / u.um,
+        "wavelow": wavelength_bins[:, 0],
+        "wavehigh": wavelength_bins[:, 1],
+        "noise": shotnoise,
     }
 
     return hwo_instrument
