@@ -48,13 +48,10 @@ def load_hwo_instrument(target, system_params):
     Tstar = system_params['T*'] * u.K
     Rstar = system_params['R*'] * const.R_sun
     d = system_params['dist'] * u.pc
-    print('Rstar', Rstar)
-    print('d', d)
     
     planet_letter = target[-1]
     # print('available planet parameters:', system_params[planet_letter].keys())
     transit_duration = system_params[planet_letter]['trandur'] * u.hr
-    print('transit duration (hours)', transit_duration)
 
     # assumed instrument parameters
     tel_diameter = 7.2 * u.m  # circumscribed diameter of EAC1
@@ -83,9 +80,7 @@ def load_hwo_instrument(target, system_params):
         / wavelength**5
         / (np.exp(const.h * const.c / (wavelength * const.k_B * Tstar)) - 1.0)
     )  # flux per wl per solid angle (blackbody spectral radiance)
-    print('BB', BB.decompose())
     F_atEarth = BB * np.pi * (Rstar / d) ** 2  # flux received at Earth
-    print('flux', F_atEarth.decompose())
 
     # transit
     transit_in = transit_duration
@@ -97,7 +92,6 @@ def load_hwo_instrument(target, system_params):
     photon_rate = tel_power / photon_energy
     # print ('photon_rate', photon_rate)
     photon_rate = photon_rate.decompose()
-    print ('photon_rate', photon_rate.decompose())
     photons_in_transit = (
         photon_rate * transit_in
     )  # total photons in each bin during the transit
@@ -110,8 +104,6 @@ def load_hwo_instrument(target, system_params):
         1 / photons_in_transit + 1 / photons_out_transit
     )  # shot noise per bin
     shotnoise = shotnoise.decompose()
-    print('fractional uncertainty on the stellar flux',
-          np.median(shotnoise), np.std(shotnoise))
     
     nVisits = 1  # number of visits
 
