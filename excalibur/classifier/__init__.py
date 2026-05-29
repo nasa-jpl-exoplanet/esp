@@ -1,6 +1,7 @@
 '''classifier __init__ ds'''
 
 import dawgie
+import dawgie.base
 
 # Do not enable this module until you find the blame commit that creates this
 # comment and put back all of the torch elements that were removed

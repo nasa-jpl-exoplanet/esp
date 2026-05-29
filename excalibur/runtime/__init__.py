@@ -1,6 +1,7 @@
 '''turn runtime operational parameters on disk into a state vector'''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

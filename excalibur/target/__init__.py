@@ -1,6 +1,7 @@
 '''First clutch of the pipeline, generates target list and data scraping'''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

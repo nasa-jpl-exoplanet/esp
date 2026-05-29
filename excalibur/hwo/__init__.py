@@ -3,6 +3,7 @@ HWO simulates HWO observations
 '''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

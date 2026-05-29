@@ -4,6 +4,7 @@ dawgie should ignore it since it is a utility library
 '''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = True
 

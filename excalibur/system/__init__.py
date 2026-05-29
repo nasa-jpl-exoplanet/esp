@@ -5,6 +5,7 @@ SYSTEM manages the astrophysical parameters of the target observed
 '''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

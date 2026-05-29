@@ -3,6 +3,7 @@ SELFTEST runs a series of retrievals, to test bias, precision, and consistency
 '''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

@@ -1,6 +1,7 @@
 '''eclipse __init__ ds'''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

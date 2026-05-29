@@ -1,6 +1,7 @@
 '''transmission spectrum task'''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

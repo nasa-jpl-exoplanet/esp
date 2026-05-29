@@ -3,6 +3,7 @@ ARIEL simulates Ariel observations
 '''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 

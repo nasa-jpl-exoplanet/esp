@@ -1,6 +1,7 @@
 '''routinely process excalibur metric data to make it more accessible'''
 
 import dawgie
+import dawgie.base
 
 DAWGIE_IGNORE = False
 
