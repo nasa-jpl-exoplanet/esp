@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.system.bot
+import excalibur.system
 
 # ------------- ------------------------------------------------------
 if __name__ == "__main__":
@@ -15,11 +15,11 @@ if __name__ == "__main__":
 
     if tn in ['', '__all__']:
         NAME = 'population'
-        subtasks = excalibur.system.bot.Agent('system', 4, rid)
+        subtasks = excalibur.system.analysis('system', 4, rid)
         pass
     else:
         NAME = ['finalize', 'validate', None][-1]  # -1 to run them all
-        subtasks = excalibur.system.bot.Actor('system', 4, rid, tn)
+        subtasks = excalibur.system.task('system', 4, rid, tn)
         pass
 
     subtasks.do(NAME)
