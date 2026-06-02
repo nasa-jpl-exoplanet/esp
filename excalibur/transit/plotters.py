@@ -134,8 +134,10 @@ def simplecorner(mctrace, fullrange=False, verbose=False):
     ]
     UpBound = [float(np.percentile(mctrace[k], 50 + 99.7 / 2)) for k in mctrace]
     Ranges = list(zip(LowBound, UpBound))
-    if fullrange: thoser = Ranges
-    else: thoser = None
+    if fullrange:
+        thoser = Ranges
+    else:
+        thoser = None
     Figure = corner.corner(
         mctrace,
         quantiles=(0.5 - 0.68 / 2, 0.5 + 0.68 / 2),
