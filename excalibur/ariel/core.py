@@ -391,8 +391,8 @@ def simulate_spectra(
                                 mixratio.pop(molecule)
                         print('mixratio just water!!!', mixratio)
 
-                    for molecule in mixratio:
-                        model_params[molecule] = mixratio[molecule]
+                    for molecule, value in mixratio.items():
+                        model_params[molecule] = value
 
                 elif 'lowmmw' in atmosModel:
                     # print(' - using a low mmw')
