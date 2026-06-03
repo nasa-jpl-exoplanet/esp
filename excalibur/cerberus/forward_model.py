@@ -280,7 +280,9 @@ class crbFM:
         # when the Pressure grid is log-spaced, rdz is a constant
         #  drop dz[] and dzprime[] arrays and just use this constant instead
         dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
-        z = dz * np.linspace(0, len(pressure) - 1, len(pressure))
+
+        #CB, the linspace was adapted in the case of constant dz
+        z = np.concatenate(([0], np.cumsum(dz[:-1])))
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
         tau, tau_by_molecule, wtau = gettau(
@@ -591,10 +593,15 @@ def gettau(
                     pass
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
-            # GMR: Array Broadcasting
-            # (n_waves, n_pressure) = n_pressure * n_pressure * (n_waves, n_pressure)
-            tau = tau + (rho * mmr * sigma).T
-            tau_by_molecule[elem] = (rho * mmr * sigma).T
+
+            #CB sigma (Nzones, Nzones, N_waves)
+            # 1st dimension corrsponds to z
+            # 2nd dimension corrsponds to z'
+            # 3rd dimension corresponds to wavelength
+            sigma = np.broadcast_to(sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))).copy()           
+            tau_by_molecule[elem] = (rho*np.ones((Nzones, Nzones)))[:, :, np.newaxis] * (mmr*np.ones((Nzones, Nzones)))[:, :, np.newaxis] * sigma
+            tau = tau + tau_by_molecule[elem]
+            
             pass
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
@@ -628,25 +635,43 @@ def gettau(
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
             pass
-        tau = tau + (f1 * f2 * sigma * rho**2).T
-        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
+
+        #CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        sigma = np.broadcast_to(sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))).copy()
+        tau_by_molecule[cia] = (f1*np.ones((Nzones, Nzones)))[:,:,np.newaxis] * (f2*np.ones((Nzones, Nzones)))[:,:,np.newaxis] * sigma * (rho*np.ones((Nzones, Nzones)))[:, :, np.newaxis]**2
+        tau = tau + tau_by_molecule[cia]
+        
     # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
-    tau = tau + (fH2 * rho * np.array(len(rho) * [sigma]).T).T
-    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
+
+    #CB sigma (Nzones, Nzones, N_waves)
+    # 1st dimension corrsponds to z
+    # 2nd dimension corrsponds to z'
+    # 3rd dimension corresponds to wavelength
+    sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
+    tau_by_molecule['rayleigh'] = (fH2*np.ones((Nzones, Nzones)))[:,:,np.newaxis] * (rho*np.ones((Nzones, Nzones)))[:, :, np.newaxis] * sigma
+    tau = tau + tau_by_molecule['rayleigh']
+    
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hazeslope)
-        hazedensity = np.ones(len(z))
-        tau = tau + 10.0**hazescale * sigma * np.array([hazedensity]).T
-        tau_by_molecule['haze'] = (
-            10.0**hazescale * sigma * np.array([hazedensity]).T
-        )
+
+        #CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()        
+        tau_by_molecule['haze'] = 10.0**hazescale * sigma
+        tau = tau + tau_by_molecule['haze']
+        
     else:
         # WEST ET AL. 2004
         sigma = (
@@ -729,17 +754,24 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
-        tau = tau + hazecontribution
+
+        #CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        hazecontribution = 10.0**hazescale * np.broadcast_to(sigma * np.array([rh]).T, (Nzones, Nzones, len(wgrid))).copy()
         tau_by_molecule['haze'] = hazecontribution
+        tau = tau + tau_by_molecule['haze']
+        
         pass
 
-    tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
-
+    #CB tau (Nzones, N_waves)
+    # sum over the z' for a fixed z
+    tau = (2e0 * dlarray[:,:,np.newaxis] * tau).sum(axis=1)
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         tau_by_molecule[molecule] = (
-            2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
+            (2e0 * dlarray[:,:,np.newaxis] * tau_by_molecule[molecule]).sum(axis=1)
         )
         pass
 
