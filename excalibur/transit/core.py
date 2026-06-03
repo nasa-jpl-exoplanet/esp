@@ -96,6 +96,7 @@ ctxtglobals = [
     'g2',
     'g3',
     'g4',
+    'lclds',
     'ootoindex',
     'ootorbits',
     'orbits',
@@ -130,6 +131,7 @@ ctxt = CONTEXT(
     g2=None,
     g3=None,
     g4=None,
+    lclds=None,
     ootoindex=None,
     ootorbits=None,
     orbits=None,
@@ -164,6 +166,7 @@ def ctxtupdt(
     g2=None,
     g3=None,
     g4=None,
+    lclds=None,
     ootoindex=None,
     ootorbits=None,
     orbits=None,
@@ -199,6 +202,7 @@ def ctxtupdt(
         g2=g2,
         g3=g3,
         g4=g4,
+        lclds=lclds,
         ootoindex=ootoindex,
         ootorbits=ootorbits,
         orbits=orbits,
@@ -241,7 +245,6 @@ def LogLikelihood(inputs):
         newindex += ns
         pass
     if not ctxt.orbits:  # JWST
-        newnodes = []
         newnodes = inputs
         pass
     if ctxt.spec:
@@ -2001,7 +2004,7 @@ def hstwhitelight(
     return True
 
 
-def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
+def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     '''
     GMR:JWST Whitelight
     [I]:nrm:[DICT]:transit.normalization SV as dict
@@ -2016,6 +2019,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
           out['data'][p][det]['valid']:[LIST] valid channels per spectrum
           out['data'][p][det]['whiteld']:[LIST] white LD coefficients
           out['data'][p][det]['mcpost']:[PYMC] post stats
+    [OPT]:imo:[INT]:Instrument Model polynomial order
     [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
                     i.e one of [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
@@ -2094,19 +2098,20 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass
-                out['data'][pln][det]['prewhite'] = wht
-                out['data'][pln][det]['prewhite_err'] = whterr
-                out['data'][pln][det]['prewhite_time'] = whttim
-                out['data'][pln][det]['prewhite_sep'] = whtsep
-                out['data'][pln][det]['valid'] = validl
-                g1, g2, g3, g4 = ldtl(
+                out['data'][pln][det][vis]['prewhite'] = wht
+                out['data'][pln][det][vis]['prewhite_err'] = whterr
+                out['data'][pln][det][vis]['prewhite_time'] = whttim
+                out['data'][pln][det][vis]['prewhite_sep'] = whtsep
+                out['data'][pln][det][vis]['valid'] = validl
+                ldcoefs = ldtl(
                     priors['T*'],
                     priors['FEH*'],
                     priors['LOGG*'],
                     [np.nanmin(nrm['data'][pln]['wave'][det][vis])],
                     [np.nanmax(nrm['data'][pln]['wave'][det][vis])],
                 )
-                out['data'][pln][det]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
+                lclds = [c[0] for c in ldcoefs]
+                out['data'][pln][det]['whiteld'] = lclds
                 # PRIORS
                 rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
                 tmjd = priors[pln]['t0']
@@ -2117,7 +2122,6 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                 if priors[pln]['inc'] == 90.0:
                     fixedpars['inc'] = priors[pln]['inc']
                     pass
-                imorder = 2
                 nodes = []
                 nodeshape = []
                 prior_ranges = {}
@@ -2166,26 +2170,44 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         nodeshape.append(1)
                         pass
                     # INSTRUMENT MODEL - ALWAYS LAST
-                    for coef in np.arange(imorder):
+                    # PRE-FIT
+                    params = lm.Parameters()
+                    for coef in np.arange(imo):
+                        params.add('c' + str(int(coef)), value=1.0)
+                        pass
+                    selectfit = np.abs(np.array(whtsep)) > (1.0 + 2.0 * rpors)
+
+                    lmout = lm.minimize(
+                        cheatim,
+                        params,
+                        args=(
+                            np.array(whttim)[selectfit],
+                            np.array(wht)[selectfit],
+                        ),
+                    )
+                    allcenim = [lmout.params[k].value for k in lmout.params]
+                    allstdim = [lmout.params[k].stderr for k in lmout.params]
+                    for ic, coef in enumerate(np.arange(imo)):
+                        thslbl = 'IM' + str(int(coef))
                         pymcim = pymc.Uniform(
-                            'IM' + str(int(coef)),
-                            lower=-1.0,
-                            upper=1.0,
+                            thslbl,
+                            lower=allcenim[ic] - 10.0 * allstdim[ic],
+                            upper=allcenim[ic] + 10.0 * allstdim[ic],
                         )
-                        prior_ranges['IM' + str(int(coef))] = [-1.0, 1.0]
-                        prior_center['IM' + str(int(coef))] = 0
+                        prior_ranges[thslbl] = [
+                            allcenim[ic] - 10.0 * allstdim[ic],
+                            allcenim[ic] + 10.0 * allstdim[ic],
+                        ]
+                        prior_center[thslbl] = allcenim[ic]
                         nodes.append(pymcim)
                         pymcim = None
                         pass
-                    nodeshape.append(imorder)
+                    nodeshape.append(imo)
                     # CONTEXT
                     ctxtupdt(
                         orbp=priors[pln],
                         ecc=priors[pln]['ecc'],
-                        g1=g1,
-                        g2=g2,
-                        g3=g3,
-                        g4=g4,
+                        lclds=lclds,
                         period=priors[pln]['period'],
                         smaors=priors[pln]['sma']
                         / priors['R*']
@@ -2218,6 +2240,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         logp=LogLH,
                     )
                     _ = rtp.sliceSampler
+                    # Force Metropolis since Slice is kaput
                     log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
@@ -2229,11 +2252,52 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         step=sampler,
                         progressbar=verbose,
                     )
-                    mcpost = pymc.stats.summary(trace)
                     pass
+                mctrace = {}
+                for k in [n.name for n in nodes]:
+                    mctrace[k] = np.array(trace['posterior'][k]).flatten()
+                    pass
+                instmodel = np.array(
+                    orbitalim(
+                        whttim,
+                        [
+                            np.median(di[-1])
+                            for di in mctrace.items()
+                            if di[0].startswith('IM')
+                        ],
+                    )
+                )
+                bestlc = (
+                    np.array(
+                        orbital(*[np.median(di[-1]) for di in mctrace.items()])
+                    )
+                    / instmodel
+                )
+                flatwht = np.array(wht) / instmodel
+                if verbose:
+                    _ = simplecorner(mctrace, fullrange=True, verbose=verbose)
+
+                    plt.figure(figsize=(12, 9))
+                    plt.title(
+                        pln + ': ' + det + ' [' + vis + ']',
+                        fontsize=20,
+                    )
+                    plt.errorbar(
+                        whttim, flatwht, yerr=whterr, fmt='o', alpha=0.5
+                    )
+                    plt.plot(
+                        np.array(whttim)[np.argsort(whttim)],
+                        bestlc[np.argsort(whttim)],
+                        lw=3,
+                    )
+                    plt.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                out['data'][pln][det][vis]['mctrace'] = mctrace
+                out['data'][pln][det][vis]['lcmodel'] = bestlc
+                out['data'][pln][det][vis]['flatwht'] = flatwht
+                out['data'][pln][det][vis]['inmodel'] = instmodel
                 pass
-            out['data'][pln]['mcpost'] = mcpost
-            out['data'][pln]['mctrace'] = trace
             out['STATUS'].append(True)
             pass
         pass
@@ -2296,22 +2360,33 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         pass
 
     # LIMB DARKENING MODEL
-    def ldotl(mu, u1, u2, u3, u4, pws=None):
+    def ldotl(mu, claret, cexts=None, pws=None):
         '''
         S. Grusnis
+        mu: cos(theta)
+        claret: 4 NL Claret coefficients associated to pws
         Generalisation of nonlinearld to arbitrary powers
         pws = [0.5, 1., 1.5, 2.] 4NL Claret et al., 2000
         https://articles.adsabs.harvard.edu/pdf/2000A%26A...363.1081C
-        pws = [0.5, 1., 0.1, 2.] GMR
-        pws = [0.5, 1, 0.01, 2.] Grusnis
+        cexts = [0., 0., 0., 0.] Additionnal coefficients for extended law
+        Extended = 4NL + sum_i(uexts[i] * mu**(2*pws[i]) * ln(mu))
         '''
         if pws is None:
-            pws = [0.5, 1.0, 0.1, 2.0]
-        xtn1 = u1 * (1e0 - mu ** pws[0])
-        xtn2 = u2 * (1e0 - mu ** pws[1])
-        xtn3 = u3 * (1e0 - mu ** pws[2])
-        xtn4 = u4 * (1e0 - mu ** pws[3])
-        model = 1e0 - xtn1 - xtn2 - xtn3 - xtn4
+            pws = [0.5, 1.0, 1.5, 2.0]
+            pass
+        if cexts is None:
+            cexts = [0.0, 0.0, 0.0, 0.0]
+            pass
+        mmu = np.array([mu]).T
+        zeroout = np.array(mu) <= 0
+        mmu[mmu <= 0] = np.nan
+        mclaret = np.array(claret)
+        mcexts = np.array(cexts)
+        mpws = np.array(pws)
+        cmodel = mclaret * (1e0 - mmu**mpws)
+        gmodel = mcexts * mmu ** (2.0 * mpws) * np.log(mmu)
+        model = 1e0 - np.nansum(cmodel + gmodel, axis=1)
+        model[zeroout] = 0.0
         return model
 
     # LMFIT MODEL
@@ -2324,7 +2399,9 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         p2 = params['p2'].value
         p3 = params['p3'].value
         p4 = params['p4'].value
-        model = ldotl(x, gamma1, gamma2, gamma3, gamma4, pws=[p1, p2, p3, p4])
+        model = ldotl(
+            x, [gamma1, gamma2, gamma3, gamma4], cexts=[p1, p2, p3, p4]
+        )
         if data is None:
             return model
         if weights is None:
@@ -2359,67 +2436,44 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         select = (wln >= mu_min) & (wln <= mu_max)
         spec = np.mean(spectra[select], axis=0)
         test = spec / np.max(spec)
-        allpws = [
-            [0.5, 1.0, 1.5, 2.0],  # 4NL
-            [0.5, 1.0, 0.1, 2.0],  # GMR
-            [0.5, 1.0, 0.2, 2.0],  # Grusnis
-            [0.5, 1.0, 0.3, 2.0],  # Grusnis
-            [0.5, 1.0, 0.01, 2.0],  # Grusnis
-        ]
         allouts = []
-        for tp in allpws:
-            params = None
-            params = lm.Parameters()
-            params.add('p1', value=tp[0], vary=False)
-            params.add('p2', value=tp[1], vary=False)
-            params.add('p3', value=tp[2], vary=False)
-            params.add('p4', value=tp[3], vary=False)
-            params.add('gamma1', value=2.5e-1)
-            params.add('gamma2', value=2.5e-1)
-            params.add('gamma3', value=2.5e-1)
-            params.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
-            allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
-            pass
+        params = None
+        params = lm.Parameters()
+        params.add('p1', value=0.0)
+        params.add('p2', value=0.0)
+        params.add('p3', value=0.0)
+        params.add('p4', value=0.0)
+        params.add('gamma1', value=2.5e-1)
+        params.add('gamma2', value=2.5e-1)
+        params.add('gamma3', value=2.5e-1)
+        params.add('gamma4', value=2.5e-1)
+        allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
         allres = []
         alllds = []
         for to in allouts:
-            tps = [
-                to.params['p1'].value,
-                to.params['p2'].value,
-                to.params['p3'].value,
-                to.params['p4'].value,
-            ]
             alllds.append(
                 [
                     to.params['gamma1'].value,
                     to.params['gamma2'].value,
                     to.params['gamma3'].value,
                     to.params['gamma4'].value,
+                    to.params['p1'].value,
+                    to.params['p2'].value,
+                    to.params['p3'].value,
+                    to.params['p4'].value,
                 ]
             )
             allres.append(
-                np.sum(spec - np.max(spec) * ldotl(mu, *alllds[-1], pws=tps))
+                np.sum(
+                    spec
+                    - np.max(spec)
+                    * ldotl(mu, alllds[-1][:4], cexts=alllds[-1][4:])
+                )
             )
             pass
-        best = min(
-            ("4NL", abs(allres[0])),
-            ("GMR", abs(allres[1])),
-            ("SG0.2", abs(allres[2])),
-            ("SG0.3", abs(allres[3])),
-            ("SG0.01", abs(allres[4])),
-            key=lambda x: x[1],
-        )
-        val = {
-            "4NL": alllds[0],
-            "GMR": alllds[1],
-            "SG0.2": alllds[2],
-            "SG0.3": alllds[3],
-            "SG0.01": alllds[4],
-        }
-        allfav.append(val[best[0]])
+        allfav.append(alllds[0])
         pass
     allfav = np.array(allfav).T
-    # GMR: We wanna save which model was selected somewhere
     return allfav
 
 
@@ -2936,12 +2990,27 @@ def whitelight(
 
 # ----------------------- --------------------------------------------
 # -- TRANSIT LIMB DARKENED LIGHT CURVE -- ----------------------------
-def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
+def tldlc(
+    z,
+    rprs,
+    g1=0.0,
+    g2=0.0,
+    g3=0.0,
+    g4=0.0,
+    g5=0.0,
+    g6=0.0,
+    g7=0.0,
+    g8=0.0,
+    nint=int(8**2),
+):
     '''
     G. ROUDIER: Light curve model
+    We do not wanna break former calls but it has to be changed at some point
+    g1...g8 in a single vector
     z: Separation in [R*]
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
+    g5...g8: Sophia Grusnis extented model
     nint: Integral into discrete sum number of bins
     '''
     ldlc = np.zeros(z.size)
@@ -2967,7 +3036,7 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
     extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
     occulted = vecoccs(znot, extxrs, rprs)
     diffocc = np.diff(occulted, axis=0)
-    si = vecistar(xrs, g1, g2, g3, g4)
+    si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
     drop = np.sum(diffocc * si, axis=0)
     inldlc = 1.0 - drop
     ldlc[~select] = np.array(inldlc)
@@ -2976,30 +3045,63 @@ def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
-def vecistar(xrs, g1, g2, g3, g4, a1=0.5, a2=1.0, a3=0.01, a4=2.0):
+def vecistar(
+    xrs,
+    g1,
+    g2,
+    g3,
+    g4,
+    g5,
+    g6,
+    g7,
+    g8,
+    a1=0.5,
+    a2=1.0,
+    a3=1.5,
+    a4=2.0,
+    a5=1.0,
+    a6=2.0,
+    a7=3.0,
+    a8=4.0,
+):
     '''
     G. ROUDIER: Stellar surface extinction model
-    C. BERNARDIN: Normalization of the LD law
     '''
     ldnorm = (
         (
-            -a1 * g1 / 2e0 / (4e0 + a1)
-            - a2 * g2 / 2e0 / (4e0 + a2)
-            - a3 * g2 / 2e0 / (4e0 + a3)
-            - a4 * g2 / 2e0 / (4e0 + a4)
+            -a1 * g1 / 2e0 / (2e0 + a1)
+            - a2 * g2 / 2e0 / (2e0 + a2)
+            - a3 * g3 / 2e0 / (2e0 + a3)
+            - a4 * g4 / 2e0 / (2e0 + a4)
+            + g5 / (a5 + 2e0) ** 2
+            + g6 / (a6 + 2e0) ** 2
+            + g7 / (a7 + 2e0) ** 2
+            + g8 / (a8 + 2e0) ** 2
             + 5e-1
         )
         * 2e0
         * np.pi
     )
+
     select = xrs < 1e0
     mu = np.zeros(xrs.shape)
-    mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 4e0)
+    mu[select] = xrs[select]
+    mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 2e0)
     s1 = g1 * (1e0 - mu**a1)
     s2 = g2 * (1e0 - mu**a2)
     s3 = g3 * (1e0 - mu**a3)
     s4 = g4 * (1e0 - mu**a4)
-    outld = (1e0 - (s1 + s2 + s3 + s4)) / ldnorm
+
+    s5 = np.zeros(xrs.shape)
+    s6 = np.zeros(xrs.shape)
+    s7 = np.zeros(xrs.shape)
+    s8 = np.zeros(xrs.shape)
+    s5[select] = g5 * mu[select] ** a5 * np.log(mu[select])
+    s6[select] = g6 * mu[select] ** a6 * np.log(mu[select])
+    s7[select] = g7 * mu[select] ** a7 * np.log(mu[select])
+    s8[select] = g8 * mu[select] ** a8 * np.log(mu[select])
+
+    outld = (1e0 - (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8)) / ldnorm
     return outld
 
 
@@ -3995,7 +4097,7 @@ def orbital(*whiteparams):
             pass
         pass
     else:
-        # JWST
+        # >-- JWST
         if 'inc' in ctxt.fixedpars:
             t2zinc = ctxt.fixedpars['inc']
             pass
@@ -4019,11 +4121,16 @@ def orbital(*whiteparams):
         out = tldlc(
             abs(omz),
             float(lcnodes[0]),
-            g1=ctxt.g1[0],
-            g2=ctxt.g2[0],
-            g3=ctxt.g3[0],
-            g4=ctxt.g4[0],
+            g1=ctxt.lclds[0],
+            g2=ctxt.lclds[1],
+            g3=ctxt.lclds[2],
+            g4=ctxt.lclds[3],
+            g5=ctxt.lclds[4],
+            g6=ctxt.lclds[5],
+            g7=ctxt.lclds[6],
+            g8=ctxt.lclds[7],
         ) * orbitalim(ctxt.time, imnodes)
+        # JWST >--
         pass
 
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
@@ -4041,6 +4148,19 @@ def orbitalim(ts, imnodes):
     p = np.poly1d(coeffs)
     out = p(ts - np.nanmean(ts))
     return out
+
+
+def cheatim(params, x, data=None, weights=None):
+    '''
+    GMR: LMFit function for JWST IM
+    '''
+    allc = [params[k].value for k in params]
+    model = orbitalim(x, allc)
+    if data is None:
+        return model
+    if weights is None:
+        return data - model
+    return (data - model) / weights
 
 
 def lcmodel(*specparams):

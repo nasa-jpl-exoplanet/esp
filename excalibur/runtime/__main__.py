@@ -3,7 +3,7 @@
 import dawgie.db
 import dawgie.security
 import excalibur.runtime.algorithms
-import excalibur.runtime.bot
+import excalibur.runtime
 import os
 
 from excalibur.util.main import main_start
@@ -48,11 +48,11 @@ elif __name__ == "__main__":
 
     if tn in ['', '__all__']:
         NAME = 'create'
-        subtasks = excalibur.runtime.bot.AnalysisTeam('runtime', 4, rid)
+        subtasks = excalibur.runtime.analysis('runtime', 4, rid)
         pass
     else:
         NAME = 'autofill'
-        subtasks = excalibur.runtime.bot.TaskTeam('runtime', 4, rid, tn)
+        subtasks = excalibur.runtime.task('runtime', 4, rid, tn)
         pass
     subtasks.do(NAME)
     dawgie.db.close()
