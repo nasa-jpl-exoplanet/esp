@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.gemli.bot
+import excalibur.gemli
 
 # ------------- ------------------------------------------------------
 if __name__ == "__main__":
@@ -15,10 +15,10 @@ if __name__ == "__main__":
 
     if tn in ['', '__all__']:
         NAME = 'analysis'
-        subtasks = excalibur.gemli.bot.Agent('gemli', 4, rid)
+        subtasks = excalibur.gemli.analysis('gemli', 4, rid)
     else:
         NAME = ['inference', None][-1]  # -1 to run them all
-        subtasks = excalibur.gemli.bot.Actor('gemli', 4, rid, tn)
+        subtasks = excalibur.gemli.task('gemli', 4, rid, tn)
         pass
 
     subtasks.do(NAME)
