@@ -2012,13 +2012,13 @@ def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     [I]:rtp:[DICT]:runtime.autofill SV as dict
     [I/O]:out:[SV]:WhitelightSV() see states.py
           out['STATUS']:[LIST]:appending True for each planet/instrument added
-          out['data'][p][det]:[DICT]:output/planet/detector
-          out['data'][p][det]['prewhite']:[LIST] Whitelight before fit
-          out['data'][p][det]['prewhite_err']:[LIST] prewhite errors
-          out['data'][p][det]['prewhite_sep']:[LIST] prewhite separation
-          out['data'][p][det]['valid']:[LIST] valid channels per spectrum
-          out['data'][p][det]['whiteld']:[LIST] white LD coefficients
-          out['data'][p][det]['mcpost']:[PYMC] post stats
+          out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
+          out['data'][p][det][vis]['prewhite']:[LIST] Whitelight before fit
+          out['data'][p][det][vis]['prewhite_err']:[LIST] prewhite errors
+          out['data'][p][det][vis]['prewhite_sep']:[LIST] prewhite separation
+          out['data'][p][det][vis]['valid']:[LIST] valid channels per spectrum
+          out['data'][p][det][vis]['whiteld']:[LIST] white LD coefficients
+          out['data'][p][det][vis]['mcpost']:[PYMC] post stats
     [OPT]:imo:[INT]:Instrument Model polynomial order
     [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
                     i.e one of [100, 99, 95, 68, 50]
