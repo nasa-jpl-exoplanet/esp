@@ -267,8 +267,9 @@ class crbFM:
 
             # mixing ratio is a fixed value for all atmospheric pressures
             for molecule in mixratio:
-                mixratioprofiles[molecule] = np.full((len(pressure)),
-                                                     mixratio[molecule])
+                mixratioprofiles[molecule] = np.full(
+                    (len(pressure)),mixratio[molecule]
+                )
 
         mmw = mmw * cst.m_p  # [kg]
 
