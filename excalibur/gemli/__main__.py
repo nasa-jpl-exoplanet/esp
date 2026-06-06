@@ -17,7 +17,7 @@ if __name__ == "__main__":
         NAME = 'analysis'
         subtasks = excalibur.gemli.analysis('gemli', 4, rid)
     else:
-        NAME = ['inference', None][-1]  # -1 to run them all
+        NAME = ['mlfit', None][-1]  # -1 to run them all
         subtasks = excalibur.gemli.task('gemli', 4, rid, tn)
         pass
 

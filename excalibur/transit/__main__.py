@@ -18,7 +18,7 @@ if __name__ == "__main__":
         subtasks = excalibur.transit.analysis('transit', 4, rid)
         pass
     else:
-        NAME = ['normalization', 'spectrum', 'whitelight', 'starspots', None][
+        NAME = ['normalization', 'whitelight', 'spectrum', 'starspots', None][
             -1
         ]  # -1 to run them all
         subtasks = excalibur.transit.task('transit', 4, rid, tn)
