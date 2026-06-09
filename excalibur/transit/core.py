@@ -3004,6 +3004,7 @@ def tldlc(
     g6=0.0,
     g7=0.0,
     g8=0.0,
+    method="LETHE",
     nint=int(8**2),
 ):
     '''
@@ -3014,37 +3015,139 @@ def tldlc(
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
     g5...g8: Sophia Grusnis extented model
-    nint: Integral into discrete sum number of bins
+    method: GMR,   occulted flux calculated thanks to numerical integration
+                   over the planet
+            LETHE, occulted flux calculated through interpolation
+    nint: Integral into discrete sum number of bins, only in case of GMR method
     '''
-    ldlc = np.zeros(z.size)
-    xin = z.copy() - rprs
-    xin[xin < 0e0] = 0e0
-    xout = z.copy() + rprs
-    xout[xout > 1e0] = 1e0
-    select = xin > 1e0
-    if True in select:
-        ldlc[select] = 1e0
-        pass
-    inldlc = []
-    xint = np.linspace(1e0, 0e0, nint)
-    znot = z.copy()[~select]
-    xinnot = np.arccos(xin[~select])
-    xoutnot = np.arccos(xout[~select])
-    xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
-    xrs = np.cos(xrs)
-    diffxrs = np.diff(xrs, axis=0)
-    extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
-    extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
-    extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
-    extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
-    occulted = vecoccs(znot, extxrs, rprs)
-    diffocc = np.diff(occulted, axis=0)
-    si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
-    drop = np.sum(diffocc * si, axis=0)
-    inldlc = 1.0 - drop
-    ldlc[~select] = np.array(inldlc)
+    if method == "LETHE" :
+        occulted = occultation(z, rprs, g1, g2, g3, g4, g5, g6, g7, g8)
+        ldlc = 1.0 - occulted
+    else:
+        ldlc = np.zeros(z.size)
+        xin = z.copy() - rprs
+        xin[xin < 0e0] = 0e0
+        xout = z.copy() + rprs
+        xout[xout > 1e0] = 1e0
+        select = xin > 1e0
+        if True in select:
+            ldlc[select] = 1e0
+            pass
+        inldlc = []
+        xint = np.linspace(1e0, 0e0, nint)
+        znot = z.copy()[~select]
+        xinnot = np.arccos(xin[~select])
+        xoutnot = np.arccos(xout[~select])
+        xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
+        xrs = np.cos(xrs)
+        diffxrs = np.diff(xrs, axis=0)
+        extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
+        extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
+        extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
+        extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
+        occulted = vecoccs(znot, extxrs, rprs)
+        diffocc = np.diff(occulted, axis=0)
+        si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
+        drop = np.sum(diffocc * si, axis=0)
+        inldlc = 1.0 - drop
+        ldlc[~select] = np.array(inldlc)
+    
     return ldlc
 
+# --------------------------------------- ----------------------------
+# -- STELLAR OCCULTATION LAW -- --------------------------------------
+def occultation(z, rprs, g1, g2, g3, g4, g5, g6, g7, g8,
+                a1=0.5, a2=1.0, a3=1.5, a4=2.0, a5=1.0,
+                a6=2.0, a7=3.0, a8=4.0):
+    
+    outld = np.zeros(z.shape)
+    select = (z < 1.0 + rprs)
+
+    #grids loading
+    z_grid = np.load("/proj/sdp/data/LETHE/301_101/z_grid.npy")
+    rprs_grid = np.load("/proj/sdp/data/LETHE/301_101/rprs_grid.npy")
+    alpha_G_0_25 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.25.npy")
+    alpha_G_0_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.5.npy")
+    alpha_G_0_75 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.75.npy")
+    alpha_G_1_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/1.0.npy")
+    alpha_F_0_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/0.5.npy")
+    alpha_F_1_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/1.0.npy")
+    alpha_F_1_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/1.5.npy")
+    alpha_F_2_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/2.0.npy")
+
+    #Spline interpolator
+    f_G_0_25 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_25)
+    f_G_0_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_50)
+    f_G_0_75 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_75)
+    f_G_1_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_1_00)
+    f_F_0_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_0_50)
+    f_F_1_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_1_00)
+    f_F_1_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_1_50)
+    f_F_2_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_2_00)
+
+    #contribution computation
+    s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
+    s2 = g2 * f_G_0_50(z[select], rprs, grid=False)
+    s3 = g3 * f_G_0_75(z[select], rprs, grid=False)
+    s4 = g4 * f_G_1_00(z[select], rprs, grid=False)
+    s5 = - g5 * f_F_0_50(z[select], rprs, grid=False)
+    s6 = - g6 * f_F_1_00(z[select], rprs, grid=False)
+    s7 = - g7 * f_F_1_50(z[select], rprs, grid=False)
+    s8 = - g8 * f_F_2_00(z[select], rprs, grid=False)
+
+    #normalization computation
+    ldnorm = (
+        ( - a1 * g1 / 2e0 / (2e0+a1)
+          - a2 * g2 / 2e0 / (2e0+a2)
+          - a3 * g3 / 2e0 / (2e0+a3)
+          - a4 * g4 / 2e0 / (2e0+a4)
+          + g5 / (a5+2e0)**2
+          + g6 / (a6+2e0)**2
+          + g7 / (a7+2e0)**2
+          + g8 / (a8+2e0)**2
+          + 5e-1)
+                  * 2e0
+                  * np.pi
+    )
+    
+    #surface crossing between star and planet
+    surface = circle_intersection_area(1.0, rprs, z[select])
+
+    #total occulted flux
+    outld[select] = (surface*(1e0 - (g1 + g2 + g3 + g4)) 
+                     + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 ) / ldnorm
+
+    return outld
+
+# --------------------------------------- ----------------------------
+# -- CIRCLE INTERSECTION AREA -- -------------------------------------
+def circle_intersection_area(r1, r2, d):
+    """
+    r1 : radius of circle 1
+    r2 : radius of circle 2
+    d :  distance between centers
+    Intersection area of 2 circles of radius r1 and r2
+    separated a distance between centers of d.
+    """
+
+    S = np.zeros(d.shape)
+
+    # total intersection
+    select_2 = (d <= abs(r1 - r2))
+    S[select_2] = np.pi * min(r1, r2)**2
+
+    # partial intersection
+    term1 = r1**2 * np.acos((d[~select_2]**2 + r1**2 - r2**2) / (2 * d[~select_2] * r1))
+    term2 = r2**2 * np.acos((d[~select_2]**2 + r2**2 - r1**2) / (2 * d[~select_2] * r2))
+    term3 = 0.5 * np.sqrt(
+        (-d[~select_2] + r1 + r2) *
+        ( d[~select_2] + r1 - r2) *
+        ( d[~select_2] - r1 + r2) *
+        ( d[~select_2] + r1 + r2)
+    )
+    S[~select_2] = term1 + term2 - term3
+
+    return S
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
