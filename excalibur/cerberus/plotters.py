@@ -874,7 +874,7 @@ def plot_walker_evolution(
         if key in prior_ranges.keys():
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
             priorloProfiled[ikey], priorhiProfiled[ikey] = prior_ranges[key]
-        # print(' new prior range:',priorlo[ikey],priorhi[ikey]
+        # print(' new prior range:',priorlo[ikey],priorhi[ikey])
 
     figure = plt.figure(figsize=(12, 6))
     linecolors = [
@@ -889,6 +889,7 @@ def plot_walker_evolution(
     ]
     chainLength = int(len(alltraces[0]) / Nchains)
     # chainLengthProfiled = int(len(profiledtraces[0]) / Nchains)
+    # print('Nparam,Nchains', Nparam, Nchains)
     for iparam in range(Nparam):
         ax = figure.add_subplot(2, int((Nparam + 1.0) / 2.0), iparam + 1)
         for ic in range(Nchains):
