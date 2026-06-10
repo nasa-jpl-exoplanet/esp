@@ -365,11 +365,19 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     nN2profile = BN2 * pH2 / p
     nNH3profile = BNH3 * pH2 / p
 
-    nCO = np.max([np.nanmean(nCOprofile), 1e-16])
-    nCH4 = np.max([np.nanmean(nCH4profile), 1e-16])
-    nH2O = np.max([np.nanmean(nH2Oprofile), 1e-16])
-    nN2 = np.max([np.nanmean(nN2profile), 1e-16])
-    nNH3 = np.max([np.nanmean(nNH3profile), 1e-16])
+    # make sure the profile has positive values throughout (no negative or zero)
+    nCOprofile = np.clip(nCOprofile, a_min=1e-16, a_max=None)
+    nCH4profile = np.clip(nCH4profile, a_min=1e-16, a_max=None)
+    nH2Oprofile = np.clip(nH2Oprofile, a_min=1e-16, a_max=None)
+    nN2profile = np.clip(nN2profile, a_min=1e-16, a_max=None)
+    nNH3profile = np.clip(nNH3profile, a_min=1e-16, a_max=None)
+
+    # average values of each molecule are calculated *before* logging
+    nCO = np.nanmean(nCOprofile)
+    nCH4 = np.nanmean(nCH4profile)
+    nH2O = np.nanmean(nH2Oprofile)
+    nN2 = np.nanmean(nN2profile)
+    nNH3 = np.nanmean(nNH3profile)
 
     # make sure that the sum of all mixing ratios does not exceed 1
     #  ok actually it's working great. no problems here (molecules are 60-75%)
@@ -377,26 +385,19 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     # print('nSummed vs nMax',nMolecules,1 - nHplusHe)
     # print('nSummed vs nMax',nMolecules / (1 - nHplusHe))
 
-    # print('H2O profile', nH2Oprofile)
-    # print('CH4 profile', nCH4profile)
-    # print('NH3 profile', nNH3profile)
-
-    # add a small bit, to avoid log10(zero) warning messages
-    smallEps = 1.e-39
-
     mixratio = {
-        'H2O': np.log10(nH2O + smallEps) + 6.0,
-        'CH4': np.log10(nCH4 + smallEps) + 6.0,
-        'NH3': np.log10(nNH3 + smallEps) + 6.0,
-        'N2': np.log10(nN2 + smallEps) + 6.0,
-        'CO': np.log10(nCO + smallEps) + 6.0,
+        'H2O': np.log10(nH2O) + 6.0,
+        'CH4': np.log10(nCH4) + 6.0,
+        'NH3': np.log10(nNH3) + 6.0,
+        'N2': np.log10(nN2) + 6.0,
+        'CO': np.log10(nCO) + 6.0,
     }
     mixratioprofiles = {
-        'H2O': np.log10(nH2Oprofile + smallEps) + 6.0,
-        'CH4': np.log10(nCH4profile + smallEps) + 6.0,
-        'NH3': np.log10(nNH3profile + smallEps) + 6.0,
-        'N2': np.log10(nN2profile + smallEps) + 6.0,
-        'CO': np.log10(nCOprofile + smallEps) + 6.0,
+        'H2O': np.log10(nH2Oprofile) + 6.0,
+        'CH4': np.log10(nCH4profile) + 6.0,
+        'NH3': np.log10(nNH3profile) + 6.0,
+        'N2': np.log10(nN2profile) + 6.0,
+        'CO': np.log10(nCOprofile) + 6.0,
     }
     # print('MIXRATIO IN TEC', mixratio)
     return mixratio, mixratioprofiles, nH2, nHe
