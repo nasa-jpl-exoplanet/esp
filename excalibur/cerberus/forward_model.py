@@ -264,7 +264,13 @@ class crbFM:
         else:
             # DISEQ case
             mmw, fH2, fHe = getmmw(mxr)
-            pass
+
+            # mixing ratio is a fixed value for all atmospheric pressures
+            for molecule in mixratio:
+                mixratioprofiles[molecule] = np.full(
+                    (len(pressure)), mixratio[molecule]
+                )
+
         mmw = mmw * cst.m_p  # [kg]
 
         if debug:
@@ -1052,10 +1058,10 @@ def clearfmcerberus(*crbinputs):
         tpr = ctxt.fixedParams['T']
         mdp = crbinputs[0]
         # this extra list[] is needed for the single param case (only metallicity)
-        if not isinstance(mdp, list):
-            mdp = [mdp]
     else:
         tpr, mdp = crbinputs
+    if not isinstance(mdp, list):
+        mdp = [mdp]
     # print(' param values inside of forward model', tpr, mdp)
 
     fmc = np.zeros(ctxt.tspectrum.size)

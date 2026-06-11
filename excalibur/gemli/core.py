@@ -177,10 +177,13 @@ def mlfit(
                 ]
             )
 
-            arielModel = 'cerberus'
+            # arielModel = 'cerberus'
             # CAREFUL!  need to use a cloud-free model for self-consistency!!!
             arielModel = 'cerberusNoclouds'
             # arielModel = 'cerberusTEANoClouds'
+            # use the gemli-specific model (has the same five molecules)
+            if 'cerberusGemliNoclouds' in arielsim['data'][p]:
+                arielModel = 'cerberusGemliNoclouds'
 
             # MORE CAREFUL! cerberus.atmos is currently the cloudy model
             # decide here whether to use the cerb.atmos atm or arielsim spc

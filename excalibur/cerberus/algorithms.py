@@ -270,7 +270,7 @@ class Atmos(dawgie.Algorithm):
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
-            # for Ariel targets, option to only do the actually Tier-2 targets
+            # for Ariel targets, option to only do the Tier-2 targets
             targetlistcheck = True
             only_these_planets = []
             if (
@@ -452,7 +452,7 @@ class Results(dawgie.Algorithm):
                     and runtime['cerberus_arielsample_tier'].value() == 2
                 ):
                     alltargetlists = get_target_lists()
-                    targetlist = alltargetlists['ariel_stars_2years']
+                    targetlist = alltargetlists['ariel_stars_tier2']
                     if target not in targetlist:
                         targetlistcheck = False
 

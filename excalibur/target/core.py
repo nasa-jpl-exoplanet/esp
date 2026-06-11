@@ -25,20 +25,11 @@ import astropy.io.fits as pyfits
 import urllib.request as urlrequest
 import urllib3.exceptions
 
-from collections import namedtuple
-
 from importlib import import_module as fetch  # avoid cicular dependencies
 
 import logging
 
 log = logging.getLogger(__name__)
-
-TargetCreateParams = namedtuple(
-    'target_create_params_from_runtime',
-    [
-        'num_reruns',
-    ],
-)
 
 
 # ------------- ------------------------------------------------------
@@ -90,7 +81,7 @@ def tap_query(base_url, query):
 
 # ----------------- --------------------------------------------------
 # -- SCRAPE IDS -- ---------------------------------------------------
-def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
+def scrapeids(ds: dawgie.Dataset, out, web, gen_ids=True):
     '''
     - Creates a state vector for each target
     - Optionally adds on an alias, for cases where archive uses a diff name
@@ -108,13 +99,8 @@ def scrapeids(ds: dawgie.Dataset, runtime_params, out, web, gen_ids=True):
         if target.startswith('test'):
             # create several names for this target (nominally 25)
             namerepeats = []
-            # asdf: still need to get runtime to work with aspects!!
-            # for i in range(runtime_params.num_reruns):
-            # print('runtime num_reruns', runtime_params.num_reruns)
-            x = runtime_params.num_reruns
-            if x == 10:
-                print('pylint can be fooled')
-            for i in range(25):
+            numberofrepeats = 25  # (runtime's selftest.Nrepeats is not used)
+            for i in range(numberofrepeats):
                 namerepeats.append(f'{parsedstr[0]}{i + 1:03d}')
         else:
             # for normal targets, there's no repeating; just 1 name

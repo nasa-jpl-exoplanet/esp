@@ -365,11 +365,19 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     nN2profile = BN2 * pH2 / p
     nNH3profile = BNH3 * pH2 / p
 
-    nCO = np.max([np.nanmean(nCOprofile), 1e-16])
-    nCH4 = np.max([np.nanmean(nCH4profile), 1e-16])
-    nH2O = np.max([np.nanmean(nH2Oprofile), 1e-16])
-    nN2 = np.max([np.nanmean(nN2profile), 1e-16])
-    nNH3 = np.max([np.nanmean(nNH3profile), 1e-16])
+    # make sure the profile has positive values throughout (no negative or zero)
+    nCOprofile = np.clip(nCOprofile, a_min=1e-16, a_max=None)
+    nCH4profile = np.clip(nCH4profile, a_min=1e-16, a_max=None)
+    nH2Oprofile = np.clip(nH2Oprofile, a_min=1e-16, a_max=None)
+    nN2profile = np.clip(nN2profile, a_min=1e-16, a_max=None)
+    nNH3profile = np.clip(nNH3profile, a_min=1e-16, a_max=None)
+
+    # average values of each molecule are calculated *before* logging
+    nCO = np.nanmean(nCOprofile)
+    nCH4 = np.nanmean(nCH4profile)
+    nH2O = np.nanmean(nH2Oprofile)
+    nN2 = np.nanmean(nN2profile)
+    nNH3 = np.nanmean(nNH3profile)
 
     # make sure that the sum of all mixing ratios does not exceed 1
     #  ok actually it's working great. no problems here (molecules are 60-75%)

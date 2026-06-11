@@ -16,7 +16,7 @@ if __name__ == "__main__":
     if tn in ['', '__all__']:
         pass
     else:
-        NAME = ['normalize', 'spectrum', 'whitelight', None][
+        NAME = ['normalize', 'whitelight', 'spectrum', None][
             -1
         ]  # -1 to run them all
         subtasks = excalibur.eclipse.task('eclipse', 4, rid, tn)
