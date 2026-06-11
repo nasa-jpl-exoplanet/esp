@@ -2298,7 +2298,8 @@ def results(
                     tceqdict_profiled,
                     mixratio_profiled,
                 ]
-                patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
+                # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
+                patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
                     runtime_params,
                     p,
@@ -2479,7 +2480,7 @@ def results(
                     figgy.subplots_adjust(
                         left=0.05, right=0.95, bottom=0.15, top=0.93, wspace=0.2
                     )
-                    ax = plt.subplot(1, 3, 1)
+                    plt.subplot(1, 3, 1)
 
                     okPart = np.where(np.isfinite(transitdata['depth']))
 
@@ -2514,13 +2515,13 @@ def results(
                             label='truth',
                         )
 
-                    offsets_model = (
-                        patmos_model - transitdata['depth'][okPart]
-                    ) / transitdata['error'][okPart]
-                    chi2model = np.nansum(offsets_model**2)
-                    numPoints = len(patmos_model)
-                    numParam_model = 1
-                    chi2model_red = chi2model / (numPoints - numParam_model)
+                    # offsets_model = (
+                    #     patmos_model - transitdata['depth'][okPart]
+                    # ) / transitdata['error'][okPart]
+                    # chi2model = np.nansum(offsets_model**2)
+                    # numPoints = len(patmos_model)
+                    # numParam_model = 1
+                    # chi2model_red = chi2model / (numPoints - numParam_model)
 
                     if filt == 'Ariel-sim':
                         plt.xlim(0, 8)
