@@ -1870,12 +1870,18 @@ def resultsversion():
     '''
     return dawgie.VERSION(1, 0, 0)
 
+
 # ------------------------------ -------------------------------------
 
+
 def calculateSpectrum(
-        fit_params,
-        runtime_params,
-        p, rp0, fin, xsl, transitdata,
+    fit_params,
+    runtime_params,
+    p,
+    rp0,
+    fin,
+    xsl,
+    transitdata,
 ):
     '''
     calculate a spectrum for the given set of fit-parameters
@@ -1884,9 +1890,7 @@ def calculateSpectrum(
     T, CTP, hazescale, hazeloc, hazethick, tceqdict, mixratio = fit_params
 
     crbhzlib = {'PROFILE': []}
-    hazedir = os.path.join(
-        excalibur.context['data_dir'], 'CERBERUS/HAZE'
-    )
+    hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
     hazelib(crbhzlib, hazedir=hazedir, verbose=False)
 
     fmc = np.zeros(transitdata['depth'].size)
@@ -1924,12 +1928,13 @@ def calculateSpectrum(
     )
 
     # calculate chi2 values to see which is the best fit
-    offsets = (
-        patmos - transitdata['depth'][okPart]
-    ) / transitdata['error'][okPart]
+    offsets = (patmos - transitdata['depth'][okPart]) / transitdata['error'][
+        okPart
+    ]
     chi2 = np.nansum(offsets**2)
 
     return patmos, chi2
+
 
 # ------------------------------ -------------------------------------
 def results(
@@ -2277,7 +2282,10 @@ def results(
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
                     runtime_params,
-                    p, rp0, fin, xsl,
+                    p,
+                    rp0,
+                    fin,
+                    xsl,
                     transitdata,
                 )
 
@@ -2293,7 +2301,10 @@ def results(
                 patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                     param_values_profiled,
                     runtime_params,
-                    p, rp0, fin, xsl,
+                    p,
+                    rp0,
+                    fin,
+                    xsl,
                     transitdata,
                 )
                 # print('median params', tpr, tceqdict)
@@ -2322,26 +2333,26 @@ def results(
                     # print('all_keys', all_keys)
                     for trace, key in zip(all_traces, all_keys):
                         # print(' best params', key, trace[ibest])
-                        if key=='T':
+                        if key == 'T':
                             param_values_bestfit[0] = trace[ibest]
-                        elif key=='CTP':
+                        elif key == 'CTP':
                             param_values_bestfit[1] = trace[ibest]
-                        elif key=='HScale':
+                        elif key == 'HScale':
                             param_values_bestfit[2] = trace[ibest]
-                        elif key=='HLoc':
+                        elif key == 'HLoc':
                             param_values_bestfit[3] = trace[ibest]
-                        elif key=='HThick':
+                        elif key == 'HThick':
                             param_values_bestfit[4] = trace[ibest]
-                        elif key=='[X/H]':
+                        elif key == '[X/H]':
                             param_values_bestfit[5]['XtoH'] = trace[ibest]
-                        elif key=='[C/O]':
+                        elif key == '[C/O]':
                             param_values_bestfit[5]['CtoO'] = trace[ibest]
-                        elif key=='[N/O]':
+                        elif key == '[N/O]':
                             param_values_bestfit[5]['NtoO'] = trace[ibest]
-                        elif key=='mixratio':
+                        elif key == 'mixratio':
                             param_values_bestfit[5] = 666
                             log.error('not done yet. geoff to do')
-                        elif key=='$\\chi^2_{red}$':
+                        elif key == '$\\chi^2_{red}$':
                             pass
                         else:
                             log.error('TROUBLE with best LogL: unknown param')
@@ -2350,7 +2361,10 @@ def results(
                     patmos_bestfit, chi2best = calculateSpectrum(
                         param_values_bestfit,
                         runtime_params,
-                        p, rp0, fin, xsl,
+                        p,
+                        rp0,
+                        fin,
+                        xsl,
                         transitdata,
                     )
 
@@ -2364,7 +2378,8 @@ def results(
                     )
                     for char in trgt + ' ' + p:
                         int_from_target = (
-                            runtime_params.randomseed * int_from_target + ord(char)
+                            runtime_params.randomseed * int_from_target
+                            + ord(char)
                         ) % 100000
                     np.random.seed(int_from_target)
 
@@ -2408,11 +2423,11 @@ def results(
                                 tceqdict['NtoO'] = float(mdp[2])
                             else:
                                 if ('TRUTH_MODELPARAMS' in atm[p]) and (
-                                        'NtoO' in atm[p]['TRUTH_MODELPARAMS']
+                                    'NtoO' in atm[p]['TRUTH_MODELPARAMS']
                                 ):
-                                    tceqdict['NtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                        'NtoO'
-                                    ]
+                                    tceqdict['NtoO'] = atm[p][
+                                        'TRUTH_MODELPARAMS'
+                                    ]['NtoO']
                                 else:
                                     # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                     tceqdict['NtoO'] = 0.0
@@ -2438,7 +2453,10 @@ def results(
                         patmos_modelrand, chi2modelrand = calculateSpectrum(
                             param_values_rand,
                             runtime_params,
-                            p, rp0, fin, xsl,
+                            p,
+                            rp0,
+                            fin,
+                            xsl,
                             transitdata,
                         )
                         # check to see if this model is the best one
