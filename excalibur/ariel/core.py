@@ -365,7 +365,7 @@ def simulate_spectra(
 
                 # ABUNDANCES
                 mixratio = {}
-                print('checking for gemli or water', atmosModel)
+                # print('checking for gemli or water', atmosModel)
                 if 'Gemli' in atmosModel or 'Water' in atmosModel:
                     model_params['metallicity'] = metallicity_planet_dex
                     model_params['C/O'] = np.log10(
@@ -377,12 +377,12 @@ def simulate_spectra(
                         X2Hr=model_params['metallicity'],
                         C2Or=model_params['C/O'],
                     )
-                    print('mixratio!!!', mixratio)
+                    # print('mixratio!!!', mixratio)
                     # to match gemli molecules, add CO2
                     mixratio['CO2'] = mixratio['N2']
                     # to match gemli molecules, drop N2
                     mixratio.pop('N2')
-                    print('mixratio!!!', mixratio)
+                    # print('mixratio!!!', mixratio)
 
                     if 'Water' in atmosModel:
                         molecules = list(mixratio.keys())
