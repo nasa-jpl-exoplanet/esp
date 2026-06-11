@@ -480,6 +480,10 @@ def plot_corner(
                 paramValues_bestFit.append(tceqdict['NtoO'])
             elif mixratio and param in mixratio:
                 paramValues_bestFit.append(mixratio[param])
+            elif param in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+                paramValues_bestFit.append(666666)
+            elif param in ['chi2reduced', '$\\chi^2_{red}$']:
+                paramValues_bestFit.append(1)
             else:
                 log.warning('--< ERROR: param not in list: %s >--', param)
         # print('best fit values in corner plot',paramValues_bestFit)
@@ -488,12 +492,12 @@ def plot_corner(
     # print(' params inside of corner plotting',allkeys)
     # print('medians inside of corner plotting',mcmcMedian)
     # print('bestfit inside of corner plotting',paramValues_bestFit)
-    lo = np.nanpercentile(np.array(alltraces), 16, axis=1)
-    hi = np.nanpercentile(np.array(alltraces), 84, axis=1)
+    lo = np.nanpercentile(np.array(profiletraces), 16, axis=1)
+    hi = np.nanpercentile(np.array(profiletraces), 84, axis=1)
     # span = hi - lo
     # Careful!  These are not actually the prior ranges; they're the range of walker values
-    priorlo = np.nanmin(np.array(alltraces), axis=1)
-    priorhi = np.nanmax(np.array(alltraces), axis=1)
+    priorlo = np.nanmin(np.array(profiletraces), axis=1)
+    priorhi = np.nanmax(np.array(profiletraces), axis=1)
     # OK fixed now. prior ranges are saved as output from atmos and then passed in here
     for ikey, key in enumerate(allkeys):
         # print('param:',key)
@@ -529,6 +533,7 @@ def plot_corner(
     if truth_params is not None:
         truths = []
         for thiskey in allkeys:
+            # print('going through truth keys', thiskey)
             if thiskey == 'T':
                 truths.append(truth_params['Teq'])
             elif thiskey == '[X/H]':
@@ -539,6 +544,10 @@ def plot_corner(
                 truths.append(truth_params['C/O'])
             elif thiskey == '[N/O]':
                 truths.append(0)
+            elif thiskey in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+                truths.append(666666)
+            elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
+                truths.append(1)
             elif thiskey in truth_params.keys():
                 truths.append(truth_params[thiskey])
             else:
@@ -676,6 +685,7 @@ def plot_vs_prior(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''compare the fit results against the original prior information'''
 
@@ -709,99 +719,108 @@ def plot_vs_prior(
     figure = plt.figure(figsize=(12, 6))
     Nparam = len(mcmcMedian)
     for iparam in range(Nparam):
-        ax = figure.add_subplot(
-            2, int((len(mcmcMedian) + 1.0) / 2.0), iparam + 1
-        )
-        ax.scatter(
-            priormid[iparam],
-            priorspan[iparam] * 0.34,
-            facecolor='None',
-            edgecolor='black',
-            s=30,
-            zorder=3,
-        )
-        ax.scatter(
-            priormidProfiled[iparam],
-            priorspanProfiled[iparam] * 0.34,
-            facecolor='black',
-            edgecolor='black',
-            s=30,
-            zorder=3,
-        )
-        ax.scatter(
-            mcmcMedian[iparam],
-            span[iparam] / 2.0,
-            facecolor='None',
-            edgecolor='firebrick',
-            s=50,
-            zorder=4,
-        )
-        ax.scatter(
-            mcmcMedianProfiled[iparam],
-            spanProfiled[iparam] / 2.0,
-            facecolor='purple',
-            edgecolor='firebrick',
-            s=50,
-            zorder=4,
-        )
-        ax.plot(
-            [priorlo[iparam], priormid[iparam], priorhi[iparam]],
-            [0, priorspan[iparam] * 0.34, 0],
-            c='k',
-            ls='--',
-            lw=0.5,
-            zorder=2,
-        )
-        # ax.plot([priorloProfiled[iparam],priormidProfiled[iparam],priorhiProfiled[iparam]],
-        #        [0,priorspanProfiled[iparam]*0.34,0],
-        #        c='purple',ls=':',lw=1.5,zorder=2)
-
-        # highlight the background of successful fits (x2 better precision)
-        if span[iparam] / 2.0 < priorspan[iparam] * 0.34 / 2:
-            # print(' this one has reduced uncertainty',allkeys[iparam])
-            ax.set_facecolor('lightyellow')
-
-        # add a dashed line for the true value
-        if truth_params is not None:
-            keyMatch = {'T': 'Teq', '[X/H]': 'metallicity', '[C/O]': 'C/O'}
-            if allkeys[iparam] in keyMatch:
-                truthparam = keyMatch[allkeys[iparam]]
-            else:
-                truthparam = allkeys[iparam]
-            if truthparam in truth_params:
-                truthvalue = float(truth_params[truthparam])
-                ax.plot(
-                    [truthvalue, truthvalue],
-                    [0, priorspan[iparam]],
-                    c='k',
-                    ls='--',
-                    zorder=5,
-                )
-            elif truthparam == '[N/O]':
-                ax.plot(
-                    [0, 0], [0, priorspan[iparam]], c='k', ls='--', zorder=5
-                )
-
-        # show if there is some profiling for this parameter
-        profiledParams = [limit[0] for limit in appliedLimits]
-        profiledValues = [limit[1] for limit in appliedLimits]
-        if allkeys[iparam] in profiledParams:
-            # print('profiling limit!',allkeys[iparam])
-            iprof = profiledParams.index(allkeys[iparam])
-            # print('  profiled value',profiledValues[iprof],iprof)
-            ax.plot(
-                [profiledValues[iprof], profiledValues[iprof]],
-                [0, priorspan[iparam]],
-                c='purple',
-                ls=':',
-                lw=2,
+        if allkeys[iparam] in [
+            'saved logLikelihood',
+            'saved chi2s',
+            '$\\chi^2$',
+            'chi2reduced',
+            '$\\chi^2_{red}$',
+        ]:
+            pass
+        else:
+            ax = figure.add_subplot(
+                2, int((len(mcmcMedian) + 1.0) / 2.0), iparam + 1
+            )
+            ax.scatter(
+                priormid[iparam],
+                priorspan[iparam] * 0.34,
+                facecolor='None',
+                edgecolor='black',
+                s=30,
+                zorder=3,
+            )
+            ax.scatter(
+                priormidProfiled[iparam],
+                priorspanProfiled[iparam] * 0.34,
+                facecolor='black',
+                edgecolor='black',
+                s=30,
+                zorder=3,
+            )
+            ax.scatter(
+                mcmcMedian[iparam],
+                span[iparam] / 2.0,
+                facecolor='None',
+                edgecolor='firebrick',
+                s=50,
                 zorder=4,
             )
+            ax.scatter(
+                mcmcMedianProfiled[iparam],
+                spanProfiled[iparam] / 2.0,
+                facecolor='purple',
+                edgecolor='firebrick',
+                s=50,
+                zorder=4,
+            )
+            ax.plot(
+                [priorlo[iparam], priormid[iparam], priorhi[iparam]],
+                [0, priorspan[iparam] * 0.34, 0],
+                c='k',
+                ls='--',
+                lw=0.5,
+                zorder=2,
+            )
+            # ax.plot([priorloProfiled[iparam],priormidProfiled[iparam],priorhiProfiled[iparam]],
+            #        [0,priorspanProfiled[iparam]*0.34,0],
+            #        c='purple',ls=':',lw=1.5,zorder=2)
 
-        ax.set_xlim(priorlo[iparam], priorhi[iparam])
-        ax.set_ylim(0, priorspan[iparam] * 0.4)
-        ax.set_xlabel(allkeys[iparam], fontsize=14)
-        ax.set_ylabel('uncertainty', fontsize=14)
+            # highlight the background of successful fits (x2 better precision)
+            if span[iparam] / 2.0 < priorspan[iparam] * 0.34 / 2:
+                # print(' this one has reduced uncertainty',allkeys[iparam])
+                ax.set_facecolor('lightyellow')
+
+            # add a dashed line for the true value
+            if truth_params is not None:
+                keyMatch = {'T': 'Teq', '[X/H]': 'metallicity', '[C/O]': 'C/O'}
+                if allkeys[iparam] in keyMatch:
+                    truthparam = keyMatch[allkeys[iparam]]
+                else:
+                    truthparam = allkeys[iparam]
+                if truthparam in truth_params:
+                    truthvalue = float(truth_params[truthparam])
+                    ax.plot(
+                        [truthvalue, truthvalue],
+                        [0, priorspan[iparam]],
+                        c='k',
+                        ls='--',
+                        zorder=5,
+                    )
+                elif truthparam == '[N/O]':
+                    ax.plot(
+                        [0, 0], [0, priorspan[iparam]], c='k', ls='--', zorder=5
+                    )
+
+            # show if there is some profiling for this parameter
+            profiledParams = [limit[0] for limit in appliedLimits]
+            profiledValues = [limit[1] for limit in appliedLimits]
+            if allkeys[iparam] in profiledParams:
+                # print('profiling limit!',allkeys[iparam])
+                iprof = profiledParams.index(allkeys[iparam])
+                # print('  profiled value',profiledValues[iprof],iprof)
+                ax.plot(
+                    [profiledValues[iprof], profiledValues[iprof]],
+                    [0, priorspan[iparam]],
+                    c='purple',
+                    ls=':',
+                    lw=2,
+                    zorder=4,
+                )
+
+            ax.set_xlim(priorlo[iparam], priorhi[iparam])
+            ax.set_ylim(0, priorspan[iparam] * 0.4)
+            ax.set_xlabel(allkeys[iparam], fontsize=14)
+            ax.set_ylabel('uncertainty', fontsize=14)
     figure.tight_layout()
     if savetodisk:
         plt.savefig(
@@ -816,6 +835,9 @@ def plot_vs_prior(
             + p
             + '.png'
         )
+
+    if verbose:
+        plt.show()
 
     return save_plot_tosv(figure), figure
 
@@ -852,7 +874,7 @@ def plot_walker_evolution(
         if key in prior_ranges.keys():
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
             priorloProfiled[ikey], priorhiProfiled[ikey] = prior_ranges[key]
-        # print(' new prior range:',priorlo[ikey],priorhi[ikey]
+        # print(' new prior range:',priorlo[ikey],priorhi[ikey])
 
     figure = plt.figure(figsize=(12, 6))
     linecolors = [
@@ -867,6 +889,7 @@ def plot_walker_evolution(
     ]
     chainLength = int(len(alltraces[0]) / Nchains)
     # chainLengthProfiled = int(len(profiledtraces[0]) / Nchains)
+    # print('Nparam,Nchains', Nparam, Nchains)
     for iparam in range(Nparam):
         ax = figure.add_subplot(2, int((Nparam + 1.0) / 2.0), iparam + 1)
         for ic in range(Nchains):

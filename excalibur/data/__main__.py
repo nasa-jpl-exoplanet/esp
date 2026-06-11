@@ -16,7 +16,7 @@ if __name__ == "__main__":
     if tn in ['', '__all__']:
         pass
     else:
-        NAME = ['calibration', 'collect', 'timing', None][
+        NAME = ['collect', 'timing', 'calibration', None][
             -1
         ]  # -1 to run them all
         subtasks = excalibur.data.task('data', 4, rid, tn)

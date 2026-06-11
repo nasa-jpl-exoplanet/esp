@@ -18,7 +18,7 @@ if __name__ == "__main__":
         NAME = 'analysis'
         subtasks = excalibur.cerberus.analysis('cerberus', 4, rid)
     else:
-        NAME = ['atmos', 'results', 'xslib', None][-1]  # -1 to run them all
+        NAME = ['xslib', 'atmos', 'results', None][-1]  # -1 to run them all
         subtasks = excalibur.cerberus.task('cerberus', 4, rid, tn)
         pass
 

@@ -18,7 +18,7 @@ if __name__ == "__main__":
         subtasks = excalibur.system.analysis('system', 4, rid)
         pass
     else:
-        NAME = ['finalize', 'validate', None][-1]  # -1 to run them all
+        NAME = ['validate', 'finalize', None][-1]  # -1 to run them all
         subtasks = excalibur.system.task('system', 4, rid, tn)
         pass
 
