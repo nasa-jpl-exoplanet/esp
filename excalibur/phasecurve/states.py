@@ -15,6 +15,21 @@ from excalibur.util.svs import ExcaliburSV
 
 # ------------- ------------------------------------------------------
 # -- SV -- -----------------------------------------------------------
+class PhasecurveSV(ExcaliburSV):
+    '''
+    J. Zanker
+    '''
+    def __init__(self, name):
+        '''__init__ ds'''
+        ExcaliburSV.__init__(self, name, dawgie.VERSION(1, 0, 0))
+
+    def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
+        '''view ds'''
+        if self['STATUS'][-1]:
+            pass
+        pass
+
+
 class NormSV(ExcaliburSV):
     '''phasecurve.normalization view'''
 

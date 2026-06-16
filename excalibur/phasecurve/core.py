@@ -453,3 +453,20 @@ def flaredetection(
 
     out['STATUS'].append(True)
     return bool(flare_results)
+
+
+def pcversion():
+    '''
+    1.0.0:J. Zanker:JWST 
+    '''
+    return dawgie.VERSION(1, 0, 0)
+
+def jwstphasecurve(nrm, fin, out):
+    '''
+    J. Zanker:JWST phase curves
+    [I]:nrm:[DICT]:transit.normalization SV as dict
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I/O]:out:[SV]:phasecurveSV()
+    '''
+    import pdb; pdb.set_trace()
+    return True
