@@ -30,7 +30,6 @@ from scipy.interpolate import interp1d
 
 log = logging.getLogger(__name__)
 
-
 # ------------- ------------------------------------------------------
 # -- SV -- -----------------------------------------------------------
 class NormSV(ExcaliburSV):

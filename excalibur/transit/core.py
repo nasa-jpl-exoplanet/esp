@@ -537,7 +537,6 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
-    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
@@ -3488,8 +3487,68 @@ def spectrumversion():
     N. Huber-Feely: 1.2.1 Add saving of trace to SV
     K. PEARSON: 1.2.2 JWST NIRISS
     R ESTRELA: 1.3.0 Merged Spectra Capability
+    GMR: 1.4.0 Added jwstspectrum()
     '''
-    return dawgie.VERSION(1, 3, 2)
+    return dawgie.VERSION(1, 4, 0)
+
+
+def jwstspectrum(out,
+                 nrm,
+                 fin,
+                 wht,
+                 rtp=None,
+                 chl=int(4e4),
+                 rjc=95,
+                 thr=10,
+                 verbose=False):
+    '''
+    GMR: JWST Spectral Light Curve Fit
+    [I/O]:out:[transit.states.SpectrumSV()]
+          out['data'][p]:[DICT]:output/planet
+    [I]:nrm:[transit.states.NormSV()]:transit.core.norm_jwst.__doc__
+    [I]:fin:[system.states.PriorsSV()]
+    [I]:wht:[transit.states.WhiteLightSV()]:transit.core.jwstwl.__doc__
+    [OPT]:rtp:[runtime.states.StatusSV()]
+    [OPT]:chl:[INT]:chain length
+    [OPT]:rjc:[FLOAT]:percentile used for outlier rejection
+    [OPT]:thr:[FLOAT]:outlier rejection threshold in sigmas
+    [OPT]:verbose:[BOOL]:plots
+    '''
+    spr = fin['priors'].copy()
+    ssc = syscore.ssconstants()
+    for pln in nrm['data']:
+        if verbose: log.info('>--< Planet %s >', pln)
+        out['data'][pln] = {}
+        rpors = spr[pln]['rp'] / spr['R*'] * ssc['Rjup/Rsun']
+        for det in nrm['data'][pln]['nspec']:
+            if verbose: log.info('>----< %s >', det)
+            out['data'][pln][det] = {}
+            for vis in nrm['data'][pln]['nspec'][det]:
+                if verbose: log.info('>------< Visit %s >', vis)
+                out['data'][pln][det][vis] = {}
+                trd = np.argsort(nrm['data'][pln]['time'][det][vis])
+                zndata = nrm['data'][pln]['nspec'][det][vis].copy() - 1e0
+                noise = np.nanstd(zndata[np.abs(zndata) <
+                                         np.nanpercentile(abs(zndata), rjc)])
+                # OUTLIERS REJECTION
+                zndata[abs(zndata) > thr*noise] = np.nan
+                zndata = 1e0 + zndata[trd].T
+                if verbose:
+                    tsp = '-'
+                    plt.figure(figsize=(12, 9))
+                    plt.title(pln + tsp + det + tsp + vis)
+                    plt.imshow(zndata,
+                               vmin=1e0 - rpors**2 - 3.*noise,
+                               vmax=1e0 + 3.*noise)
+                    plt.colorbar()
+                    plt.show()
+                    pass
+                
+                import pdb; pdb.set_trace()
+                pass
+            pass
+        pass
+    return True
 
 
 def spectrum(
