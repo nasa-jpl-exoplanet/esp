@@ -73,6 +73,7 @@ from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
 import os
 
 stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
+LETHE_dir = os.path.join(excalibur.context['data_dir'], 'LETHE')
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -117,6 +118,7 @@ ctxtglobals = [
     'mcmcsig',
     'nodeshape',
     'spec',
+    'LETHE',
 ]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
@@ -152,6 +154,7 @@ ctxt = CONTEXT(
     mcmcsig=None,
     nodeshape=None,
     spec=None,
+    LETHE=None,
 )
 
 
@@ -187,6 +190,7 @@ def ctxtupdt(
     mcmcsig=None,
     nodeshape=None,
     spec=None,
+    LETHE=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -223,6 +227,7 @@ def ctxtupdt(
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
         spec=spec,
+        LETHE=LETHE,
     )
     return
 
@@ -2027,6 +2032,26 @@ def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     [OPT]:thr:[INT]:percentile for valid data in [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
     '''
+
+    # Interpolators for LETHE
+    LETHE = []
+    interp_names = [
+        '/interpolator_G/f_G_0_25.pkl',
+        '/interpolator_G/f_G_0_50.pkl',
+        '/interpolator_G/f_G_0_75.pkl',
+        '/interpolator_G/f_G_1_00.pkl',
+        '/interpolator_F/f_F_0_50.pkl',
+        '/interpolator_F/f_F_1_00.pkl',
+        '/interpolator_F/f_F_1_50.pkl',
+        '/interpolator_F/f_F_2_00.pkl',
+    ]
+
+    for name in interp_names:
+        with open(LETHE_dir + name, 'rb') as file:
+            interpolator = pickle.load(file)
+        LETHE.append(interpolator)
+    ctxtupdt(LETHE=LETHE)
+
     planetloop = [
         thisp
         for thisp in map(chr, range(97, 123))
@@ -3005,6 +3030,7 @@ def tldlc(
     g7=0.0,
     g8=0.0,
     method="LETHE",
+    interpolator=None,
     nint=int(8**2),
 ):
     '''
@@ -3015,13 +3041,19 @@ def tldlc(
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
     g5...g8: Sophia Grusnis extented model
-    method: GMR,   occulted flux calculated thanks to numerical integration
-                   over the planet
-            LETHE, occulted flux calculated through interpolation
-    nint: Integral into discrete sum number of bins, only in case of GMR method
+    method: LETHE, occulted flux calculated through interpolation
+            Numerical integration otherwise
+    interpolator: List of 8 interpolators for LETHE method if the one
+                  from ctxt is None
+    nint: Integral into discrete sum number of bins
     '''
-    if method == "LETHE" :
-        occulted = occultation(z, rprs, g1, g2, g3, g4, g5, g6, g7, g8)
+    if method == "LETHE":
+        inter_list = sys.modules[__name__].ctxt.LETHE
+        if inter_list is None:
+            inter_list = interpolator
+        occulted = occultation(
+            z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, inter_list
+        )
         ldlc = 1.0 - occulted
     else:
         ldlc = np.zeros(z.size)
@@ -3051,73 +3083,94 @@ def tldlc(
         drop = np.sum(diffocc * si, axis=0)
         inldlc = 1.0 - drop
         ldlc[~select] = np.array(inldlc)
-    
+
     return ldlc
+
 
 # --------------------------------------- ----------------------------
 # -- STELLAR OCCULTATION LAW -- --------------------------------------
-def occultation(z, rprs, g1, g2, g3, g4, g5, g6, g7, g8,
-                a1=0.5, a2=1.0, a3=1.5, a4=2.0, a5=1.0,
-                a6=2.0, a7=3.0, a8=4.0):
-    
+def occultation(
+    z,
+    rprs,
+    g1,
+    g2,
+    g3,
+    g4,
+    g5,
+    g6,
+    g7,
+    g8,
+    inter_list,
+    a1=0.5,
+    a2=1.0,
+    a3=1.5,
+    a4=2.0,
+    a5=1.0,
+    a6=2.0,
+    a7=3.0,
+    a8=4.0,
+):
+
     outld = np.zeros(z.shape)
-    select = (z < 1.0 + rprs)
 
-    #grids loading
-    z_grid = np.load("/proj/sdp/data/LETHE/301_101/z_grid.npy")
-    rprs_grid = np.load("/proj/sdp/data/LETHE/301_101/rprs_grid.npy")
-    alpha_G_0_25 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.25.npy")
-    alpha_G_0_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.5.npy")
-    alpha_G_0_75 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/0.75.npy")
-    alpha_G_1_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_G/1.0.npy")
-    alpha_F_0_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/0.5.npy")
-    alpha_F_1_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/1.0.npy")
-    alpha_F_1_50 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/1.5.npy")
-    alpha_F_2_00 = np.load("/proj/sdp/data/LETHE/301_101/grid_F/2.0.npy")
+    if inter_list is not None:
+        select = z < 1.0 + rprs
 
-    #Spline interpolator
-    f_G_0_25 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_25)
-    f_G_0_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_50)
-    f_G_0_75 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_0_75)
-    f_G_1_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_G_1_00)
-    f_F_0_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_0_50)
-    f_F_1_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_1_00)
-    f_F_1_50 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_1_50)
-    f_F_2_00 = RectBivariateSpline(z_grid, rprs_grid, alpha_F_2_00)
+        # Interpolators
+        f_G_0_25 = inter_list[0]
+        f_G_0_50 = inter_list[1]
+        f_G_0_75 = inter_list[2]
+        f_G_1_00 = inter_list[3]
+        f_F_0_50 = inter_list[4]
+        f_F_1_00 = inter_list[5]
+        f_F_1_50 = inter_list[6]
+        f_F_2_00 = inter_list[7]
 
-    #contribution computation
-    s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
-    s2 = g2 * f_G_0_50(z[select], rprs, grid=False)
-    s3 = g3 * f_G_0_75(z[select], rprs, grid=False)
-    s4 = g4 * f_G_1_00(z[select], rprs, grid=False)
-    s5 = - g5 * f_F_0_50(z[select], rprs, grid=False)
-    s6 = - g6 * f_F_1_00(z[select], rprs, grid=False)
-    s7 = - g7 * f_F_1_50(z[select], rprs, grid=False)
-    s8 = - g8 * f_F_2_00(z[select], rprs, grid=False)
+        # contribution computation
+        s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
+        s2 = g2 * f_G_0_50(z[select], rprs, grid=False)
+        s3 = g3 * f_G_0_75(z[select], rprs, grid=False)
+        s4 = g4 * f_G_1_00(z[select], rprs, grid=False)
+        s5 = -g5 * f_F_0_50(z[select], rprs, grid=False)
+        s6 = -g6 * f_F_1_00(z[select], rprs, grid=False)
+        s7 = -g7 * f_F_1_50(z[select], rprs, grid=False)
+        s8 = -g8 * f_F_2_00(z[select], rprs, grid=False)
 
-    #normalization computation
-    ldnorm = (
-        ( - a1 * g1 / 2e0 / (2e0+a1)
-          - a2 * g2 / 2e0 / (2e0+a2)
-          - a3 * g3 / 2e0 / (2e0+a3)
-          - a4 * g4 / 2e0 / (2e0+a4)
-          + g5 / (a5+2e0)**2
-          + g6 / (a6+2e0)**2
-          + g7 / (a7+2e0)**2
-          + g8 / (a8+2e0)**2
-          + 5e-1)
-                  * 2e0
-                  * np.pi
-    )
-    
-    #surface crossing between star and planet
-    surface = circle_intersection_area(1.0, rprs, z[select])
+        # normalization computation
+        ldnorm = (
+            (
+                -a1 * g1 / 2e0 / (2e0 + a1)
+                - a2 * g2 / 2e0 / (2e0 + a2)
+                - a3 * g3 / 2e0 / (2e0 + a3)
+                - a4 * g4 / 2e0 / (2e0 + a4)
+                + g5 / (a5 + 2e0) ** 2
+                + g6 / (a6 + 2e0) ** 2
+                + g7 / (a7 + 2e0) ** 2
+                + g8 / (a8 + 2e0) ** 2
+                + 5e-1
+            )
+            * 2e0
+            * np.pi
+        )
 
-    #total occulted flux
-    outld[select] = (surface*(1e0 - (g1 + g2 + g3 + g4)) 
-                     + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 ) / ldnorm
+        # surface crossing between star and planet
+        surface = circle_intersection_area(1.0, rprs, z[select])
+
+        # total occulted flux
+        outld[select] = (
+            surface * (1e0 - (g1 + g2 + g3 + g4))
+            + s1
+            + s2
+            + s3
+            + s4
+            + s5
+            + s6
+            + s7
+            + s8
+        ) / ldnorm
 
     return outld
+
 
 # --------------------------------------- ----------------------------
 # -- CIRCLE INTERSECTION AREA -- -------------------------------------
@@ -3133,21 +3186,26 @@ def circle_intersection_area(r1, r2, d):
     S = np.zeros(d.shape)
 
     # total intersection
-    select_2 = (d <= abs(r1 - r2))
-    S[select_2] = np.pi * min(r1, r2)**2
+    select_2 = d <= abs(r1 - r2)
+    S[select_2] = np.pi * min(r1, r2) ** 2
 
     # partial intersection
-    term1 = r1**2 * np.acos((d[~select_2]**2 + r1**2 - r2**2) / (2 * d[~select_2] * r1))
-    term2 = r2**2 * np.acos((d[~select_2]**2 + r2**2 - r1**2) / (2 * d[~select_2] * r2))
+    term1 = r1**2 * np.acos(
+        (d[~select_2] ** 2 + r1**2 - r2**2) / (2 * d[~select_2] * r1)
+    )
+    term2 = r2**2 * np.acos(
+        (d[~select_2] ** 2 + r2**2 - r1**2) / (2 * d[~select_2] * r2)
+    )
     term3 = 0.5 * np.sqrt(
-        (-d[~select_2] + r1 + r2) *
-        ( d[~select_2] + r1 - r2) *
-        ( d[~select_2] - r1 + r2) *
-        ( d[~select_2] + r1 + r2)
+        (-d[~select_2] + r1 + r2)
+        * (d[~select_2] + r1 - r2)
+        * (d[~select_2] - r1 + r2)
+        * (d[~select_2] + r1 + r2)
     )
     S[~select_2] = term1 + term2 - term3
 
     return S
+
 
 # --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
