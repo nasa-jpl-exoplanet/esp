@@ -50,6 +50,7 @@ from scipy.signal import savgol_filter
 from scipy.stats import gaussian_kde
 
 import numpy as np
+import pickle
 
 try:
     import astropy.constants

@@ -1,7 +1,9 @@
+'''grid generation for LETHE method'''
+
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import integrate
 from scipy.interpolate import RectBivariateSpline
+import pickle
 
 
 def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
@@ -14,7 +16,7 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
     # Parameters generation
     z_1 = np.arange(0.0, 0.8, step_z_1)
     z_2 = np.arange(0.8, 1.2 + step_z_2, step_z_2)
-    z_grid = np.concatenate((step_z_1, step_z_2))
+    z_grid = np.concatenate((z_1, z_2))
     rprs_grid = np.arange(0.0, 0.2 + step_rprs, step_rprs)
 
     # Parameters saving
@@ -39,7 +41,7 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
 
     # powers of the LD model
     alpha_test_1 = np.array([1.0 / 4.0, 2.0 / 4.0, 3.0 / 4.0, 4.0 / 4.0])
-    alpha_test_2 = 2.0 * alpha_test_1
+    alpha_test = np.concatenate((alpha_test_1, 2.0 * alpha_test_1))
 
     def compute_integral_1(z, rprs, alpha):
         res, err = integrate.dblquad(
@@ -63,55 +65,49 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
         )
         return res
 
-    int = [1, 2]
     interp_names = [
-        [
-            '/interpolator_G/f_G_0_25.pkl',
-            '/interpolator_G/f_G_0_50.pkl',
-            '/interpolator_G/f_G_0_75.pkl',
-            '/interpolator_G/f_G_1_00.pkl',
-        ],
-        [
-            '/interpolator_F/f_F_0_50.pkl',
-            '/interpolator_F/f_F_1_00.pkl',
-            '/interpolator_F/f_F_1_50.pkl',
-            '/interpolator_F/f_F_2_00.pkl',
-        ],
+        '/interpolator_G/f_G_0_25.pkl',
+        '/interpolator_G/f_G_0_50.pkl',
+        '/interpolator_G/f_G_0_75.pkl',
+        '/interpolator_G/f_G_1_00.pkl',
+        '/interpolator_F/f_F_0_50.pkl',
+        '/interpolator_F/f_F_1_00.pkl',
+        '/interpolator_F/f_F_1_50.pkl',
+        '/interpolator_F/f_F_2_00.pkl',
     ]
 
+    z, rprs = np.meshgrid(z_grid, rprs_grid, indexing='ij')
     # Computation of the values
-    for i in int:
-        if i == 1:
-            for j in range(len(alpha_test_1)):
-
-                # Integrals computation
-                XR, RP = np.meshgrid(z_grid, rprs_grid, indexing='ij')
-                vec_integral_1 = np.vectorize(
-                    lambda z_grid, rprs_grid: compute_integral_1(
-                        z_grid, rprs_grid, alpha_test_1[j]
-                    )
+    for index, name in enumerate(interp_names):
+        if index <= 3:
+            # Integrals computation
+            vec_integral_1 = np.vectorize(
+                lambda z_grid, rprs_grid: compute_integral_1(
+                    z_grid, rprs_grid, alpha_test[index]
                 )
-                I = vec_integral_1(XR, RP)
-                np.save(path + "/grid_G/" + str(alpha_test_1[j]) + ".npy", I)
+            )
+            integral = vec_integral_1(z, rprs)
+            np.save(
+                path + "/grid_G/" + str(alpha_test[index]) + ".npy", integral
+            )
 
-                # Interpolation computation
-                interpolator = RectBivariateSpline(z_grid, rprs_grid, I)
-                with open(path + interp_names[0][j], "wb") as file:
-                    pickle.dump(interpolator, file)
+            # Interpolation computation
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, integral)
+            with open(path + name, "wb") as file:
+                pickle.dump(interpolator, file)
         else:
-            for j in range(len(alpha_test_2)):
-
-                # Integrals computation
-                XR, RP = np.meshgrid(z_grid, rprs_grid, indexing='ij')
-                vec_integral_2 = np.vectorize(
-                    lambda z_grid, rprs_grid: compute_integral_2(
-                        z_grid, rprs_grid, alpha_test_2[j]
-                    )
+            # Integrals computation
+            vec_integral_2 = np.vectorize(
+                lambda z_grid, rprs_grid: compute_integral_2(
+                    z_grid, rprs_grid, alpha_test[index]
                 )
-                I = vec_integral_2(XR, RP)
-                np.save(path + "/grid_F/" + str(alpha_test_2[j]) + ".npy", I)
+            )
+            integral = vec_integral_2(z, rprs)
+            np.save(
+                path + "/grid_F/" + str(alpha_test[index]) + ".npy", integral
+            )
 
-                # Interpolation computation
-                interpolator = RectBivariateSpline(z_grid, rprs_grid, I)
-                with open(path + interp_names[1][j], "wb") as file:
-                    pickle.dump(interpolator, file)
+            # Interpolation computation
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, integral)
+            with open(path + name, "wb") as file:
+                pickle.dump(interpolator, file)
