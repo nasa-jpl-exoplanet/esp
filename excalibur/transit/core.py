@@ -3051,11 +3051,11 @@ def tldlc(
     nint: Integral into discrete sum number of bins
     '''
     if method == "LETHE":
-        inter_list = sys.modules[__name__].ctxt.LETHE
-        if inter_list is None:
-            inter_list = interpolator
+        interpolators_list = sys.modules[__name__].ctxt.LETHE
+        if interpolators_list is None:
+            interpolators_list = interpolator
         occulted = occultation(
-            z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, inter_list
+            z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, interpolators_list
         )
         ldlc = 1.0 - occulted
     else:
@@ -3103,7 +3103,7 @@ def occultation(
     g6,
     g7,
     g8,
-    inter_list,
+    interpolators_list,
     a1=0.5,
     a2=1.0,
     a3=1.5,
@@ -3116,18 +3116,18 @@ def occultation(
 
     outld = np.zeros(z.shape)
 
-    if inter_list is not None:
+    if interpolators_list is not None:
         select = z < 1.0 + rprs
 
         # Interpolators
-        f_G_0_25 = inter_list[0]
-        f_G_0_50 = inter_list[1]
-        f_G_0_75 = inter_list[2]
-        f_G_1_00 = inter_list[3]
-        f_F_0_50 = inter_list[4]
-        f_F_1_00 = inter_list[5]
-        f_F_1_50 = inter_list[6]
-        f_F_2_00 = inter_list[7]
+        f_G_0_25 = interpolators_list[0]
+        f_G_0_50 = interpolators_list[1]
+        f_G_0_75 = interpolators_list[2]
+        f_G_1_00 = interpolators_list[3]
+        f_F_0_50 = interpolators_list[4]
+        f_F_1_00 = interpolators_list[5]
+        f_F_1_50 = interpolators_list[6]
+        f_F_2_00 = interpolators_list[7]
 
         # contribution computation
         s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
