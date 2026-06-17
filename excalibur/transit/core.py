@@ -48,9 +48,9 @@ from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
 from scipy.signal import savgol_filter
 from scipy.stats import gaussian_kde
+from scipy.interpolate import RectBivariateSpline
 
 import numpy as np
-from scipy.interpolate import RectBivariateSpline
 
 try:
     import astropy.constants
