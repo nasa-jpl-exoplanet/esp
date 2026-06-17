@@ -5,7 +5,7 @@ from scipy import integrate
 from scipy.interpolate import RectBivariateSpline
 import pickle
 
-path = "/proj/sdp/data/LETHE"
+PATH = "/proj/sdp/data/LETHE"
 interpolation_names = [
     '/interpolator_G/f_G_0_25.pkl',
     '/interpolator_G/f_G_0_50.pkl',
@@ -98,8 +98,8 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
     )
 
     # Parameters saving
-    np.save(path + "/parameters/z_grid.npy", z_grid)
-    np.save(path + "/parameters/rprs_grid.npy", rprs_grid)
+    np.save(PATH + "/parameters/z_grid.npy", z_grid)
+    np.save(PATH + "/parameters/rprs_grid.npy", rprs_grid)
 
     # integrals computation
     integral_1 = vectorize_integral_1(
@@ -131,5 +131,5 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
         interpolators_list.append(interpolator)
 
     for name, interpolator in zip(interpolation_names, interpolators_list):
-        with open(path + name, "wb") as file:
+        with open(PATH + name, "wb") as file:
             pickle.dump(interpolator, file)
