@@ -50,7 +50,7 @@ from scipy.signal import savgol_filter
 from scipy.stats import gaussian_kde
 
 import numpy as np
-import pickle
+from scipy.interpolate import RectBivariateSpline
 
 try:
     import astropy.constants
@@ -2035,21 +2035,23 @@ def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     '''
 
     # Interpolators for LETHE
+    z_grid = np.load(LETHE_dir + "/parameters/z_grid")
+    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid")
     LETHE = []
-    interp_names = [
-        '/interpolator_G/f_G_0_25.pkl',
-        '/interpolator_G/f_G_0_50.pkl',
-        '/interpolator_G/f_G_0_75.pkl',
-        '/interpolator_G/f_G_1_00.pkl',
-        '/interpolator_F/f_F_0_50.pkl',
-        '/interpolator_F/f_F_1_00.pkl',
-        '/interpolator_F/f_F_1_50.pkl',
-        '/interpolator_F/f_F_2_00.pkl',
+    grid_names = [
+        '/grid_G/0.25.npy',
+        '/grid_G/0.5.npy',
+        '/grid_G/0.75.npy',
+        '/grid_G/1.0.npy',
+        '/grid_F/0.5.npy',
+        '/grid_F/1.0.npy',
+        '/grid_F/1.5.npy',
+        '/grid_F/2.0.npy',
     ]
 
-    for name in interp_names:
-        with open(LETHE_dir + name, 'rb') as file:
-            interpolator = pickle.load(file)
+    for name in grid_names:
+        grid = np.load(LETHE_dir + name)
+        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
         LETHE.append(interpolator)
     ctxtupdt(LETHE=LETHE)
 

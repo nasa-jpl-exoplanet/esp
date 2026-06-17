@@ -3,18 +3,17 @@
 import numpy as np
 from scipy import integrate
 from scipy.interpolate import RectBivariateSpline
-import pickle
 
 PATH = "/proj/sdp/data/LETHE"
-interpolation_names = [
-    '/interpolator_G/f_G_0_25.pkl',
-    '/interpolator_G/f_G_0_50.pkl',
-    '/interpolator_G/f_G_0_75.pkl',
-    '/interpolator_G/f_G_1_00.pkl',
-    '/interpolator_F/f_F_0_50.pkl',
-    '/interpolator_F/f_F_1_00.pkl',
-    '/interpolator_F/f_F_1_50.pkl',
-    '/interpolator_F/f_F_2_00.pkl',
+grid_names = [
+    '/grid_G/0.25.npy',
+    '/grid_G/0.5.npy',
+    '/grid_G/0.75.npy',
+    '/grid_G/1.0.npy',
+    '/grid_F/0.5.npy',
+    '/grid_F/1.0.npy',
+    '/grid_F/1.5.npy',
+    '/grid_F/2.0.npy',
 ]
 
 
@@ -125,11 +124,5 @@ def grid_generation(step_z_1=0.01, step_z_2=0.001, step_rprs=0.002):
         integral_2[:, :, 3],
     ]
 
-    interpolators_list = []
-    for integral in integrals_list:
-        interpolator = RectBivariateSpline(z_grid, rprs_grid, integral)
-        interpolators_list.append(interpolator)
-
-    for name, interpolator in zip(interpolation_names, interpolators_list):
-        with open(PATH + name, "wb") as file:
-            pickle.dump(interpolator, file)
+    for name, integral in zip(grid_names, integrals_list):
+        np.save(PATH + name, integral)
