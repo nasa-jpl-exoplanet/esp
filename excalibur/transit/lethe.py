@@ -2,7 +2,6 @@
 
 import numpy as np
 from scipy import integrate
-from scipy.interpolate import RectBivariateSpline
 
 PATH = "/proj/sdp/data/LETHE"
 grid_names = [
