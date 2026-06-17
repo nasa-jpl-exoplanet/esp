@@ -166,7 +166,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
     '''
 
     applied_limits = []
-    proftrace = np.ones(len(alltraces[0]), dtype=int)
+    profile_mask = np.ones(len(alltraces[0]), dtype=int)
     if target in limits:
         for limit in limits[target]:
             if limit[0] in allkeys:
@@ -177,7 +177,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                 applied_limits.append(limit)
 
                 if limit[2] == '>':
-                    proftrace[
+                    profile_mask[
                         np.where(alltraces[allkeys.index(limit[0])] <= limit[1])
                     ] = 0
                     if (
@@ -194,7 +194,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                             limit,
                         )
                 else:
-                    proftrace[
+                    profile_mask[
                         np.where(alltraces[allkeys.index(limit[0])] >= limit[1])
                     ] = 0
                     if (
@@ -211,7 +211,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                             limit,
                         )
 
-    return proftrace, applied_limits
+    return profile_mask, applied_limits
 
 
 def add_priors(

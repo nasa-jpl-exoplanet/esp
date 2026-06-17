@@ -56,6 +56,7 @@ from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 
 import pymc
+import pytensor.tensor as pytensr
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -912,7 +913,11 @@ def atmos(
                     if not runtime_params.fitT:
                         fixed_params['T'] = eqtemp
                     if not runtime_params.fitCtoO:
-                        if 'model_params' in input_data:
+                        print('inputdata keys', input_data.keys())
+                        print('modelparams', input_data['model_params'])
+                        # if 'model_params' in input_data:
+                        # model_params should always exist, but might be 'None'
+                        if 'C/O' in input_data['model_params']:
                             fixed_params['CtoO'] = input_data['model_params'][
                                 'C/O'
                             ]
@@ -920,7 +925,7 @@ def atmos(
                             fixed_params['CtoO'] = 0.0
                     if not runtime_params.fitNtoO:
                         fixed_params['NtoO'] = 0.0
-                    # print('fixedparams',fixedParams)
+                    # print('fixedparams',fixed_params)
 
                     # OFFSET BETWEEN STIS AND WFC3 filters
                     if 'STIS-WFC3' in ext:
@@ -1198,6 +1203,18 @@ def atmos(
                             observed=tspectrum[cleanup],
                             logp=LogLH,
                         )
+                        # save the logLikelihood values for each pymc step
+                        # pymc.Deterministic(
+                        #    "saved logLikelihood",
+                        #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                        # )
+                        # save the chi-squared values for each pymc step
+                        # (mulitply the logLikelihood by -2)
+                        pymc.Deterministic(
+                            "saved chi2",
+                            -2.0
+                            * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                        )
                         # --------------
                         pass
                     else:
@@ -1322,11 +1339,24 @@ def atmos(
 
                             TensorModel = TensorShell()
 
-                            _ = pymc.CustomDist(
+                            pymc.CustomDist(
                                 "likelihood for cloudy spectrum",
                                 nodes,
                                 observed=tspectrum[cleanup],
                                 logp=LogLH,
+                            )
+
+                            # save the logLikelihood values for each pymc step
+                            # pymc.Deterministic(
+                            #    "saved logLikelihood",
+                            #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
+                            # )
+                            # save the chi-squared values for each pymc step
+                            # (mulitply the logLikelihood by -2)
+                            pymc.Deterministic(
+                                "saved chi2",
+                                -2.0
+                                * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
                             )
                             # --------------
                         pass
@@ -1361,6 +1391,17 @@ def atmos(
 
                 # N_TEC = len(trace.posterior.TEC_dim_0)
                 # print('# of TEC parameters',N_TEC)
+
+                saved_chi2s = trace.posterior['saved chi2'].values
+                # print('shape of loglikelihoods', saved_chi2s.shape)
+                # have to unravel these, to match the unraveled pymc traces
+                out['data'][p][model]['chi2'] = np.ravel(saved_chi2s, order='F')
+                degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
+                # print('DOF', degrees_of_freedom,
+                #      len(tspectrum[cleanup]), len(nodes))
+                out['data'][p][model]['chi2reduced'] = np.ravel(
+                    saved_chi2s / degrees_of_freedom, order='F'
+                )
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
@@ -1412,7 +1453,16 @@ def atmos(
                 for key, thistrace in mctrace.items():
                     # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
-                    if model == 'TEC':
+                    if key == 'saved chi2':
+                        all_keys.append('$\\chi^2$')
+
+                        # switch from chi2 to reduced chi2
+                        all_keys[-1] = '$\\chi^2_{red}$'
+                        degrees_of_freedom = len(tspectrum[cleanup]) - len(
+                            nodes
+                        )
+                        all_traces[-1] = all_traces[-1] / degrees_of_freedom
+                    elif model == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
@@ -1465,8 +1515,7 @@ def atmos(
                     spc['data']['target'],
                     p,
                     bins=runtime_params.cornerBins,
-                    verbose=True,
-                    # verbose=False,
+                    verbose=verbose,
                 )
                 plot_walker_evolution(
                     all_keys,
@@ -1480,7 +1529,7 @@ def atmos(
                     spc['data']['target'],
                     p,
                     Nchains=Nchains,
-                    verbose=True,
+                    # verbose=True,
                 )
 
             out['data'][p]['VALID'] = cleanup
@@ -1823,6 +1872,71 @@ def resultsversion():
 
 
 # ------------------------------ -------------------------------------
+
+
+def calculateSpectrum(
+    fit_params,
+    runtime_params,
+    p,
+    rp0,
+    fin,
+    xsl,
+    transitdata,
+):
+    '''
+    calculate a spectrum for the given set of fit-parameters
+    also calculate how well the data matches this spectrum (chi2)
+    '''
+    T, CTP, hazescale, hazeloc, hazethick, tceqdict, mixratio = fit_params
+
+    crbhzlib = {'PROFILE': []}
+    hazedir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE')
+    hazelib(crbhzlib, hazedir=hazedir, verbose=False)
+
+    fmc = np.zeros(transitdata['depth'].size)
+    fmc = crbFM().crbmodel(
+        float(T),
+        float(CTP),
+        hazescale=float(hazescale),
+        hazeloc=float(hazeloc),
+        hazethick=float(hazethick),
+        mixratio=mixratio,
+        cheq=tceqdict,
+        rp0=rp0,
+        xsecs=xsl[p]['XSECS'],
+        qtgrid=xsl[p]['QTGRID'],
+        wgrid=transitdata['wavelength'],
+        orbp=fin['priors'],
+        hzlib=crbhzlib,
+        planet=p,
+        knownspecies=runtime_params.knownspecies,
+        cialist=runtime_params.cialist,
+        xmollist=runtime_params.xmollist,
+        lbroadening=runtime_params.lbroadening,
+        lshifting=runtime_params.lshifting,
+        nlevels=runtime_params.nlevels,
+        Hsmax=runtime_params.Hsmax,
+        solrad=runtime_params.solrad,
+    )
+    spectrum = fmc.spectrum
+
+    # add offset to match data (i.e. modify Rp)
+    okPart = np.where(np.isfinite(transitdata['depth']))
+    patmos = spectrum[okPart] + np.average(
+        (transitdata['depth'][okPart] - spectrum[okPart]),
+        weights=1 / transitdata['error'][okPart] ** 2,
+    )
+
+    # calculate chi2 values to see which is the best fit
+    offsets = (patmos - transitdata['depth'][okPart]) / transitdata['error'][
+        okPart
+    ]
+    chi2 = np.nansum(offsets**2)
+
+    return patmos, chi2
+
+
+# ------------------------------ -------------------------------------
 def results(
     trgt,
     filt,
@@ -1881,7 +1995,6 @@ def results(
                 trgt,
                 p,
             )
-
         else:
             out['data'][p] = {}
 
@@ -1906,7 +2019,25 @@ def results(
                 for key in atm[p][model_name]['MCTRACE']:
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(atm[p][model_name]['MCTRACE'][key])
-                    if model_name == 'TEC':
+                    if key == 'saved chi2':
+                        chi2values = all_traces[-1]
+                        all_keys.append('$\\chi^2$')
+
+                        # switch from chi2 to reduced chi2
+                        all_keys[-1] = '$\\chi^2_{red}$'
+
+                        degrees_of_freedom = (
+                            len(atm[p]['WAVELENGTH'])
+                            - len(atm[p][model_name]['MCTRACE'])
+                            + 1
+                        )
+                        # print('degrees of freedom',
+                        #      degrees_of_freedom,
+                        #      len(atm[p]['WAVELENGTH']),
+                        #      len(atm[p][model_name]['MCTRACE']))
+                        all_traces[-1] = chi2values / degrees_of_freedom
+
+                    elif model_name == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
@@ -1942,21 +2073,25 @@ def results(
                 # print('all_keys',all_keys)
 
                 # remove the traced phase space that is excluded by profiling
-                profile_trace, applied_limits = apply_profiling(
+                profile_mask, applied_limits = apply_profiling(
                     trgt + ' ' + p, profiling_limits, all_traces, all_keys
                 )
-                keepers = np.where(profile_trace == 1)
+                keepers = np.where(profile_mask == 1)
                 # don't do profiling if it excludes every single walker
                 if len(keepers[0]) == 0:
                     log.warning(
                         '--< Profiling removes everything! %s >--', trgt
                     )
-                    keepers = np.where(profile_trace == 0)
+                    keepers = np.where(profile_mask == 0)
                 profiled_traces = []
                 for key in atm[p][model_name]['MCTRACE']:
-                    profiled_traces.append(
-                        atm[p][model_name]['MCTRACE'][key][keepers]
-                    )
+                    if key == 'saved chi2':
+                        chi2values = atm[p][model_name]['MCTRACE'][key][keepers]
+                        profiled_traces.append(chi2values / degrees_of_freedom)
+                    else:
+                        profiled_traces.append(
+                            atm[p][model_name]['MCTRACE'][key][keepers]
+                        )
                 profiled_traces = np.array(profiled_traces)
 
                 # make note of the bounds placed on each parameter
@@ -2084,11 +2219,11 @@ def results(
                         tceqdict_profiled['CtoO'] = float(mdp_profiled[1])
                     else:
                         if ('TRUTH_MODELPARAMS' in atm[p]) and (
-                            'CtoO' in atm[p]['TRUTH_MODELPARAMS']
+                            'C/O' in atm[p]['TRUTH_MODELPARAMS']
                         ):
                             # print('truth params',atm[p]['TRUTH_MODELPARAMS'])
                             tceqdict['CtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                'CtoO'
+                                'C/O'
                             ]
                         else:
                             # default is Solar
@@ -2135,13 +2270,7 @@ def results(
                         '--< Expecting TEQ, TEC, or PHOTOCHEM model! >--'
                     )
 
-                crbhzlib = {'PROFILE': []}
-                hazedir = os.path.join(
-                    excalibur.context['data_dir'], 'CERBERUS/HAZE'
-                )
-                hazelib(crbhzlib, hazedir=hazedir, verbose=False)
-
-                param_values_median = (
+                param_values_median = [
                     tpr,
                     ctp,
                     hazescale,
@@ -2149,8 +2278,18 @@ def results(
                     hazethick,
                     tceqdict,
                     mixratio,
+                ]
+                patmos_model, chi2model = calculateSpectrum(
+                    param_values_median,
+                    runtime_params,
+                    p,
+                    rp0,
+                    fin,
+                    xsl,
+                    transitdata,
                 )
-                param_values_profiled = (
+
+                param_values_profiled = [
                     tpr_profiled,
                     ctp_profiled,
                     hazescale_profiled,
@@ -2158,203 +2297,152 @@ def results(
                     hazethick_profiled,
                     tceqdict_profiled,
                     mixratio_profiled,
+                ]
+                # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
+                patmos_model_profiled, _ = calculateSpectrum(
+                    param_values_profiled,
+                    runtime_params,
+                    p,
+                    rp0,
+                    fin,
+                    xsl,
+                    transitdata,
                 )
+                # print('median params', tpr, tceqdict)
+                # print('chi2 from posterior medians', chi2model)
+                # print('')
 
-                # print('median fmc',np.nanmedian(fmc))
-                fmc = np.zeros(transitdata['depth'].size)
-                fmc = crbFM().crbmodel(
-                    float(tpr),
-                    float(ctp),
-                    hazescale=float(hazescale),
-                    hazeloc=float(hazeloc),
-                    hazethick=float(hazethick),
-                    mixratio=mixratio,
-                    cheq=tceqdict,
-                    rp0=rp0,
-                    xsecs=xsl[p]['XSECS'],
-                    qtgrid=xsl[p]['QTGRID'],
-                    wgrid=transitdata['wavelength'],
-                    orbp=fin['priors'],
-                    hzlib=crbhzlib,
-                    planet=p,
-                    knownspecies=runtime_params.knownspecies,
-                    cialist=runtime_params.cialist,
-                    xmollist=runtime_params.xmollist,
-                    lbroadening=runtime_params.lbroadening,
-                    lshifting=runtime_params.lshifting,
-                    nlevels=runtime_params.nlevels,
-                    Hsmax=runtime_params.Hsmax,
-                    solrad=runtime_params.solrad,
-                )
-                spectrum = fmc.spectrum
+                # print('true XtoH', atm[p]['TRUTH_MODELPARAMS']['metallicity'])
+                # print('true CtoO', atm[p]['TRUTH_MODELPARAMS']['C/O'])
 
-                # add offset to match data (i.e. modify Rp)
-                okPart = np.where(np.isfinite(transitdata['depth']))
-                patmos_model = spectrum[okPart] + np.average(
-                    (transitdata['depth'][okPart] - spectrum[okPart]),
-                    weights=1 / transitdata['error'][okPart] ** 2,
-                )
+                if 'chi2reduced' in atm[p][model_name]:
+                    param_values_bestfit = param_values_profiled
 
-                fmc_profiled = np.zeros(transitdata['depth'].size)
-                fmc_profiled = crbFM().crbmodel(
-                    float(tpr_profiled),
-                    float(ctp_profiled),
-                    hazescale=float(hazescale_profiled),
-                    hazeloc=float(hazeloc_profiled),
-                    hazethick=float(hazethick_profiled),
-                    mixratio=mixratio_profiled,
-                    rp0=rp0,
-                    xsecs=xsl[p]['XSECS'],
-                    qtgrid=xsl[p]['QTGRID'],
-                    wgrid=transitdata['wavelength'],
-                    orbp=fin['priors'],
-                    hzlib=crbhzlib,
-                    cheq=tceqdict_profiled,
-                    planet=p,
-                    knownspecies=runtime_params.knownspecies,
-                    cialist=runtime_params.cialist,
-                    xmollist=runtime_params.xmollist,
-                    lbroadening=runtime_params.lbroadening,
-                    lshifting=runtime_params.lshifting,
-                    nlevels=runtime_params.nlevels,
-                    Hsmax=runtime_params.Hsmax,
-                    solrad=runtime_params.solrad,
-                )
-                spectrum_profiled = fmc_profiled.spectrum
-                # add offset to match data (i.e. modify Rp)
-                okPart = np.where(np.isfinite(transitdata['depth']))
-                patmos_model_profiled = spectrum_profiled[okPart] + np.average(
-                    (transitdata['depth'][okPart] - spectrum_profiled[okPart]),
-                    weights=1 / transitdata['error'][okPart] ** 2,
-                )
+                    # best log-likelihood comes directly from main run saved-logL
+                    # print(
+                    #    'best chi2 from the full set of walkers!!',
+                    #    np.min(atm[p][model_name]['chi2']),
+                    # )
+                    #    np.min(atm[p][model_name]['chi2reduced']),
+                    chi2values = atm[p][model_name]['chi2reduced']
+                    # print(chi2values.shape)
+                    ibest = np.where(chi2values == np.min(chi2values))[0][0]
+                    # print('ibest', ibest)
+                    #  these two both work to give a single float value:
+                    # print('  examples', chi2values[ibest][0])
+                    # print('  examples', chi2values[ibest[0][0]])
+                    # print('all_keys', all_keys)
+                    for trace, key in zip(all_traces, all_keys):
+                        # print(' best params', key, trace[ibest])
+                        if key == 'T':
+                            param_values_bestfit[0] = trace[ibest]
+                        elif key == 'CTP':
+                            param_values_bestfit[1] = trace[ibest]
+                        elif key == 'HScale':
+                            param_values_bestfit[2] = trace[ibest]
+                        elif key == 'HLoc':
+                            param_values_bestfit[3] = trace[ibest]
+                        elif key == 'HThick':
+                            param_values_bestfit[4] = trace[ibest]
+                        elif key == '[X/H]':
+                            param_values_bestfit[5]['XtoH'] = trace[ibest]
+                        elif key == '[C/O]':
+                            param_values_bestfit[5]['CtoO'] = trace[ibest]
+                        elif key == '[N/O]':
+                            param_values_bestfit[5]['NtoO'] = trace[ibest]
+                        elif key == 'mixratio':
+                            param_values_bestfit[5] = 666
+                            log.error('not done yet. geoff to do')
+                        elif key == '$\\chi^2_{red}$':
+                            pass
+                        else:
+                            log.error('TROUBLE with best LogL: unknown param')
+                    # print('best params', param_values_bestfit)
+                    # print('')
+                    patmos_bestfit, chi2best = calculateSpectrum(
+                        param_values_bestfit,
+                        runtime_params,
+                        p,
+                        rp0,
+                        fin,
+                        xsl,
+                        transitdata,
+                    )
 
-                # calculate chi2 values to see which is the best fit
-                offsets_model = (
-                    patmos_model - transitdata['depth'][okPart]
-                ) / transitdata['error'][okPart]
-                chi2model = np.nansum(offsets_model**2)
-                # print('chi2model', chi2model)
+                else:
+                    # if there's no saved-logL info, use the old brute-force method
+                    # make an array of some randomly selected walker results
 
-                # actually the profiled chi2 isn't used below just now, so has to be commented out
-                # offsets_modelProfiled = (patmos_modelProfiled - transitdata['depth'][okPart]) / transitdata['error'][okPart]
-                # chi2modelProfiled = np.nansum(offsets_modelProfiled**2)
-                # print('chi2 after profiling',chi2modelProfiled)
-
-                # make an array of some randomly selected walker results
-                # fix the random seed for each target/planet, so that results are reproducable
-                int_from_target = (
-                    1  # arbitrary initialization for the random seed
-                )
-                for char in trgt + ' ' + p:
+                    # fix the random seed for each target/planet, so that results are reproducable
                     int_from_target = (
-                        runtime_params.randomseed * int_from_target + ord(char)
-                    ) % 100000
-                np.random.seed(int_from_target)
+                        1  # arbitrary initialization for the random seed
+                    )
+                    for char in trgt + ' ' + p:
+                        int_from_target = (
+                            runtime_params.randomseed * int_from_target
+                            + ord(char)
+                        ) % 100000
+                    np.random.seed(int_from_target)
 
-                chi2best = chi2model
-                patmos_best_fit = patmos_model
-                param_values_best_fit = param_values_profiled
-                spectrumarray = []
-                nwalkersteps = len(np.array(mdptrace)[0, :])
-                # print('# of walker steps', nwalkersteps)
-                for _ in range(runtime_params.nrandomwalkers):
-                    iwalker = int(nwalkersteps * np.random.rand())
+                    chi2best = chi2model
+                    patmos_bestfit = patmos_model
+                    param_values_bestfit = param_values_profiled
 
-                    if fit_cloud_parameters:
-                        ctp = ctptrace[iwalker]
-                        hazescale = hazescaletrace[iwalker]
-                        hazeloc = hazeloctrace[iwalker]
-                        hazethick = hazethicktrace[iwalker]
-                    if fit_t:
-                        tpr = tprtrace[iwalker]
-                    mdp = np.array(mdptrace)[:, iwalker]
-                    # print('shape mdp',mdp.shape)
-                    # if runtime_params.fitCloudParameters:
-                    #    print('fit results; CTP:', ctp)
-                    #    print('fit results; HScale:', hazescale)
-                    #    print('fit results; HLoc:', hazeloc)
-                    #    print('fit results; HThick:', hazethick)
-                    # print('fit results; T:', tpr)
-                    # print('fit results; mdplist:', mdp)
+                    nwalkersteps = len(np.array(mdptrace)[0, :])
+                    # print('# of walker steps', nwalkersteps)
+                    for _ in range(runtime_params.nrandomwalkers):
+                        iwalker = int(nwalkersteps * np.random.rand())
 
-                    if model_name in ['TEC', 'TEA']:
-                        mixratio = None
-                        tceqdict = {}
-                        tceqdict['XtoH'] = float(mdp[0])
-                        if fit_c_to_o:
-                            tceqdict['CtoO'] = float(mdp[1])
-                        else:
-                            tceqdict['CtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                'C/O'
-                            ]
-                        if fit_n_to_o:
-                            tceqdict['NtoO'] = float(mdp[2])
-                        else:
-                            if ('TRUTH_MODELPARAMS' in atm[p]) and (
-                                'NtoO' in atm[p]['TRUTH_MODELPARAMS']
-                            ):
-                                tceqdict['NtoO'] = atm[p]['TRUTH_MODELPARAMS'][
-                                    'NtoO'
-                                ]
+                        if fit_cloud_parameters:
+                            ctp = ctptrace[iwalker]
+                            hazescale = hazescaletrace[iwalker]
+                            hazeloc = hazeloctrace[iwalker]
+                            hazethick = hazethicktrace[iwalker]
+                        if fit_t:
+                            tpr = tprtrace[iwalker]
+                        mdp = np.array(mdptrace)[:, iwalker]
+                        # print('shape mdp',mdp.shape)
+                        # if runtime_params.fitCloudParameters:
+                        #    print('fit results; CTP:', ctp)
+                        #    print('fit results; HScale:', hazescale)
+                        #    print('fit results; HLoc:', hazeloc)
+                        #    print('fit results; HThick:', hazethick)
+                        # print('fit results; T:', tpr)
+                        # print('fit results; mdplist:', mdp)
+
+                        if model_name in ['TEC', 'TEA']:
+                            mixratio = None
+                            tceqdict = {}
+                            tceqdict['XtoH'] = float(mdp[0])
+                            if fit_c_to_o:
+                                tceqdict['CtoO'] = float(mdp[1])
                             else:
-                                # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
-                                tceqdict['NtoO'] = 0.0
+                                tceqdict['CtoO'] = atm[p]['TRUTH_MODELPARAMS'][
+                                    'C/O'
+                                ]
+                            if fit_n_to_o:
+                                tceqdict['NtoO'] = float(mdp[2])
+                            else:
+                                if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                                    'NtoO' in atm[p]['TRUTH_MODELPARAMS']
+                                ):
+                                    tceqdict['NtoO'] = atm[p][
+                                        'TRUTH_MODELPARAMS'
+                                    ]['NtoO']
+                                else:
+                                    # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
+                                    tceqdict['NtoO'] = 0.0
 
-                    elif model_name == 'PHOTOCHEM':
-                        tceqdict = None
-                        mixratio = {}
-                        mixratio['HCN'] = float(mdp[0])
-                        mixratio['CH4'] = float(mdp[1])
-                        mixratio['C2H2'] = float(mdp[2])
-                        mixratio['CO2'] = float(mdp[3])
-                        mixratio['H2CO'] = float(mdp[4])
+                        elif model_name == 'PHOTOCHEM':
+                            tceqdict = None
+                            mixratio = {}
+                            mixratio['HCN'] = float(mdp[0])
+                            mixratio['CH4'] = float(mdp[1])
+                            mixratio['C2H2'] = float(mdp[2])
+                            mixratio['CO2'] = float(mdp[3])
+                            mixratio['H2CO'] = float(mdp[4])
 
-                    fmcrand = crbFM().crbmodel(
-                        float(tpr),
-                        float(ctp),
-                        hazescale=float(hazescale),
-                        hazeloc=float(hazeloc),
-                        hazethick=float(hazethick),
-                        mixratio=mixratio,
-                        rp0=rp0,
-                        xsecs=xsl[p]['XSECS'],
-                        qtgrid=xsl[p]['QTGRID'],
-                        wgrid=transitdata['wavelength'],
-                        orbp=fin['priors'],
-                        hzlib=crbhzlib,
-                        cheq=tceqdict,
-                        planet=p,
-                        knownspecies=runtime_params.knownspecies,
-                        cialist=runtime_params.cialist,
-                        xmollist=runtime_params.xmollist,
-                        lbroadening=runtime_params.lbroadening,
-                        lshifting=runtime_params.lshifting,
-                        nlevels=runtime_params.nlevels,
-                        Hsmax=runtime_params.Hsmax,
-                        solrad=runtime_params.solrad,
-                    )
-                    spectrumrand = fmcrand.spectrum
-                    # add offset to match data (i.e. modify Rp)
-                    okPart = np.where(np.isfinite(transitdata['depth']))
-                    patmos_modelrand = spectrumrand[okPart] + np.average(
-                        (transitdata['depth'][okPart] - spectrumrand[okPart]),
-                        weights=1 / transitdata['error'][okPart] ** 2,
-                    )
-                    spectrumarray.append(patmos_modelrand)
-
-                    # check to see if this model is the best one
-                    offsets_modelrand = (
-                        patmos_modelrand - transitdata['depth'][okPart]
-                    ) / transitdata['error'][okPart]
-                    chi2modelrand = np.nansum(offsets_modelrand**2)
-                    # print('chi2 for a random walker', chi2modelrand)
-                    # print('chi2modelrand', chi2modelrand)
-                    # print('chi2best', chi2best)
-                    if chi2modelrand < chi2best:
-                        # print('  using this as best', chi2modelrand)
-                        chi2best = chi2modelrand
-                        patmos_best_fit = patmos_modelrand
-                        param_values_best_fit = (
+                        param_values_rand = [
                             tpr,
                             ctp,
                             hazescale,
@@ -2362,7 +2450,139 @@ def results(
                             hazethick,
                             tceqdict,
                             mixratio,
+                        ]
+                        patmos_modelrand, chi2modelrand = calculateSpectrum(
+                            param_values_rand,
+                            runtime_params,
+                            p,
+                            rp0,
+                            fin,
+                            xsl,
+                            transitdata,
                         )
+                        # check to see if this model is the best one
+                        # print('chi2 from sample toward best', chi2modelrand)
+                        if chi2modelrand < chi2best:
+                            # print('  using this as best', chi2modelrand)
+                            # print('best param',tpr,tceqdict)
+                            chi2best = chi2modelrand
+                            patmos_bestfit = patmos_modelrand
+                            param_values_bestfit = param_values_rand
+                    # print(' best params', param_values_bestfit)
+                    # print(' best XtoH (random selection)',tceqdict)
+                # print('NEW chi2best, OLD chi2model', chi2best, chi2model)
+
+                # plot the residuals of the best fit spectrum
+                #  and compare against the truth residuals.
+                # should be very different, even though looks same by eye
+                if verbose:
+                    figgy = plt.figure(figsize=(20, 4))
+                    figgy.subplots_adjust(
+                        left=0.05, right=0.95, bottom=0.15, top=0.93, wspace=0.2
+                    )
+                    plt.subplot(1, 3, 1)
+
+                    okPart = np.where(np.isfinite(transitdata['depth']))
+
+                    # 1) plot the data
+                    plt.errorbar(
+                        transitdata['wavelength'],
+                        transitdata['depth'] * 100,
+                        yerr=transitdata['error'] * 100,
+                        fmt='.',
+                        color='lightgray',
+                        zorder=1,
+                        label='raw data',
+                    )
+                    # 2) plot the best-fit model
+                    plt.plot(
+                        transitdata['wavelength'][okPart],
+                        patmos_bestfit * 100,
+                        # c='k', lw=2, zorder=4,
+                        c='orange',
+                        lw=2,
+                        zorder=4,
+                        label='best fit',
+                    )
+                    # 3) plot the true spectrum
+                    if truth_spectrum is not None:
+                        plt.plot(
+                            truth_spectrum['wavelength'],
+                            truth_spectrum['depth'] * 100,
+                            c='k',
+                            lw=1.5,
+                            zorder=3,
+                            label='truth',
+                        )
+
+                    # offsets_model = (
+                    #     patmos_model - transitdata['depth'][okPart]
+                    # ) / transitdata['error'][okPart]
+                    # chi2model = np.nansum(offsets_model**2)
+                    # numPoints = len(patmos_model)
+                    # numParam_model = 1
+                    # chi2model_red = chi2model / (numPoints - numParam_model)
+
+                    if filt == 'Ariel-sim':
+                        plt.xlim(0, 8)
+                    plt.xlabel(str('Wavelength [$\\mu m$]'), fontsize=14)
+                    plt.ylabel(str('$(R_p/R_*)^2$ [%]'), fontsize=14)
+                    plt.legend()
+
+                    # Now plot the residuals!
+                    plt.subplot(1, 3, 2)
+                    plt.scatter(
+                        transitdata['wavelength'],
+                        (patmos_bestfit - transitdata['depth'])
+                        / transitdata['error'],
+                        facecolor='None',
+                        edgecolor='orange',
+                        s=30,
+                        zorder=1,
+                        label='best fit residuals',
+                    )
+                    plt.scatter(
+                        truth_spectrum['wavelength'],
+                        (truth_spectrum['depth'] - transitdata['depth'])
+                        / transitdata['error'],
+                        facecolor='None',
+                        edgecolor='black',
+                        s=30,
+                        zorder=4,
+                        label='truth residuals',
+                    )
+                    if filt == 'Ariel-sim':
+                        plt.xlim(0, 8)
+                    plt.xlabel(str('Wavelength [$\\mu m$]'), fontsize=14)
+                    plt.ylabel(str('$\\chi$ [sigma]'), fontsize=14)
+                    plt.legend()
+
+                    # Now plot the difference in residuals
+                    plt.subplot(1, 3, 3)
+                    chitrue = (
+                        truth_spectrum['depth'] - transitdata['depth']
+                    ) / transitdata['error']
+                    chifit = (
+                        patmos_bestfit - transitdata['depth']
+                    ) / transitdata['error']
+                    print('  CHI2 TRUTH', np.sum(chitrue**2))
+                    print('  CHI2 FIT  ', np.sum(chifit**2))
+                    print('TOTAL DELTA CHI', np.sum(chitrue**2 - chifit**2))
+                    plt.scatter(
+                        transitdata['wavelength'],
+                        chitrue**2 - chifit**2,
+                        facecolor='None',
+                        edgecolor='black',
+                        s=30,
+                        zorder=1,
+                        label='improvement over truth',
+                    )
+                    if filt == 'Ariel-sim':
+                        plt.xlim(0, 8)
+                    plt.xlabel(str('Wavelength [$\\mu m$]'), fontsize=14)
+                    plt.ylabel(str('$\\Delta\\chi^2$ [sigma]'), fontsize=14)
+                    plt.legend()
+                    plt.show()
 
                 # _______________MAKE SOME PLOTS________________
                 save_dir = os.path.join(
@@ -2377,8 +2597,8 @@ def results(
                         transitdata,
                         patmos_model,
                         patmos_model_profiled,
-                        patmos_best_fit,
-                        spectrumarray,
+                        patmos_bestfit,
+                        [],
                         truth_spectrum,
                         fin['priors'],
                         anc['data'][p],
@@ -2393,15 +2613,15 @@ def results(
 
                 if verbose:
                     print('paramValues median  ', param_values_median)
-                    print('paramValues profiled', param_values_profiled)
-                    print('paramValues bestFit ', param_values_best_fit)
+                    # print('paramValues profiled', param_values_profiled)
+                    print('paramValues bestFit ', param_values_bestfit)
 
                 # _______________CORNER PLOT________________
                 out['data'][p]['plot_corner_' + model_name], _ = plot_corner(
                     all_keys,
                     all_traces,
                     profiled_traces,
-                    param_values_best_fit,
+                    param_values_bestfit,
                     truth_params,
                     prior_ranges,
                     filt,
@@ -2427,6 +2647,7 @@ def results(
                         trgt,
                         p,
                         saveDir=save_dir,
+                        # verbose=verbose,
                     )
                 )
 
@@ -2443,6 +2664,7 @@ def results(
                     trgt,
                     p,
                     saveDir=save_dir,
+                    # verbose=verbose,
                 )
 
             out['target'].append(trgt)

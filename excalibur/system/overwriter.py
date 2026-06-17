@@ -1982,6 +1982,17 @@ def ppar():
     }
     # ~50 are missing transit duration. update analytically?
 
+    # 5/21/26 Sophia Grusnis finds T0 is off in the JWST data
+    # update to T0 from published JWST
+    overwrite['GJ 357'] = {
+        'b': {
+            't0': 2460282.34130,
+            't0_uperr': 0.00003,
+            't0_lowerr': -0.00003,
+            't0_ref': 'Adams Redai et al. 2025',
+        },
+    }
+
     return overwrite
 
 
