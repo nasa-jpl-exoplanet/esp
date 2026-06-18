@@ -3717,7 +3717,7 @@ def jwstspectrum(
                 if verbose:
                     tsp = '-'
                     fig = plt.figure(figsize=(12, 9))
-                    ax = fig.add_subplot(111)
+                    _ = fig.add_subplot(111)
                     plt.title(pln + tsp + det + tsp + vis, fontsize=20)
                     im = plt.imshow(
                         zndata,
@@ -3817,7 +3817,7 @@ def jwstspectrum(
                                 pass
                             nodeshape.append(imo)
                             # CONTEXT
-                            ssz, ssp = tm.time2z(
+                            ssz, _ = tm.time2z(
                                 tst[np.isfinite(slc)],
                                 fxp['inc'],
                                 fxp['tknot'],
@@ -4625,23 +4625,21 @@ def lcmodel(*specparams):
         )
         out = out * np.array(allimout)
         return out[ctxt.valid]
-        pass
-    else:  # JWST
-        imnodes = specparams[-ctxt.nodeshape[-1] :]
-        lcnodes = specparams[: -ctxt.nodeshape[-1]]
-        out = tldlc(
-            abs(ctxt.allz),
-            float(lcnodes[0]),
-            g1=ctxt.lclds[0],
-            g2=ctxt.lclds[1],
-            g3=ctxt.lclds[2],
-            g4=ctxt.lclds[3],
-            g5=ctxt.lclds[4],
-            g6=ctxt.lclds[5],
-            g7=ctxt.lclds[6],
-            g8=ctxt.lclds[7],
-        ) * orbitalim(ctxt.time, imnodes)
-        return out
+    # JWST
+    imnodes = specparams[-ctxt.nodeshape[-1] :]
+    lcnodes = specparams[: -ctxt.nodeshape[-1]]
+    out = tldlc(
+        abs(ctxt.allz),
+        float(lcnodes[0]),
+        g1=ctxt.lclds[0],
+        g2=ctxt.lclds[1],
+        g3=ctxt.lclds[2],
+        g4=ctxt.lclds[3],
+        g5=ctxt.lclds[4],
+        g6=ctxt.lclds[5],
+        g7=ctxt.lclds[6],
+        g8=ctxt.lclds[7],
+    ) * orbitalim(ctxt.time, imnodes)
     pass
 
 

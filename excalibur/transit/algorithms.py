@@ -408,7 +408,6 @@ class Spectrum(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         svupdate = []
-        hstmerge = False
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
