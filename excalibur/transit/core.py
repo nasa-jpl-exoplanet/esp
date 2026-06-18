@@ -2035,8 +2035,8 @@ def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     '''
 
     # Interpolators for LETHE
-    z_grid = np.load(LETHE_dir + "/parameters/z_grid")
-    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid")
+    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
     LETHE = []
     grid_names = [
         '/grid_G/0.25.npy',
@@ -3690,6 +3690,27 @@ def jwstspectrum(
     [OPT]:verbose:[BOOL]:plots
     [OPT]:debug:[BOOL]:channel plots
     '''
+    # LETHE
+    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+    LETHE = []
+    grid_names = [
+        '/grid_G/0.25.npy',
+        '/grid_G/0.5.npy',
+        '/grid_G/0.75.npy',
+        '/grid_G/1.0.npy',
+        '/grid_F/0.5.npy',
+        '/grid_F/1.0.npy',
+        '/grid_F/1.5.npy',
+        '/grid_F/2.0.npy',
+    ]
+
+    for name in grid_names:
+        grid = np.load(LETHE_dir + name)
+        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+        LETHE.append(interpolator)
+        pass
+    
     spr = fin['priors'].copy()
     ssc = syscore.ssconstants()
     for pln in nrm['data']:
@@ -3833,6 +3854,7 @@ def jwstspectrum(
                                 allz=ssz,
                                 lclds=lclds,
                                 spec=True,
+                                LETHE=LETHE
                             )
                             # PYMC SHELL
                             TensorModel = TensorShell()
@@ -4640,6 +4662,7 @@ def lcmodel(*specparams):
         g7=ctxt.lclds[6],
         g8=ctxt.lclds[7],
     ) * orbitalim(ctxt.time, imnodes)
+    return out
     pass
 
 
