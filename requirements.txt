@@ -7,7 +7,7 @@ h5py
 joblib
 ldtk
 lmfit
-matplotlib
+matplotlib<3.9   # needs fixed - see #317
 numexpr          # used to limit cores it uses preventing thrashing
 numpy
 photutils
