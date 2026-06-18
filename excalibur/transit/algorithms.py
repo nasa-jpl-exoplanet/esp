@@ -444,7 +444,9 @@ class Spectrum(dawgie.Algorithm):
             pass
 
         # HST STIS/WFC3 MERGE
-        if np.sum(['HST' in svname for svname in [sv.name() for sv in svupdate]]):
+        if np.sum(
+            ['HST' in svname for svname in [sv.name() for sv in svupdate]]
+        ):
             merg = trncore.hstspectrum(self.__out, fltrs)
             log.info('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
             if merg:
@@ -471,13 +473,15 @@ class Spectrum(dawgie.Algorithm):
         if "Spitzer" in fltr:
             s = trncore.spitzer_spectrum(wht, out, fltr)
         elif "JWST" in fltr:
-            s = trncore.jwstspectrum(out,
-                                     nrm,
-                                     fin,
-                                     wht,
-                                     rtp=runtime_params,
-                                     chl=chain_length,
-                                     verbose=False)
+            s = trncore.jwstspectrum(
+                out,
+                nrm,
+                fin,
+                wht,
+                rtp=runtime_params,
+                chl=chain_length,
+                verbose=False,
+            )
             pass
         else:
             s = trncore.spectrum(
