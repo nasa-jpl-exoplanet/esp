@@ -1,16 +1,15 @@
 altaipony @ git+https://github.com/gbryden/altaipony.git
 astropy
 astroquery
-dawgie
+dawgie>2.1.0
 deprecated
 h5py
 joblib
 ldtk
 lmfit
-matplotlib
+matplotlib<3.9   # needs fixed - see #317
 numexpr          # used to limit cores it uses preventing thrashing
 numpy
-pyOpenSSL==26.0.0  # 26.0.2 breaks the world so needs testing
 photutils
 pymc
 pyvo
