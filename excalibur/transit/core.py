@@ -3044,6 +3044,7 @@ def tldlc(
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
     g5...g8: Sophia Grusnis extented model
+    C. BERNARDIN: LETHE Light Curve Model
     method: LETHE, occulted flux calculated through interpolation
             Numerical integration otherwise
     interpolator: List of 8 interpolators for LETHE method if the one
@@ -3710,7 +3711,7 @@ def jwstspectrum(
         interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
         LETHE.append(interpolator)
         pass
-    
+
     spr = fin['priors'].copy()
     ssc = syscore.ssconstants()
     for pln in nrm['data']:
@@ -3854,7 +3855,7 @@ def jwstspectrum(
                                 allz=ssz,
                                 lclds=lclds,
                                 spec=True,
-                                LETHE=LETHE
+                                LETHE=LETHE,
                             )
                             # PYMC SHELL
                             TensorModel = TensorShell()
@@ -4663,7 +4664,6 @@ def lcmodel(*specparams):
         g8=ctxt.lclds[7],
     ) * orbitalim(ctxt.time, imnodes)
     return out
-    pass
 
 
 # ----------------------------------- --------------------------------
