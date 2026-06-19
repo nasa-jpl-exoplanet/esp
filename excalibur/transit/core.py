@@ -48,6 +48,7 @@ from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
 from scipy.signal import savgol_filter
 from scipy.stats import gaussian_kde
+from scipy.interpolate import RectBivariateSpline
 
 import numpy as np
 
@@ -73,6 +74,7 @@ from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
 import os
 
 stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
+LETHE_dir = os.path.join(excalibur.context['data_dir'], 'LETHE')
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
@@ -117,6 +119,7 @@ ctxtglobals = [
     'mcmcsig',
     'nodeshape',
     'spec',
+    'LETHE',
 ]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
@@ -152,6 +155,7 @@ ctxt = CONTEXT(
     mcmcsig=None,
     nodeshape=None,
     spec=None,
+    LETHE=None,
 )
 
 
@@ -187,6 +191,7 @@ def ctxtupdt(
     mcmcsig=None,
     nodeshape=None,
     spec=None,
+    LETHE=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -223,6 +228,7 @@ def ctxtupdt(
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
         spec=spec,
+        LETHE=LETHE,
     )
     return
 
@@ -244,13 +250,14 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
-    if not ctxt.orbits:  # JWST
+    # JWST FLAT NODES
+    if not ctxt.orbits:
         newnodes = inputs
         pass
-    if ctxt.spec:
+    if ctxt.spec:  # SPECTRUM
         ForwardModel = lcmodel(*newnodes)
         pass
-    else:
+    else:  # WHITELIGHT
         ForwardModel = orbital(*newnodes)
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
@@ -537,7 +544,6 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
-    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
@@ -2012,18 +2018,43 @@ def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
     [I]:rtp:[DICT]:runtime.autofill SV as dict
     [I/O]:out:[SV]:WhitelightSV() see states.py
           out['STATUS']:[LIST]:appending True for each planet/instrument added
-          out['data'][p][det]:[DICT]:output/planet/detector
-          out['data'][p][det]['prewhite']:[LIST] Whitelight before fit
-          out['data'][p][det]['prewhite_err']:[LIST] prewhite errors
-          out['data'][p][det]['prewhite_sep']:[LIST] prewhite separation
-          out['data'][p][det]['valid']:[LIST] valid channels per spectrum
-          out['data'][p][det]['whiteld']:[LIST] white LD coefficients
-          out['data'][p][det]['mcpost']:[PYMC] post stats
+          out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
+          out['data'][p][det][vis]['prewhite']:[LIST] Whitelight before fit
+          out['data'][p][det][vis]['prewhite_err']:[LIST] prewhite errors
+          out['data'][p][det][vis]['prewhite_sep']:[LIST] prewhite separation
+          out['data'][p][det][vis]['valid']:[LIST] valid channels per spectrum
+          out['data'][p][det][vis]['whiteld']:[LIST] white LD coefficients
+          out['data'][p][det][vis]['mcpost']:[PYMC] post stats
+          out['data'][p][det][vis]['mctrace']:[DICT] MCMC trace
+          out['data'][p][det][vis]['lcmodel']:[ARRAY] Light curve best model
+          out['data'][p][det][vis]['flatwht']:[ARRAY] White light curve
+          out['data'][p][det][vis]['inmodel']:[ARRAY] Instrument Model
     [OPT]:imo:[INT]:Instrument Model polynomial order
-    [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
-                    i.e one of [100, 99, 95, 68, 50]
+    [OPT]:thr:[INT]:percentile for valid data in [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
     '''
+
+    # Interpolators for LETHE
+    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+    LETHE = []
+    grid_names = [
+        '/grid_G/0.25.npy',
+        '/grid_G/0.5.npy',
+        '/grid_G/0.75.npy',
+        '/grid_G/1.0.npy',
+        '/grid_F/0.5.npy',
+        '/grid_F/1.0.npy',
+        '/grid_F/1.5.npy',
+        '/grid_F/2.0.npy',
+    ]
+
+    for name in grid_names:
+        grid = np.load(LETHE_dir + name)
+        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+        LETHE.append(interpolator)
+    ctxtupdt(LETHE=LETHE)
+
     planetloop = [
         thisp
         for thisp in map(chr, range(97, 123))
@@ -3001,6 +3032,8 @@ def tldlc(
     g6=0.0,
     g7=0.0,
     g8=0.0,
+    method="LETHE",
+    interpolator=None,
     nint=int(8**2),
 ):
     '''
@@ -3011,36 +3044,171 @@ def tldlc(
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
     g5...g8: Sophia Grusnis extented model
+    C. BERNARDIN: LETHE Light Curve Model
+    method: LETHE, occulted flux calculated through interpolation
+            Numerical integration otherwise
+    interpolator: List of 8 interpolators for LETHE method if the one
+                  from ctxt is None
     nint: Integral into discrete sum number of bins
     '''
-    ldlc = np.zeros(z.size)
-    xin = z.copy() - rprs
-    xin[xin < 0e0] = 0e0
-    xout = z.copy() + rprs
-    xout[xout > 1e0] = 1e0
-    select = xin > 1e0
-    if True in select:
-        ldlc[select] = 1e0
-        pass
-    inldlc = []
-    xint = np.linspace(1e0, 0e0, nint)
-    znot = z.copy()[~select]
-    xinnot = np.arccos(xin[~select])
-    xoutnot = np.arccos(xout[~select])
-    xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
-    xrs = np.cos(xrs)
-    diffxrs = np.diff(xrs, axis=0)
-    extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
-    extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
-    extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
-    extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
-    occulted = vecoccs(znot, extxrs, rprs)
-    diffocc = np.diff(occulted, axis=0)
-    si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
-    drop = np.sum(diffocc * si, axis=0)
-    inldlc = 1.0 - drop
-    ldlc[~select] = np.array(inldlc)
+    if method == "LETHE":
+        interpolators_list = sys.modules[__name__].ctxt.LETHE
+        if interpolators_list is None:
+            interpolators_list = interpolator
+        occulted = occultation(
+            z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, interpolators_list
+        )
+        ldlc = 1.0 - occulted
+    else:
+        ldlc = np.zeros(z.size)
+        xin = z.copy() - rprs
+        xin[xin < 0e0] = 0e0
+        xout = z.copy() + rprs
+        xout[xout > 1e0] = 1e0
+        select = xin > 1e0
+        if True in select:
+            ldlc[select] = 1e0
+            pass
+        inldlc = []
+        xint = np.linspace(1e0, 0e0, nint)
+        znot = z.copy()[~select]
+        xinnot = np.arccos(xin[~select])
+        xoutnot = np.arccos(xout[~select])
+        xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
+        xrs = np.cos(xrs)
+        diffxrs = np.diff(xrs, axis=0)
+        extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
+        extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
+        extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
+        extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
+        occulted = vecoccs(znot, extxrs, rprs)
+        diffocc = np.diff(occulted, axis=0)
+        si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
+        drop = np.sum(diffocc * si, axis=0)
+        inldlc = 1.0 - drop
+        ldlc[~select] = np.array(inldlc)
+
     return ldlc
+
+
+# --------------------------------------- ----------------------------
+# -- STELLAR OCCULTATION LAW -- --------------------------------------
+def occultation(
+    z,
+    rprs,
+    g1,
+    g2,
+    g3,
+    g4,
+    g5,
+    g6,
+    g7,
+    g8,
+    interpolators_list,
+    a1=0.5,
+    a2=1.0,
+    a3=1.5,
+    a4=2.0,
+    a5=1.0,
+    a6=2.0,
+    a7=3.0,
+    a8=4.0,
+):
+
+    outld = np.zeros(z.shape)
+
+    if interpolators_list is not None:
+        select = z < 1.0 + rprs
+
+        # Interpolators
+        f_G_0_25 = interpolators_list[0]
+        f_G_0_50 = interpolators_list[1]
+        f_G_0_75 = interpolators_list[2]
+        f_G_1_00 = interpolators_list[3]
+        f_F_0_50 = interpolators_list[4]
+        f_F_1_00 = interpolators_list[5]
+        f_F_1_50 = interpolators_list[6]
+        f_F_2_00 = interpolators_list[7]
+
+        # contribution computation
+        s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
+        s2 = g2 * f_G_0_50(z[select], rprs, grid=False)
+        s3 = g3 * f_G_0_75(z[select], rprs, grid=False)
+        s4 = g4 * f_G_1_00(z[select], rprs, grid=False)
+        s5 = -g5 * f_F_0_50(z[select], rprs, grid=False)
+        s6 = -g6 * f_F_1_00(z[select], rprs, grid=False)
+        s7 = -g7 * f_F_1_50(z[select], rprs, grid=False)
+        s8 = -g8 * f_F_2_00(z[select], rprs, grid=False)
+
+        # normalization computation
+        ldnorm = (
+            (
+                -a1 * g1 / 2e0 / (2e0 + a1)
+                - a2 * g2 / 2e0 / (2e0 + a2)
+                - a3 * g3 / 2e0 / (2e0 + a3)
+                - a4 * g4 / 2e0 / (2e0 + a4)
+                + g5 / (a5 + 2e0) ** 2
+                + g6 / (a6 + 2e0) ** 2
+                + g7 / (a7 + 2e0) ** 2
+                + g8 / (a8 + 2e0) ** 2
+                + 5e-1
+            )
+            * 2e0
+            * np.pi
+        )
+
+        # surface crossing between star and planet
+        surface = circle_intersection_area(1.0, rprs, z[select])
+
+        # total occulted flux
+        outld[select] = (
+            surface * (1e0 - (g1 + g2 + g3 + g4))
+            + s1
+            + s2
+            + s3
+            + s4
+            + s5
+            + s6
+            + s7
+            + s8
+        ) / ldnorm
+
+    return outld
+
+
+# --------------------------------------- ----------------------------
+# -- CIRCLE INTERSECTION AREA -- -------------------------------------
+def circle_intersection_area(r1, r2, d):
+    """
+    r1 : radius of circle 1
+    r2 : radius of circle 2
+    d :  distance between centers
+    Intersection area of 2 circles of radius r1 and r2
+    separated a distance between centers of d.
+    """
+
+    S = np.zeros(d.shape)
+
+    # total intersection
+    select_2 = d <= abs(r1 - r2)
+    S[select_2] = np.pi * min(r1, r2) ** 2
+
+    # partial intersection
+    term1 = r1**2 * np.acos(
+        (d[~select_2] ** 2 + r1**2 - r2**2) / (2 * d[~select_2] * r1)
+    )
+    term2 = r2**2 * np.acos(
+        (d[~select_2] ** 2 + r2**2 - r1**2) / (2 * d[~select_2] * r2)
+    )
+    term3 = 0.5 * np.sqrt(
+        (-d[~select_2] + r1 + r2)
+        * (d[~select_2] + r1 - r2)
+        * (d[~select_2] - r1 + r2)
+        * (d[~select_2] + r1 + r2)
+    )
+    S[~select_2] = term1 + term2 - term3
+
+    return S
 
 
 # --------------------------------------- ----------------------------
@@ -3488,8 +3656,299 @@ def spectrumversion():
     N. Huber-Feely: 1.2.1 Add saving of trace to SV
     K. PEARSON: 1.2.2 JWST NIRISS
     R ESTRELA: 1.3.0 Merged Spectra Capability
+    GMR: 1.4.0 Added jwstspectrum()
     '''
-    return dawgie.VERSION(1, 3, 2)
+    return dawgie.VERSION(1, 4, 0)
+
+
+def jwstspectrum(
+    out,
+    nrm,
+    fin,
+    wht,
+    rtp=None,
+    chl=int(4e4),
+    rjc=95,
+    thr=5,
+    ntm=10,
+    imo=4,
+    verbose=False,
+    debug=False,
+):
+    '''
+    GMR: JWST Spectral Light Curve Fit
+    [I/O]:out:[transit.states.SpectrumSV()]
+          out['data'][p]:[DICT]:output/planet
+    [I]:nrm:[transit.states.NormSV()]:transit.core.norm_jwst.__doc__
+    [I]:fin:[system.states.PriorsSV()]
+    [I]:wht:[transit.states.WhiteLightSV()]:transit.core.jwstwl.__doc__
+    [OPT]:rtp:[runtime.states.StatusSV()]
+    [OPT]:chl:[INT]:MCMC chain length
+    [OPT]:rjc:[FLOAT]:percentile used for outlier rejection
+    [OPT]:thr:[FLOAT]:outlier rejection threshold in sigmas
+    [OPT]:ntm:[INT]:minimum number of in transit data points
+    [OPT]:imo:[INT]:Instrument Model polynomial order
+    [OPT]:verbose:[BOOL]:plots
+    [OPT]:debug:[BOOL]:channel plots
+    '''
+    # LETHE
+    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+    LETHE = []
+    grid_names = [
+        '/grid_G/0.25.npy',
+        '/grid_G/0.5.npy',
+        '/grid_G/0.75.npy',
+        '/grid_G/1.0.npy',
+        '/grid_F/0.5.npy',
+        '/grid_F/1.0.npy',
+        '/grid_F/1.5.npy',
+        '/grid_F/2.0.npy',
+    ]
+
+    for name in grid_names:
+        grid = np.load(LETHE_dir + name)
+        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+        LETHE.append(interpolator)
+        pass
+
+    spr = fin['priors'].copy()
+    ssc = syscore.ssconstants()
+    for pln in nrm['data']:
+        if verbose:
+            log.info('>--< Planet %s >', pln)
+        out['data'][pln] = {}
+        for det in nrm['data'][pln]['nspec']:
+            if verbose:
+                log.info('>----< %s >', det)
+            out['data'][pln][det] = {}
+            for vis in nrm['data'][pln]['nspec'][det]:
+                if verbose:
+                    log.info('>------< Visit %s >', vis)
+                out['data'][pln][det][vis] = {}
+                trd = np.argsort(nrm['data'][pln]['time'][det][vis])
+                zndata = nrm['data'][pln]['nspec'][det][vis].copy() - 1e0
+                noise = np.nanstd(
+                    zndata[np.abs(zndata) < np.nanpercentile(abs(zndata), rjc)]
+                )
+                whttrc = wht['data'][pln][det][vis]['mctrace']
+                rpors = np.nanmedian(whttrc['rprs'])
+                # OUTLIERS REJECTION
+                zndata[abs(zndata) > thr * noise] = np.nan
+                zndata = 1e0 + zndata[trd].T
+                if verbose:
+                    tsp = '-'
+                    fig = plt.figure(figsize=(12, 9))
+                    _ = fig.add_subplot(111)
+                    plt.title(pln + tsp + det + tsp + vis, fontsize=20)
+                    im = plt.imshow(
+                        zndata,
+                        vmin=1e0 - rpors**2 - thr * noise,
+                        vmax=1e0 + thr * noise,
+                        aspect='auto',
+                    )
+                    plt.tick_params(axis='both', labelsize=18)
+                    cbar = fig.colorbar(im)
+                    cbar.ax.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                ndsc = 0
+                spc = []
+                spcerr = []
+                wvl = []
+                trc = []
+                dta = []
+                bmd = []
+                tst = nrm['data'][pln]['time'][det][vis][trd]
+                zst = nrm['data'][pln]['z'][det][vis][trd]
+                allwvl = np.median(nrm['data'][pln]['wave'][det][vis], axis=0)
+                dltwvl = np.nanmedian(np.diff(allwvl))
+                for chn, slc in enumerate(zndata):
+                    wvl.append(allwvl[chn])
+                    slc[np.abs(1e0 - slc) > thr * noise] = np.nan
+                    # ERROR ESTIMATED ON DATA
+                    sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
+                    transiting = np.sum(np.isfinite(slc[np.abs(zst) < 1])) > ntm
+                    if (
+                        np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
+                    ) and transiting:
+                        if debug:
+                            plt.figure(figsize=(12, 9))
+                            plt.title(pln + tsp + det + tsp + vis, fontsize=20)
+                            plt.plot(tst, slc, 'o')
+                            plt.tick_params(axis='both', labelsize=18)
+                            plt.show()
+                            pass
+                        # GRUSNIS LD
+                        ldcoefs = ldtl(
+                            spr['T*'],
+                            spr['FEH*'],
+                            spr['LOGG*'],
+                            [wvl[-1] - dltwvl / 2.0],
+                            [wvl[-1] + dltwvl / 2.0],
+                        )
+                        lclds = [c[0] for c in ldcoefs]
+                        # FIXED PARAMS
+                        fxp = {}
+                        fxp['tknot'] = np.nanmedian(whttrc['tknot'])
+                        if 'inc' in whttrc:
+                            ginc = np.nanmedian(whttrc['inc'])
+                            pass
+                        else:
+                            ginc = spr[pln]['inc']
+                            pass
+                        fxp['inc'] = ginc
+                        nodes = []
+                        nodeshape = []
+                        prior_ranges = {}
+                        prior_center = {}
+                        # PRIORS
+                        with pymc.Model():
+                            pymcrprs = pymc.Uniform(
+                                'rprs', lower=rpors / 2e0, upper=rpors * 2e0
+                            )
+                            prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+                            prior_center['rprs'] = rpors
+                            nodes.append(pymcrprs)
+                            nodeshape.append(1)
+                            # INSTRUMENT MODEL - ALWAYS LAST
+                            allcenim = [
+                                np.nanmedian(whttrc[t])
+                                for t in whttrc
+                                if t.startswith('IM')
+                            ]
+                            allstdim = [
+                                np.nanstd(whttrc[t])
+                                for t in whttrc
+                                if t.startswith('IM')
+                            ]
+                            for ic, coef in enumerate(np.arange(imo)):
+                                thslbl = 'IM' + str(int(coef))
+                                pymcim = pymc.Normal(
+                                    thslbl,
+                                    mu=allcenim[ic],
+                                    tau=1e0 / (allstdim[ic] ** 2),
+                                )
+                                prior_ranges[thslbl] = [
+                                    allcenim[ic] - 3.0 * allstdim[ic],
+                                    allcenim[ic] + 3.0 * allstdim[ic],
+                                ]
+                                prior_center[thslbl] = allcenim[ic]
+                                nodes.append(pymcim)
+                                pymcim = None
+                                pass
+                            nodeshape.append(imo)
+                            # CONTEXT
+                            ssz, _ = tm.time2z(
+                                tst[np.isfinite(slc)],
+                                fxp['inc'],
+                                fxp['tknot'],
+                                spr[pln]['sma'] / spr['R*'] / ssc['Rsun/AU'],
+                                spr[pln]['period'],
+                                spr[pln]['ecc'],
+                            )
+                            ctxtupdt(
+                                time=tst[np.isfinite(slc)],
+                                mcmcdat=slc[np.isfinite(slc)],
+                                mcmcsig=slc[np.isfinite(slc)] * 0 + sns,
+                                nodeshape=nodeshape,
+                                allz=ssz,
+                                lclds=lclds,
+                                spec=True,
+                                LETHE=LETHE,
+                            )
+                            # PYMC SHELL
+                            TensorModel = TensorShell()
+
+                            def LogLH(_, nodes):
+                                '''
+                                GMR: Fill in model tensor shell
+                                '''
+                                return TensorModel(nodes)
+
+                            _ = pymc.CustomDist(
+                                "likelihood",
+                                nodes,
+                                observed=ctxt.mcmcdat,
+                                logp=LogLH,
+                            )
+                            # DA LINT
+                            _ = rtp
+
+                            log.info('>-- SPECTRUM SAMPLER: Metropolis')
+                            sampler = pymc.Metropolis()
+                            log.info(
+                                '>-- MCMC nodes: %s', str(prior_center.keys())
+                            )
+                            trace = pymc.sample(
+                                chl,
+                                cores=4,
+                                tune=int(chl / 2),
+                                compute_convergence_checks=False,
+                                step=sampler,
+                                progressbar=verbose,
+                            )
+                            pass
+                        mctrace = {}
+                        for k in [n.name for n in nodes]:
+                            mctrace[k] = np.array(
+                                trace['posterior'][k]
+                            ).flatten()
+                            pass
+                        bestlc = np.array(
+                            lcmodel(
+                                *[np.median(di[-1]) for di in mctrace.items()]
+                            )
+                        )
+                        if debug:
+                            _ = simplecorner(
+                                mctrace, fullrange=True, verbose=verbose
+                            )
+
+                            plt.figure(figsize=(12, 9))
+                            plt.title(
+                                pln + ': ' + det + ' [' + vis + ']',
+                                fontsize=20,
+                            )
+                            plt.errorbar(
+                                ctxt.time,
+                                ctxt.mcmcdat,
+                                yerr=noise,
+                                fmt='o',
+                                alpha=0.5,
+                            )
+                            plt.plot(ctxt.time, bestlc, lw=3)
+                            plt.tick_params(labelsize=18)
+                            plt.show()
+                            pass
+                        trc.append(mctrace)
+                        spc.append(np.nanmedian(mctrace['rprs']))
+                        spcerr.append(np.nanstd(mctrace['rprs']))
+                        dta.append(ctxt.mcmcdat)
+                        bmd.append(bestlc)
+                        pass
+                    else:
+                        ndsc += 1
+                        pass
+                    pass
+                out['data'][pln][det][vis]['ES'] = np.array(spc)
+                out['data'][pln][det][vis]['ESerr'] = np.array(spcerr)
+                out['data'][pln][det][vis]['MCTRACE'] = trc
+                out['data'][pln][det][vis]['WB'] = np.array(wvl)
+                out['data'][pln][det][vis]['WBlow'] = (
+                    np.array(wvl) - dltwvl / 2.0
+                )
+                out['data'][pln][det][vis]['WBup'] = (
+                    np.array(wvl) + dltwvl / 2.0
+                )
+                out['data'][pln][det][vis]['LCFIT'] = bmd
+                out['data'][pln][det][vis]['LCDATA'] = dta
+                out['data'][pln][det][vis]['IGNORED'] = ndsc
+                out['STATUS'].append(True)
+                pass
+            pass
+        pass
+    return True
 
 
 def spectrum(
@@ -3783,8 +4242,6 @@ def spectrum(
                     visits=visits,
                     mcmcdat=data[valid],
                     mcmcsig=dnoise[valid],
-                    # mcmcsig=1e0
-                    # / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
@@ -3805,10 +4262,10 @@ def spectrum(
                 )
                 # SAMPLING
                 if runtime_params.sliceSampler:
-                    log.info('>-- SPECTRUM SAMPLER: Slice --<')
+                    log.info('>-- SPECTRUM SAMPLER: Slice')
                     sampler = pymc.Slice()
                 else:
-                    log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
+                    log.info('>-- SPECTRUM SAMPLER: Metropolis')
                     sampler = pymc.Metropolis()
 
                 trace = pymc.sample(
@@ -4167,30 +4624,46 @@ def lcmodel(*specparams):
     '''
     G. ROUDIER: Spectral light curve model
     '''
-    r, avs, aos, aoi = specparams
-    allimout = []
-
-    for iv in range(len(ctxt.visits)):
-        imout = timlc(
-            ctxt.time[iv],
-            ctxt.orbits[iv],
-            vslope=avs[iv],
-            vitcp=1e0,
-            oslope=aos[iv],
-            oitcp=aoi[iv],
+    if ctxt.orbits:  # HST
+        r, avs, aos, aoi = specparams
+        allimout = []
+        for iv in range(len(ctxt.visits)):
+            imout = timlc(
+                ctxt.time[iv],
+                ctxt.orbits[iv],
+                vslope=avs[iv],
+                vitcp=1e0,
+                oslope=aos[iv],
+                oitcp=aoi[iv],
+            )
+            allimout.extend(imout)
+            pass
+        out = tldlc(
+            np.abs(ctxt.allz),
+            r,
+            g1=float(ctxt.g1[0]),
+            g2=float(ctxt.g2[0]),
+            g3=float(ctxt.g3[0]),
+            g4=float(ctxt.g4[0]),
         )
-        allimout.extend(imout)
-        pass
+        out = out * np.array(allimout)
+        return out[ctxt.valid]
+    # JWST
+    imnodes = specparams[-ctxt.nodeshape[-1] :]
+    lcnodes = specparams[: -ctxt.nodeshape[-1]]
     out = tldlc(
-        np.abs(ctxt.allz),
-        r,
-        g1=float(ctxt.g1[0]),
-        g2=float(ctxt.g2[0]),
-        g3=float(ctxt.g3[0]),
-        g4=float(ctxt.g4[0]),
-    )
-    out = out * np.array(allimout)
-    return out[ctxt.valid]
+        abs(ctxt.allz),
+        float(lcnodes[0]),
+        g1=ctxt.lclds[0],
+        g2=ctxt.lclds[1],
+        g3=ctxt.lclds[2],
+        g4=ctxt.lclds[3],
+        g5=ctxt.lclds[4],
+        g6=ctxt.lclds[5],
+        g7=ctxt.lclds[6],
+        g8=ctxt.lclds[7],
+    ) * orbitalim(ctxt.time, imnodes)
+    return out
 
 
 # ----------------------------------- --------------------------------

@@ -468,6 +468,17 @@ def mlfit(
                     X2Hr=model_params['metallicity'],
                     C2Or=model_params['C/O'],
                 )
+            if 'Gemli' in arielModel or 'Water' in arielModel:
+                truth_params['CO2'] = truth_params['N2']
+                # to match gemli molecules, drop N2
+                truth_params.pop('N2')
+                if 'Water' in arielModel:
+                    molecules = list(truth_params.keys())
+                    for molecule in molecules:
+                        if molecule != 'H2O':
+                            truth_params.pop(molecule)
+            # print('truth_params', truth_params)
+
             # include Teq and Rp truths in with the mixing ratios
             truth_params['Teq'] = model_params['Teq']
             truth_params['Rp'] = model_params['Rp']
@@ -482,6 +493,7 @@ def mlfit(
             ] = ML_uncertainties_instrument
             out['data'][p]['ML_spectrum_bestfit'] = ML_best_fit
             out['data'][p]['truth_params'] = truth_params
+            # print('TRUTH!', truth_params)
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
