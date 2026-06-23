@@ -439,6 +439,9 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'C2H6': 30.0,
         'C3H8': 44.0,
         'CH3CHO': 44.0,
+        'Ca':40.0,
+        'K': 39.098,
+        'Na': 22.990,
     }
 
     # TEA abuncances include H and He; have to be separated to get metals
