@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
+import excalibur
 
 from deprecated import deprecated
 
@@ -58,6 +59,7 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
+        atom_list = ['Ca','K','Na'],
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -65,6 +67,7 @@ class crbFM:
         logx=False,
         verbose=False,
         debug=False,
+        atom_data=None,
     ):
         '''
         G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
@@ -305,6 +308,7 @@ class crbFM:
             lbroadening,
             lshifting,
             cialist,
+            atom_list,
             fH2,
             fHe,
             xmollist,
@@ -314,6 +318,7 @@ class crbFM:
             hazeslope,
             hazeloc,
             hazethick,
+            atom_data,
             debug=debug,
         )
         if not break_down_by_molecule:
@@ -506,6 +511,7 @@ def gettau(
     lbroadening,
     lshifting,
     cialist,
+    atom_list,
     fH2,
     fHe,
     xmollist,
@@ -515,6 +521,7 @@ def gettau(
     hazeslope,
     hazeloc,
     hazethick,
+    atom_data,
     debug=False,
 ):
     '''
@@ -559,10 +566,35 @@ def gettau(
                 # ignore missing xsecs for molecules without strong features
                 pass
             else:
-                log.error(
-                    'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
-                    elem,
-                )
+                # print(elem)
+                if elem in atom_list:
+                    interp_atom = excalibur.cerberus.forward_model.ctxt.atom_xsec
+                    if interp_atom is None :
+                        interp_atom = atom_data
+                        pass
+                    if interp_atom is not None :
+#                        print(pressure)
+                        interpolator = interp_atom[elem]
+                        T = np.repeat(temp, len(wgrid))
+                        P = np.repeat(pressure, len(wgrid))
+                        wl = np.tile(wgrid, Nzones)
+                        points = np.column_stack((T, P, wl))
+                        
+                        sigma = interpolator(points)
+                        sigma = np.reshape(sigma, (Nzones, len(wgrid))) # cm^2/mol
+                        sigma = sigma[:,::-1].T
+                        # print(np.shape(sigma))
+                        # sigma.shape(n_waves, n_pressure)
+                        sigma = sigma * 1e-4 # m^2/mol
+                        lsig = 1e4/wgrid[::-1]
+                        pass
+                    pass
+                else:
+                    log.error(
+                        'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                        elem,
+                    )
+                
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED
@@ -599,22 +631,22 @@ def gettau(
                     pass
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
+        print(elem)
+        print(np.shape(sigma))
+        # CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        sigma = np.broadcast_to(
+            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
+        ).copy()
+        tau_by_molecule[elem] = (
+            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * sigma
+        )
+        tau = tau + tau_by_molecule[elem]
 
-            # CB sigma (Nzones, Nzones, N_waves)
-            # 1st dimension corrsponds to z
-            # 2nd dimension corrsponds to z'
-            # 3rd dimension corresponds to wavelength
-            sigma = np.broadcast_to(
-                sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-            ).copy()
-            tau_by_molecule[elem] = (
-                (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-                * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-                * sigma
-            )
-            tau = tau + tau_by_molecule[elem]
-
-            pass
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
@@ -663,23 +695,23 @@ def gettau(
         )
         tau = tau + tau_by_molecule[cia]
 
-    # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
-    # NAUS & UBACHS 2000
-    slambda0 = 750.0 * 1e-3  # microns
-    sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
-    sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
+    # # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
+    # # NAUS & UBACHS 2000
+    # slambda0 = 750.0 * 1e-3  # microns
+    # sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
+    # sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
 
-    # CB sigma (Nzones, Nzones, N_waves)
-    # 1st dimension corrsponds to z
-    # 2nd dimension corrsponds to z'
-    # 3rd dimension corresponds to wavelength
-    sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
-    tau_by_molecule['rayleigh'] = (
-        (fH2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * sigma
-    )
-    tau = tau + tau_by_molecule['rayleigh']
+    # # CB sigma (Nzones, Nzones, N_waves)
+    # # 1st dimension corrsponds to z
+    # # 2nd dimension corrsponds to z'
+    # # 3rd dimension corresponds to wavelength
+    # sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
+    # tau_by_molecule['rayleigh'] = (
+    #     (fH2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+    #     * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+    #     * sigma
+    # )
+    # tau = tau + tau_by_molecule['rayleigh']
 
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
