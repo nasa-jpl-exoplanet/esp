@@ -59,7 +59,7 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
-        atom_list = ['Ca','K','Na'],
+        atom_list=['Ca', 'K', 'Na'],
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -567,26 +567,31 @@ def gettau(
                 pass
             else:
                 if elem in atom_list:
-                    interp_atom = excalibur.cerberus.forward_model.ctxt.atom_xsec
-                    if interp_atom is None :
+                    interp_atom = (
+                        excalibur.cerberus.forward_model.ctxt.atom_xsec
+                    )
+                    if interp_atom is None:
                         interp_atom = atom_data
                         pass
-                    if interp_atom is not None :
-                        #interpolator loading
+                    if interp_atom is not None:
+                        # interpolator loading
                         interpolator = interp_atom[elem]
                         T = np.repeat(temp, len(wgrid))
                         P = np.repeat(pressure, len(wgrid))
+                        X_H2 = np.repeat(fH2 / (fH2 + fHe), len(wgrid))
                         wl = np.tile(wgrid, Nzones)
-                        points = np.column_stack((T, P, wl))
+                        points = np.column_stack((T, P, X_H2, wl))
 
-                        #xsec computation
+                        # xsec computation
                         sigma = interpolator(points)
-                        sigma = np.reshape(sigma, (Nzones, len(wgrid))) # cm^2/mol
-                        sigma = sigma[:,::-1].T
+                        sigma = np.reshape(
+                            sigma, (Nzones, len(wgrid))
+                        )  # cm^2/mol
+                        sigma = sigma[:, ::-1].T
 
                         # sigma.shape(n_waves, n_pressure)
-                        sigma = sigma * 1e-4 # m^2/mol
-                        lsig = 1e4/wgrid[::-1]
+                        sigma = sigma * 1e-4  # m^2/mol
+                        lsig = 1e4 / wgrid[::-1]
                         pass
                     pass
                 else:
@@ -594,7 +599,7 @@ def gettau(
                         'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
                         elem,
                     )
-                
+
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED
