@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
-import excalibur
 
 from deprecated import deprecated
+
+import excalibur
 
 import excalibur.system.core as syscore
 

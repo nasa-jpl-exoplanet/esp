@@ -1,5 +1,8 @@
 '''Computation of the grids for atomic cross sections Ca, K, Na
-with VALD line lists'''
+with VALD line lists ds'''
+
+# pylint: disable=invalid-name
+# pylint: disable=no-member
 
 import numpy as np
 import json
@@ -10,12 +13,12 @@ from scipy.interpolate import interp1d
 from scipy.constants import c, h, k, m_e, physical_constants, eV
 
 # reference physical parameters for
-# colisionnal broadening
+# colisional broadening
 TREF = 296e0
 PREF = 1e0
 
 # physical constants
-charge_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
+e_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
@@ -35,10 +38,11 @@ ATOMIC_MASS = {
 # -- LINE LIST LOADING -- --------------------------------------------
 def load_lines():
     with open(
-        "/proj/sdp/data/CERBERUS/ATOM_XSEC/lines_infos/lines.json", "r"
+        "/proj/sdp/data/CERBERUS/ATOM_XSEC/lines_infos/lines.json",
+        "r",
+        encoding="utf-8",
     ) as f:
         data = json.load(f)
-    # reconvertir les clés wavelength en float
     for element in data:
         if element == "units":
             continue
@@ -54,6 +58,7 @@ def load_part_func(specie):
     with open(
         "/proj/sdp/data/CERBERUS/ATOM_XSEC/lines_infos/partition_function.json",
         "r",
+        encoding="utf-8",
     ) as f:
         partition_func = json.load(f)
         for element in partition_func:
@@ -69,8 +74,8 @@ def load_part_func(specie):
 
 
 # --------- ----------------------------------------------------------
-# -- COLISIONNAL BROADENING COEFFICIENTS COMPUTATION -- --------------
-def gammavld(gamma_vdw, m_s, broadener):
+# -- COLISIONAL BROADENING COEFFICIENTS -- ---------------------------
+def gammavld(gamma_vdw, ms, broadener):
 
     alphah = 0.666793  # Polarisability of atomic hydrogen (A^-3)
     mh = 1.007825  # Mass of atomic hydrogen (u)
@@ -89,7 +94,7 @@ def gammavld(gamma_vdw, m_s, broadener):
     gammal0 = (
         2.2593427e7
         * gamma_vdw
-        * np.power(((mh * (m_s + mp)) / (mp * (m_s + mh))), (3e0 / 1e1))
+        * np.power(((mh * (ms + mp)) / (mp * (ms + mh))), (3e0 / 1e1))
         * np.power((alphap / alphah), (2e0 / 5e0))
     )
 
@@ -97,7 +102,7 @@ def gammavld(gamma_vdw, m_s, broadener):
 
 
 # --------- ----------------------------------------------------------
-# -- COLISIONNAL BROADENING COMPUTATION -- ---------------------------
+# -- COLISIONAL BROADENING -- ----------------------------------------
 def h2hebroadening(
     gamma0h2,
     T,
@@ -119,7 +124,7 @@ def h2hebroadening(
 
 
 # --------- ----------------------------------------------------------
-# -- PARTITION FUNCTION COMPUTATION -- -------------------------------
+# -- PARTITION FUNCTION -- -------------------------------------------
 def partition_function(specie, T):
     temp, Q = load_part_func(specie)
     temp_min, temp_max = np.min(temp), np.max(temp)
@@ -131,14 +136,15 @@ def partition_function(specie, T):
             f"Valid range is [{temp_min}, {temp_max}]",
             RuntimeWarning,
         )
+
     return f(T)
 
 
 # --------- ----------------------------------------------------------
-# -- LINE INTENSITY COMPUTATION -- -----------------------------------
+# -- LINE INTENSITY -- -----------------------------------------------
 def vald_intensity(gf, elow, nu0, T, Q):
     S = (
-        ((gf * np.pi * charge_cgs**2) / (me_cgs * c_cgs**2))
+        ((gf * np.pi * e_cgs**2) / (me_cgs * c_cgs**2))
         * (1e0 / Q)
         * np.exp(-1e0 * c2 * elow / T)
         * (1e0 - np.exp(-1e0 * c2 * nu0 / T))
@@ -147,7 +153,7 @@ def vald_intensity(gf, elow, nu0, T, Q):
 
 
 # --------- ----------------------------------------------------------
-# -- VOIGT PROFILE COMPUTATION -- ------------------------------------
+# -- VOIGT PROFILE -- ------------------------------------------------
 def voigt(nu_grid, nu0, T, mass, gamma):
     alpha = np.sqrt(2e0 * k * T * np.log(2e0) / mass) * nu0 / c
     x = np.sqrt(np.log(2e0)) * (np.outer(1.0 / alpha, (nu_grid - nu0)))
@@ -160,12 +166,13 @@ def voigt(nu_grid, nu0, T, mass, gamma):
 
 
 # --------- ----------------------------------------------------------
-# -- CROSS SECTION COMPUTATION FOR 1 LINE-- --------------------------
+# -- CROSS SECTION PER LINE-- ----------------------------------------
 def single_line_sigma(w_grid, specie, line, Q, parameters):
 
-    nu_grid = 1e0 / w_grid * 1e4  # conversion from micron to cm-1
+    # micron to cm-1
+    nu_grid = 1e0 / w_grid * 1e4
 
-    # line intensity computation
+    # line intensity
     S = vald_intensity(
         line["gf"],
         line["E_low"] * eV / h / c_cgs,
@@ -185,14 +192,14 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
         parameters[:, 0],
         parameters[:, 1],
         parameters[:, 2],
-        gamma_0_he,
+        gamma0he,
     )
     gamma = gamma + 1e0 / (4e0 * np.pi * (c_cgs)) * line["Rad"]
 
     # line cutoff
     wing_cutoff = 3e1
 
-    # voigt profile construction
+    # voigt profile
     idx = np.where(
         np.abs(nu_grid - 1e0 / line["WL_vacuum"] * 1e4) <= wing_cutoff
     )[0]
@@ -211,17 +218,19 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
 
 
 # --------- ----------------------------------------------------------
-# -- CROSS SECTION COMPUTATION WITH LINE BY LINE -- ------------------
+# -- CROSS SECTION WITH LINE BY LINE -- ------------------------------
 def atom_xsec(w_grid, specie, parameters):
     # partition function computation
-    Q = partition_function(specie, T)
+    Q = partition_function(specie, parameters[:, 0])
 
     # lines loading
     data = load_lines()
 
-    sigma_total = np.zeros((len(T), len(w_grid)))
+    # line by line computation
+    sigma_total = np.zeros((len(parameters[:, 0]), len(w_grid)))
     for line in data[specie].values():
-        sigma_total += single_line_sigma(w_grid, specie, line, Q, parameters)
+        sigma_total += single_line_sigma(w_grid, specie, line, Q, 
+                                         parameters)
     return sigma_total
 
 
@@ -241,10 +250,10 @@ def grid_generation(elem, temp, pressure, xh2, wgrid):
 
     grid = atom_xsec(w_grid=wgrid, specie=elem, parameters=parameters)
 
-    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/wgrid.npy", wgrid)
     np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/temp.npy", temp)
     np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/pressure.npy", pressure)
     np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/X_H2.npy", xh2)
+    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/wgrid.npy", wgrid)
 
     grid_4d = grid.reshape((len(temp), len(pressure), len(xh2), -1))
 
