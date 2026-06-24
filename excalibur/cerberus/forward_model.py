@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
-import excalibur
 
 import scipy.special as scipyspecial
 

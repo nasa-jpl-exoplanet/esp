@@ -18,7 +18,7 @@ TREF = 296e0
 PREF = 1e0
 
 # physical constants
-charge_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
+e_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
@@ -227,7 +227,8 @@ def atom_xsec(w_grid, specie, parameters):
     # line by line computation
     sigma_total = np.zeros((len(parameters[:, 0]), len(w_grid)))
     for line in data[specie].values():
-        sigma_total += single_line_sigma(w_grid, specie, line, Q, parameters)
+        sigma_total += single_line_sigma(w_grid, specie, line, Q, 
+                                         parameters)
     return sigma_total
 
 
