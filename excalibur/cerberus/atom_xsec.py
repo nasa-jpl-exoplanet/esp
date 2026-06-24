@@ -148,8 +148,7 @@ def vald_intensity(gf, elow, nu0, T, Q):
         * (1e0 / Q)
         * np.exp(-1e0 * c2 * elow / T)
     for line in data[specie].values():
-        sigma_total += single_line_sigma(w_grid, specie, line, Q, 
-                                         parameters)
+        sigma_total += single_line_sigma(w_grid, specie, line, Q, parameters)
     return sigma_total
 
 
