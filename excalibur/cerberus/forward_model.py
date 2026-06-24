@@ -78,7 +78,7 @@ class crbFM:
         - MMW profile
         '''
         if atom_list is None:
-            atom_list=['Ca', 'K', 'Na']
+            atom_list = ['Ca', 'K', 'Na']
         if planet is None:
             planet = ctxt.planet
         if orbp is None:
