@@ -421,12 +421,17 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                             lim,
                             ref,
                         )
-        elif lbl in ['Jmag', 'Hmag', 'Kmag', 'TESSmag', 'dist', 'spTyp']:
+        elif lbl in ['Jmag', 'Hmag', 'Kmag', 'TESSmag', 'Vmag', 'Zmag',
+                     'dist', 'spTyp']:
             pass  # these parameters don't have limit flags
         elif testTarget:
             pass  # limits are blank for test targets
         else:
-            print('  ERROR: no limit flag for ', lbl)
+            log.warning(
+                '--< ERROR: no limit flag for %s %s >--',
+                lbl,
+                target,
+            )
 
         try:
             values = autofill['starID'][target][lbl].copy()
