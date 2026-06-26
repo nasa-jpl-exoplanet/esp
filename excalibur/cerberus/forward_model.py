@@ -1,7 +1,7 @@
 '''cerberus forward_model ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,no-member
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
 import numpy as np
@@ -645,9 +645,8 @@ def gettau(
             toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
             # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
             # print('toptau shape', toptau_by_molecule[elem].shape) #103
-
-            # if extendedBoundaryCondition:
-            if 1:
+            
+            if extendedBoundaryCondition:
                 # analytictau = analyticIntegral * rho * top_mmr * top_sigma
                 # print(analyticIntegral.shape,
                 #      rho.shape,
