@@ -1984,14 +1984,17 @@ def ppar():
 
     # 5/21/26 Sophia Grusnis finds T0 is off in the JWST data
     # update to T0 from published JWST
-    overwrite['GJ 357'] = {
-        'b': {
-            't0': 2460282.34130,
-            't0_uperr': 0.00003,
-            't0_lowerr': -0.00003,
-            't0_ref': 'Adams Redai et al. 2025',
-        },
-    }
+    # 6/26/26 actually drop this.
+    #  1) there's a BJD-vs-MJD mistake in the paper so this off by 0.5 day
+    #  2) once corrected, it's not really any different from the default
+    # overwrite['GJ 357'] = {
+    #    'b': {
+    #        't0': 2460282.34130,
+    #        't0_uperr': 0.00003,
+    #        't0_lowerr': -0.00003,
+    #        't0_ref': 'Adams Redai et al. 2025',
+    #    },
+    # }
 
     return overwrite
 
