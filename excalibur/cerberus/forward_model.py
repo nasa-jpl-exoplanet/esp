@@ -659,10 +659,7 @@ def gettau(
                 analytictau_by_molecule[elem] = (
                     analyticIntegral[:, np.newaxis]
                     * rho[:, np.newaxis]
-                    *
-                    # mmr[:, np.newaxis] *
-                    # sigma.T  # full sigma array 100x103
-                    mmr[:, np.newaxis][49, :][np.newaxis, :]
+                    * mmr[:, np.newaxis][49, :][np.newaxis, :]
                     * sigma.T[49, :][np.newaxis, :]
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
