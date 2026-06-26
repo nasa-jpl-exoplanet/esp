@@ -645,7 +645,7 @@ def gettau(
             toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
             # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
             # print('toptau shape', toptau_by_molecule[elem].shape) #103
-            
+
             if extendedBoundaryCondition:
                 # analytictau = analyticIntegral * rho * top_mmr * top_sigma
                 # print(analyticIntegral.shape,
