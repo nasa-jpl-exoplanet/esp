@@ -1,6 +1,7 @@
 '''ariel forward_models ds'''
 
 # Heritage code shame:
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
 
 # import os
@@ -21,6 +22,8 @@ def make_cerberus_atmos(
     planet_letter,
     chemistry='TEC',
     mixratios=None,
+    improvedBoundaryCondition=True,
+    extendedBoundaryCondition=False,
 ):
     '''
     Create a simulated spectrum using the code that's better than the other ones
@@ -90,6 +93,8 @@ def make_cerberus_atmos(
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
         break_down_by_molecule=True,
+        improvedBoundaryCondition=improvedBoundaryCondition,
+        extendedBoundaryCondition=extendedBoundaryCondition,
     )
 
     return (

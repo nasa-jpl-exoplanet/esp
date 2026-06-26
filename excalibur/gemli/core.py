@@ -185,6 +185,9 @@ def mlfit(
             if 'cerberusGemliNoclouds' in arielsim['data'][p]:
                 arielModel = 'cerberusGemliNoclouds'
 
+            # print('ariel sim models available:', arielsim['data'][p].keys())
+            # print('ariel model used for gemli fitting:', arielModel)
+
             # MORE CAREFUL! cerberus.atmos is currently the cloudy model
             # decide here whether to use the cerb.atmos atm or arielsim spc
             # useAtmos = False
