@@ -264,7 +264,9 @@ class crbFM:
         for molecule in mixratio:
             # mixratio[molecule] = np.array(mixratio[molecule])
             if not mixratio[molecule].ndim:
-                mixratio[molecule] = np.array([float(mixratio[molecule])] * len(tpp))
+                mixratio[molecule] = np.array(
+                    [float(mixratio[molecule])] * len(tpp)
+                )
 
             # verify that the mixratio array has the right length (nlevels)
             if len(mixratio[molecule]) not in [int(nlevels)]:
@@ -567,19 +569,18 @@ def gettau(
     # print('Rplanet', rp0)  #3e7 = 300km ?!  should be 4.8*Rearth = 3e4 km
     # print('top of atmosphere', z[0],z[-1])  # 4.7e6 = 4700 km
     # print('top of atmosphere', sum(dz))  # ok the last dz is not used, right?
-    #Hestimate = np.exp(np.log(z[0] / z[-1]) / 20)   #
+    # Hestimate = np.exp(np.log(z[0] / z[-1]) / 20)   #
     # Rtop = rp0 + z[-1]
-    NscaleHeights = np.log(pressure[0]/pressure[-1])
+    NscaleHeights = np.log(pressure[0] / pressure[-1])
     Hestimate = (z[-1] - z[0]) / NscaleHeights
     # earth scale height is 8.5km.
     #  scale height goes as T/g = T Rp^2 / Mp
     #   M is 25 Mearth; R is 4.8; T is 800 so that predicts H = 22.4 km
     # print('scale height', Hestimate)  # 235 km  way off!
     # oh! ok mean molecular weight is much lower here.  it's like 3.1
-    
+
     analyticIntegral = np.sqrt(2 * np.pi * Hestimate * (rp0 + z))
     # print('shape', analyticIntegral.shape)
-
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
     for elem in mixratio:
@@ -639,13 +640,13 @@ def gettau(
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
 
-            top_sigma = sigma[:,-1]
+            top_sigma = sigma[:, -1]
             # this is a 1-D array, not 3-D.  just a function of wavelength
             toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
-            #print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
-            #print('toptau shape', toptau_by_molecule[elem].shape) #103
+            # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
+            # print('toptau shape', toptau_by_molecule[elem].shape) #103
 
-            #if extendedBoundaryCondition:
+            # if extendedBoundaryCondition:
             if 1:
                 # analytictau = analyticIntegral * rho * top_mmr * top_sigma
                 # print(analyticIntegral.shape,
@@ -657,12 +658,13 @@ def gettau(
                 #  or, to be fair, just use the 50th element to match below
                 # ok also mmr should just take the top value, if it's true B.C.
                 analytictau_by_molecule[elem] = (
-                    analyticIntegral[:, np.newaxis] *
-                    rho[:, np.newaxis] *
+                    analyticIntegral[:, np.newaxis]
+                    * rho[:, np.newaxis]
+                    *
                     # mmr[:, np.newaxis] *
                     # sigma.T  # full sigma array 100x103
-                    mmr[:, np.newaxis][49,:][np.newaxis, :] *
-                    sigma.T[49,:][np.newaxis, :]
+                    mmr[:, np.newaxis][49, :][np.newaxis, :]
+                    * sigma.T[49, :][np.newaxis, :]
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
 
@@ -725,12 +727,12 @@ def gettau(
         if True in ~np.isfinite(sigma):
             sigma[~np.isfinite(sigma)] = 0e0
             pass
-        
-        top_sigma = sigma[:,-1] 
+
+        top_sigma = sigma[:, -1]
         top_f1 = np.array(f1)[-1]
         top_f2 = np.array(f2)[-1]
 
-        toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho ** 2
+        toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
 
         # CB sigma (Nzones, Nzones, N_waves)
         # 1st dimension corrsponds to z
@@ -775,7 +777,7 @@ def gettau(
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hazeslope)
 
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma
-        
+
         # CB sigma (Nzones, Nzones, N_waves)
         # 1st dimension corrsponds to z
         # 2nd dimension corrsponds to z'
@@ -869,7 +871,7 @@ def gettau(
 
         top_rh = rh[-1]
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma * top_rh
-        
+
         # CB sigma (Nzones, Nzones, N_waves)
         # 1st dimension corrsponds to z
         # 2nd dimension corrsponds to z'
@@ -904,7 +906,8 @@ def gettau(
     if improvedBoundaryCondition:
         scaleHeightsDown = np.log(pressure / pressure[-1])
         experfEquation = np.exp(scaleHeightsDown) * (
-            1 - scipyspecial.erf(np.sqrt(scaleHeightsDown)))
+            1 - scipyspecial.erf(np.sqrt(scaleHeightsDown))
+        )
         # BCintegral = np.sqrt(2 * np.pi * Hestimate * (Rtop + z)) * experfEquation
         BCintegral = np.sqrt(2 * np.pi * Hestimate * (rp0 + z)) * experfEquation
 
@@ -913,13 +916,13 @@ def gettau(
         # BCintegral is a height array (len 100)
         # print('BCintegral', BCintegral)
         # print('BCintegral shape', BCintegral.shape)
-        BCintegral = BCintegral[:,np.newaxis]
+        BCintegral = BCintegral[:, np.newaxis]
         # print('BCintegral shape', BCintegral.shape)
 
         # print('scaleHdown', scaleHeightsDown)
         # print('experfeq', experfEquation)
         # exit()
-        
+
         for molecule in molecules:
             # print('  starting molecule=', molecule)
             # print('toptau', toptau_by_molecule[molecule])
@@ -929,25 +932,27 @@ def gettau(
 
             if molecule in toptau_by_molecule:
                 fractionalChange = (
-                    toptau_by_molecule[molecule][np.newaxis,:] *
-                    BCintegral / (tau_by_molecule[molecule] + 1.e-30)
+                    toptau_by_molecule[molecule][np.newaxis, :]
+                    * BCintegral
+                    / (tau_by_molecule[molecule] + 1.0e-30)
                 )
                 # hmm these are all the exact same (at same height). strange...
                 # print('fractional change', fractionalChange[40,:])
                 # this prints a range of heights (fixed wavelengths)
                 # print('fractional change', fractionalChange[:,40])
                 # check the H=10,lambda=3 case  aaaasdfasdf
-                print('fractional change', molecule, fractionalChange[48,48],
-                      np.min(fractionalChange), np.max(fractionalChange))
+                print(
+                    'fractional change',
+                    molecule,
+                    fractionalChange[48, 48],
+                    np.min(fractionalChange),
+                    np.max(fractionalChange),
+                )
 
                 tau_by_molecule[molecule] += (
-                    toptau_by_molecule[molecule][np.newaxis,:] *
-                    BCintegral
+                    toptau_by_molecule[molecule][np.newaxis, :] * BCintegral
                 )
-                tau += (
-                    toptau_by_molecule[molecule][np.newaxis,:] *
-                    BCintegral
-                )
+                tau += toptau_by_molecule[molecule][np.newaxis, :] * BCintegral
             else:
                 log.warning(
                     '--< molecule missing from atmos B.C.: %s >--', molecule
@@ -958,19 +963,24 @@ def gettau(
                 # print('shape check vs analytic', molecule,
                 #      tau_by_molecule[molecule].shape,
                 #      analytictau_by_molecule[molecule].shape)
-                #print('check vs analytic', molecule,
-                #      analytictau_by_molecule[molecule] / 
+                # print('check vs analytic', molecule,
+                #      analytictau_by_molecule[molecule] /
                 #      tau_by_molecule[molecule])
                 # pick a single wavelength and see how diff varies with height
-                print('check vs analytic', molecule,
-                      analytictau_by_molecule[molecule][:,57] / 
-                      tau_by_molecule[molecule][:,57])
+                print(
+                    'check vs analytic',
+                    molecule,
+                    analytictau_by_molecule[molecule][:, 57]
+                    / tau_by_molecule[molecule][:, 57],
+                )
 
                 # replace the upper half with the analytic part. see how it looks
                 # (and adjust the overall tau accordingly)
-                tau[50:,:] -= tau_by_molecule[molecule][50:,:]
-                tau[50:,:] += analytictau_by_molecule[molecule][50:,:]
-                tau_by_molecule[molecule][50:,:] = analytictau_by_molecule[molecule][50:,:]
+                tau[50:, :] -= tau_by_molecule[molecule][50:, :]
+                tau[50:, :] += analytictau_by_molecule[molecule][50:, :]
+                tau_by_molecule[molecule][50:, :] = analytictau_by_molecule[
+                    molecule
+                ][50:, :]
 
     if debug:
         plt.figure(figsize=(12, 6))
