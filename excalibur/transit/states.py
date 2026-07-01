@@ -202,7 +202,8 @@ class WhiteLightSV(ExcaliburSV):
                                 label='model',
                             )
                             # model phases only go from -0.5 to 0.5 (not good for eclipse)
-                            # plot the model line a second time, but shifting the phases over by 1
+                            # plot the model line a second time,
+                            # but shifting the phases over by 1
                             ax1.plot(
                                 modelphase[np.argsort(modelphase)] + 1,
                                 modellc[np.argsort(modelphase)],
@@ -282,15 +283,61 @@ class WhiteLightSV(ExcaliburSV):
                         visitor.add_image(
                             '...', ' ', self['data'][p][i]['plot_pixelmap']
                         )
-
+                        pass
+                    pass
+                pass
+            # >-- Sophia GRUSNIS: JWST
             elif 'JWST' in self.name():
-                # for each planet
-                for p in self['data'].keys():
-                    # for each event
-                    for i in range(len(self['data'][p])):
-                        # light curve fit
-                        fig = jwst_lightcurve(self['data'][p][i])
-                        save_plot_toscreen(fig, visitor)
+                sep = ' '
+                for pln in trnwht['data']:
+                    for dtc in trnwht['data'][pln]:
+                        for vst in [t for t in trnwht['data'][pln][dtc]
+                                    if t in str(np.arange(100))]:
+                            dat = trnwht['data'][pln][dtc][vst]
+                            tms = np.array(dat['prewhite_time'])
+                            trd = np.argsort(tms)
+                            select = abs(np.array(dat['prewhite_sep'])[trd]) < 2
+                            fig = plt.figure(figsize=(12, 9))
+                            gs = fig.add_gridspec(2, hspace=0)
+                            axs = gs.subplots(sharex=True, sharey=False)
+                            axs[0].set_title(' '.join([pln, dtc, vst]), fontsize=20)
+                            axs[0].errorbar(tms[trd][select],
+                                            np.array(dat['prewhite'])[trd][select], 
+                                            yerr=np.array(dat['prewhite_err'])[trd][select], marker='o', color='gray', alpha=0.2)
+                            axs[0].plot(tms[trd][select], np.array(dat['flatwht'])[trd][select], 'o', color='blue', alpha=0.5)
+                            axs[0].plot(tms[trd][select], np.array(dat['lcmodel'])[trd][select], 'r--')
+                            axs[0].set_xlabel('Time [JD]', fontsize=20)
+                            axs[0].set_ylabel('Flux [$F_*$]', fontsize=20)
+                            axs[0].tick_params(axis='both', labelsize=18)
+
+                            axs[1].plot(tms[trd][select],
+                                        np.array(dat['lcmodel'])[trd][select] - np.array(dat['flatwht'])[trd][select], 'bo', alpha=0.5)
+                            axs[1].plot(tms[trd][select], tms[trd][select]*0, '--')
+                            axs[1].fill_between(tms[trd][select], 
+                                                -np.array(dat['prewhite_err'])[trd][select], 
+                                                np.array(dat['prewhite_err'])[trd][select], 
+                                                color='gray', alpha=0.2)
+                            axs[1].fill_between(tms[trd][select], 
+                                                -2.*np.array(dat['prewhite_err'])[trd][select], 
+                                                2.*np.array(dat['prewhite_err'])[trd][select], 
+                                                color='gray', alpha=0.2)
+                            axs[1].tick_params(axis='both', labelsize=18)
+                            save_plot_toscreen(fig, visitor)
+                            fig = None
+                            fig = corner.corner(dat['mctrace'],
+                                                quantiles=[0.16, 0.5, 0.84],
+                                                levels=(0.393, 0.675,),
+                                                label_kwargs={"fontsize":20})
+                            save_plot_toscreen(fig, visitor)
+                            fig = None
+                            pass
+                        pass
+                    pass
+                pass
+            # JWST >--
+            pass
+        pass
+    pass
 
 
 class SpectrumSV(ExcaliburSV):
