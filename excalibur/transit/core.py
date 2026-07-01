@@ -3696,7 +3696,7 @@ def jwstspectrum(
     verbose=False,
     debug=False,
     donotuse=False,
-    bserr=8e-5,
+    bserr=None,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3738,16 +3738,13 @@ def jwstspectrum(
     spr = fin['priors'].copy()
     ssc = syscore.ssconstants()
     for pln in nrm['data']:
-        if verbose:
-            log.info('>--< Planet %s >', pln)
+        log.info('>--< Planet %s >', pln)
         out['data'][pln] = {}
         for det in nrm['data'][pln]['nspec']:
-            if verbose:
-                log.info('>----< %s >', det)
+            log.info('>----< %s >', det)
             out['data'][pln][det] = {}
             for vis in nrm['data'][pln]['nspec'][det]:
-                if verbose:
-                    log.info('>------< Visit %s >', vis)
+                log.info('>------< Visit %s >', vis)
                 out['data'][pln][det][vis] = {}
                 trd = np.argsort(nrm['data'][pln]['time'][det][vis])
                 zndata = nrm['data'][pln]['nspec'][det][vis].copy() - 1e0
@@ -3800,10 +3797,9 @@ def jwstspectrum(
                     # ERROR ESTIMATED ON DATA
                     sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
                     transiting = np.sum(np.isfinite(slc[np.abs(zst) < 1])) > ntm
-                    # TEST
-                    if (chn % 2) != 0 or (vis not in '1'):
-                        transiting = False
-                        pass
+                    # if (chn % 2) != 0 or (vis not in '1'):
+                    #    transiting = False
+                    #    pass
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
                     ) and transiting:
