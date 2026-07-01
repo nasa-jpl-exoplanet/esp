@@ -291,8 +291,11 @@ class WhiteLightSV(ExcaliburSV):
                 sep = ' '
                 for pln in trnwht['data']:
                     for dtc in trnwht['data'][pln]:
-                        for vst in [t for t in trnwht['data'][pln][dtc]
-                                    if t in str(np.arange(100))]:
+                        for vst in [
+                            t
+                            for t in trnwht['data'][pln][dtc]
+                            if t in str(np.arange(100))
+                        ]:
                             dat = trnwht['data'][pln][dtc][vst]
                             tms = np.array(dat['prewhite_time'])
                             trd = np.argsort(tms)
@@ -300,34 +303,71 @@ class WhiteLightSV(ExcaliburSV):
                             fig = plt.figure(figsize=(12, 9))
                             gs = fig.add_gridspec(2, hspace=0)
                             axs = gs.subplots(sharex=True, sharey=False)
-                            axs[0].set_title(' '.join([pln, dtc, vst]), fontsize=20)
-                            axs[0].errorbar(tms[trd][select],
-                                            np.array(dat['prewhite'])[trd][select], 
-                                            yerr=np.array(dat['prewhite_err'])[trd][select], marker='o', color='gray', alpha=0.2)
-                            axs[0].plot(tms[trd][select], np.array(dat['flatwht'])[trd][select], 'o', color='blue', alpha=0.5)
-                            axs[0].plot(tms[trd][select], np.array(dat['lcmodel'])[trd][select], 'r--')
+                            axs[0].set_title(
+                                ' '.join([pln, dtc, vst]), fontsize=20
+                            )
+                            axs[0].errorbar(
+                                tms[trd][select],
+                                np.array(dat['prewhite'])[trd][select],
+                                yerr=np.array(dat['prewhite_err'])[trd][select],
+                                marker='o',
+                                color='gray',
+                                alpha=0.2,
+                            )
+                            axs[0].plot(
+                                tms[trd][select],
+                                np.array(dat['flatwht'])[trd][select],
+                                'o',
+                                color='blue',
+                                alpha=0.5,
+                            )
+                            axs[0].plot(
+                                tms[trd][select],
+                                np.array(dat['lcmodel'])[trd][select],
+                                'r--',
+                            )
                             axs[0].set_xlabel('Time [JD]', fontsize=20)
                             axs[0].set_ylabel('Flux [$F_*$]', fontsize=20)
                             axs[0].tick_params(axis='both', labelsize=18)
 
-                            axs[1].plot(tms[trd][select],
-                                        np.array(dat['lcmodel'])[trd][select] - np.array(dat['flatwht'])[trd][select], 'bo', alpha=0.5)
-                            axs[1].plot(tms[trd][select], tms[trd][select]*0, '--')
-                            axs[1].fill_between(tms[trd][select], 
-                                                -np.array(dat['prewhite_err'])[trd][select], 
-                                                np.array(dat['prewhite_err'])[trd][select], 
-                                                color='gray', alpha=0.2)
-                            axs[1].fill_between(tms[trd][select], 
-                                                -2.*np.array(dat['prewhite_err'])[trd][select], 
-                                                2.*np.array(dat['prewhite_err'])[trd][select], 
-                                                color='gray', alpha=0.2)
+                            axs[1].plot(
+                                tms[trd][select],
+                                np.array(dat['lcmodel'])[trd][select]
+                                - np.array(dat['flatwht'])[trd][select],
+                                'bo',
+                                alpha=0.5,
+                            )
+                            axs[1].plot(
+                                tms[trd][select], tms[trd][select] * 0, '--'
+                            )
+                            axs[1].fill_between(
+                                tms[trd][select],
+                                -np.array(dat['prewhite_err'])[trd][select],
+                                np.array(dat['prewhite_err'])[trd][select],
+                                color='gray',
+                                alpha=0.2,
+                            )
+                            axs[1].fill_between(
+                                tms[trd][select],
+                                -2.0
+                                * np.array(dat['prewhite_err'])[trd][select],
+                                2.0
+                                * np.array(dat['prewhite_err'])[trd][select],
+                                color='gray',
+                                alpha=0.2,
+                            )
                             axs[1].tick_params(axis='both', labelsize=18)
                             save_plot_toscreen(fig, visitor)
                             fig = None
-                            fig = corner.corner(dat['mctrace'],
-                                                quantiles=[0.16, 0.5, 0.84],
-                                                levels=(0.393, 0.675,),
-                                                label_kwargs={"fontsize":20})
+                            fig = corner.corner(
+                                dat['mctrace'],
+                                quantiles=[0.16, 0.5, 0.84],
+                                levels=(
+                                    0.393,
+                                    0.675,
+                                ),
+                                label_kwargs={"fontsize": 20},
+                            )
                             save_plot_toscreen(fig, visitor)
                             fig = None
                             pass
@@ -337,6 +377,7 @@ class WhiteLightSV(ExcaliburSV):
             # JWST >--
             pass
         pass
+
     pass
 
 
