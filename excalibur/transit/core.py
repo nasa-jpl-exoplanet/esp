@@ -309,6 +309,7 @@ class TensorShell(tnsrgraph.Op):
 
 
 def truanderie(params, x, data=None, weights=None):
+    _ = x  # CI
     imlist = ['IM0', 'IM1', 'IM2', 'IM3']
     model = tldlc(
         abs(ctxt.allz),
@@ -2031,7 +2032,17 @@ def hstwhitelight(
     return True
 
 
-def jwstwl(nrm, fin, rtp, out, imo=4, thr=95, chainlen=int(1e6), verbose=False):
+def jwstwl(
+    nrm,
+    fin,
+    rtp,
+    out,
+    imo=4,
+    thr=95,
+    chainlen=int(1e6),
+    verbose=False,
+    debug=False,
+):
     '''
     GMR:JWST Whitelight
     [I]:nrm:[DICT]:transit.normalization SV as dict
