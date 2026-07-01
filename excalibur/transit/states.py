@@ -8,11 +8,11 @@
 
 import dawgie
 import logging
+import corner
 
 import excalibur
 from excalibur.transit.core import (
     composite_spectrum,
-    jwst_lightcurve,
     bin_spectrum,
 )
 from excalibur.util.plotters import (
@@ -288,15 +288,14 @@ class WhiteLightSV(ExcaliburSV):
                 pass
             # >-- Sophia GRUSNIS: JWST
             elif 'JWST' in self.name():
-                sep = ' '
-                for pln in trnwht['data']:
-                    for dtc in trnwht['data'][pln]:
+                for pln in self['data']:
+                    for dtc in self['data'][pln]:
                         for vst in [
                             t
-                            for t in trnwht['data'][pln][dtc]
+                            for t in self['data'][pln][dtc]
                             if t in str(np.arange(100))
                         ]:
-                            dat = trnwht['data'][pln][dtc][vst]
+                            dat = self['data'][pln][dtc][vst]
                             tms = np.array(dat['prewhite_time'])
                             trd = np.argsort(tms)
                             select = abs(np.array(dat['prewhite_sep'])[trd]) < 2
