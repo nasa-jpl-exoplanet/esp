@@ -328,6 +328,7 @@ def truanderie(params, x, data=None, weights=None):
         return data - model
     return (data - model) / weights
 
+
 # ----------------- --------------------------------------------------
 # -- NORMALIZATION -- ------------------------------------------------
 def normversion():
@@ -3682,20 +3683,20 @@ def spectrumversion():
 
 
 def jwstspectrum(
-        out,
-        nrm,
-        fin,
-        wht,
-        rtp=None,
-        chl=int(4e4),
-        rjc=95,
-        thr=5,
-        ntm=10,
-        imo=4,
-        verbose=False,
-        debug=False,
-        donotuse=False,
-        bserr=8e-5,
+    out,
+    nrm,
+    fin,
+    wht,
+    rtp=None,
+    chl=int(4e4),
+    rjc=95,
+    thr=5,
+    ntm=10,
+    imo=4,
+    verbose=False,
+    debug=False,
+    donotuse=False,
+    bserr=8e-5,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3914,7 +3915,8 @@ def jwstspectrum(
                             if not verbose:
                                 log.info('>-- SPECTRUM SAMPLER: Metropolis')
                                 log.info(
-                                    '>-- MCMC nodes: %s', str(prior_center.keys())
+                                    '>-- MCMC nodes: %s',
+                                    str(prior_center.keys()),
                                 )
                                 pass
                             if donotuse:
