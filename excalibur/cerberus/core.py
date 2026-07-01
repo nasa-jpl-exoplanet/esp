@@ -54,6 +54,7 @@ import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 from scipy.interpolate import interp1d as itp
+from scipy.interpolate import RegularGridInterpolator
 
 import pymc
 import pytensor.tensor as pytensr
@@ -141,6 +142,9 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
+ATOM_XSEC_dir = os.path.join(
+    excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
+)
 
 
 # ----------------- --------------------------------------------------
@@ -678,6 +682,21 @@ def atmos(
     '''
     G. ROUDIER: Cerberus retrieval
     '''
+
+    # atomic xsec loading
+    atom_list = ['Ca', 'K', 'Ca']
+    atom_xsec = {}
+    temp = np.load(ATOM_XSEC_dir + "temp.npy")
+    pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
+    X_H2 = np.load(ATOM_XSEC_dir + "XH2.npy")
+    wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
+    for atom in atom_list:
+        xsec = np.load(ATOM_XSEC_dir + atom + "/xsec.npy")
+        interp_xsec = RegularGridInterpolator(
+            (temp, pressure, X_H2, wgrid), xsec
+        )
+        atom_xsec[atom] = interp_xsec
+    ctxtupdt(atom_xsec=atom_xsec)
 
     okfit = False
     orbp = fin['priors'].copy()
