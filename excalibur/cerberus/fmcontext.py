@@ -36,6 +36,7 @@ CONTEXT = namedtuple(
         'lbroadening',
         'lshifting',
         'isothermal',
+        'Tparams',
     ],
 )
 
@@ -66,6 +67,7 @@ def ctxtinit():
         lbroadening=None,
         lshifting=None,
         isothermal=None,
+        Tparams=None,
     )
     return ctxt
 
@@ -82,6 +84,7 @@ def ctxtupdt(
     spc=None,
     modparlbl=None,
     hzlib=None,
+    Tparams=None,
     fixed_params=None,
     mcmcdat=None,
     mcmcsig=None,
@@ -117,6 +120,7 @@ def ctxtupdt(
         lbroadening=runtime.lbroadening,
         lshifting=runtime.lshifting,
         isothermal=runtime.isothermal,
+        Tparams=Tparams,
     )
 
     excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt
