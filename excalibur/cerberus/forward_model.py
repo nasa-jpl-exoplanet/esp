@@ -67,6 +67,7 @@ class crbFM:
         logx=False,
         verbose=False,
         debug=False,
+        Tparams=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
     ):
@@ -117,6 +118,8 @@ class crbFM:
             lshifting = ctxt.lshifting
         if not bool(lbroadening):
             lbroadening = ctxt.lbroadening
+        if Tparams is None:
+            Tparams = ctxt.Tparams
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -128,19 +131,6 @@ class crbFM:
         if hzlib is None:
             hzlib = ctxt.hzlib
 
-        temp = np.array(temp)
-        if temp.ndim:
-            tpp = temp
-        else:
-            tpp = np.array([float(temp)] * nlevels)
-            pass
-        # verify that the temperature array has the right length (nlevels)
-        if len(tpp) not in [int(nlevels)]:
-            log.error(
-                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
-            )
-            pass
-
         ssc = syscore.ssconstants(mks=True)
         pgrid = np.arange(
             np.log(solrad) - Hsmax,
@@ -150,6 +140,26 @@ class crbFM:
         pgrid = np.exp(pgrid)
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
+
+        temp = np.array(temp)
+        if temp.ndim:
+            tpp = temp
+        else:
+            tpp = np.array([float(temp)] * nlevels)
+            pass
+        # option for non-isothermal T-P profile
+        if Tparams is not None:
+            print('forward model with non-Isothermal T-P profile!!')
+            tppsaved = tpp
+            tpp = TPprofile(Tparams, pressure)
+        # print('tpp', tpp)
+
+        # verify that the temperature array has the right length (nlevels)
+        if len(tpp) not in [int(nlevels)]:
+            log.error(
+                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
+            )
+            pass
 
         mixratioprofiles = {}
         if not mixratio:
@@ -176,8 +186,11 @@ class crbFM:
             elif chemistry.startswith('TEA'):
                 #  (this one gives a div-by-0 error)
                 # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+                #  this is the correct way to pass in to Luke's _make_tp_profile
                 tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                #  but now we're passing in the T array directly, not params for it
                 mixratioprofiles = calcTEA(
+                    tpp,
                     tempCoeffs,
                     pressure,
                     metallicity=10.0 ** cheq['XtoH'],
@@ -186,10 +199,6 @@ class crbFM:
                 )
 
                 # have to take the average! (same as done in crbce)
-
-                #  REVISIT THIS LATER!!!
-                #  IT SHOULD BE ABLE TO HANDLE PROFILES NOW!!!
-
                 mixratio = {}
                 for molecule in mixratioprofiles:
                     mixratio[molecule] = np.log10(
@@ -499,6 +508,21 @@ class crbFM:
 def crbmodel(temp, cloudtp, **kwargs):
     log.info('use crbFM class to get additional saved results from crbmodel')
     return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum
+
+
+def TPprofile(sparseTgrid, pressures):
+    '''
+    interpolate a small set of temperatures over the full pressure grid
+    '''
+
+    sparsePgrid = np.linspace(np.log10(pressures[0]),
+                              np.log10(pressures[-1]), len(sparseTgrid))
+
+    # interp requires sparsePgrid to be increasing, so reverse its order
+    temperatures = np.interp(np.log10(pressures),
+                             sparsePgrid[::-1],
+                             sparseTgrid[::-1])
+    return temperatures
 
 
 # --------------------------- ----------------------------------------
@@ -936,14 +960,14 @@ def gettau(
                 # print('fractional change', fractionalChange[40,:])
                 # this prints a range of heights (fixed wavelengths)
                 # print('fractional change', fractionalChange[:,40])
-                # check the H=10,lambda=3 case  aaaasdfasdf
-                print(
-                    'fractional change',
-                    molecule,
-                    fractionalChange[48, 48],
-                    np.min(fractionalChange),
-                    np.max(fractionalChange),
-                )
+                # check the H=10,lambda=3 case
+                # print(
+                #    'fractional change',
+                #    molecule,
+                #    fractionalChange[48, 48],
+                #    np.min(fractionalChange),
+                #    np.max(fractionalChange),
+                # )
 
                 tau_by_molecule[molecule] += (
                     toptau_by_molecule[molecule][np.newaxis, :] * BCintegral

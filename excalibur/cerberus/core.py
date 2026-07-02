@@ -682,6 +682,10 @@ def atmos(
     okfit = False
     orbp = fin['priors'].copy()
 
+    # fit a T-P profile?
+    Tparams = None
+    nonisothermal = False
+
     ssc = syscore.ssconstants(mks=True)
     crbhzlib = {'PROFILE': []}
     hazelib(crbhzlib, hazedir=hazedir, verbose=False)
@@ -712,6 +716,14 @@ def atmos(
         # option to fix C/O
         if not runtime_params.fitCtoO:
             modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
+
+        if 'cerberusNonisothermal' in spc['data']['models']:
+            arielmodel = 'cerberusNonisothermal'
+            nonisothermal = True
+            Tparams = [1,0.8,1,1.2,1,1]
+            # hmm, labels?  Not really just yet at least
+            #  for chemtype in modparlbl:
+            #   modparlbl[chemtype].extend(Tparams)
 
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
@@ -1182,6 +1194,7 @@ def atmos(
                             spc=spc,
                             modparlbl=modparlbl,
                             hzlib=crbhzlib,
+                            Tparams=Tparams,
                             fixed_params=fixed_params,
                             mcmcdat=tspectrum[cleanup],
                             mcmcsig=tspecerr[cleanup],
@@ -1326,6 +1339,7 @@ def atmos(
                                 spc=spc,
                                 modparlbl=modparlbl,
                                 hzlib=crbhzlib,
+                                Tparams=Tparams,
                                 fixed_params=fixed_params,
                                 mcmcdat=tspectrum[cleanup],
                                 mcmcsig=tspecerr[cleanup],
