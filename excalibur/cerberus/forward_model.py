@@ -14,6 +14,8 @@ import scipy.special as scipyspecial
 
 from deprecated import deprecated
 
+import excalibur
+
 import excalibur.system.core as syscore
 
 from excalibur.util.cerberus import crbce, calcTEA, getmmw
@@ -60,6 +62,7 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
+        atom_list=None,
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -68,6 +71,7 @@ class crbFM:
         verbose=False,
         debug=False,
         Tparams=None,
+        atom_data=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
     ):
@@ -78,6 +82,8 @@ class crbFM:
         - VMR profile
         - MMW profile
         '''
+        if atom_list is None:
+            atom_list = ['Ca', 'K', 'Na']
         if planet is None:
             planet = ctxt.planet
         if orbp is None:
@@ -323,6 +329,7 @@ class crbFM:
             lbroadening,
             lshifting,
             cialist,
+            atom_list,
             fH2,
             fHe,
             xmollist,
@@ -332,6 +339,7 @@ class crbFM:
             hazeslope,
             hazeloc,
             hazethick,
+            atom_data,
             debug=debug,
             improvedBoundaryCondition=improvedBoundaryCondition,
             extendedBoundaryCondition=extendedBoundaryCondition,
@@ -541,6 +549,7 @@ def gettau(
     lbroadening,
     lshifting,
     cialist,
+    atom_list,
     fH2,
     fHe,
     xmollist,
@@ -550,6 +559,7 @@ def gettau(
     hazeslope,
     hazeloc,
     hazethick,
+    atom_data,
     debug=False,
     improvedBoundaryCondition=True,
     extendedBoundaryCondition=False,
@@ -623,10 +633,40 @@ def gettau(
                 # ignore missing xsecs for molecules without strong features
                 pass
             else:
-                log.error(
-                    'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
-                    elem,
-                )
+                if elem in atom_list:
+                    interp_atom = (
+                        excalibur.cerberus.forward_model.ctxt.atom_xsec
+                    )
+                    if interp_atom is None:
+                        interp_atom = atom_data
+                        pass
+                    if interp_atom is not None:
+                        # interpolator loading
+                        interpolator = interp_atom[elem]
+                        T = np.repeat(temp, len(wgrid))
+                        P = np.repeat(pressure, len(wgrid))
+                        X_H2 = np.repeat(fH2 / (fH2 + fHe), len(wgrid))
+                        wl = np.tile(wgrid, Nzones)
+                        points = np.column_stack((T, P, X_H2, wl))
+
+                        # xsec computation
+                        sigma = interpolator(points)
+                        sigma = np.reshape(
+                            sigma, (Nzones, len(wgrid))
+                        )  # cm^2/mol
+                        sigma = sigma[:, ::-1].T
+
+                        # sigma.shape(n_waves, n_pressure)
+                        sigma = sigma * 1e-4  # m^2/mol
+                        lsig = 1e4 / wgrid[::-1]
+                        pass
+                    pass
+                else:
+                    log.error(
+                        'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                        elem,
+                    )
+
         else:
             # Fake use of xmollist due to changes in xslib v112
             # THIS HAS TO BE FIXED
@@ -688,33 +728,21 @@ def gettau(
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
 
-            # CB sigma (Nzones, Nzones, N_waves)
-            # 1st dimension corrsponds to z
-            # 2nd dimension corrsponds to z'
-            # 3rd dimension corresponds to wavelength
-            sigma = np.broadcast_to(
-                sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-            ).copy()
-            tau_by_molecule[elem] = (
-                (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-                * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-                * sigma
-            )
+        # CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        sigma = np.broadcast_to(
+            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
+        ).copy()
+        tau_by_molecule[elem] = (
+            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * sigma
+        )
 
-            # special boundary condition to account for material above P_min
-            #
-            # add to the top grid cell for each integral path
-            # print('rho', rho)
-            # print('sigma',sigma)
-            # print('mmr',mmr)
-            # print('rho', rho.shape)
-            # print('sigma',sigma.shape)
-            # print('mmr',mmr.shape)
+        tau = tau + tau_by_molecule[elem]
 
-            # print('tau shape', elem, tau_by_molecule[elem].shape)
-            tau = tau + tau_by_molecule[elem]
-
-            pass
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
     for cia in cialist:
@@ -920,9 +948,6 @@ def gettau(
     #  use an analytic estimate for the integrated depth
     # (toptau.. is already defined above as rho*sigma at top of atmosphere)
 
-    # print('tau shape after line integral', tau_by_molecule[molecule].shape)
-
-    # print('molecules', molecules)
     if improvedBoundaryCondition:
         scaleHeightsDown = np.log(pressure / pressure[-1])
         experfEquation = np.exp(scaleHeightsDown) * (
@@ -987,12 +1012,12 @@ def gettau(
                 #      analytictau_by_molecule[molecule] /
                 #      tau_by_molecule[molecule])
                 # pick a single wavelength and see how diff varies with height
-                print(
-                    'check vs analytic',
-                    molecule,
-                    analytictau_by_molecule[molecule][:, 57]
-                    / tau_by_molecule[molecule][:, 57],
-                )
+                # print(
+                #    'check vs analytic',
+                #    molecule,
+                #    analytictau_by_molecule[molecule][:, 57]
+                #    / tau_by_molecule[molecule][:, 57],
+                # )
 
                 # replace the upper half with the analytic part. see how it looks
                 # (and adjust the overall tau accordingly)

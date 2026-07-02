@@ -37,6 +37,7 @@ CONTEXT = namedtuple(
         'lshifting',
         'isothermal',
         'Tparams',
+        'atom_xsec',
     ],
 )
 
@@ -68,6 +69,7 @@ def ctxtinit():
         lshifting=None,
         isothermal=None,
         Tparams=None,
+        atom_xsec=None,
     )
     return ctxt
 
@@ -90,6 +92,7 @@ def ctxtupdt(
     mcmcsig=None,
     nodeshape=None,
     forwardmodel=None,
+    atom_xsec=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -121,6 +124,7 @@ def ctxtupdt(
         lshifting=runtime.lshifting,
         isothermal=runtime.isothermal,
         Tparams=Tparams,
+        atom_xsec=atom_xsec,
     )
 
     excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt
