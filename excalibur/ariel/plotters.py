@@ -460,7 +460,7 @@ def plot_vertical_profiles(
     stylelist = ['-'] * 6 + ['--'] * 6 + [':'] * 6 + ['-.'] * 6
     # set mixing ratio boundaries for main molecules, trace molecules, and absolute cutoff
     floor_ppm = 1e-10
-    split_ppm = 1e-6
+    # split_ppm = 1e-6
     xmax_ppm = 1e6
 
     # myfig, (ax_main, ax_trace) = plt.subplots(

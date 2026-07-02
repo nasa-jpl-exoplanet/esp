@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 def calcTEA(
     temperatures,
-    tp_coeffs,
+    # tp_coeffs,
     pressure,
     species=None,
     metallicity=1.0,

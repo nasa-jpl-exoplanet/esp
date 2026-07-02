@@ -156,7 +156,7 @@ class crbFM:
         # option for non-isothermal T-P profile
         if Tparams is not None:
             print('forward model with non-Isothermal T-P profile!!')
-            tppsaved = tpp
+            # tppsaved = tpp
             tpp = TPprofile(Tparams, pressure)
         # print('tpp', tpp)
 
@@ -193,11 +193,11 @@ class crbFM:
                 #  (this one gives a div-by-0 error)
                 # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                 #  this is the correct way to pass in to Luke's _make_tp_profile
-                tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
                 #  but now we're passing in the T array directly, not params for it
                 mixratioprofiles = calcTEA(
                     tpp,
-                    tempCoeffs,
+                    # tempCoeffs,
                     pressure,
                     metallicity=10.0 ** cheq['XtoH'],
                     C_O=0.55 * 10.0 ** cheq['CtoO'],
@@ -977,11 +977,11 @@ def gettau(
             # print('toptau shape', toptau_by_molecule[molecule].shape) #103
 
             if molecule in toptau_by_molecule:
-                fractionalChange = (
-                    toptau_by_molecule[molecule][np.newaxis, :]
-                    * BCintegral
-                    / (tau_by_molecule[molecule] + 1.0e-30)
-                )
+                # fractionalChange = (
+                #    toptau_by_molecule[molecule][np.newaxis, :]
+                #    * BCintegral
+                #    / (tau_by_molecule[molecule] + 1.0e-30)
+                # )
                 # hmm these are all the exact same (at same height). strange...
                 # print('fractional change', fractionalChange[40,:])
                 # this prints a range of heights (fixed wavelengths)
