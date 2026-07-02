@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def calcTEA(
+    temperatures,
     tp_coeffs,
     pressure,
     species=None,
@@ -169,7 +170,9 @@ def calcTEA(
         return abund
 
     pressure = np.asarray(pressure, dtype=float)
-    temperature = _make_tp_profile(pressure, *tp_coeffs)
+    # temperature = _make_tp_profile(pressure, *tp_coeffs)
+    # T-P profile is no longer calculated here; full T array is passed in
+    temperature = temperatures
     if plot_tp:
         plt.plot(temperature, pressure)
         plt.yscale("log")
