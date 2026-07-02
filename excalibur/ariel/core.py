@@ -41,7 +41,6 @@ from excalibur.ariel.plotters import (
 import numpy as np
 import scipy.constants as cst
 
-
 log = logging.getLogger(__name__)
 
 ArielParams = namedtuple(
@@ -85,8 +84,10 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
         # log.error('TEA removed for now')
         tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
         mixratioprofiles = crbutil.calcTEA(
-            np.array([temperature]*len(pressureArray)),
-            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
+            np.array([temperature] * len(pressureArray)),
+            tempCoeffs,
+            pressureArray,
+            metallicity=10.0**X2Hr,
         )
         # have to take the average! (same as done in crbce)
         mixratio = {}
@@ -372,17 +373,23 @@ def simulate_spectra(
                 isothermal = not bool('Nonisothermal' in atmosModel)
                 if isothermal:
                     model_params['Tparams'] = None
-                    model_params['temperatures'] = np.array([model_params['Teq']] * len(pressure))
+                    model_params['temperatures'] = np.array(
+                        [model_params['Teq']] * len(pressure)
+                    )
                 else:
-                    model_params['Tparams'] = eqtemp * np.array([
-                        1.4,
-                        1.25,
-                        1.0,
-                        0.8,
-                        0.9,
-                        1.25,
-                    ])
-                    model_params['temperatures'] = TPprofile(model_params['Tparams'], pressure)
+                    model_params['Tparams'] = eqtemp * np.array(
+                        [
+                            1.4,
+                            1.25,
+                            1.0,
+                            0.8,
+                            0.9,
+                            1.25,
+                        ]
+                    )
+                    model_params['temperatures'] = TPprofile(
+                        model_params['Tparams'], pressure
+                    )
 
                 # ABUNDANCES
                 mixratio = {}

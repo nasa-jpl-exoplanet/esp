@@ -739,7 +739,7 @@ def atmos(
         if 'cerberusNonisothermal' in spc['data']['models']:
             arielmodel = 'cerberusNonisothermal'
             nonisothermal = True
-            Tparams = [1,0.8,1,1.2,1,1]
+            Tparams = [1, 0.8, 1, 1.2, 1, 1]
             # hmm, labels?  Not really just yet at least
             #  for chemtype in modparlbl:
             #   modparlbl[chemtype].extend(Tparams)

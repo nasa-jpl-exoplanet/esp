@@ -523,13 +523,14 @@ def TPprofile(sparseTgrid, pressures):
     interpolate a small set of temperatures over the full pressure grid
     '''
 
-    sparsePgrid = np.linspace(np.log10(pressures[0]),
-                              np.log10(pressures[-1]), len(sparseTgrid))
+    sparsePgrid = np.linspace(
+        np.log10(pressures[0]), np.log10(pressures[-1]), len(sparseTgrid)
+    )
 
     # interp requires sparsePgrid to be increasing, so reverse its order
-    temperatures = np.interp(np.log10(pressures),
-                             sparsePgrid[::-1],
-                             sparseTgrid[::-1])
+    temperatures = np.interp(
+        np.log10(pressures), sparsePgrid[::-1], sparseTgrid[::-1]
+    )
     return temperatures
 
 
