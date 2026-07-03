@@ -451,7 +451,7 @@ def mlfit(
             if 'TEA' in arielModel:
                 # tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                 mixratioprofiles = crbutil.calcTEA(
-                    np.array([model_params['Teq']] * len(pressure))
+                    np.array([model_params['Teq']] * len(pressure)),
                     # tempCoeffs,
                     pressure,
                     metallicity=10.0 ** model_params['metallicity'],
