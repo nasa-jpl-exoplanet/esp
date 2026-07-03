@@ -684,14 +684,14 @@ def atmos(
     '''
 
     # atomic xsec loading
-    atom_list = ['Ca', 'K', 'Ca']
+    atom_list = ['Ca', 'K', 'Na']
     atom_xsec = {}
     temp = np.load(ATOM_XSEC_dir + "temp.npy")
     pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-    X_H2 = np.load(ATOM_XSEC_dir + "XH2.npy")
+    X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
     wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
     for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + "/xsec.npy")
+        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
         interp_xsec = RegularGridInterpolator(
             (temp, pressure, X_H2, wgrid), xsec
         )
