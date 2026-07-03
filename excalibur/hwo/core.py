@@ -7,12 +7,10 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
-
+import numpy as np
 from collections import namedtuple
 
-# import excalibur
 import excalibur.system.core as syscore
-import excalibur.util.cerberus as crbutil
 
 from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
 
@@ -32,8 +30,6 @@ from excalibur.ariel.plotters import (
     plot_vertical_profiles,
 )
 
-import numpy as np
-import scipy.constants as cst
 
 log = logging.getLogger(__name__)
 
@@ -293,7 +289,7 @@ def simulate_spectra(
                         model_params['N/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
-                _, Hs = calc_mmw_Hs(
+                _, _, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
                     model_params['logg'],
