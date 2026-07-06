@@ -37,7 +37,6 @@ CONTEXT = namedtuple(
         'lbroadening',
         'lshifting',
         'isothermal',
-#        'Tparams',
         'atom_xsec',
     ],
 )
@@ -69,7 +68,6 @@ def ctxtinit():
         lbroadening=None,
         lshifting=None,
         isothermal=None,
-#        Tparams=None,
         atom_xsec=None,
     )
     return ctxt
@@ -87,7 +85,6 @@ def ctxtupdt(
     spc=None,
     modparlbl=None,
     hzlib=None,
-#    Tparams=None,
     fixed_params=None,
     mcmcdat=None,
     mcmcsig=None,
@@ -124,7 +121,6 @@ def ctxtupdt(
         lbroadening=runtime.lbroadening,
         lshifting=runtime.lshifting,
         isothermal=runtime.isothermal,
-#        Tparams=Tparams,
         atom_xsec=atom_xsec,
     )
 

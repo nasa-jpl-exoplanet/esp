@@ -30,7 +30,6 @@ from excalibur.ariel.plotters import (
     plot_vertical_profiles,
 )
 
-
 log = logging.getLogger(__name__)
 
 HWOparams = namedtuple(
@@ -61,6 +60,7 @@ HWOparams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE HWO SPECTRA ------------------------------------------
+
 
 def simulate_spectra(
     target,

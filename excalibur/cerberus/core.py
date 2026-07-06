@@ -701,9 +701,6 @@ def atmos(
     okfit = False
     orbp = fin['priors'].copy()
 
-    # fit a T-P profile?
-#    Tparams = None
-
     ssc = syscore.ssconstants(mks=True)
     crbhzlib = {'PROFILE': []}
     hazelib(crbhzlib, hazedir=hazedir, verbose=False)
@@ -739,12 +736,10 @@ def atmos(
             if 'cerberusNonisothermal' in spc['data']['models']:
                 arielmodel = 'cerberusNonisothermal'
                 arielmodel = 'cerberusNocloudsNonisothermal'
-                # Tparams = [1, 0.8, 1, 1.2, 1, 1]
-                # hmm, labels?  Not really just yet at least
-                #  for chemtype in modparlbl:
-                #   modparlbl[chemtype].extend(Tparams)
             else:
-                log.warning('--< TROUBLE: no nonisothermal ariel model during nonisothermal fitting >--')
+                log.warning(
+                    '--< TROUBLE: no nonisothermal ariel model during nonisothermal fitting >--'
+                )
 
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
@@ -1216,7 +1211,6 @@ def atmos(
                             spc=spc,
                             modparlbl=modparlbl,
                             hzlib=crbhzlib,
-#                            Tparams=Tparams,
                             fixed_params=fixed_params,
                             mcmcdat=tspectrum[cleanup],
                             mcmcsig=tspecerr[cleanup],
@@ -1361,7 +1355,6 @@ def atmos(
                                 spc=spc,
                                 modparlbl=modparlbl,
                                 hzlib=crbhzlib,
-#                                Tparams=Tparams,
                                 fixed_params=fixed_params,
                                 mcmcdat=tspectrum[cleanup],
                                 mcmcsig=tspecerr[cleanup],
@@ -1487,7 +1480,7 @@ def atmos(
                 all_traces = []
                 all_keys = []
                 for key, thistrace in mctrace.items():
-                    # print('going through keys in MCTRACE', key)
+                    print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if key == 'saved chi2':
                         all_keys.append('$\\chi^2$')
@@ -1536,7 +1529,7 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                # print('allKeys', all_keys)
+                print('allKeys', all_keys)
 
                 param_values_median = None
                 plot_corner(

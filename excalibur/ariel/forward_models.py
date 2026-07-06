@@ -33,7 +33,6 @@ def make_cerberus_atmos(
 
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
-    # Tparams = model_params['Tparams']
     if np.all(model_params['Tparams'] is not None):
         Teq = model_params['Tparams']
 
@@ -96,7 +95,6 @@ def make_cerberus_atmos(
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
-#        Tparams=Tparams,
         break_down_by_molecule=True,
         improvedBoundaryCondition=improvedBoundaryCondition,
         extendedBoundaryCondition=extendedBoundaryCondition,

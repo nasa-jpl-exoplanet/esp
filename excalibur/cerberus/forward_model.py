@@ -70,7 +70,6 @@ class crbFM:
         logx=False,
         verbose=False,
         debug=False,
-#        Tparams=None,
         atom_data=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
@@ -124,8 +123,6 @@ class crbFM:
             lshifting = ctxt.lshifting
         if not bool(lbroadening):
             lbroadening = ctxt.lbroadening
-#        if Tparams is None:
-#            Tparams = ctxt.Tparams
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -155,13 +152,8 @@ class crbFM:
             tpp = np.array([float(temp)] * nlevels)
             pass
         # print('  tpp', tpp)
-        # print('  Tparams', Tparams)
         # option for non-isothermal T-P profile
-        # if Tparams is not None:
-        #    print('Tparams forward model with non-Isothermal T-P profile!!')
-        #    # tppsaved = tpp
-        #    tpp = TPprofile(Tparams, pressure)
-        # if the temperature array has just a handful of elements,
+        #  if the temperature array has just a handful of elements,
         #  then it's actually the parameters for a T-P profile
         if len(tpp) not in [int(nlevels)]:
             # print('tpp forward model with non-Isothermal T-P profile!!')
