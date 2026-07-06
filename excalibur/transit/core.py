@@ -3725,6 +3725,9 @@ def jwstspectrum(
     [OPT]:verbose:[BOOL]:plots
     [OPT]:debug:[BOOL]:channel plots
     '''
+    # TRUANDERIE
+    if bserr is None:
+        bserr = 1e-3
     # LETHE
     z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
     rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
