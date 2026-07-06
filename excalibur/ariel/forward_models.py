@@ -34,7 +34,7 @@ def make_cerberus_atmos(
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
     # Tparams = model_params['Tparams']
-    if np.all(model_params['Tparams'] != None):
+    if np.all(model_params['Tparams'] is not None):
         Teq = model_params['Tparams']
 
     # CLOUD/HAZE PARAMETERS
