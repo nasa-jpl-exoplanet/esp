@@ -6,6 +6,7 @@
 
 # import os
 # import excalibur
+import numpy as np
 import excalibur.system.core as syscore
 from excalibur.cerberus.core import hazelib
 
@@ -32,7 +33,9 @@ def make_cerberus_atmos(
 
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
-    Tparams = model_params['Tparams']
+    # Tparams = model_params['Tparams']
+    if np.all(model_params['Tparams'] != None):
+        Teq = model_params['Tparams']
 
     # CLOUD/HAZE PARAMETERS
     ctp = model_params['CTP']
@@ -70,8 +73,8 @@ def make_cerberus_atmos(
 
     # CERBERUS FORWARD MODEL
     fmc = crbFM().crbmodel(
-        float(Teq),
-        float(ctp),
+        Teq,
+        ctp,
         hazescale=float(hazescale),
         hazeloc=float(hazeloc),
         hazethick=float(hazethick),
@@ -93,7 +96,7 @@ def make_cerberus_atmos(
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
-        Tparams=Tparams,
+#        Tparams=Tparams,
         break_down_by_molecule=True,
         improvedBoundaryCondition=improvedBoundaryCondition,
         extendedBoundaryCondition=extendedBoundaryCondition,

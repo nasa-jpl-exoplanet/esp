@@ -70,7 +70,7 @@ class crbFM:
         logx=False,
         verbose=False,
         debug=False,
-        Tparams=None,
+#        Tparams=None,
         atom_data=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
@@ -124,8 +124,8 @@ class crbFM:
             lshifting = ctxt.lshifting
         if not bool(lbroadening):
             lbroadening = ctxt.lbroadening
-        if Tparams is None:
-            Tparams = ctxt.Tparams
+#        if Tparams is None:
+#            Tparams = ctxt.Tparams
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -148,20 +148,29 @@ class crbFM:
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
         temp = np.array(temp)
+        # print('  temp', temp)
         if temp.ndim:
             tpp = temp
         else:
             tpp = np.array([float(temp)] * nlevels)
             pass
+        # print('  tpp', tpp)
+        # print('  Tparams', Tparams)
         # option for non-isothermal T-P profile
-        if Tparams is not None:
-            print('forward model with non-Isothermal T-P profile!!')
-            # tppsaved = tpp
-            tpp = TPprofile(Tparams, pressure)
-        # print('tpp', tpp)
+        # if Tparams is not None:
+        #    print('Tparams forward model with non-Isothermal T-P profile!!')
+        #    # tppsaved = tpp
+        #    tpp = TPprofile(Tparams, pressure)
+        # if the temperature array has just a handful of elements,
+        #  then it's actually the parameters for a T-P profile
+        if len(tpp) not in [int(nlevels)]:
+            # print('tpp forward model with non-Isothermal T-P profile!!')
+            tpp = TPprofile(temp, pressure)
+        # print('  tpp', tpp)
 
         # verify that the temperature array has the right length (nlevels)
         if len(tpp) not in [int(nlevels)]:
+            print('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
             log.error(
                 '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
             )
@@ -1285,6 +1294,7 @@ def clearfmcerberus(*crbinputs):
         # this extra list[] is needed for the single param case (only metallicity)
     else:
         tpr, mdp = crbinputs
+    # print('clearfmcerberus TPR = ', tpr)
     if not isinstance(mdp, list):
         mdp = [mdp]
     # print(' param values inside of forward model', tpr, mdp)

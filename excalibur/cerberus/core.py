@@ -702,8 +702,7 @@ def atmos(
     orbp = fin['priors'].copy()
 
     # fit a T-P profile?
-    Tparams = None
-    nonisothermal = False
+#    Tparams = None
 
     ssc = syscore.ssconstants(mks=True)
     crbhzlib = {'PROFILE': []}
@@ -736,13 +735,16 @@ def atmos(
         if not runtime_params.fitCtoO:
             modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
 
-        if 'cerberusNonisothermal' in spc['data']['models']:
-            arielmodel = 'cerberusNonisothermal'
-            nonisothermal = True
-            Tparams = [1, 0.8, 1, 1.2, 1, 1]
-            # hmm, labels?  Not really just yet at least
-            #  for chemtype in modparlbl:
-            #   modparlbl[chemtype].extend(Tparams)
+        if not runtime_params.isothermal:
+            if 'cerberusNonisothermal' in spc['data']['models']:
+                arielmodel = 'cerberusNonisothermal'
+                arielmodel = 'cerberusNocloudsNonisothermal'
+                # Tparams = [1, 0.8, 1, 1.2, 1, 1]
+                # hmm, labels?  Not really just yet at least
+                #  for chemtype in modparlbl:
+                #   modparlbl[chemtype].extend(Tparams)
+            else:
+                log.warning('--< TROUBLE: no nonisothermal ariel model during nonisothermal fitting >--')
 
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
@@ -813,6 +815,7 @@ def atmos(
                     # spc['data'][p]['WB'] = spc['data'][p][arielModel]['WB']
                     input_data['WB'] = spc['data'][p]['WB']
                 else:
+                    input_data = {}
                     log.warning(
                         '--< THIS arielModel DOESNT EXIST!!! (rerun ariel task?) >--'
                     )
@@ -1213,7 +1216,7 @@ def atmos(
                             spc=spc,
                             modparlbl=modparlbl,
                             hzlib=crbhzlib,
-                            Tparams=Tparams,
+#                            Tparams=Tparams,
                             fixed_params=fixed_params,
                             mcmcdat=tspectrum[cleanup],
                             mcmcsig=tspecerr[cleanup],
@@ -1358,7 +1361,7 @@ def atmos(
                                 spc=spc,
                                 modparlbl=modparlbl,
                                 hzlib=crbhzlib,
-                                Tparams=Tparams,
+#                                Tparams=Tparams,
                                 fixed_params=fixed_params,
                                 mcmcdat=tspectrum[cleanup],
                                 mcmcsig=tspecerr[cleanup],
