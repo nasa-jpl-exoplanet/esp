@@ -358,13 +358,18 @@ class WhiteLightSV(ExcaliburSV):
                             axs[1].tick_params(axis='both', labelsize=18)
                             save_plot_toscreen(fig, visitor)
                             fig = None
+                            mclbl = list(dat['mctrace'])
+                            mcarr = np.array(
+                                [dat['mctrace'][k] for k in dat['mctrace']]
+                            )
                             fig = corner.corner(
-                                dat['mctrace'],
+                                mcarr.T,
                                 quantiles=[0.16, 0.5, 0.84],
                                 levels=(
                                     0.393,
                                     0.675,
                                 ),
+                                labels=mclbl,
                                 label_kwargs={"fontsize": 20},
                             )
                             save_plot_toscreen(fig, visitor)
