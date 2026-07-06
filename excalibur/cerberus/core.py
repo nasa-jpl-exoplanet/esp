@@ -696,7 +696,7 @@ def atmos(
             (temp, pressure, X_H2, wgrid), xsec
         )
         atom_xsec[atom] = interp_xsec
-    ctxtupdt(atom_xsec=atom_xsec)
+    ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
     okfit = False
     orbp = fin['priors'].copy()
