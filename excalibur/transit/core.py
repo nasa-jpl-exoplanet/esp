@@ -3805,9 +3805,7 @@ def jwstspectrum(
                     bnndx = 0
                     bnnmx = len(zndata)
                     while bnndx < bnnmx:
-                        bnndxlmt = bnndx + bntst
-                        if bnndxlmt > bnnmx:
-                            bnndxlmt = bnnmx
+                        bnndxlmt = min(bnndx + bntst, bnnmx)
                         if not np.all(
                             ~np.isfinite(
                                 np.mean(zndata[bnndx:bnndxlmt], axis=0)
