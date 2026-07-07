@@ -3708,6 +3708,7 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bserr=None,
+    bntst=1,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3797,6 +3798,36 @@ def jwstspectrum(
                 zst = nrm['data'][pln]['z'][det][vis][trd]
                 allwvl = np.median(nrm['data'][pln]['wave'][det][vis], axis=0)
                 dltwvl = np.nanmedian(np.diff(allwvl))
+                # REBIN TEST
+                if bntst > 1:
+                    newzndata = []
+                    newallwvl = []
+                    bnndx = 0
+                    bnnmx = len(zndata)
+                    while bnndx < bnnmx:
+                        bnndxlmt = bnndx + bntst
+                        if bnndxlmt > bnnmx:
+                            bnndxlmt = bnnmx
+                        if not np.all(
+                            ~np.isfinite(
+                                np.mean(zndata[bnndx:bnndxlmt], axis=0)
+                            )
+                        ):
+                            newzndata.append(
+                                np.nanmean(zndata[bnndx:bnndxlmt], axis=0)
+                            )
+                            newallwvl.append(np.mean(allwvl[bnndx:bnndxlmt]))
+                            pass
+                        bnndx += bntst
+                        pass
+                    newdltwvl = np.nanmedian(np.diff(newallwvl))
+                    if not np.isfinite(newdltwvl):
+                        newdltwvl = np.max(dltwvl) - np.min(dltwvl)
+                    allwvl = np.array(newallwvl)
+                    dltwvl = newdltwvl
+                    zndata = np.array(newzndata)
+                    pass
+
                 argsdict = {
                     'progbar': verbose,
                     'progsizemax': 35,
@@ -3811,9 +3842,6 @@ def jwstspectrum(
                     # ERROR ESTIMATED ON DATA
                     sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
                     transiting = np.sum(np.isfinite(slc[np.abs(zst) < 1])) > ntm
-                    # if (chn % 2) != 0 or (vis not in '1'):
-                    #    transiting = False
-                    #    pass
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
                     ) and transiting:
@@ -3962,7 +3990,7 @@ def jwstspectrum(
                                     tune=int(chl / 2),
                                     compute_convergence_checks=False,
                                     step=sampler,
-                                    progressbar=verbose,
+                                    progressbar=debug,
                                 )
                                 mctrace = {}
                                 for k in [n.name for n in nodes]:
