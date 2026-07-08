@@ -680,7 +680,7 @@ def plot_corner(
 
             # select a random batch of Tparams coming out of the retrieval
             nwalkersteps = traces.shape[1]
-            print('# of walker steps', nwalkersteps)
+            # print('# of walker steps', nwalkersteps)
             Nrandom = 100
             np.random.seed(123)
             for i in range(Nrandom):
