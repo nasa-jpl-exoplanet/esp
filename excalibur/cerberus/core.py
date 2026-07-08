@@ -2166,10 +2166,14 @@ def results(
                     tprtrace_profiled = []
                     for param in atm[p][model_name]['MCTRACE']:
                         if param.startswith('Tparam'):
-                            tprtrace.append(atm[p][model_name]['MCTRACE'][param])
+                            tprtrace.append(
+                                atm[p][model_name]['MCTRACE'][param]
+                            )
                             tprtrace_profiled.append(tprtrace[-1][keepers])
                     tpr = np.median(np.array(tprtrace), axis=1)
-                    tpr_profiled = np.median(np.array(tprtrace_profiled), axis=1)
+                    tpr_profiled = np.median(
+                        np.array(tprtrace_profiled), axis=1
+                    )
                 elif fit_t:
                     tprtrace = atm[p][model_name]['MCTRACE']['T']
                     tprtrace_profiled = tprtrace[keepers]
@@ -2378,7 +2382,7 @@ def results(
                         if key == 'T':
                             param_values_bestfit[0] = trace[ibest]
                         elif key.startswith('Tparam'):
-                            if key=='Tparam[0]':
+                            if key == 'Tparam[0]':
                                 param_values_bestfit[0] = [trace[ibest]]
                             else:
                                 param_values_bestfit[0].append(trace[ibest])

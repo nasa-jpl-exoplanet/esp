@@ -674,7 +674,9 @@ def plot_corner(
 
             traces = np.vstack(np.array(profiletraces))
 
-            pressures = 10.**np.linspace(1, 1 - 20.*np.log10(np.exp(1)), 100)
+            pressures = 10.0 ** np.linspace(
+                1, 1 - 20.0 * np.log10(np.exp(1)), 100
+            )
 
             # select a random batch of Tparams coming out of the retrieval
             nwalkersteps = traces.shape[1]
@@ -683,24 +685,42 @@ def plot_corner(
             np.random.seed(123)
             for i in range(Nrandom):
                 iwalker = int(nwalkersteps * np.random.rand())
-                numTparams = np.sum([key.startswith('Tparam') for key in allkeys])
+                numTparams = np.sum(
+                    [key.startswith('Tparam') for key in allkeys]
+                )
                 # print('number of Tparams', numTparams)
                 Tparams = []
                 for i in range(numTparams):
-                    Tparams.append(traces[allkeys.index('Tparam['+str(i)+']'), iwalker])
+                    Tparams.append(
+                        traces[allkeys.index('Tparam[' + str(i) + ']'), iwalker]
+                    )
                 Tparams = np.array(Tparams)
                 Temps = TPprofile(Tparams, pressures)
                 axother.plot(Temps, pressures, 'k-', lw=0.5, zorder=1)
 
             # best-fit T-P profile is in red
-            if Tparams_bestFit != []:
+            if Tparams_bestFit:
                 bestTemps = TPprofile(Tparams_bestFit, pressures)
-                axother.plot(bestTemps, pressures, c=fitcolor, lw=2, zorder=3, label='best fit')
+                axother.plot(
+                    bestTemps,
+                    pressures,
+                    c=fitcolor,
+                    lw=2,
+                    zorder=3,
+                    label='best fit',
+                )
 
             # true T-P profile is in green
             if 'Tparams' in truth_params:
                 trueTemps = TPprofile(truth_params['Tparams'], pressures)
-                axother.plot(trueTemps, pressures, c=truthcolor, lw=2, zorder=3, label='truth')
+                axother.plot(
+                    trueTemps,
+                    pressures,
+                    c=truthcolor,
+                    lw=2,
+                    zorder=3,
+                    label='truth',
+                )
 
             axother.set_ylim(pressures[0], pressures[-1])
             axother.set_xlabel('Temperature (K)', fontsize=14)
