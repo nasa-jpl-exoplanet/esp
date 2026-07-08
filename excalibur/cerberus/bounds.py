@@ -1,6 +1,7 @@
 '''cerberus bounds ds'''
 
 # Heritage code shame:
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-positional-arguments
 
 # -- IMPORTS --------------------------------------------------------
@@ -256,10 +257,24 @@ def add_priors(
 
     if runtime_params.fitT:
         prior_ranges['T'] = prior_range_table['T']
-        nodes.append(
-            pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
-        )
-        nodeshape.append(1)
+        if runtime_params.isothermal:
+            # print('OK normal isothermal T')
+            nodes.append(
+                pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
+            )
+            nodeshape.append(1)
+        else:
+            # print('NEW non-isothermal T')
+            num_T_params = 6  # ERROR put this inside runtime ERROR
+            nodes.extend(
+                pymc.Uniform(
+                    'Tparam',
+                    lower=prior_range_table['T'][0],
+                    upper=prior_range_table['T'][1],
+                    shape=num_T_params,
+                )
+            )
+            nodeshape.append(num_T_params)
 
     for param in modparlbls:
         if param == 'XtoH':

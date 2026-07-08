@@ -684,19 +684,19 @@ def atmos(
     '''
 
     # atomic xsec loading
-    atom_list = ['Ca', 'K', 'Ca']
+    atom_list = ['Ca', 'K', 'Na']
     atom_xsec = {}
     temp = np.load(ATOM_XSEC_dir + "temp.npy")
     pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-    X_H2 = np.load(ATOM_XSEC_dir + "XH2.npy")
+    X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
     wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
     for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + "/xsec.npy")
+        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
         interp_xsec = RegularGridInterpolator(
             (temp, pressure, X_H2, wgrid), xsec
         )
         atom_xsec[atom] = interp_xsec
-    ctxtupdt(atom_xsec=atom_xsec)
+    ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
     okfit = False
     orbp = fin['priors'].copy()
@@ -731,6 +731,15 @@ def atmos(
         # option to fix C/O
         if not runtime_params.fitCtoO:
             modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
+
+        if not runtime_params.isothermal:
+            if 'cerberusNonisothermal' in spc['data']['models']:
+                arielmodel = 'cerberusNonisothermal'
+                arielmodel = 'cerberusNocloudsNonisothermal'
+            else:
+                log.warning(
+                    '--< TROUBLE: no nonisothermal ariel model during nonisothermal fitting >--'
+                )
 
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
@@ -801,6 +810,7 @@ def atmos(
                     # spc['data'][p]['WB'] = spc['data'][p][arielModel]['WB']
                     input_data['WB'] = spc['data'][p]['WB']
                 else:
+                    input_data = {}
                     log.warning(
                         '--< THIS arielModel DOESNT EXIST!!! (rerun ariel task?) >--'
                     )
@@ -1914,7 +1924,7 @@ def calculateSpectrum(
 
     fmc = np.zeros(transitdata['depth'].size)
     fmc = crbFM().crbmodel(
-        float(T),
+        T,
         float(CTP),
         hazescale=float(hazescale),
         hazeloc=float(hazeloc),
@@ -2123,6 +2133,7 @@ def results(
                 fit_n_to_o = '[N/O]' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
                 fit_t = 'T' in all_keys
+                fit_TPprofile = 'Tparam[0]' in all_keys
 
                 # save the relevant info
                 transitdata = {}
@@ -2149,9 +2160,22 @@ def results(
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
-                if fit_t:
+                # print('mctrace keys', atm[p][model_name]['MCTRACE'].keys())
+                if fit_TPprofile:
+                    tprtrace = []
+                    tprtrace_profiled = []
+                    for param in atm[p][model_name]['MCTRACE']:
+                        if param.startswith('Tparam'):
+                            tprtrace.append(
+                                atm[p][model_name]['MCTRACE'][param]
+                            )
+                            tprtrace_profiled.append(tprtrace[-1][keepers])
+                    tpr = np.median(np.array(tprtrace), axis=1)
+                    tpr_profiled = np.median(
+                        np.array(tprtrace_profiled), axis=1
+                    )
+                elif fit_t:
                     tprtrace = atm[p][model_name]['MCTRACE']['T']
-                    # tprtrace_profiled = atm[p][model_name]['MCTRACE']['T'][keepers]
                     tprtrace_profiled = tprtrace[keepers]
 
                     tpr = np.median(tprtrace)
@@ -2298,6 +2322,7 @@ def results(
                     tceqdict,
                     mixratio,
                 ]
+                # print('param_values median',param_values_median)
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
                     runtime_params,
@@ -2317,6 +2342,7 @@ def results(
                     tceqdict_profiled,
                     mixratio_profiled,
                 ]
+                # print('param_values profiled',param_values_profiled)
                 # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                 patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
@@ -2355,6 +2381,11 @@ def results(
                         # print(' best params', key, trace[ibest])
                         if key == 'T':
                             param_values_bestfit[0] = trace[ibest]
+                        elif key.startswith('Tparam'):
+                            if key == 'Tparam[0]':
+                                param_values_bestfit[0] = [trace[ibest]]
+                            else:
+                                param_values_bestfit[0].append(trace[ibest])
                         elif key == 'CTP':
                             param_values_bestfit[1] = trace[ibest]
                         elif key == 'HScale':
@@ -2376,6 +2407,7 @@ def results(
                             pass
                         else:
                             log.error('TROUBLE with best LogL: unknown param')
+                    # print('param_values bestfit',param_values_bestfit)
                     # print('best params', param_values_bestfit)
                     # print('')
                     patmos_bestfit, chi2best = calculateSpectrum(
@@ -2417,7 +2449,7 @@ def results(
                             hazescale = hazescaletrace[iwalker]
                             hazeloc = hazeloctrace[iwalker]
                             hazethick = hazethicktrace[iwalker]
-                        if fit_t:
+                        if fit_TPprofile or fit_t:
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
@@ -2631,9 +2663,11 @@ def results(
                 )
 
                 if verbose:
+                    print()
                     print('paramValues median  ', param_values_median)
                     # print('paramValues profiled', param_values_profiled)
                     print('paramValues bestFit ', param_values_bestfit)
+                    print()
 
                 # _______________CORNER PLOT________________
                 out['data'][p]['plot_corner_' + model_name], _ = plot_corner(
@@ -2651,7 +2685,6 @@ def results(
                     verbose=verbose,
                     saveDir=save_dir,
                 )
-
                 # _______________WALKER-EVOLUTION PLOT________________
                 out['data'][p]['plot_walkerevol_' + model_name], _ = (
                     plot_walker_evolution(

@@ -7,16 +7,15 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
-
+import numpy as np
 from collections import namedtuple
 
-# import excalibur
 import excalibur.system.core as syscore
-import excalibur.util.cerberus as crbutil
 
 from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
 
 from excalibur.cerberus.core import myxsecs
+from excalibur.ariel.core import calc_mmw_Hs
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.metallicity import (
@@ -30,9 +29,6 @@ from excalibur.ariel.plotters import (
     plot_depthprobed,
     plot_vertical_profiles,
 )
-
-import numpy as np
-import scipy.constants as cst
 
 log = logging.getLogger(__name__)
 
@@ -64,61 +60,6 @@ HWOparams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE HWO SPECTRA ------------------------------------------
-def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
-    '''
-    calculate the mean molecular weight and scale height
-    '''
-
-    # INCLUDE C/O RATIO HERE????  ASDF
-
-    if useTEA:
-        # log.error('TEA removed for now')
-        tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-        mixratioprofiles = crbutil.calcTEA(
-            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
-        )
-        # have to take the average! (same as done in crbce)
-        mixratio = {}
-        for molecule in mixratioprofiles:
-            mixratio[molecule] = np.log10(
-                np.mean(10.0 ** mixratioprofiles[molecule])
-            )
-
-        mmw, fH2, fHe = crbutil.getmmw(mixratio)
-
-        # (uncomment to compare TEC vs TEA)
-        # print('TEA:', mixratio, fH2, fHe)
-        # print('TEA: water profile', mixratioprofiles['H2O'])
-        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
-        #    pressureArray, temperature, X2Hr=X2Hr
-        # )
-        # print('TEC:', mixratio, fH2, fHe)
-        # print('TEC: water profile', mixratioprofiles['H2O'])
-
-    else:
-        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
-        mixratio, _, fH2, fHe = crbutil.crbce(
-            pressureArray, temperature, X2Hr=X2Hr
-        )
-        mmw, fH2, fHe = crbutil.getmmw(
-            mixratio,
-            protosolar=False,
-            fH2=fH2,
-            fHe=fHe,
-        )
-    # print('mmw      (inside)', mmw, fH2, fHe)
-
-    # print('mixratio (inside)', mixratio, fH2, fHe)
-    # X2Hr=cheq['XtoH'])
-    # assume solar C/O and N/O for now
-    # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-
-    mmw_kg = mmw * cst.m_p  # [kg]
-    Hs = (
-        cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
-    )  # [m]
-
-    return mmw, Hs
 
 
 def simulate_spectra(
@@ -348,7 +289,7 @@ def simulate_spectra(
                         model_params['N/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
-                _, Hs = calc_mmw_Hs(
+                _, _, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
                     model_params['logg'],
