@@ -1,10 +1,12 @@
 '''ariel forward_models ds'''
 
 # Heritage code shame:
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
 
 # import os
 # import excalibur
+import numpy as np
 import excalibur.system.core as syscore
 from excalibur.cerberus.core import hazelib
 
@@ -21,6 +23,8 @@ def make_cerberus_atmos(
     planet_letter,
     chemistry='TEC',
     mixratios=None,
+    improvedBoundaryCondition=True,
+    extendedBoundaryCondition=False,
 ):
     '''
     Create a simulated spectrum using the code that's better than the other ones
@@ -29,6 +33,8 @@ def make_cerberus_atmos(
 
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
+    if np.all(model_params['Tparams'] is not None):
+        Teq = model_params['Tparams']
 
     # CLOUD/HAZE PARAMETERS
     ctp = model_params['CTP']
@@ -66,8 +72,8 @@ def make_cerberus_atmos(
 
     # CERBERUS FORWARD MODEL
     fmc = crbFM().crbmodel(
-        float(Teq),
-        float(ctp),
+        Teq,
+        ctp,
         hazescale=float(hazescale),
         hazeloc=float(hazeloc),
         hazethick=float(hazethick),
@@ -90,6 +96,8 @@ def make_cerberus_atmos(
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
         break_down_by_molecule=True,
+        improvedBoundaryCondition=improvedBoundaryCondition,
+        extendedBoundaryCondition=extendedBoundaryCondition,
     )
 
     return (

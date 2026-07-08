@@ -1,6 +1,7 @@
 '''cerberus fmcontext ds'''
 
 # Heritage code shame:
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
 
 import excalibur
