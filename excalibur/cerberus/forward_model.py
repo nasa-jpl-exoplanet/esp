@@ -524,6 +524,8 @@ def TPprofile(sparseTgrid, pressures):
     interpolate a small set of temperatures over the full pressure grid
     '''
 
+    # print('P range in TPprofile', pressures[0], pressures[-1])
+
     sparsePgrid = np.linspace(
         np.log10(pressures[0]), np.log10(pressures[-1]), len(sparseTgrid)
     )

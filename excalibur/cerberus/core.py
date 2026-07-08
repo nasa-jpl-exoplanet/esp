@@ -1480,7 +1480,7 @@ def atmos(
                 all_traces = []
                 all_keys = []
                 for key, thistrace in mctrace.items():
-                    print('going through keys in MCTRACE', key)
+                    # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if key == 'saved chi2':
                         all_keys.append('$\\chi^2$')
@@ -1529,7 +1529,7 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                print('allKeys', all_keys)
+                # print('allKeys', all_keys)
 
                 param_values_median = None
                 plot_corner(
@@ -1924,7 +1924,7 @@ def calculateSpectrum(
 
     fmc = np.zeros(transitdata['depth'].size)
     fmc = crbFM().crbmodel(
-        float(T),
+        T,
         float(CTP),
         hazescale=float(hazescale),
         hazeloc=float(hazeloc),
@@ -2133,6 +2133,7 @@ def results(
                 fit_n_to_o = '[N/O]' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
                 fit_t = 'T' in all_keys
+                fit_TPprofile = 'Tparam[0]' in all_keys
 
                 # save the relevant info
                 transitdata = {}
@@ -2159,9 +2160,18 @@ def results(
                         'ERROR: true spectrum is present for non-simulated data'
                     )
 
-                if fit_t:
+                # print('mctrace keys', atm[p][model_name]['MCTRACE'].keys())
+                if fit_TPprofile:
+                    tprtrace = []
+                    tprtrace_profiled = []
+                    for param in atm[p][model_name]['MCTRACE']:
+                        if param.startswith('Tparam'):
+                            tprtrace.append(atm[p][model_name]['MCTRACE'][param])
+                            tprtrace_profiled.append(tprtrace[-1][keepers])
+                    tpr = np.median(np.array(tprtrace), axis=1)
+                    tpr_profiled = np.median(np.array(tprtrace_profiled), axis=1)
+                elif fit_t:
                     tprtrace = atm[p][model_name]['MCTRACE']['T']
-                    # tprtrace_profiled = atm[p][model_name]['MCTRACE']['T'][keepers]
                     tprtrace_profiled = tprtrace[keepers]
 
                     tpr = np.median(tprtrace)
@@ -2308,6 +2318,7 @@ def results(
                     tceqdict,
                     mixratio,
                 ]
+                # print('param_values median',param_values_median)
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
                     runtime_params,
@@ -2327,6 +2338,7 @@ def results(
                     tceqdict_profiled,
                     mixratio_profiled,
                 ]
+                # print('param_values profiled',param_values_profiled)
                 # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                 patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
@@ -2365,6 +2377,11 @@ def results(
                         # print(' best params', key, trace[ibest])
                         if key == 'T':
                             param_values_bestfit[0] = trace[ibest]
+                        elif key.startswith('Tparam'):
+                            if key=='Tparam[0]':
+                                param_values_bestfit[0] = [trace[ibest]]
+                            else:
+                                param_values_bestfit[0].append(trace[ibest])
                         elif key == 'CTP':
                             param_values_bestfit[1] = trace[ibest]
                         elif key == 'HScale':
@@ -2386,6 +2403,7 @@ def results(
                             pass
                         else:
                             log.error('TROUBLE with best LogL: unknown param')
+                    # print('param_values bestfit',param_values_bestfit)
                     # print('best params', param_values_bestfit)
                     # print('')
                     patmos_bestfit, chi2best = calculateSpectrum(
@@ -2427,7 +2445,7 @@ def results(
                             hazescale = hazescaletrace[iwalker]
                             hazeloc = hazeloctrace[iwalker]
                             hazethick = hazethicktrace[iwalker]
-                        if fit_t:
+                        if fit_TPprofile or fit_t:
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
@@ -2641,9 +2659,11 @@ def results(
                 )
 
                 if verbose:
+                    print()
                     print('paramValues median  ', param_values_median)
                     # print('paramValues profiled', param_values_profiled)
                     print('paramValues bestFit ', param_values_bestfit)
+                    print()
 
                 # _______________CORNER PLOT________________
                 out['data'][p]['plot_corner_' + model_name], _ = plot_corner(
@@ -2661,7 +2681,6 @@ def results(
                     verbose=verbose,
                     saveDir=save_dir,
                 )
-
                 # _______________WALKER-EVOLUTION PLOT________________
                 out['data'][p]['plot_walkerevol_' + model_name], _ = (
                     plot_walker_evolution(

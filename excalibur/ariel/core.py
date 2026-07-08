@@ -82,10 +82,10 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
 
     if useTEA:
         # log.error('TEA removed for now')
-        tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+        # tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
         mixratioprofiles = crbutil.calcTEA(
             np.array([temperature] * len(pressureArray)),
-            tempCoeffs,
+            # tempCoeffs,
             pressureArray,
             metallicity=10.0**X2Hr,
         )
@@ -174,6 +174,7 @@ def simulate_spectra(
         'cerberusTEA',
         'cerberuslowmmw',
         'cerberusNoclouds',
+        'cerberusNocloudsNonisothermal',
         'cerberusTEANoclouds',
         'cerberuslowmmwNoclouds',
         'cerberusGemliNoclouds',
@@ -382,8 +383,8 @@ def simulate_spectra(
                             1.4,
                             1.25,
                             1.0,
-                            0.8,
-                            0.9,
+                            0.85,
+                            0.95,
                             1.25,
                         ]
                     )
@@ -478,12 +479,10 @@ def simulate_spectra(
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
                     if 'Noclouds' in atmosModel:
-                        model_params['CTP'] = (
-                            3.0  # cloud deck is very deep - 1000 bars
-                        )
-                        model_params['HScale'] = (
-                            -10.0
-                        )  # small number means essentially no haze
+                        # locate cloud deck very deep (1000 bars)
+                        model_params['CTP'] = 3.0
+                        # small number (log scale) means essentially no haze
+                        model_params['HScale'] = -10.0
                         model_params['HLoc'] = 0.0
                         model_params['HThick'] = 0.0
                     else:
@@ -751,7 +750,8 @@ def simulate_spectra(
                         molecules,
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
-                        verbose=verbose,
+                        verbose=False,
+                        # verbose=verbose,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -770,7 +770,8 @@ def simulate_spectra(
                     molecules,
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
-                    verbose=verbose,
+                    verbose=False,
+                    # verbose=verbose,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (
                     plot_depthprobed(
@@ -780,7 +781,8 @@ def simulate_spectra(
                         wavelength_um_rebin,
                         pressure,
                         opticalDepthProfiles,
-                        verbose=verbose,
+                        verbose=False,
+                        # verbose=verbose,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
