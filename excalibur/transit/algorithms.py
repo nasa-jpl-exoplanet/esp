@@ -482,7 +482,7 @@ class Spectrum(dawgie.Algorithm):
                 debug=False,
                 donotuse=False,
                 bserr=None,
-                bntst=50,
+                bntst=10,
             )
             pass
         else:
