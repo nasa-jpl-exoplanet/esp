@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # import excalibur
+from excalibur.cerberus.forward_model import TPprofile
 from excalibur.ariel.metallicity import massMetalRelation
 from excalibur.system.core import ssconstants
 from excalibur.util.plotters import save_plot_tosv
@@ -461,9 +462,14 @@ def plot_corner(
         )
         # print('model param in corner plot',modelParams_bestFit)
 
+        Tparams_bestFit = []
         for param in allkeys:
             if param == 'T':
                 paramValues_bestFit.append(tpr)
+            elif param.startswith('Tparam'):
+                # print('tpr bestfit in corner', param, tpr[int(param[-2])])
+                paramValues_bestFit.append(tpr[int(param[-2])])
+                Tparams_bestFit.append(tpr[int(param[-2])])
             elif param == 'CTP':
                 paramValues_bestFit.append(ctp)
             elif param == 'HScale':
@@ -509,8 +515,10 @@ def plot_corner(
 
         if key in prior_ranges.keys():
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
-        # else:
-        #    print('TROUBLE: param not found',prior_ranges.keys())
+        elif key.startswith('Tparam') and ('T' in prior_ranges):
+            priorlo[ikey], priorhi[ikey] = prior_ranges['T']
+        elif key != '$\\chi^2_{red}$':
+            log.warning('--< TROUBLE: prior-range not found %s >--', key)
         # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
     # priorspan = priorhi - priorlo
     # priormid = (priorhi + priorlo) / 2.
@@ -531,11 +539,21 @@ def plot_corner(
     # print('lorange',lorange)
     truths = None
     if truth_params is not None:
+        # print('truth', truth_params)
         truths = []
         for thiskey in allkeys:
             # print('going through truth keys', thiskey)
+            # print('check',thiskey,('Tparam' in thiskey),('Tparam' in truth_params))
             if thiskey == 'T':
                 truths.append(truth_params['Teq'])
+            elif ('Tparam' in thiskey) and ('Tparams' in truth_params):
+                if int(thiskey[-2]) < len(truth_params['Tparams']):
+                    truths.append(truth_params['Tparams'][int(thiskey[-2])])
+                else:
+                    truths.append(666666)
+                    log.warning(
+                        '--< PROBLEM: not enough Tparam truth values >--'
+                    )
             elif thiskey == '[X/H]':
                 # truths.append(np.log10(truth_params['metallicity']))
                 truths.append(truth_params['metallicity'])
@@ -650,6 +668,45 @@ def plot_corner(
                 ax.axvline(
                     paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12
                 )
+        # show various T-P profiles in the upper right (empty) part of the corner
+        if 'Tparam[0]' in allkeys:
+            axother = figure.add_subplot(2, 3, 3)
+
+            traces = np.vstack(np.array(profiletraces))
+
+            pressures = 10.**np.linspace(1, 1 - 20.*np.log10(np.exp(1)), 100)
+
+            # select a random batch of Tparams coming out of the retrieval
+            nwalkersteps = traces.shape[1]
+            print('# of walker steps', nwalkersteps)
+            Nrandom = 100
+            np.random.seed(123)
+            for i in range(Nrandom):
+                iwalker = int(nwalkersteps * np.random.rand())
+                numTparams = np.sum([key.startswith('Tparam') for key in allkeys])
+                # print('number of Tparams', numTparams)
+                Tparams = []
+                for i in range(numTparams):
+                    Tparams.append(traces[allkeys.index('Tparam['+str(i)+']'), iwalker])
+                Tparams = np.array(Tparams)
+                Temps = TPprofile(Tparams, pressures)
+                axother.plot(Temps, pressures, 'k-', lw=0.5, zorder=1)
+
+            # best-fit T-P profile is in red
+            if Tparams_bestFit != []:
+                bestTemps = TPprofile(Tparams_bestFit, pressures)
+                axother.plot(bestTemps, pressures, c=fitcolor, lw=2, zorder=3, label='best fit')
+
+            # true T-P profile is in green
+            if 'Tparams' in truth_params:
+                trueTemps = TPprofile(truth_params['Tparams'], pressures)
+                axother.plot(trueTemps, pressures, c=truthcolor, lw=2, zorder=3, label='truth')
+
+            axother.set_ylim(pressures[0], pressures[-1])
+            axother.set_xlabel('Temperature (K)', fontsize=14)
+            axother.set_ylabel('Pressure (bar)', fontsize=14)
+            axother.semilogy()
+            axother.legend(fontsize=14)
 
     if savetodisk:
         plt.savefig(
