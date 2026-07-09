@@ -331,8 +331,8 @@ class WhiteLightSV(ExcaliburSV):
 
                             axs[1].plot(
                                 tms[trd][select],
-                                np.array(dat['lcmodel'])[trd][select]
-                                - np.array(dat['flatwht'])[trd][select],
+                                np.array(dat['flatwht'])[trd][select]
+                                - np.array(dat['lcmodel'])[trd][select],
                                 'bo',
                                 alpha=0.5,
                             )
