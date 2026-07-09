@@ -617,7 +617,7 @@ class SpectrumSV(ExcaliburSV):
             # --< JWST
             elif 'JWST' in self.name():
                 for pln in self['data']:
-                    dtc = list(self['data'][planet])
+                    dtc = list(self['data'][pln])
                     for vst in [
                         t
                         for t in self['data'][pln][dtc]
@@ -675,8 +675,8 @@ class SpectrumSV(ExcaliburSV):
                         axs[0].set_ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
                         axs[0].tick_params(axis='both', labelsize=18)
                         axs[1].tick_params(axis='both', labelsize=18)
-                        axs[1].set_ylabel('$\Delta_{LC}$', fontsize=20)
-                        axs[1].set_xlabel('Wavelength [$\mu$m]', fontsize=20)
+                        axs[1].set_ylabel(r'$\Delta_{LC}$', fontsize=20)
+                        axs[1].set_xlabel(r'Wavelength [$\mu$m]', fontsize=20)
                         save_plot_toscreen(fig, visitor)
                         fig = None
                         pass
