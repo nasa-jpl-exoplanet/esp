@@ -309,6 +309,9 @@ class TensorShell(tnsrgraph.Op):
 
 
 def truanderie(params, x, data=None, weights=None):
+    '''
+    GMR: Do not use
+    '''
     _ = x  # CI
     imlist = ['IM0', 'IM1', 'IM2', 'IM3']
     model = tldlc(
@@ -4025,7 +4028,7 @@ def jwstspectrum(
                             plt.show()
                             pass
                         wvl.append(allwvl[chn])
-                        trc.append(mctrace)
+                        # trc.append(mctrace)
                         spc.append(np.nanmedian(mctrace['rprs']))
                         spcerr.append(np.nanstd(mctrace['rprs']))
                         dta.append(ctxt.mcmcdat)
