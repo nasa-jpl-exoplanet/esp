@@ -626,7 +626,7 @@ def plot_corner(
             log.error(
                 '--< ERR: missing bestFit values in corner %s %s >--',
                 ndim,
-                len(paramValues_bestFit)
+                len(paramValues_bestFit),
             )
             ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
@@ -652,7 +652,7 @@ def plot_corner(
                     else:
                         log.error(
                             '--< ERR: not enough bestfit values xi %s %s >--',
-                            len(paramValuesFit),
+                            len(paramValues_bestFit),
                             ndim,
                         )
                     if yi < len(paramValues_bestFit):
@@ -660,11 +660,12 @@ def plot_corner(
                     else:
                         log.error(
                             '--< ERR: not enough bestfit values yi %s %s >--',
-                            len(paramValuesFit),
+                            len(paramValues_bestFit),
                             ndim,
                         )
-                    if yi < len(paramValues_bestFit) or \
-                       xi < len(paramValues_bestFit):
+                    if yi < len(paramValues_bestFit) or xi < len(
+                            paramValues_bestFit
+                    ):
                         ax.plot(
                             paramValues_bestFit[xi],
                             paramValues_bestFit[yi],
