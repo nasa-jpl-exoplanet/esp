@@ -33,6 +33,8 @@ def make_cerberus_atmos(
 
     # EQUILIBRIUM TEMPERATURE
     Teq = model_params['Teq']
+    if 'Tparams' not in model_params:
+        model_params['Tparams'] = None
     if np.all(model_params['Tparams'] is not None):
         Teq = model_params['Tparams']
 
