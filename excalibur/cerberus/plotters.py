@@ -622,6 +622,13 @@ def plot_corner(
         # figure.set_size_inches(16,16)  # this actually makes it smaller
 
         ndim = len(alltraces)
+        if ndim > len(paramValues_bestFit):
+            log.error(
+                '--< ERR: missing bestFit values in corner %s %s >--',
+                ndim,
+                len(paramValues_bestFit)
+            )
+            ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
         # use larger font size for the axis labels
         for i in range(ndim):
