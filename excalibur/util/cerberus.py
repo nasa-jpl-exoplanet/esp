@@ -184,16 +184,16 @@ def calcTEA(
         stoich_file=filedir + stoich_file,
     )
     ###
-#    print("elem_arr :", elem_arr)
+    #    print("elem_arr :", elem_arr)
 
     needed_elem = set(elem_arr) | {"H"}
 
-#    print("needed_elem :", needed_elem)
+    #    print("needed_elem :", needed_elem)
 
     gdir = Path(filedir + cfg_file).with_name("gdata")
     atomic = [_reservoir_base(el, gdir) for el in needed_elem]
 
-#    print("atomic :",atomic)
+    #    print("atomic :",atomic)
 
     species_ordered = []
     for sp in atomic:
@@ -204,12 +204,12 @@ def calcTEA(
             species_ordered.append(sp)
 
     species = species_ordered
-#    print("species :", species)
+    #    print("species :", species)
 
     abund = _scale_abund(
         {k: solar[k] for k in needed_elem}, metallicity, C_O, N_O
     )
-#    print("abund :",abund)
+    #    print("abund :",abund)
 
     input_elem = list(elem_arr)
     abund_vec = np.array([abund[e] for e in input_elem])
@@ -223,14 +223,14 @@ def calcTEA(
         abundances_path=filedir + abundance_file,
         cfg_file=filedir + cfg_file,
     )
-    
-#    print("pressure :",pre_atm['pressure'])
-#    print("temperature :",pre_atm['temperature'])
-#    print("atom_name :",pre_atm['atom_name'])
-#    print("atom_abundances :",pre_atm['atom_abundances'])
-#    print("output_species :",pre_atm['output_species'])
-#    pdb.set_trace()
-    
+
+    #    print("pressure :",pre_atm['pressure'])
+    #    print("temperature :",pre_atm['temperature'])
+    #    print("atom_name :",pre_atm['atom_name'])
+    #    print("atom_abundances :",pre_atm['atom_abundances'])
+    #    print("output_species :",pre_atm['output_species'])
+    #    pdb.set_trace()
+
     if verbose:
         print('  cpu time for makeatm', time.time() - time0)
 
@@ -258,7 +258,7 @@ def calcTEA(
         for sp in input_species
         if sp in df.columns
     }
-    
+
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
     # print('MIXRATIO IN TEA for h2o',np.log10(
     #    np.mean(10.0 ** mixratio['H2O'])))

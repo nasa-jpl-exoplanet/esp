@@ -86,14 +86,14 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
 
     # Get number of elements that occur in species of interest
     nspec = len(spec_list)
-    #print(spec_list[145])
+    # print(spec_list[145])
 
     # Trim suffix from species list
     nostate = np.copy(spec_list)
     for i in np.arange(nspec):
         nostate[i] = re.search('(.*?)_', spec_list[i]).group(1)
-    #print(nostate[145])
-    #print(len(nostate))
+    # print(nostate[145])
+    # print(len(nostate))
 
     # Location of the stoich_file
     stoich_file = stoich_file

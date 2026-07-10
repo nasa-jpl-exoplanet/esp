@@ -323,7 +323,6 @@ class crbFM:
 
         # CB, the linspace was adapted in the case of constant dz      
         z = np.concatenate(([0], np.cumsum(dz[:-1])))
-        
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
         tau, tau_by_molecule, wtau = gettau(
