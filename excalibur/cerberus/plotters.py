@@ -664,7 +664,7 @@ def plot_corner(
                             ndim,
                         )
                     if yi < len(paramValues_bestFit) or xi < len(
-                            paramValues_bestFit
+                        paramValues_bestFit
                     ):
                         ax.plot(
                             paramValues_bestFit[xi],
