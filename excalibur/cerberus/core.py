@@ -734,10 +734,16 @@ def atmos(
 
         if not runtime_params.isothermal:
             if 'cerberusNonisothermal' in spc['data']['models']:
-                arielmodel = 'cerberusNonisothermal'
-                arielmodel = 'cerberusNocloudsNonisothermal'
+                # arielmodel = 'cerberusNonisothermal'
+                # arielmodel = 'cerberusTEANonisothermal'
+                # arielmodel = 'cerberusNocloudsNonisothermal'
+                arielmodel += 'Nonisothermal'
+                log.info(
+                    '--< NONISOTHERMAL truth model: %s >--',
+                    arielmodel,
+                )
             else:
-                log.warning(
+                log.error(
                     '--< TROUBLE: no nonisothermal ariel model during nonisothermal fitting >--'
                 )
 
