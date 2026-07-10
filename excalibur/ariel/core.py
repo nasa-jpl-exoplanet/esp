@@ -573,22 +573,11 @@ def simulate_spectra(
                     # only calculate here if it's not set already as fixed value
                     if not mixratio:
                         if useTEA:
-                            T = model_params['Teq']
-                            tempCoeffs = [
-                                0,
-                                T,
-                                0,
-                                1,
-                                0,
-                                -1,
-                                1,
-                                0,
-                                -1,
-                                1,
-                            ]
+                            # T = model_params['Teq']
+                            # tempCoeffs = [0, T, 0, 1, 0, -1, 1, 0, -1, 1]
                             mixratioprofiles = crbutil.calcTEA(
                                 model_params['temperatures'],
-                                tempCoeffs,
+                                # tempCoeffs,
                                 pressure,
                                 metallicity=10.0 ** model_params['metallicity'],
                                 C_O=0.55 * 10.0 ** model_params['C/O'],
