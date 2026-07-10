@@ -2,7 +2,6 @@
 
 import dawgie.db
 import dawgie.security
-import excalibur.runtime.algorithms
 import excalibur.runtime
 import os
 
@@ -10,8 +9,9 @@ from excalibur.util.main import main_start
 
 if 'EXCALIBUR_PRIVATE_PIPELINE_INDEPENDENT' in os.environ:
     # need to fake some dawgie stuff so that can run the unit independent of any
-    # pipeline since it is the data in the configuration file that matters not any
-    # data or state of the pipeline itself. There going to
+    # pipeline since it is the data in the configuration file that matters not
+    # any data or state of the pipeline itself.
+    import excalibur.runtime.algorithms
 
     class FakeDawgie:
         def __init__(self):

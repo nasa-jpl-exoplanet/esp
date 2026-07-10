@@ -185,6 +185,9 @@ def mlfit(
             if 'cerberusGemliNoclouds' in arielsim['data'][p]:
                 arielModel = 'cerberusGemliNoclouds'
 
+            # print('ariel sim models available:', arielsim['data'][p].keys())
+            # print('ariel model used for gemli fitting:', arielModel)
+
             # MORE CAREFUL! cerberus.atmos is currently the cloudy model
             # decide here whether to use the cerb.atmos atm or arielsim spc
             # useAtmos = False
@@ -446,9 +449,10 @@ def mlfit(
             model_params = cerbatmos[p]['TRUTH_MODELPARAMS']
             # print('model_params', model_params)
             if 'TEA' in arielModel:
-                tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
+                # tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                 mixratioprofiles = crbutil.calcTEA(
-                    tempCoeffs,
+                    np.array([model_params['Teq']] * len(pressure)),
+                    # tempCoeffs,
                     pressure,
                     metallicity=10.0 ** model_params['metallicity'],
                     C_O=0.55 * 10.0 ** model_params['C/O'],

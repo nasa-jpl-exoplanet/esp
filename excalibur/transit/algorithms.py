@@ -477,9 +477,12 @@ class Spectrum(dawgie.Algorithm):
                 nrm,
                 fin,
                 wht,
-                rtp=runtime_params,
-                chl=chain_length,
+                chl=int(4e3),
                 verbose=False,
+                debug=False,
+                donotuse=False,
+                bserr=None,
+                bntst=10,
             )
             pass
         else:
