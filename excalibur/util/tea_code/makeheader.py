@@ -86,11 +86,14 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
 
     # Get number of elements that occur in species of interest
     nspec = len(spec_list)
+    #print(spec_list[145])
 
     # Trim suffix from species list
     nostate = np.copy(spec_list)
     for i in np.arange(nspec):
         nostate[i] = re.search('(.*?)_', spec_list[i]).group(1)
+    #print(nostate[145])
+    #print(len(nostate))
 
     # Location of the stoich_file
     stoich_file = stoich_file
@@ -107,6 +110,10 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
 
     # All species names
     allspec = stoich_data[2:, 0]
+    # for spec in allspec:
+    #     if spec == 'e':
+    #         print('True')
+    # print(nostate)
 
     # Elemental abundances
     # dex = stoich_data[0, 1:]
@@ -115,10 +122,21 @@ def read_stoich(spec_list, stoich_file='lib/stoich.txt'):
     # Trim species names and cast to float
     stoich_data = np.asarray(stoich_data[2:, 1:], np.double)
 
+    # for i in range(len(allspec)):
+    #     if allspec[i] == 'e_ion_n':
+    #         allspec[i] = 'e'
+    #     if allspec[i] == 'ONO_ion_n':
+    #         allspec[i] = 'ONO'
+    #     if allspec[i] == 'NaF2_ion_n':
+    #         allspec[i] = 'NaF2'
+    #     if allspec[i] == 'LiF2_ion_n':
+    #         allspec[i] = 'LiF2'
+
     # Select species
     # Has to be in a for-loop to keep order
     idx = np.zeros(nspec, int)
     for i in np.arange(nspec):
+        # print(i)
         idx[i] = np.where(allspec == nostate[i])[0][0]
     spec_stoich = stoich_data[idx]
 

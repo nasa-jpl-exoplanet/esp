@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import time
+import pdb
 
 import excalibur
 from excalibur.util.tea_code import makeatm
@@ -182,11 +183,17 @@ def calcTEA(
         species,
         stoich_file=filedir + stoich_file,
     )
+    ###
+#    print("elem_arr :", elem_arr)
 
     needed_elem = set(elem_arr) | {"H"}
 
+#    print("needed_elem :", needed_elem)
+
     gdir = Path(filedir + cfg_file).with_name("gdata")
     atomic = [_reservoir_base(el, gdir) for el in needed_elem]
+
+#    print("atomic :",atomic)
 
     species_ordered = []
     for sp in atomic:
@@ -197,10 +204,12 @@ def calcTEA(
             species_ordered.append(sp)
 
     species = species_ordered
+#    print("species :", species)
 
     abund = _scale_abund(
         {k: solar[k] for k in needed_elem}, metallicity, C_O, N_O
     )
+#    print("abund :",abund)
 
     input_elem = list(elem_arr)
     abund_vec = np.array([abund[e] for e in input_elem])
@@ -214,6 +223,14 @@ def calcTEA(
         abundances_path=filedir + abundance_file,
         cfg_file=filedir + cfg_file,
     )
+    
+#    print("pressure :",pre_atm['pressure'])
+#    print("temperature :",pre_atm['temperature'])
+#    print("atom_name :",pre_atm['atom_name'])
+#    print("atom_abundances :",pre_atm['atom_abundances'])
+#    print("output_species :",pre_atm['output_species'])
+#    pdb.set_trace()
+    
     if verbose:
         print('  cpu time for makeatm', time.time() - time0)
 
@@ -241,6 +258,7 @@ def calcTEA(
         for sp in input_species
         if sp in df.columns
     }
+    
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
     # print('MIXRATIO IN TEA for h2o',np.log10(
     #    np.mean(10.0 ** mixratio['H2O'])))
@@ -307,7 +325,7 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
 
     Xfactor = 10.0**X2Hr
     Cfactor = 10.0**C2Or
-    Nfactor = 10.0**C2Or
+    Nfactor = 10.0**N2Or
 
     # OLD linear method, with max limit at 2.84 dex
     # if Xfactor >= 1.0 / nXsolar:
