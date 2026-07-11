@@ -160,6 +160,9 @@ def simulate_spectra(
                 'Teq': system_params[planet_letter]['teq'],
             }
 
+            # for a T-P profile (non-isothermal atmosphere) insert code here
+            model_params['Tparams'] = None
+
             # Calculate the atmosphere scale height
             #  cerberus wants it, to normalize the spectrum
             #  (some of this code is copied from transit/core)
