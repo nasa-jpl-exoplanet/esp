@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
+import excalibur
 
 import scipy.special as scipyspecial
 
@@ -737,6 +738,21 @@ def gettau(
                     pass
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
+        print(elem)
+        print(np.shape(sigma))
+        # CB sigma (Nzones, Nzones, N_waves)
+        # 1st dimension corrsponds to z
+        # 2nd dimension corrsponds to z'
+        # 3rd dimension corresponds to wavelength
+        sigma = np.broadcast_to(
+            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
+        ).copy()
+        tau_by_molecule[elem] = (
+            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
+            * sigma
+        )
+        tau = tau + tau_by_molecule[elem]
 
         tau_by_molecule[elem] = (rho * mmr * sigma).T
         tau = tau + tau_by_molecule[elem]
