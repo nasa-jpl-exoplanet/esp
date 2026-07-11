@@ -18,7 +18,7 @@ TREF = 296e0
 PREF = 1e0
 
 # physical constants
-e_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
+ecgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
@@ -147,16 +147,6 @@ def vald_intensity(gf, elow, nu0, T, Q):
         ((gf * np.pi * e_cgs**2) / (me_cgs * c_cgs**2))
         * (1e0 / Q)
         * np.exp(-1e0 * c2 * elow / T)
-        sigma[:, idx] = S[:, None] * phi
-
-    return sigma
-
-
-# --------- ----------------------------------------------------------
-# -- CROSS SECTION WITH LINE BY LINE -- ------------------------------
-def atom_xsec(w_grid, specie, parameters):
-    # partition function computation
-    Q = partition_function(specie, parameters[:, 0])
 
     # lines loading
     data = load_lines()
