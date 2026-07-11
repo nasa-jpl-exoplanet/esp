@@ -228,14 +228,11 @@ class crbFM:
                 # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
                 #  but now we're passing in the T array directly, not params for it
                 mixratioprofiles = calcTEA(
-                    tpp,
-                    # tempCoeffs,
-                    pressure,
-                    metallicity=10.0 ** cheq['XtoH'],
-                    C_O=0.55 * 10.0 ** cheq['CtoO'],
-                    # N_O=?? * 10.0 ** cheq['NtoO'],
-                )
-
+                tempCoeffs,
+                pressure,
+                metallicity=10.0 ** cheq['XtoH'],
+                C_O=0.55 * 10.0 ** cheq['CtoO'],
+                # N_O=?? * 10.0 ** cheq['NtoO'],
                 # have to take the average! (same as done in crbce)
                 mixratio = {}
                 for molecule in mixratioprofiles:
@@ -780,7 +777,6 @@ def gettau(
             * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
             * sigma
         )
-
         tau = tau + tau_by_molecule[elem]
         pass
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
@@ -862,7 +858,6 @@ def gettau(
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
         sigma = sray0 * (wgrid[::-1] / slambda0) ** (hazeslope)
-
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma
 
         # CB sigma (Nzones, Nzones, N_waves)
@@ -955,7 +950,6 @@ def gettau(
             if True in negrh:
                 rh[negrh] = 0e0
             pass
-
         top_rh = rh[-1]
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma * top_rh
 
