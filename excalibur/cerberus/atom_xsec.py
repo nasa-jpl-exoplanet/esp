@@ -18,7 +18,7 @@ TREF = 296e0
 PREF = 1e0
 
 # physical constants
-ecgs = 4.80320427e-10  # Electron charge in cgs units (statC)
+charge_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
