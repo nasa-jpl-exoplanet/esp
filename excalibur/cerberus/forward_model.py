@@ -203,9 +203,7 @@ class crbFM:
                 #metallicity=10.0 ** cheq['XtoH'],
                 #C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
-                )
                 #mixratioprofiles['TIO'] = mixratioprofiles.pop('TiO')
-
                 #CB
                 #mixratioprofiles = {}
                 # species_name = ['CH4','CO2','CO','H2O','H2','H2S','He','N2','NH3','O3','SO2']

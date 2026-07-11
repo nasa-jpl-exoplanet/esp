@@ -150,6 +150,7 @@ def vald_intensity(gf, elow, nu0, T, Q):
     )
     return S
 
+
 # --------- ----------------------------------------------------------
 # -- VOIGT PROFILE -- ------------------------------------------------
 def voigt(nu_grid, nu0, T, mass, gamma):
