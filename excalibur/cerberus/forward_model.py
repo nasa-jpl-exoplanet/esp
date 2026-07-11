@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
+import excalibur
 
 import scipy.special as scipyspecial
 
@@ -62,7 +63,11 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
+<<<<<<< HEAD
         atom_list=None,
+=======
+        atom_list = ['Ca','K','Na'],
+>>>>>>> c389c37 (modif_atomic_cross_section)
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -71,8 +76,11 @@ class crbFM:
         verbose=False,
         debug=False,
         atom_data=None,
+<<<<<<< HEAD
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
+=======
+>>>>>>> c389c37 (modif_atomic_cross_section)
     ):
         '''
         G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
