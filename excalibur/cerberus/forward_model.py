@@ -63,7 +63,11 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
+<<<<<<< HEAD
         atom_list=None,
+=======
+        atom_list=['Ca', 'K', 'Na'],
+>>>>>>> 9dd0cbf (modifications_X_H2)
         nlevels=None,
         Hsmax=None,
         solrad=None,
