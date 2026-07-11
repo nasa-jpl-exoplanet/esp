@@ -738,8 +738,7 @@ def gettau(
                     pass
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
-        print(elem)
-        print(np.shape(sigma))
+
         # CB sigma (Nzones, Nzones, N_waves)
         # 1st dimension corrsponds to z
         # 2nd dimension corrsponds to z'
