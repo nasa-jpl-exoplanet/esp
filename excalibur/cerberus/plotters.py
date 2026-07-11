@@ -622,6 +622,13 @@ def plot_corner(
         # figure.set_size_inches(16,16)  # this actually makes it smaller
 
         ndim = len(alltraces)
+        if ndim > len(paramValues_bestFit):
+            log.error(
+                '--< ERR: missing bestFit values in corner %s %s >--',
+                ndim,
+                len(paramValues_bestFit),
+            )
+            ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
         # use larger font size for the axis labels
         for i in range(ndim):
@@ -640,14 +647,31 @@ def plot_corner(
                     # ax.axvline(mcmcMedian[xi], color=fitcolor)
                     # ax.axhline(mcmcMedian[yi], color=fitcolor)
                     # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
-                    ax.axvline(paramValues_bestFit[xi], color=fitcolor)
-                    ax.axhline(paramValues_bestFit[yi], color=fitcolor)
-                    ax.plot(
-                        paramValues_bestFit[xi],
-                        paramValues_bestFit[yi],
-                        marker='s',
-                        c=fitcolor,
-                    )
+                    if xi < len(paramValues_bestFit):
+                        ax.axvline(paramValues_bestFit[xi], color=fitcolor)
+                    else:
+                        log.error(
+                            '--< ERR: not enough bestfit values xi %s %s >--',
+                            len(paramValues_bestFit),
+                            ndim,
+                        )
+                    if yi < len(paramValues_bestFit):
+                        ax.axhline(paramValues_bestFit[yi], color=fitcolor)
+                    else:
+                        log.error(
+                            '--< ERR: not enough bestfit values yi %s %s >--',
+                            len(paramValues_bestFit),
+                            ndim,
+                        )
+                    if yi < len(paramValues_bestFit) or xi < len(
+                        paramValues_bestFit
+                    ):
+                        ax.plot(
+                            paramValues_bestFit[xi],
+                            paramValues_bestFit[yi],
+                            marker='s',
+                            c=fitcolor,
+                        )
             for i in range(ndim):
                 ax = axes[i, i]
                 # draw light-colored vertical lines in each hisogram for the prior
