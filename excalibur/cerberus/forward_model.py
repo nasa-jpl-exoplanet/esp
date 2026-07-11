@@ -1,7 +1,7 @@
 '''cerberus forward_model ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name,no-member
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
 import numpy as np
@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 import scipy.constants as cst
 from scipy.interpolate import interp1d as itp
 import logging
-
-import scipy.special as scipyspecial
 
 from deprecated import deprecated
 
@@ -62,7 +60,7 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
-        atom_list=None,
+        atom_list=['Ca', 'K', 'Na'],
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -71,8 +69,6 @@ class crbFM:
         verbose=False,
         debug=False,
         atom_data=None,
-        improvedBoundaryCondition=True,
-        extendedBoundaryCondition=False,
     ):
         '''
         G. ROUDIER: Cerberus forward model probing up to 'Hsmax' scale heights from solid
@@ -81,8 +77,6 @@ class crbFM:
         - VMR profile
         - MMW profile
         '''
-        if atom_list is None:
-            atom_list = ['Ca', 'K', 'Na']
         if planet is None:
             planet = ctxt.planet
         if orbp is None:
@@ -134,6 +128,38 @@ class crbFM:
         if hzlib is None:
             hzlib = ctxt.hzlib
 
+        temp = np.array(temp)
+        if temp.ndim:
+            tpp = temp
+        else:
+            tpp = np.array([float(temp)] * nlevels)
+            pass
+        # verify that the temperature array has the right length (nlevels)
+        if len(tpp) not in [int(nlevels)]:
+            log.error(
+                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
+            )
+            pass
+
+        if mixratio is not None:
+            mxr = {}
+            for molecule in mixratio:
+                mxr[molecule] = np.array(mixratio[molecule])
+                if not mxr[molecule].ndim:
+                    mxr[molecule] = np.array([float(mxr[molecule])] * len(tpp))
+                    pass
+                # verify that the mixratio array has the right length (nlevels)
+                if len(mxr[molecule]) not in [int(nlevels)]:
+                    log.error(
+                        '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
+                        nlevels,
+                    )
+                    pass
+                pass
+            pass
+        else:
+            mxr = None
+
         ssc = syscore.ssconstants(mks=True)
         pgrid = np.arange(
             np.log(solrad) - Hsmax,
@@ -143,30 +169,6 @@ class crbFM:
         pgrid = np.exp(pgrid)
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
-
-        temp = np.array(temp)
-        # print('  temp', temp)
-        if temp.ndim:
-            tpp = temp
-        else:
-            tpp = np.array([float(temp)] * nlevels)
-            pass
-        # print('  tpp', tpp)
-        # option for non-isothermal T-P profile
-        #  if the temperature array has just a handful of elements,
-        #  then it's actually the parameters for a T-P profile
-        if len(tpp) not in [int(nlevels)]:
-            # print('tpp forward model with non-Isothermal T-P profile!!')
-            tpp = TPprofile(temp, pressure)
-        # print('  tpp', tpp)
-
-        # verify that the temperature array has the right length (nlevels)
-        if len(tpp) not in [int(nlevels)]:
-            print('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
-            log.error(
-                '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
-            )
-            pass
 
         mixratioprofiles = {}
         if not mixratio:
@@ -203,7 +205,9 @@ class crbFM:
                 #metallicity=10.0 ** cheq['XtoH'],
                 #C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
+                )
                 #mixratioprofiles['TIO'] = mixratioprofiles.pop('TiO')
+
                 #CB
                 #mixratioprofiles = {}
                 # species_name = ['CH4','CO2','CO','H2O','H2','H2S','He','N2','NH3','O3','SO2']
@@ -222,9 +226,7 @@ class crbFM:
                 ####CODE TO KEEP IN THE PUSH
                 #  (this one gives a div-by-0 error)
                 # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-                #  this is the correct way to pass in to Luke's _make_tp_profile
-                # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-                #  but now we're passing in the T array directly, not params for it
+                tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
                 mixratioprofiles = calcTEA(
                 tempCoeffs,
                 pressure,
@@ -232,6 +234,10 @@ class crbFM:
                 C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
                 # have to take the average! (same as done in crbce)
+
+                #  REVISIT THIS LATER!!!
+                #  IT SHOULD BE ABLE TO HANDLE PROFILES NOW!!!
+
                 mixratio = {}
                 for molecule in mixratioprofiles:
                     mixratio[molecule] = mixratioprofiles[molecule]
@@ -285,35 +291,16 @@ class crbFM:
                 log.error('!!! >--< UNKNOWN CHEM MODEL: %s', chemistry)
                 pass
 
+            mxr = mixratio
             pass
         else:
             # DISEQ case
-            mmw, fH2, fHe = getmmw(mixratio)
+            mmw, fH2, fHe = getmmw(mxr)
 
             # mixing ratio is a fixed value for all atmospheric pressures
             for molecule in mixratio:
                 mixratioprofiles[molecule] = np.full(
                     (len(pressure)), mixratio[molecule]
-                )
-
-        # make sure that the mixing ratios are 1-d arrays over the pressure grid
-        #  (otherwise later calls may get mis-matched broadcasting problems)
-        if not fH2.ndim:
-            fH2 = np.array([float(fH2)] * len(tpp))
-        if not fHe.ndim:
-            fHe = np.array([float(fHe)] * len(tpp))
-        for molecule in mixratio:
-            # mixratio[molecule] = np.array(mixratio[molecule])
-            if not mixratio[molecule].ndim:
-                mixratio[molecule] = np.array(
-                    [float(mixratio[molecule])] * len(tpp)
-                )
-
-            # verify that the mixratio array has the right length (nlevels)
-            if len(mixratio[molecule]) not in [int(nlevels)]:
-                log.error(
-                    '!!! >--< MIXRATIO PROFILE != PRESSURE GRID: %s nlevels',
-                    nlevels,
                 )
 
         mmw = mmw * cst.m_p  # [kg]
@@ -328,25 +315,19 @@ class crbFM:
             / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
         )  # [m]
 
-        # print('T',tpp)
-        # print('mmw',mmw)
-        # print('logg',10.0 ** float(orbp[planet]['logg']))
-        # print('Hs!!!!!', Hs)
-
         # when the Pressure grid is log-spaced, rdz is a constant
         #  drop dz[] and dzprime[] arrays and just use this constant instead
         dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
 
         # CB, the linspace was adapted in the case of constant dz      
         z = np.concatenate(([0], np.cumsum(dz[:-1])))
-        
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
         tau, tau_by_molecule, wtau = gettau(
             xsecs,
             qtgrid,
             tpp,
-            mixratio,
+            mxr,
             z,
             dz,
             rho,
@@ -368,8 +349,6 @@ class crbFM:
             hazethick,
             atom_data,
             debug=debug,
-            improvedBoundaryCondition=improvedBoundaryCondition,
-            extendedBoundaryCondition=extendedBoundaryCondition,
         )
         if not break_down_by_molecule:
             tau_by_molecule = {}
@@ -459,7 +438,7 @@ class crbFM:
             fig, ax1 = plt.subplots(figsize=(10, 6))
             ax2 = ax1.twiny()
 
-            for k in mixratio.items():
+            for k in mxr.items():
                 ax1.plot(pressure * 0 + k[1], pressure, label=k[0])
                 pass
             ax1.legend(loc='upper left')
@@ -545,24 +524,6 @@ def crbmodel(temp, cloudtp, **kwargs):
     return crbFM().crbmodel(temp, cloudtp, **kwargs).spectrum
 
 
-def TPprofile(sparseTgrid, pressures):
-    '''
-    interpolate a small set of temperatures over the full pressure grid
-    '''
-
-    # print('P range in TPprofile', pressures[0], pressures[-1])
-
-    sparsePgrid = np.linspace(
-        np.log10(pressures[0]), np.log10(pressures[-1]), len(sparseTgrid)
-    )
-
-    # interp requires sparsePgrid to be increasing, so reverse its order
-    temperatures = np.interp(
-        np.log10(pressures), sparsePgrid[::-1], sparseTgrid[::-1]
-    )
-    return temperatures
-
-
 # --------------------------- ----------------------------------------
 # -- TAU -- ----------------------------------------------------------
 def gettau(
@@ -591,21 +552,17 @@ def gettau(
     hazethick,
     atom_data,
     debug=False,
-    improvedBoundaryCondition=True,
-    extendedBoundaryCondition=False,
 ):
     '''
     G. ROUDIER: Builds optical depth matrix
     '''
 
-    # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) -----------------------------------
-    # MATRICES INIT --------------------------------------------------------------
+    # SPHERICAL SHELL (PLANE-PARALLEL REMOVED) ---------------------------------------
+    # MATRICES INIT ------------------------------------------------------------------
     Nzones = len(pressure)
     tau = np.zeros((Nzones, wgrid.size))
     tau_by_molecule = {}
-    toptau_by_molecule = {}
-    analytictau_by_molecule = {}
-    # DL ARRAY, Z VERSUS ZPRIME --------------------------------------------------
+    # DL ARRAY, Z VERSUS ZPRIME ------------------------------------------------------
     zprime = np.broadcast_to(z, (Nzones, Nzones))
     thisz = zprime.T
 
@@ -622,31 +579,7 @@ def gettau(
         )
     )
     dlarray = dl - dl0
-
-    # print('dlarray shape', dlarray.shape)
-    # print('dlarray[0]', dlarray[0])
-    # print('dlarray[-1]', dlarray[-1])
-
-    top_rho = rho[-1]
-    # bottom_rho = rho[0]
-    # rp0 is in units of meters.  z,dz also
-    # print('Rplanet', rp0)  #3e7 = 300km ?!  should be 4.8*Rearth = 3e4 km
-    # print('top of atmosphere', z[0],z[-1])  # 4.7e6 = 4700 km
-    # print('top of atmosphere', sum(dz))  # ok the last dz is not used, right?
-    # Hestimate = np.exp(np.log(z[0] / z[-1]) / 20)   #
-    # Rtop = rp0 + z[-1]
-    NscaleHeights = np.log(pressure[0] / pressure[-1])
-    Hestimate = (z[-1] - z[0]) / NscaleHeights
-    # earth scale height is 8.5km.
-    #  scale height goes as T/g = T Rp^2 / Mp
-    #   M is 25 Mearth; R is 4.8; T is 800 so that predicts H = 22.4 km
-    # print('scale height', Hestimate)  # 235 km  way off!
-    # oh! ok mean molecular weight is much lower here.  it's like 3.1
-
-    analyticIntegral = np.sqrt(2 * np.pi * Hestimate * (rp0 + z))
-    # print('shape', analyticIntegral.shape)
-
-    # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
+    # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for elem in mixratio:
         mlp = np.array(mixratio[elem])
         if not mlp.ndim:
@@ -656,7 +589,6 @@ def gettau(
             log.error('!!! >--< %s VMR PROFILE NOT ON PRESSURE GRID', elem)
             pass
         mmr = 10.0 ** (mlp - 6.0)  # mmr.shape(n_pressure)
-        top_mmr = mmr[-1]
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
             if elem in ['H2', 'He']:
@@ -704,7 +636,7 @@ def gettau(
             # THIS HAS TO BE FIXED
             # if elem not in xmollist:
             if not xmollist:
-                # HITEMP/HITRAN ROTHMAN ET AL. 2010 ------------------------------
+                # HITEMP/HITRAN ROTHMAN ET AL. 2010 --------------------------------------
                 sigma, lsig = absorb(
                     xsecs[elem],
                     qtgrid[elem],
@@ -724,7 +656,7 @@ def gettau(
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
             else:
-                # EXOMOL HILL ET AL. 2013 ----------------------------------------
+                # EXOMOL HILL ET AL. 2013 ------------------------------------------------
                 sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
                 # sigma.shape(n_waves, n_pressure)
                 if True in (sigma < 0):
@@ -773,7 +705,7 @@ def gettau(
         )
         tau = tau + tau_by_molecule[elem]
         pass
-    # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
+    # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------------------
     for cia in cialist:
         if cia == 'H2-H2':
             f1 = fH2
@@ -805,49 +737,19 @@ def gettau(
             sigma[~np.isfinite(sigma)] = 0e0
             pass
 
-        top_sigma = sigma[:, -1]
-        top_f1 = np.array(f1)[-1]
-        top_f2 = np.array(f2)[-1]
-
-        toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
-
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[cia] = (
-            (f1 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (f2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-            * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis] ** 2
-        )
+        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
         tau = tau + tau_by_molecule[cia]
 
-    # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------
+    # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -----------------------------------
     # NAUS & UBACHS 2000
     slambda0 = 750.0 * 1e-3  # microns
     sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
     sigma = sray0 * (wgrid[::-1] / slambda0) ** (-4e0)
 
-    top_fH2 = np.array(fH2)[-1]
-    toptau_by_molecule['rayleigh'] = top_fH2 * top_rho * sigma
-
-    # CB sigma (Nzones, Nzones, N_waves)
-    # 1st dimension corrsponds to z
-    # 2nd dimension corrsponds to z'
-    # 3rd dimension corresponds to wavelength
-    sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
-    tau_by_molecule['rayleigh'] = (
-        (fH2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * sigma
-    )
+    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
     tau = tau + tau_by_molecule['rayleigh']
 
-    # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
+    # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  ------------------------------------------
     if hzlib is None:
         slambda0 = 750.0 * 1e-3  # microns
         sray0 = 2.52 * 1e-28 * 1e-4  # m^2/mol
@@ -947,16 +849,7 @@ def gettau(
         top_rh = rh[-1]
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma * top_rh
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        hazecontribution = (
-            10.0**hazescale
-            * np.broadcast_to(
-                sigma * np.array([rh]).T, (Nzones, Nzones, len(wgrid))
-            ).copy()
-        )
+        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = hazecontribution
         tau = tau + tau_by_molecule['haze']
         pass
@@ -967,89 +860,6 @@ def gettau(
         tau_by_molecule[molecule] = (
             2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
         )
-
-    # include the upper boundary condition on atmosphere here, after line integral
-    #  use an analytic estimate for the integrated depth
-    # (toptau.. is already defined above as rho*sigma at top of atmosphere)
-
-    if improvedBoundaryCondition:
-        scaleHeightsDown = np.log(pressure / pressure[-1])
-        experfEquation = np.exp(scaleHeightsDown) * (
-            1 - scipyspecial.erf(np.sqrt(scaleHeightsDown))
-        )
-        # BCintegral = np.sqrt(2 * np.pi * Hestimate * (Rtop + z)) * experfEquation
-        BCintegral = np.sqrt(2 * np.pi * Hestimate * (rp0 + z)) * experfEquation
-
-        # ok careful with array broadcasting here
-        # toptau is a wavelength array (len 103)
-        # BCintegral is a height array (len 100)
-        # print('BCintegral', BCintegral)
-        # print('BCintegral shape', BCintegral.shape)
-        BCintegral = BCintegral[:, np.newaxis]
-        # print('BCintegral shape', BCintegral.shape)
-
-        # print('scaleHdown', scaleHeightsDown)
-        # print('experfeq', experfEquation)
-        # exit()
-
-        for molecule in molecules:
-            # print('  starting molecule=', molecule)
-            # print('toptau', toptau_by_molecule[molecule])
-            # print('tau shape', tau_by_molecule[molecule].shape) #100x103
-            # print('tau shape', tau_by_molecule[molecule][-1].shape) #103
-            # print('toptau shape', toptau_by_molecule[molecule].shape) #103
-
-            if molecule in toptau_by_molecule:
-                # fractionalChange = (
-                #    toptau_by_molecule[molecule][np.newaxis, :]
-                #    * BCintegral
-                #    / (tau_by_molecule[molecule] + 1.0e-30)
-                # )
-                # hmm these are all the exact same (at same height). strange...
-                # print('fractional change', fractionalChange[40,:])
-                # this prints a range of heights (fixed wavelengths)
-                # print('fractional change', fractionalChange[:,40])
-                # check the H=10,lambda=3 case
-                # print(
-                #    'fractional change',
-                #    molecule,
-                #    fractionalChange[48, 48],
-                #    np.min(fractionalChange),
-                #    np.max(fractionalChange),
-                # )
-
-                tau_by_molecule[molecule] += (
-                    toptau_by_molecule[molecule][np.newaxis, :] * BCintegral
-                )
-                tau += toptau_by_molecule[molecule][np.newaxis, :] * BCintegral
-            else:
-                log.warning(
-                    '--< molecule missing from atmos B.C.: %s >--', molecule
-                )
-    if extendedBoundaryCondition:
-        for molecule in molecules:
-            if molecule in analytictau_by_molecule:
-                # print('shape check vs analytic', molecule,
-                #      tau_by_molecule[molecule].shape,
-                #      analytictau_by_molecule[molecule].shape)
-                # print('check vs analytic', molecule,
-                #      analytictau_by_molecule[molecule] /
-                #      tau_by_molecule[molecule])
-                # pick a single wavelength and see how diff varies with height
-                # print(
-                #    'check vs analytic',
-                #    molecule,
-                #    analytictau_by_molecule[molecule][:, 57]
-                #    / tau_by_molecule[molecule][:, 57],
-                # )
-
-                # replace the upper half with the analytic part. see how it looks
-                # (and adjust the overall tau accordingly)
-                tau[50:, :] -= tau_by_molecule[molecule][50:, :]
-                tau[50:, :] += analytictau_by_molecule[molecule][50:, :]
-                tau_by_molecule[molecule][50:, :] = analytictau_by_molecule[
-                    molecule
-                ][50:, :]
 
     if debug:
         plt.figure(figsize=(12, 6))
@@ -1308,7 +1118,6 @@ def clearfmcerberus(*crbinputs):
         # this extra list[] is needed for the single param case (only metallicity)
     else:
         tpr, mdp = crbinputs
-    # print('clearfmcerberus TPR = ', tpr)
     if not isinstance(mdp, list):
         mdp = [mdp]
     # print(' param values inside of forward model', tpr, mdp)
