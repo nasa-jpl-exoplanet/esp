@@ -18,7 +18,7 @@ TREF = 296e0
 PREF = 1e0
 
 # physical constants
-ecgs = 4.80320427e-10  # Electron charge in cgs units (statC)
+charge_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
@@ -147,12 +147,6 @@ def vald_intensity(gf, elow, nu0, T, Q):
         ((gf * np.pi * e_cgs**2) / (me_cgs * c_cgs**2))
         * (1e0 / Q)
         * np.exp(-1e0 * c2 * elow / T)
-
-    # lines loading
-    data = load_lines()
-
-    # line by line computation
-    sigma_total = np.zeros((len(parameters[:, 0]), len(w_grid)))
     for line in data[specie].values():
         sigma_total += single_line_sigma(w_grid, specie, line, Q, parameters)
     return sigma_total
