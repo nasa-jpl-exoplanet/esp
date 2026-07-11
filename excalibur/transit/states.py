@@ -331,8 +331,8 @@ class WhiteLightSV(ExcaliburSV):
 
                             axs[1].plot(
                                 tms[trd][select],
-                                np.array(dat['lcmodel'])[trd][select]
-                                - np.array(dat['flatwht'])[trd][select],
+                                np.array(dat['flatwht'])[trd][select]
+                                - np.array(dat['lcmodel'])[trd][select],
                                 'bo',
                                 alpha=0.5,
                             )
@@ -408,7 +408,9 @@ class SpectrumSV(ExcaliburSV):
                         save_plot_toscreen(fig, visitor)
                     except KeyError:
                         pass
-            else:
+                    pass
+                pass
+            elif 'HST' in self.name():
                 for p in self['data'].keys():
                     visitor.add_declaration('PLANET: ' + p)
                     if 'Teq' in self['data'][p]:
@@ -609,6 +611,82 @@ class SpectrumSV(ExcaliburSV):
                         ax[1].set_xscale('log', base=2)
                         ax[1].legend()
                         save_plot_toscreen(myfig, visitor)
+                        pass
+                    pass
+                pass
+            # --< JWST
+            elif 'JWST' in self.name():
+                for pln in self['data']:
+                    dtc = list(self['data'][pln])
+                    for vst in [
+                        t
+                        for t in self['data'][pln][dtc]
+                        if t in str(np.arange(100))
+                    ]:
+                        wave = [self['data'][pln][d][vst]['WB'] for d in dtc]
+                        spec = [self['data'][pln][d][vst]['ES'] for d in dtc]
+                        err = [self['data'][pln][d][vst]['ESerr'] for d in dtc]
+                        res = [
+                            np.mean(
+                                np.abs(
+                                    np.array(self['data'][pln][d][vst]['LCFIT'])
+                                    - np.array(
+                                        self['data'][pln][d][vst]['LCDATA']
+                                    )
+                                ),
+                                axis=1,
+                            )
+                            for d in dtc
+                        ]
+                        cleanup = [
+                            r
+                            < (
+                                np.percentile(r, 50)
+                                + 3.0
+                                * np.std(r[r < np.percentile(r, 50 + 68 / 2)])
+                            )
+                            for r in res
+                        ]
+                        fig = plt.figure(figsize=(12, 9))
+                        gs = fig.add_gridspec(
+                            2, hspace=0, height_ratios=[24 / 3, 4 / 3]
+                        )
+                        axs = gs.subplots(sharex=True, sharey=False)
+                        axs[0].set_title(' '.join([pln, vst]), fontsize=20)
+                        for ndx, _ in enumerate(dtc):
+                            axs[0].errorbar(
+                                wave[ndx][cleanup[ndx]],
+                                spec[ndx][cleanup[ndx]] ** 2,
+                                yerr=err[ndx][cleanup[ndx]] ** 2
+                                + 2.0
+                                * err[ndx][cleanup[ndx]]
+                                * spec[ndx][cleanup[ndx]],
+                                marker='o',
+                                alpha=0.5,
+                            )
+                            axs[1].plot(wave[ndx], res[ndx], 'g^', alpha=0.5)
+                            axs[1].plot(
+                                wave[ndx][~cleanup[ndx]],
+                                res[ndx][~cleanup[ndx]],
+                                'rx',
+                                ms=10,
+                            )
+                            pass
+                        axs[0].set_ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
+                        axs[0].tick_params(axis='both', labelsize=18)
+                        axs[1].tick_params(axis='both', labelsize=18)
+                        axs[1].set_ylabel(r'$\Delta_{LC}$', fontsize=20)
+                        axs[1].set_xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                        save_plot_toscreen(fig, visitor)
+                        fig = None
+                        pass
+                    pass
+                pass
+            # JWST >--
+            pass
+        pass
+
+    pass
 
 
 class StarspotSV(ExcaliburSV):
