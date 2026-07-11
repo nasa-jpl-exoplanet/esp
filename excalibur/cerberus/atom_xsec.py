@@ -33,6 +33,7 @@ ATOMIC_MASS = {
     "Ca": 40.078,
 }
 
+
 # --------- ----------------------------------------------------------
 # -- LINE LIST LOADING -- --------------------------------------------
 def load_lines():
@@ -228,8 +229,7 @@ def atom_xsec(w_grid, specie, parameters):
     # line by line computation
     sigma_total = np.zeros((len(parameters[:, 0]), len(w_grid)))
     for line in data[specie].values():
-        sigma_total += single_line_sigma(w_grid, specie, line, Q, 
-                                         parameters)
+        sigma_total += single_line_sigma(w_grid, specie, line, Q, parameters)
     return sigma_total
 
 

@@ -191,33 +191,32 @@ class crbFM:
                     fHe=fHe,
                 )
                 pass
-
             elif chemistry.startswith('TEA'):
-                #CB
-                #species = ['CH4_g','CO2_g','CO_g','H2O_g','H2_ref','H2S_g','He_ref',
+                # CB
+                # species = ['CH4_g','CO2_g','CO_g','H2O_g','H2_ref','H2S_g','He_ref',
                 #           'N2_ref','NH3_g','O3_g','SO2_g','HCN_g','TiO_g','C2H2_g',
                 #           'N2O_g','NO_g','O2_ref','OH_g']
-                #tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-                #mixratioprofiles = calcTEA(
-                #tempCoeffs,
-                #pressure,
-                #species=species,
-                #metallicity=10.0 ** cheq['XtoH'],
-                #C_O=0.55 * 10.0 ** cheq['CtoO'],
+                # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                # mixratioprofiles = calcTEA(
+                # tempCoeffs,
+                # pressure,
+                # species=species,
+                # metallicity=10.0 ** cheq['XtoH'],
+                # C_O=0.55 * 10.0 ** cheq['CtoO'],
                 # N_O=?? * 10.0 ** cheq['NtoO'],
-                #mixratioprofiles['TIO'] = mixratioprofiles.pop('TiO')
-
-                #CB
-                #mixratioprofiles = {}
-                # species_name = ['CH4','CO2','CO','H2O','H2','H2S','He','N2','NH3','O3','SO2']
-                #species_name = ['CH4','CO2','CO','H2O','H2','H2S','He',
+                # mixratioprofiles['TIO'] = mixratioprofiles.pop('TiO')
+                # CB
+                # mixratioprofiles = {}
+                # species_name = ['CH4','CO2','CO','H2O','H2','H2S','He',
+                # 'N2','NH3','O3','SO2']
+                # species_name = ['CH4','CO2','CO','H2O','H2','H2S','He',
                 #                'N2','NH3','O3','SO2','HCN','TIO','C2H2',
                 #                'N2O','NO','O2','OH']
-                #points = np.column_stack((temp, pressure, 
-                #                          10**cheq['XtoH']*np.ones(pressure.size), 
+                # points = np.column_stack((temp, pressure,
+                #                          10**cheq['XtoH']*np.ones(pressure.size),
                 #                          10**cheq['CtoO']*np.ones(pressure.size)))
                 #
-                #for molecule in species_name:
+                # for molecule in species_name:
                 #    interp = atom_data[molecule]
                 #    mxr = interp(points)
                 #    mixratioprofiles[molecule] = mxr
@@ -227,20 +226,19 @@ class crbFM:
                 # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                 tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
                 mixratioprofiles = calcTEA(
-                tempCoeffs,
-                pressure,
-                metallicity=10.0 ** cheq['XtoH'],
-                C_O=0.55 * 10.0 ** cheq['CtoO'],
+                    tempCoeffs,
+                    pressure,
+                    metallicity=10.0 ** cheq['XtoH'],
+                    C_O=0.55 * 10.0 ** cheq['CtoO'],
+                )
                 # N_O=?? * 10.0 ** cheq['NtoO'],
                 # have to take the average! (same as done in crbce)
-
                 #  REVISIT THIS LATER!!!
                 #  IT SHOULD BE ABLE TO HANDLE PROFILES NOW!!!
-
                 mixratio = {}
                 for molecule in mixratioprofiles:
                     mixratio[molecule] = mixratioprofiles[molecule]
-                    
+                    pass
                 # print()
                 # print('mixratio in cerb', mixratio)
                 mmw, fH2, fHe = getmmw(mixratio)
@@ -318,7 +316,7 @@ class crbFM:
         #  drop dz[] and dzprime[] arrays and just use this constant instead
         dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
 
-        # CB, the linspace was adapted in the case of constant dz      
+        # CB, the linspace was adapted in the case of constant dz
         z = np.concatenate(([0], np.cumsum(dz[:-1])))
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
@@ -401,7 +399,7 @@ class crbFM:
                 * np.log(1.0 + ctpdpress / pressure[cloudtopindex])
             )
             rp0 += z[cloudtopindex] + ctpdz
-        pass
+            pass
 
         # note that original version had rp0+z as matrix then multiply by dz after
         geometrygrid = (rp0 + z) * dz
@@ -628,7 +626,7 @@ def gettau(
                         elem,
                     )
                     ## Constant a rajouter
-                    sigma = np.zeros((len(wgrid),Nzones))
+                    sigma = np.zeros((len(wgrid), Nzones))
 
         else:
             # Fake use of xmollist due to changes in xslib v112
