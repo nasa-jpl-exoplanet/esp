@@ -344,6 +344,7 @@ class crbFM:
 
         # CB, the linspace was adapted in the case of constant dz      
         z = np.concatenate(([0], np.cumsum(dz[:-1])))
+        
 
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
         tau, tau_by_molecule, wtau = gettau(
@@ -700,6 +701,8 @@ def gettau(
                         'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
                         elem,
                     )
+                    ## Constant a rajouter
+                    sigma = np.zeros((len(wgrid),Nzones))
 
         else:
             # Fake use of xmollist due to changes in xslib v112
@@ -738,18 +741,7 @@ def gettau(
                 sigma = sigma * 1e-4  # m^2/mol
                 pass
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[elem] = (
-            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-        )
+        tau_by_molecule[elem] = (rho * mmr * sigma).T
         tau = tau + tau_by_molecule[elem]
 
             top_sigma = sigma[:, -1]
