@@ -620,24 +620,23 @@ class SpectrumSV(ExcaliburSV):
                     dtc = list(self['data'][pln])
                     for vst in [
                         t
-                        for t in self['data'][pln][dtc]
-                        if t in str(np.arange(100))
+                        for t in self['data'][pln][dtc[0]]
+                        if t in [str(int(i)) for i in np.arange(100)]
                     ]:
                         wave = [self['data'][pln][d][vst]['WB'] for d in dtc]
                         spec = [self['data'][pln][d][vst]['ES'] for d in dtc]
                         err = [self['data'][pln][d][vst]['ESerr'] for d in dtc]
-                        res = [
-                            np.mean(
-                                np.abs(
-                                    np.array(self['data'][pln][d][vst]['LCFIT'])
-                                    - np.array(
-                                        self['data'][pln][d][vst]['LCDATA']
-                                    )
-                                ),
-                                axis=1,
-                            )
-                            for d in dtc
-                        ]
+                        res = []
+                        for d in dtc:  # GMR: Ugly but necessary see issue #343
+                            addme = []
+                            for lc, ld in zip(
+                                self['data'][pln][d][vst]['LCFIT'],
+                                self['data'][pln][d][vst]['LCDATA'],
+                            ):
+                                addme.append(np.mean(np.abs(lc - ld)))
+                                pass
+                            res.append(np.array(addme))
+                            pass
                         cleanup = [
                             r
                             < (
