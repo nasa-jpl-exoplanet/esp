@@ -394,7 +394,7 @@ class SpectrumSV(ExcaliburSV):
 
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
-        if self['STATUS'][-1]:
+        if len(self['STATUS']) and self['STATUS'][-1]:
             if self.name() == "Composite":
                 plist = []
                 for f in self['data'].keys():
@@ -685,7 +685,6 @@ class SpectrumSV(ExcaliburSV):
             # JWST >--
             pass
         pass
-
     pass
 
 
