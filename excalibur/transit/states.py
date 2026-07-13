@@ -629,8 +629,10 @@ class SpectrumSV(ExcaliburSV):
                         res = []
                         for d in dtc:  # GMR: Ugly but necessary see issue #343
                             addme = []
-                            for lc, ld in zip(self['data'][pln][d][vst]['LCFIT'],
-                                              self['data'][pln][d][vst]['LCDATA']):
+                            for lc, ld in zip(
+                                self['data'][pln][d][vst]['LCFIT'],
+                                self['data'][pln][d][vst]['LCDATA'],
+                            ):
                                 addme.append(np.mean(np.abs(lc - ld)))
                                 pass
                             res.append(np.array(addme))
@@ -682,6 +684,7 @@ class SpectrumSV(ExcaliburSV):
             # JWST >--
             pass
         pass
+
     pass
 
 
