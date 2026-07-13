@@ -783,23 +783,11 @@ def gettau(
         top_sigma = sigma[:, -1]
         top_f1 = np.array(f1)[-1]
         top_f2 = np.array(f2)[-1]
-
         toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[cia] = (
-            (f1 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (f2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-            * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis] ** 2
-        )
+        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
         tau = tau + tau_by_molecule[cia]
+        pass
 
     # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------
     # NAUS & UBACHS 2000
@@ -810,16 +798,7 @@ def gettau(
     top_fH2 = np.array(fH2)[-1]
     toptau_by_molecule['rayleigh'] = top_fH2 * top_rho * sigma
 
-    # CB sigma (Nzones, Nzones, N_waves)
-    # 1st dimension corrsponds to z
-    # 2nd dimension corrsponds to z'
-    # 3rd dimension corresponds to wavelength
-    sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
-    tau_by_molecule['rayleigh'] = (
-        (fH2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * sigma
-    )
+    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
     tau = tau + tau_by_molecule['rayleigh']
 
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
@@ -830,11 +809,6 @@ def gettau(
 
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
         tau_by_molecule['haze'] = 10.0**hazescale * sigma
         tau = tau + tau_by_molecule['haze']
 
@@ -924,28 +898,19 @@ def gettau(
         top_rh = rh[-1]
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma * top_rh
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        hazecontribution = (
-            10.0**hazescale
-            * np.broadcast_to(
-                sigma * np.array([rh]).T, (Nzones, Nzones, len(wgrid))
-            ).copy()
-        )
+        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = hazecontribution
         tau = tau + tau_by_molecule['haze']
         pass
 
     # CB tau (Nzones, N_waves)
-    # sum over the z' for a fixed z
-    tau = (2e0 * dlarray[:, :, np.newaxis] * tau).sum(axis=1)
+    tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
+
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         tau_by_molecule[molecule] = (
-            2e0 * dlarray[:, :, np.newaxis] * tau_by_molecule[molecule]
-        ).sum(axis=1)
+            2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
+        )
         pass
 
     # include the upper boundary condition on atmosphere here, after line integral
