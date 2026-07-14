@@ -192,9 +192,7 @@ class crbFM:
                 pass
 
             elif chemistry.startswith('TEA'):
-                interp_tea = (
-                    excalibur.cerberus.forward_model.ctxt.interp_tea
-                )
+                interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
                 if interp_tea is None:
                     # for use outside of the pipeline, give a dictionary
                     # containing the interpolators for each molecule
@@ -216,14 +214,19 @@ class crbFM:
                     )
                     pass
                 else:
-                    # species used for the equilibrium are :             
+                    # species used for the equilibrium are :
                     # CH4, CO2, CO, H2O, H2, H2S, He, N2,
                     # NH3, O3, SO2, HCN, TIO, C2H2, N2O,
                     # NO, O2, OH
-                    grid_points = np.column_stack((tpp, pressure, 
-                                                       10**cheq['XtoH']*np.ones(pressure.size), 
-                                                       10**cheq['CtoO']*np.ones(pressure.size)))
-                        
+                    grid_points = np.column_stack(
+                        (
+                            tpp,
+                            pressure,
+                            10 ** cheq['XtoH'] * np.ones(pressure.size),
+                            10 ** cheq['CtoO'] * np.ones(pressure.size),
+                        )
+                    )
+
                     for molecule in interp_tea:
                         interp = atom_data[molecule]
                         mxr = interp(grid_points)
