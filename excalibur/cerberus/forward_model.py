@@ -672,8 +672,7 @@ def gettau(
                     )
 
         else:
-            # Fake use of xmollist due to changes in xslib v112
-            # THIS HAS TO BE FIXED
+            # note that this HITRAN calc is not used here anymore; just EXOMOL
             # if elem not in xmollist:
             if not xmollist:
                 # HITEMP/HITRAN ROTHMAN ET AL. 2010 ------------------------------
@@ -687,26 +686,19 @@ def gettau(
                     lshifting,
                     wgrid,
                 )  # cm^2/mol
-                if True in (sigma < 0):
-                    sigma[sigma < 0] = 0e0
-                    pass
-                if True in ~np.isfinite(sigma):
-                    sigma[~np.isfinite(sigma)] = 0e0
-                    pass
-                sigma = sigma * 1e-4  # m^2/mol
                 pass
             else:
                 # EXOMOL HILL ET AL. 2013 ----------------------------------------
                 sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
                 # sigma.shape(n_waves, n_pressure)
-                if True in (sigma < 0):
-                    sigma[sigma < 0] = 0e0
-                    pass
-                if True in ~np.isfinite(sigma):
-                    sigma[~np.isfinite(sigma)] = 0e0
-                    pass
-                sigma = sigma * 1e-4  # m^2/mol
                 pass
+            if True in (sigma < 0):
+                sigma[sigma < 0] = 0e0
+                pass
+            if True in ~np.isfinite(sigma):
+                sigma[~np.isfinite(sigma)] = 0e0
+                pass
+            sigma = sigma * 1e-4  # m^2/mol
 
             top_sigma = sigma[:, -1]
             # this is a 1-D array, not 3-D.  just a function of wavelength
