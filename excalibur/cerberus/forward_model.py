@@ -211,6 +211,7 @@ class crbFM:
                     mixratio[molecule] = np.log10(
                         np.mean(10.0 ** mixratioprofiles[molecule])
                     )
+
                 # print()
                 # print('mixratio in cerb', mixratio)
                 mmw, fH2, fHe = getmmw(mixratio)
@@ -273,9 +274,9 @@ class crbFM:
 
         # make sure that the mixing ratios are 1-d arrays over the pressure grid
         #  (otherwise later calls may get mis-matched broadcasting problems)
-        if not fH2.ndim:
+        if not np.array(fH2).ndim:
             fH2 = np.array([float(fH2)] * len(tpp))
-        if not fHe.ndim:
+        if not np.array(fHe).ndim:
             fHe = np.array([float(fHe)] * len(tpp))
         for molecule in mixratio:
             # mixratio[molecule] = np.array(mixratio[molecule])
@@ -645,7 +646,10 @@ def gettau(
                         interp_atom = atom_data
                         pass
                     if interp_atom is not None:
-                        # interpolator loading
+                        # interpolator loading, the interpolation is made on temperature and
+                        # pressure but not on the wavelengths
+                        # The wavelengths have to be the nods of the grid used for interpolation
+                        # The grid I commited the first time was for JWST in terms of wavelength
                         interpolator = interp_atom[elem]
                         T = np.repeat(temp, len(wgrid))
                         P = np.repeat(pressure, len(wgrid))
@@ -732,19 +736,7 @@ def gettau(
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[elem] = (
-            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-        )
-
+        tau_by_molecule[elem] = (rho * mmr * sigma).T
         tau = tau + tau_by_molecule[elem]
 
         pass
@@ -809,7 +801,10 @@ def gettau(
 
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma
 
-        tau_by_molecule['haze'] = 10.0**hazescale * sigma
+        hazedensity = np.ones(len(z))
+        tau_by_molecule['haze'] = (
+            10.0**hazescale * sigma * np.array([hazedensity]).T
+        )
         tau = tau + tau_by_molecule['haze']
 
     else:
@@ -903,7 +898,7 @@ def gettau(
         tau = tau + tau_by_molecule['haze']
         pass
 
-    # CB tau (Nzones, N_waves)
+    # tau (Nzones, N_waves)
     tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
 
     molecules = tau_by_molecule.keys()
