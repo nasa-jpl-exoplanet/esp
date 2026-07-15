@@ -228,7 +228,7 @@ class crbFM:
                     )
 
                     for molecule in interp_tea:
-                        interp = atom_data[molecule]
+                        interp = interp_tea[molecule]
                         mxr = interp(grid_points)
                         mixratioprofiles[molecule] = mxr
                     pass
