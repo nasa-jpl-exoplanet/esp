@@ -71,6 +71,7 @@ class crbFM:
         verbose=False,
         debug=False,
         atom_data=None,
+        tea_data=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
     ):
@@ -191,26 +192,52 @@ class crbFM:
                 pass
 
             elif chemistry.startswith('TEA'):
-                #  (this one gives a div-by-0 error)
-                # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-                #  this is the correct way to pass in to Luke's _make_tp_profile
-                # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-                #  but now we're passing in the T array directly, not params for it
-                mixratioprofiles = calcTEA(
-                    tpp,
-                    # tempCoeffs,
-                    pressure,
-                    metallicity=10.0 ** cheq['XtoH'],
-                    C_O=0.55 * 10.0 ** cheq['CtoO'],
-                    # N_O=?? * 10.0 ** cheq['NtoO'],
-                )
+                interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
+                if interp_tea is None:
+                    # for use outside of the pipeline, give a dictionary
+                    # containing the interpolators for each molecule
+                    interp_tea = tea_data
+                    pass
+                if not interp_tea:
+                    #  (this one gives a div-by-0 error)
+                    # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+                    #  this is the correct way to pass in to Luke's _make_tp_profile
+                    # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                    #  but now we're passing in the T array directly, not params for it
+                    mixratioprofiles = calcTEA(
+                        tpp,
+                        # tempCoeffs,
+                        pressure,
+                        metallicity=10.0 ** cheq['XtoH'],
+                        C_O=0.55 * 10.0 ** cheq['CtoO'],
+                        # N_O=?? * 10.0 ** cheq['NtoO'],
+                    )
+                    pass
+                else:
+                    # species used for the equilibrium are :
+                    # CH4, CO2, CO, H2O, H2, H2S, He, N2,
+                    # NH3, O3, SO2, HCN, TIO, C2H2, N2O,
+                    # NO, O2, OH
+                    grid_points = np.column_stack(
+                        (
+                            tpp,
+                            pressure,
+                            10 ** cheq['XtoH'] * np.ones(pressure.size),
+                            10 ** cheq['CtoO'] * np.ones(pressure.size),
+                        )
+                    )
 
-                # have to take the average! (same as done in crbce)
+                    for molecule in interp_tea:
+                        interp = interp_tea[molecule]
+                        mxr = interp(grid_points)
+                        mixratioprofiles[molecule] = mxr
+                    pass
+
+                # Not taking the average since the equilibrium
+                # changes with the layers
                 mixratio = {}
                 for molecule in mixratioprofiles:
-                    mixratio[molecule] = np.log10(
-                        np.mean(10.0 ** mixratioprofiles[molecule])
-                    )
+                    mixratio[molecule] = mixratioprofiles[molecule]
 
                 # print()
                 # print('mixratio in cerb', mixratio)
