@@ -1209,14 +1209,33 @@ def ppar():
     }
 
     overwrite["GJ 1214"] = {
+        # --< GMR: JWST NIRSPEC
+        'R*':0.215,
+        'R*_uperr':0.008, 'R*_lowerr':-0.008,
+        'R*_ref':'https://doi.org/10.3847/1538-3881/ac1584',
+        'T*':3250,
+        'T*_uperr':100, 'T*_lowerr':-100,
+        'T*_ref':'https://doi.org/10.3847/1538-3881/ac1584',
+        'LOGG*':5.026,
+        'LOGG*_uperr':0.04, 'LOGG*_lowerr':-0.04,
+        'LOGG*_ref':'https://doi.org/10.3847/1538-3881/ac1584',
+        'FEH*':0.29,
+        'FEH*_uperr':0.12, 'FEH*_lowerr':-0.12,
+        'FEH*_ref':'https://doi.org/10.3847/1538-3881/ac1584',
         "b": {
-            # switch from the most recent ephemeris (Kokori 2022 = exoClock) back to the default
-            # 'period':1.58040433,
-            # 'period_uperr':1.3e-7, 'period_lowerr':-1.3e-7,
-            # 'period_ref':'Cloutier et al. 2021',
-            # 't0':2455701.413328,
-            # 't0_uperr':0.000066, 't0_lowerr':-0.000059,
-            # 't0_ref':'Cloutier et al. 2021',
+            'period':1.580404341,
+            'period_uperr':0.000000079, 'period_lowerr':-0.000000079,
+            'period_ref':'https://doi.org/10.3847/2041-8213/ad7fef',
+            't0':2460143.93029503,
+            't0_uperr':0.00000358, 't0_lowerr':-0.00000358,
+            't0_ref':'https://doi.org/10.3847/2041-8213/ad7fef',
+            'inc':89.32,
+            'inc_uperr':0.03, 'inc_lowerr':-0.03,
+            'inc_ref':'https://doi.org/10.3847/2041-8213/ad7fef',
+            'sma':0.015267716541101813,
+            'sma_uperr':2e-5, 'sma_lowerr':-2e-5,
+            'sma_ref':'https://doi.org/10.3847/2041-8213/ad7fef',
+            # >--
             "Spitzer_IRAC1_subarray": [
                 0.9083242210542111,
                 -0.7976911808204602,
