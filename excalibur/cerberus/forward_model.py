@@ -71,6 +71,7 @@ class crbFM:
         verbose=False,
         debug=False,
         atom_data=None,
+        tea_data=None,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
     ):
@@ -191,26 +192,53 @@ class crbFM:
                 pass
 
             elif chemistry.startswith('TEA'):
-                #  (this one gives a div-by-0 error)
-                # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
-                #  this is the correct way to pass in to Luke's _make_tp_profile
-                # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-                #  but now we're passing in the T array directly, not params for it
-                mixratioprofiles = calcTEA(
-                    tpp,
-                    # tempCoeffs,
-                    pressure,
-                    metallicity=10.0 ** cheq['XtoH'],
-                    C_O=0.55 * 10.0 ** cheq['CtoO'],
-                    # N_O=?? * 10.0 ** cheq['NtoO'],
-                )
+                interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
+                if interp_tea is None:
+                    # for use outside of the pipeline, give a dictionary
+                    # containing the interpolators for each molecule
+                    interp_tea = tea_data
+                    pass
+                if not interp_tea:
+                    #  (this one gives a div-by-0 error)
+                    # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
+                    #  this is the correct way to pass in to Luke's _make_tp_profile
+                    # tempCoeffs = [0, temp, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+                    #  but now we're passing in the T array directly, not params for it
+                    mixratioprofiles = calcTEA(
+                        tpp,
+                        # tempCoeffs,
+                        pressure,
+                        metallicity=10.0 ** cheq['XtoH'],
+                        C_O=0.55 * 10.0 ** cheq['CtoO'],
+                        # N_O=?? * 10.0 ** cheq['NtoO'],
+                    )
+                    pass
+                else:
+                    # species used for the equilibrium are :
+                    # CH4, CO2, CO, H2O, H2, H2S, He, N2,
+                    # NH3, O3, SO2, HCN, TIO, C2H2, N2O,
+                    # NO, O2, OH
+                    grid_points = np.column_stack(
+                        (
+                            tpp,
+                            pressure,
+                            10 ** cheq['XtoH'] * np.ones(pressure.size),
+                            10 ** cheq['CtoO'] * np.ones(pressure.size),
+                        )
+                    )
 
-                # have to take the average! (same as done in crbce)
+                    for molecule in interp_tea:
+                        interp = interp_tea[molecule]
+                        mxr = interp(grid_points)
+                        mixratioprofiles[molecule] = mxr
+                    pass
+
+                # Not taking the average since the equilibrium
+                # changes with the layers
                 mixratio = {}
                 for molecule in mixratioprofiles:
-                    mixratio[molecule] = np.log10(
-                        np.mean(10.0 ** mixratioprofiles[molecule])
-                    )
+                    mixratio[molecule] = mixratioprofiles[molecule]
+
                 # print()
                 # print('mixratio in cerb', mixratio)
                 mmw, fH2, fHe = getmmw(mixratio)
@@ -273,9 +301,9 @@ class crbFM:
 
         # make sure that the mixing ratios are 1-d arrays over the pressure grid
         #  (otherwise later calls may get mis-matched broadcasting problems)
-        if not fH2.ndim:
+        if not np.array(fH2).ndim:
             fH2 = np.array([float(fH2)] * len(tpp))
-        if not fHe.ndim:
+        if not np.array(fHe).ndim:
             fHe = np.array([float(fHe)] * len(tpp))
         for molecule in mixratio:
             # mixratio[molecule] = np.array(mixratio[molecule])
@@ -645,7 +673,10 @@ def gettau(
                         interp_atom = atom_data
                         pass
                     if interp_atom is not None:
-                        # interpolator loading
+                        # interpolator loading, the interpolation is made on temperature and
+                        # pressure but not on the wavelengths
+                        # The wavelengths have to be the nods of the grid used for interpolation
+                        # The grid I commited the first time was for JWST in terms of wavelength
                         interpolator = interp_atom[elem]
                         T = np.repeat(temp, len(wgrid))
                         P = np.repeat(pressure, len(wgrid))
@@ -724,19 +755,7 @@ def gettau(
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[elem] = (
-            (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (mmr * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-        )
-
+        tau_by_molecule[elem] = (rho * mmr * sigma).T
         tau = tau + tau_by_molecule[elem]
 
         pass
@@ -775,23 +794,11 @@ def gettau(
         top_sigma = sigma[:, -1]
         top_f1 = np.array(f1)[-1]
         top_f2 = np.array(f2)[-1]
-
         toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(
-            sigma.T[None, :, :], (Nzones, Nzones, len(wgrid))
-        ).copy()
-        tau_by_molecule[cia] = (
-            (f1 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * (f2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-            * sigma
-            * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis] ** 2
-        )
+        tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
         tau = tau + tau_by_molecule[cia]
+        pass
 
     # H2 RAYLEIGH ARRAY, ZPRIME VERSUS WAVELENGTH  -------------------------------
     # NAUS & UBACHS 2000
@@ -802,16 +809,7 @@ def gettau(
     top_fH2 = np.array(fH2)[-1]
     toptau_by_molecule['rayleigh'] = top_fH2 * top_rho * sigma
 
-    # CB sigma (Nzones, Nzones, N_waves)
-    # 1st dimension corrsponds to z
-    # 2nd dimension corrsponds to z'
-    # 3rd dimension corresponds to wavelength
-    sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
-    tau_by_molecule['rayleigh'] = (
-        (fH2 * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * (rho * np.ones((Nzones, Nzones)))[:, :, np.newaxis]
-        * sigma
-    )
+    tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
     tau = tau + tau_by_molecule['rayleigh']
 
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
@@ -822,12 +820,10 @@ def gettau(
 
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        sigma = np.broadcast_to(sigma, (Nzones, Nzones, len(wgrid))).copy()
-        tau_by_molecule['haze'] = 10.0**hazescale * sigma
+        hazedensity = np.ones(len(z))
+        tau_by_molecule['haze'] = (
+            10.0**hazescale * sigma * np.array([hazedensity]).T
+        )
         tau = tau + tau_by_molecule['haze']
 
     else:
@@ -916,28 +912,19 @@ def gettau(
         top_rh = rh[-1]
         toptau_by_molecule['haze'] = 10.0**hazescale * sigma * top_rh
 
-        # CB sigma (Nzones, Nzones, N_waves)
-        # 1st dimension corrsponds to z
-        # 2nd dimension corrsponds to z'
-        # 3rd dimension corresponds to wavelength
-        hazecontribution = (
-            10.0**hazescale
-            * np.broadcast_to(
-                sigma * np.array([rh]).T, (Nzones, Nzones, len(wgrid))
-            ).copy()
-        )
+        hazecontribution = 10.0**hazescale * sigma * np.array([rh]).T
         tau_by_molecule['haze'] = hazecontribution
         tau = tau + tau_by_molecule['haze']
         pass
 
-    # CB tau (Nzones, N_waves)
-    # sum over the z' for a fixed z
-    tau = (2e0 * dlarray[:, :, np.newaxis] * tau).sum(axis=1)
+    # tau (Nzones, N_waves)
+    tau = 2e0 * np.asmatrix(dlarray) * np.asmatrix(tau)
+
     molecules = tau_by_molecule.keys()
     for molecule in molecules:
         tau_by_molecule[molecule] = (
-            2e0 * dlarray[:, :, np.newaxis] * tau_by_molecule[molecule]
-        ).sum(axis=1)
+            2e0 * np.asmatrix(dlarray) * np.asmatrix(tau_by_molecule[molecule])
+        )
         pass
 
     # include the upper boundary condition on atmosphere here, after line integral
