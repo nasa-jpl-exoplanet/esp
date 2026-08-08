@@ -189,7 +189,7 @@ class Finalize(dawgie.Algorithm):
                     )
 
                 # log warnings moved to the very end (previously were before forcepar)
-                # 6/16/24 target name added to log, otherwise can't tell which one has the error
+                # target name added to log, otherwise can't tell which one has error
                 log.info(
                     '>-- FORCE PARAMETER: %s %s',
                     target,

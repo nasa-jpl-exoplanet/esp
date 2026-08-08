@@ -2023,6 +2023,28 @@ def ppar():
     #    },
     # }
 
+    # missing t0 for Kepler-453 b (so it comes up as no planets)
+    # strange, it actually is in the default publication. binary oddness
+    overwrite['Kepler-453'] = {
+        'b': {
+            't0': 2455069.020,
+            't0_uperr': 0.054,
+            't0_lowerr': -0.054,
+            't0_ref': 'Welsh et al. 2015', # Table 3
+        }
+    }
+
+    # missing rp,mass,logg for BD+05 4868 (so it comes up as no planets)
+    # oops actually this one has a tail, so planet radius is unknown
+    #overwrite['BD+05 4868'] = {
+    #    'b': {
+    #        'rp': ,
+    #        'rp_uperr': ,
+    #        'rp_lowerr': -,
+    #        'rp_ref': 'Hon et al. 2025',
+    #    }
+    # }
+
     return overwrite
 
 
