@@ -127,7 +127,8 @@ def mlfit(
         else:
             out['data'][p] = {}
 
-            # print('START MLFit for planet:', p)
+            if verbose:
+                print('START MLFit for planet:', p)
 
             ML_param_names = [
                 'Teq',
@@ -539,7 +540,9 @@ def mlfit(
                 for key in cerbatmos[p][model_name]['MCTRACE']:
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(cerbatmos[p][model_name]['MCTRACE'][key])
-                    if model_name == 'TEC':
+                    if key == 'saved chi2':
+                        all_keys.append('$\\chi^2$')
+                    elif model_name == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
