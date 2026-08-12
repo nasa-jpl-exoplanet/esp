@@ -2030,13 +2030,13 @@ def ppar():
             't0': 2455069.020,
             't0_uperr': 0.054,
             't0_lowerr': -0.054,
-            't0_ref': 'Welsh et al. 2015', # Table 3
+            't0_ref': 'Welsh et al. 2015',  # Table 3
         }
     }
 
     # missing rp,mass,logg for BD+05 4868 (so it comes up as no planets)
     # oops actually this one has a tail, so planet radius is unknown
-    #overwrite['BD+05 4868'] = {
+    # overwrite['BD+05 4868'] = {
     #    'b': {
     #        'rp': ,
     #        'rp_uperr': ,
