@@ -686,19 +686,33 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    # atomic xsec loading
+    def get_atom_xsec(atom_list):
+        # atomic xsec loading
+        atom_xsec = {}
+        temp = np.load(ATOM_XSEC_dir + "temp.npy")
+        pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
+        X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
+        wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
+        # grid size is 271,100,11,3312
+        # print('atom-xsec grid size T,P,Z,lambda',
+        #      len(temp), len(pressure), len(X_H2), len(wgrid))
+        # print('atom-xsec grid range T',temp[0],temp[-1]) 300-3000
+        # print('atom-xsec grid range P',pressure[0],pressure[-1]) 1e-9-10
+        # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
+        # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
+        for atom in atom_list:
+            xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
+            interp_xsec = RegularGridInterpolator(
+                (temp, pressure, X_H2, wgrid), xsec
+            )
+            del xsec
+            atom_xsec[atom] = interp_xsec
+        return atom_xsec
+
     atom_list = ['Ca', 'K', 'Na']
+    # atom_xsec = get_atom_xsec(atom_list)
+    # each species takes up ~8GB; drop for now, to avoid memory problems
     atom_xsec = {}
-    temp = np.load(ATOM_XSEC_dir + "temp.npy")
-    pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-    X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
-    wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
-    for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
-        interp_xsec = RegularGridInterpolator(
-            (temp, pressure, X_H2, wgrid), xsec
-        )
-        atom_xsec[atom] = interp_xsec
     ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
     # TEA interpolation
@@ -730,8 +744,12 @@ def atmos(
     for molecule in species_name:
         grid_4d = np.load(INTERP_TEA_dir + molecule + ".npy")
         interp_mol = RegularGridInterpolator(
-            (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
+            (temp, pressure, XtoH, CtoO), grid_4d
         )
+        # temporary drop the cubic spline.  takes some cpu during debugging
+        # interp_mol = RegularGridInterpolator(
+        #    (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
+        # )
         interp_tea[molecule] = interp_mol
     ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
 
@@ -985,8 +1003,8 @@ def atmos(
                     if not runtime_params.fitT:
                         fixed_params['T'] = eqtemp
                     if not runtime_params.fitCtoO:
-                        print('inputdata keys', input_data.keys())
-                        print('modelparams', input_data['model_params'])
+                        # print('inputdata keys', input_data.keys())
+                        # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
                         # model_params should always exist, but might be 'None'
                         if 'C/O' in input_data['model_params']:
@@ -1449,6 +1467,7 @@ def atmos(
                     trace = pymc.sample(
                         chainlen,
                         cores=Nchains,
+                        chains=Nchains,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1497,6 +1516,8 @@ def atmos(
                     # seems better when reversed ('F' reverses the indices)
                     mctrace[key] = np.ravel(mctrace[key], order='F')
                 out['data'][p][model]['MCTRACE'] = mctrace
+                out['data'][p][model]['Nchains'] = Nchains
+                out['data'][p][model]['chainlen'] = chainlen
 
                 out['data'][p][model]['prior_ranges'] = prior_ranges
             out['data'][p]['WAVELENGTH'] = np.array(input_data['WB'])
@@ -2166,6 +2187,12 @@ def results(
                         )
                 profiled_traces = np.array(profiled_traces)
 
+                if 'Nchains' in atm[p][model_name]:
+                    Nchains = atm[p][model_name]['Nchains']
+                else:
+                    Nchains = None
+                print('Nchains (passed through from atmos)', Nchains)
+
                 # make note of the bounds placed on each parameter
                 if 'prior_ranges' in atm[p][model_name].keys():
                     prior_ranges = atm[p][model_name]['prior_ranges']
@@ -2702,6 +2729,7 @@ def results(
                         trgt,
                         p,
                         saveDir=save_dir,
+                        verbose=False,
                     )
                 )
 
@@ -2726,8 +2754,10 @@ def results(
                     p,
                     bins=runtime_params.cornerBins,
                     verbose=verbose,
+                    # verbose=False,
                     saveDir=save_dir,
                 )
+
                 # _______________WALKER-EVOLUTION PLOT________________
                 out['data'][p]['plot_walkerevol_' + model_name], _ = (
                     plot_walker_evolution(
@@ -2741,8 +2771,10 @@ def results(
                         model_name,
                         trgt,
                         p,
+                        Nchains=Nchains,
                         saveDir=save_dir,
-                        # verbose=verbose,
+                        verbose=verbose,
+                        # verbose=True,
                     )
                 )
 
