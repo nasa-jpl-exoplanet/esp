@@ -4,6 +4,7 @@
 # aapylint: disable=invalid-name
 # aapylint: disable=no-member
 
+import os
 import numpy as np
 import json
 import warnings
@@ -11,6 +12,8 @@ import warnings
 from scipy import special
 from scipy.interpolate import interp1d
 from scipy.constants import c, h, k, m_e, physical_constants, eV
+
+import excalibur
 
 
 ATOM_XSEC_dir = os.path.join(

@@ -4,7 +4,10 @@
 # asfpylint: disable=invalid-name
 # asdfpylint: disable=no-member
 
+import os
 import numpy as np
+import excalibur
+
 
 INTERP_TEA_DIR = os.path.join(
     excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
