@@ -6,6 +6,10 @@
 
 import numpy as np
 
+INTERP_TEA_DIR = os.path.join(
+    excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
+)
+
 def get_TEA_grid():
 
     species_name = [
@@ -29,14 +33,14 @@ def get_TEA_grid():
         'OH',
     ]
 
-    temp = np.load(INTERP_TEA_dir + 'grid_parameters/temperature.npy')
-    pressure = np.load(INTERP_TEA_dir + 'grid_parameters/pressure.npy')
-    XtoH = np.load(INTERP_TEA_dir + 'grid_parameters/XtoH.npy')
-    CtoO = np.load(INTERP_TEA_dir + 'grid_parameters/CtoO.npy')
+    temp = np.load(INTERP_TEA_DIR + 'grid_parameters/temperature.npy')
+    pressure = np.load(INTERP_TEA_DIR + 'grid_parameters/pressure.npy')
+    XtoH = np.load(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy')
+    CtoO = np.load(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy')
 
     interp_tea = {}
     for molecule in species_name:
-        grid_4d = np.load(INTERP_TEA_dir + molecule + '.npy')
+        grid_4d = np.load(INTERP_TEA_DIR + molecule + '.npy')
         interp_mol = RegularGridInterpolator(
             (temp, pressure, XtoH, CtoO), grid_4d
         )

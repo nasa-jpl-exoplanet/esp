@@ -144,12 +144,6 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
-ATOM_XSEC_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
-)
-INTERP_TEA_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
-)
 
 
 # ----------------- --------------------------------------------------
