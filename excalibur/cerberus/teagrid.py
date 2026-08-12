@@ -9,10 +9,10 @@ import numpy as np
 import excalibur
 from scipy.interpolate import RegularGridInterpolator
 
-
 INTERP_TEA_DIR = os.path.join(
     excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
 )
+
 
 def get_TEA_grid():
 

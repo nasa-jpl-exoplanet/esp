@@ -16,8 +16,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 import excalibur
 
-
-ATOM_XSEC_dir = os.path.join(
+ATOM_XSEC_DIR = os.path.join(
     excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
 )
 
@@ -47,7 +46,7 @@ ATOMIC_MASS = {
 # -- LINE LIST LOADING -- --------------------------------------------
 def load_lines():
     with open(
-        ATOM_XSEC_dir + '/lines_infos/lines.json',
+        ATOM_XSEC_DIR + '/lines_infos/lines.json',
         'r',
         encoding='utf-8',
     ) as f:
@@ -65,7 +64,7 @@ def load_lines():
 # -- PARTITION FUNCTION LOADING -- -----------------------------------
 def load_part_func(specie):
     with open(
-        ATOM_XSEC_dir + '/lines_infos/partition_function.json',
+        ATOM_XSEC_DIR + '/lines_infos/partition_function.json',
         'r',
         encoding='utf-8',
     ) as f:
@@ -258,23 +257,26 @@ def grid_generation(elem, temp, pressure, xh2, wgrid):
 
     grid = atom_xsec(w_grid=wgrid, specie=elem, parameters=parameters)
 
-    np.save(ATOM_XSEC_dir + 'temp.npy', temp)
-    np.save(ATOM_XSEC_dir + 'pressure.npy', pressure)
-    np.save(ATOM_XSEC_dir + 'X_H2.npy', xh2)
-    np.save(ATOM_XSEC_dir + 'wgrid.npy', wgrid)
+    np.save(ATOM_XSEC_DIR + 'temp.npy', temp)
+    np.save(ATOM_XSEC_DIR + 'pressure.npy', pressure)
+    np.save(ATOM_XSEC_DIR + 'X_H2.npy', xh2)
+    np.save(ATOM_XSEC_DIR + 'wgrid.npy', wgrid)
 
     grid_4d = grid.reshape((len(temp), len(pressure), len(xh2), -1))
 
-    np.save(ATOM_XSEC_dir + elem + '/grid_4d.npy', grid_4d)
+    np.save(ATOM_XSEC_DIR + elem + '/grid_4d.npy', grid_4d)
 
     return
 
+
+# --------- ----------------------------------------------------------
+# -- LOAD IN THE INTERPOLATION GRID ----------------------------------
 def get_atom_xsec(atom_list):
-    atom_xsec = {}
-    temp = np.load(ATOM_XSEC_dir + 'temp.npy')
-    pressure = np.load(ATOM_XSEC_dir + 'pressure.npy')
-    X_H2 = np.load(ATOM_XSEC_dir + 'X_H2.npy')
-    wgrid = np.load(ATOM_XSEC_dir + 'wgrid.npy')
+
+    temp = np.load(ATOM_XSEC_DIR + 'temp.npy')
+    pressure = np.load(ATOM_XSEC_DIR + 'pressure.npy')
+    X_H2 = np.load(ATOM_XSEC_DIR + 'X_H2.npy')
+    wgrid = np.load(ATOM_XSEC_DIR + 'wgrid.npy')
     # grid size is 271,100,11,3312
     # print('atom-xsec grid size T,P,Z,lambda',
     #      len(temp), len(pressure), len(X_H2), len(wgrid))
@@ -282,11 +284,13 @@ def get_atom_xsec(atom_list):
     # print('atom-xsec grid range P',pressure[0],pressure[-1]) 1e-9-10
     # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
     # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
+
+    atom_xsec = {}
     for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + '/grid_4d.npy')
+        xsec = np.load(ATOM_XSEC_DIR + atom + '/grid_4d.npy')
         interp_xsec = RegularGridInterpolator(
             (temp, pressure, X_H2, wgrid), xsec
         )
-        del xsec
         atom_xsec[atom] = interp_xsec
+
     return atom_xsec
