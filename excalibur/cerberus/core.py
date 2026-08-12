@@ -703,7 +703,7 @@ def atmos(
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
         modfam = ['TEC']
-        modfam = ['TEA']
+        # modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
