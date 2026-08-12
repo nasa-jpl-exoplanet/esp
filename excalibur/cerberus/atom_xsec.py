@@ -285,12 +285,12 @@ def get_atom_xsec(atom_list):
     # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
     # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
 
-    atom_xsec = {}
+    atom_xsec_grid = {}
     for atom in atom_list:
         xsec = np.load(ATOM_XSEC_DIR + atom + '/grid_4d.npy')
         interp_xsec = RegularGridInterpolator(
             (temp, pressure, X_H2, wgrid), xsec
         )
-        atom_xsec[atom] = interp_xsec
+        atom_xsec_grid[atom] = interp_xsec
 
-    return atom_xsec
+    return atom_xsec_grid

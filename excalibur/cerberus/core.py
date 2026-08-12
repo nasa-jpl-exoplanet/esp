@@ -681,14 +681,14 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    # atomic cross-section interpolation grid
+    # load atomic cross-section interpolation grid
     atom_list = ['Ca', 'K', 'Na']
     # each species takes up ~8GB; drop for now, to avoid memory problems
     atom_list = []
     atom_xsec = get_atom_xsec(atom_list)
     ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
-    # TEA equilibrium chemistry interpolation grid
+    # load TEA equilibrium chemistry interpolation grid
     interp_tea = get_TEA_grid()
     ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
 
@@ -703,6 +703,7 @@ def atmos(
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
         modfam = ['TEC']
+        modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
