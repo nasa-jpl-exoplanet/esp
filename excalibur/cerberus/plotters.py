@@ -87,6 +87,7 @@ def plot_spectrumfit(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''plot the best fit to the data'''
 
@@ -412,7 +413,8 @@ def plot_spectrumfit(
         plt.legend()
 
     # figgy.tight_layout()
-    # plt.show()
+    if verbose:
+        plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
         plt.savefig(
