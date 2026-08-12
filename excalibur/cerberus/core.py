@@ -56,7 +56,6 @@ import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 from scipy.interpolate import interp1d as itp
-from scipy.interpolate import RegularGridInterpolator
 
 import pymc
 import pytensor.tensor as pytensr

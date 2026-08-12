@@ -12,6 +12,7 @@ import warnings
 from scipy import special
 from scipy.interpolate import interp1d
 from scipy.constants import c, h, k, m_e, physical_constants, eV
+from scipy.interpolate import RegularGridInterpolator
 
 import excalibur
 

@@ -7,6 +7,7 @@
 import os
 import numpy as np
 import excalibur
+from scipy.interpolate import RegularGridInterpolator
 
 
 INTERP_TEA_DIR = os.path.join(
