@@ -45,6 +45,8 @@ from excalibur.cerberus.bounds import (
     get_profile_limits_hstg141,
     apply_profiling,
 )
+from excalibur.cerberus.atom_xsec import get_atom_xsec
+from excalibur.cerberus.teagrid import get_TEA_grid
 
 import logging
 import os
@@ -686,71 +688,15 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    def get_atom_xsec(atom_list):
-        # atomic xsec loading
-        atom_xsec = {}
-        temp = np.load(ATOM_XSEC_dir + 'temp.npy')
-        pressure = np.load(ATOM_XSEC_dir + 'pressure.npy')
-        X_H2 = np.load(ATOM_XSEC_dir + 'X_H2.npy')
-        wgrid = np.load(ATOM_XSEC_dir + 'wgrid.npy')
-        # grid size is 271,100,11,3312
-        # print('atom-xsec grid size T,P,Z,lambda',
-        #      len(temp), len(pressure), len(X_H2), len(wgrid))
-        # print('atom-xsec grid range T',temp[0],temp[-1]) 300-3000
-        # print('atom-xsec grid range P',pressure[0],pressure[-1]) 1e-9-10
-        # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
-        # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
-        for atom in atom_list:
-            xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
-            interp_xsec = RegularGridInterpolator(
-                (temp, pressure, X_H2, wgrid), xsec
-            )
-            del xsec
-            atom_xsec[atom] = interp_xsec
-        return atom_xsec
-
+    # atomic cross-section interpolation grid
     atom_list = ['Ca', 'K', 'Na']
-    atom_xsec = get_atom_xsec(atom_list)
     # each species takes up ~8GB; drop for now, to avoid memory problems
-    atom_xsec = {}
+    atom_list = []
+    atom_xsec = get_atom_xsec(atom_list)
     ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
-    # TEA interpolation
-    species_name = [
-        'CH4',
-        'CO2',
-        'CO',
-        'H2O',
-        'H2',
-        'H2S',
-        'He',
-        'N2',
-        'NH3',
-        'O3',
-        'SO2',
-        'HCN',
-        'TIO',
-        'C2H2',
-        'N2O',
-        'NO',
-        'O2',
-        'OH',
-    ]
-    temp = np.load(INTERP_TEA_dir + "grid_parameters/temperature.npy")
-    pressure = np.load(INTERP_TEA_dir + "grid_parameters/pressure.npy")
-    XtoH = np.load(INTERP_TEA_dir + "grid_parameters/XtoH.npy")
-    CtoO = np.load(INTERP_TEA_dir + "grid_parameters/CtoO.npy")
-    interp_tea = {}
-    for molecule in species_name:
-        grid_4d = np.load(INTERP_TEA_dir + molecule + ".npy")
-        interp_mol = RegularGridInterpolator(
-            (temp, pressure, XtoH, CtoO), grid_4d
-        )
-        # temporary drop the cubic spline.  takes some cpu during debugging
-        # interp_mol = RegularGridInterpolator(
-        #    (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
-        # )
-        interp_tea[molecule] = interp_mol
+    # TEA equilibrium chemistry interpolation grid
+    interp_tea = get_TEA_grid()
     ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
 
     okfit = False

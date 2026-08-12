@@ -1,6 +1,6 @@
-'''Computation of the grids for atomic cross sections Ca, K, Na
-with VALD line lists ds'''
+'''cerberus atom_xsec ds'''
 
+# Heritage code shame:
 # pylint: disable=invalid-name
 # pylint: disable=no-member
 
@@ -261,3 +261,25 @@ def grid_generation(elem, temp, pressure, xh2, wgrid):
     )
 
     return
+
+def get_atom_xsec(atom_list):
+    atom_xsec = {}
+    temp = np.load(ATOM_XSEC_dir + 'temp.npy')
+    pressure = np.load(ATOM_XSEC_dir + 'pressure.npy')
+    X_H2 = np.load(ATOM_XSEC_dir + 'X_H2.npy')
+    wgrid = np.load(ATOM_XSEC_dir + 'wgrid.npy')
+    # grid size is 271,100,11,3312
+    # print('atom-xsec grid size T,P,Z,lambda',
+    #      len(temp), len(pressure), len(X_H2), len(wgrid))
+    # print('atom-xsec grid range T',temp[0],temp[-1]) 300-3000
+    # print('atom-xsec grid range P',pressure[0],pressure[-1]) 1e-9-10
+    # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
+    # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
+    for atom in atom_list:
+        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
+        interp_xsec = RegularGridInterpolator(
+            (temp, pressure, X_H2, wgrid), xsec
+        )
+        del xsec
+        atom_xsec[atom] = interp_xsec
+    return atom_xsec
