@@ -1,8 +1,7 @@
 '''cerberus teagrid ds'''
 
 # Heritage code shame:
-# asfpylint: disable=invalid-name
-# asdfpylint: disable=no-member
+# pylint: disable=invalid-name
 
 import os
 import numpy as np

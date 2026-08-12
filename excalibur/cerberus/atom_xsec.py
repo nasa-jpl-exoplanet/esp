@@ -1,8 +1,8 @@
 '''cerberus atom_xsec ds'''
 
 # Heritage code shame:
-# aapylint: disable=invalid-name
-# aapylint: disable=no-member
+# pylint: disable=invalid-name
+# pylint: disable=no-member
 
 import os
 import numpy as np
