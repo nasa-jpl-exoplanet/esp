@@ -689,10 +689,10 @@ def atmos(
     def get_atom_xsec(atom_list):
         # atomic xsec loading
         atom_xsec = {}
-        temp = np.load(ATOM_XSEC_dir + "temp.npy")
-        pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-        X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
-        wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
+        temp = np.load(ATOM_XSEC_dir + 'temp.npy')
+        pressure = np.load(ATOM_XSEC_dir + 'pressure.npy')
+        X_H2 = np.load(ATOM_XSEC_dir + 'X_H2.npy')
+        wgrid = np.load(ATOM_XSEC_dir + 'wgrid.npy')
         # grid size is 271,100,11,3312
         # print('atom-xsec grid size T,P,Z,lambda',
         #      len(temp), len(pressure), len(X_H2), len(wgrid))
@@ -710,7 +710,7 @@ def atmos(
         return atom_xsec
 
     atom_list = ['Ca', 'K', 'Na']
-    # atom_xsec = get_atom_xsec(atom_list)
+    atom_xsec = get_atom_xsec(atom_list)
     # each species takes up ~8GB; drop for now, to avoid memory problems
     atom_xsec = {}
     ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
