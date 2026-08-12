@@ -519,7 +519,7 @@ def plot_corner(
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
         elif key.startswith('Tparam') and ('T' in prior_ranges):
             priorlo[ikey], priorhi[ikey] = prior_ranges['T']
-        elif not key in ['$\\chi^2$', '$\\chi^2_{red}$', 'saved chi2']:
+        elif key not in ['$\\chi^2$', '$\\chi^2_{red}$', 'saved chi2']:
             log.warning('--< TROUBLE: prior-range not found %s >--', key)
         # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
     # priorspan = priorhi - priorlo
