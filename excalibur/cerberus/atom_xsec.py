@@ -1,9 +1,10 @@
-'''Computation of the grids for atomic cross sections Ca, K, Na
-with VALD line lists ds'''
+'''cerberus atom_xsec ds'''
 
+# Heritage code shame:
 # pylint: disable=invalid-name
 # pylint: disable=no-member
 
+import os
 import numpy as np
 import json
 import warnings
@@ -11,6 +12,13 @@ import warnings
 from scipy import special
 from scipy.interpolate import interp1d
 from scipy.constants import c, h, k, m_e, physical_constants, eV
+from scipy.interpolate import RegularGridInterpolator
+
+import excalibur
+
+ATOM_XSEC_DIR = os.path.join(
+    excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
+)
 
 # reference physical parameters for
 # colisional broadening
@@ -22,15 +30,15 @@ e_cgs = 4.80320427e-10  # Electron charge in cgs units (statC)
 c_cgs = 1e2 * c  # Speed of light in cgs units (cm)
 me_cgs = 1e3 * m_e  # Electron mass in cgs units (g)
 c2 = h * c_cgs / k
-amu = physical_constants["atomic mass constant"][0]
+amu = physical_constants['atomic mass constant'][0]
 
 # Element masses
 ATOMIC_MASS = {
-    "H": 1.008,
-    "He": 4.0026,
-    "Na": 22.990,
-    "K": 39.098,
-    "Ca": 40.078,
+    'H': 1.008,
+    'He': 4.0026,
+    'Na': 22.990,
+    'K': 39.098,
+    'Ca': 40.078,
 }
 
 
@@ -38,13 +46,13 @@ ATOMIC_MASS = {
 # -- LINE LIST LOADING -- --------------------------------------------
 def load_lines():
     with open(
-        "/proj/sdp/data/CERBERUS/ATOM_XSEC/lines_infos/lines.json",
-        "r",
-        encoding="utf-8",
+        ATOM_XSEC_DIR + '/lines_infos/lines.json',
+        'r',
+        encoding='utf-8',
     ) as f:
         data = json.load(f)
     for element in data:
-        if element == "units":
+        if element == 'units':
             continue
         data[element] = {
             float(wl): values for wl, values in data[element].items()
@@ -56,20 +64,20 @@ def load_lines():
 # -- PARTITION FUNCTION LOADING -- -----------------------------------
 def load_part_func(specie):
     with open(
-        "/proj/sdp/data/CERBERUS/ATOM_XSEC/lines_infos/partition_function.json",
-        "r",
-        encoding="utf-8",
+        ATOM_XSEC_DIR + '/lines_infos/partition_function.json',
+        'r',
+        encoding='utf-8',
     ) as f:
         partition_func = json.load(f)
         for element in partition_func:
-            partition_func[element]["T"] = np.array(
-                [float(x) for x in partition_func[element]["T"]]
+            partition_func[element]['T'] = np.array(
+                [float(x) for x in partition_func[element]['T']]
             )
-            partition_func[element]["Q"] = np.array(
-                [float(x) for x in partition_func[element]["Q"]]
+            partition_func[element]['Q'] = np.array(
+                [float(x) for x in partition_func[element]['Q']]
             )
-    temp = partition_func[specie]["T"]
-    Q = partition_func[specie]["Q"]
+    temp = partition_func[specie]['T']
+    Q = partition_func[specie]['Q']
     return temp, Q
 
 
@@ -128,12 +136,12 @@ def h2hebroadening(
 def partition_function(specie, T):
     temp, Q = load_part_func(specie)
     temp_min, temp_max = np.min(temp), np.max(temp)
-    f = interp1d(temp, Q, kind='linear', fill_value="extrapolate")
+    f = interp1d(temp, Q, kind='linear', fill_value='extrapolate')
 
     if np.any((T < temp_min) | (T > temp_max)):
         warnings.warn(
-            f"Extrapolation used for T = {T}. "
-            f"Valid range is [{temp_min}, {temp_max}]",
+            f'Extrapolation used for T = {T}. '
+            f'Valid range is [{temp_min}, {temp_max}]',
             RuntimeWarning,
         )
 
@@ -174,9 +182,9 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
 
     # line intensity
     S = vald_intensity(
-        line["gf"],
-        line["E_low"] * eV / h / c_cgs,
-        1e0 / line["WL_vacuum"] * 1e4,
+        line['gf'],
+        line['E_low'] * eV / h / c_cgs,
+        1e0 / line['WL_vacuum'] * 1e4,
         parameters[:, 0],
         Q,
     )
@@ -185,8 +193,8 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
     mass = ATOMIC_MASS[specie] * amu
 
     # broadening
-    gamma0h2 = gammavld(line["Waals"], mass / amu, 'H2')
-    gamma0he = gammavld(line["Waals"], mass / amu, 'He')
+    gamma0h2 = gammavld(line['Waals'], mass / amu, 'H2')
+    gamma0he = gammavld(line['Waals'], mass / amu, 'He')
     gamma = h2hebroadening(
         gamma0h2,
         parameters[:, 0],
@@ -194,20 +202,20 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
         parameters[:, 2],
         gamma0he,
     )
-    gamma = gamma + 1e0 / (4e0 * np.pi * (c_cgs)) * line["Rad"]
+    gamma = gamma + 1e0 / (4e0 * np.pi * (c_cgs)) * line['Rad']
 
     # line cutoff
     wing_cutoff = 3e1
 
     # voigt profile
     idx = np.where(
-        np.abs(nu_grid - 1e0 / line["WL_vacuum"] * 1e4) <= wing_cutoff
+        np.abs(nu_grid - 1e0 / line['WL_vacuum'] * 1e4) <= wing_cutoff
     )[0]
     sigma = np.zeros((len(parameters[:, 0]), len(nu_grid)))
     if len(idx):
         phi = voigt(
             nu_grid[idx],
-            1e0 / line["WL_vacuum"] * 1e4,
+            1e0 / line['WL_vacuum'] * 1e4,
             parameters[:, 0],
             mass,
             gamma,
@@ -249,15 +257,40 @@ def grid_generation(elem, temp, pressure, xh2, wgrid):
 
     grid = atom_xsec(w_grid=wgrid, specie=elem, parameters=parameters)
 
-    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/temp.npy", temp)
-    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/pressure.npy", pressure)
-    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/X_H2.npy", xh2)
-    np.save("/proj/sdp/data/CERBERUS/ATOM_XSEC/wgrid.npy", wgrid)
+    np.save(ATOM_XSEC_DIR + 'temp.npy', temp)
+    np.save(ATOM_XSEC_DIR + 'pressure.npy', pressure)
+    np.save(ATOM_XSEC_DIR + 'X_H2.npy', xh2)
+    np.save(ATOM_XSEC_DIR + 'wgrid.npy', wgrid)
 
     grid_4d = grid.reshape((len(temp), len(pressure), len(xh2), -1))
 
-    np.save(
-        "/proj/sdp/data/CERBERUS/ATOM_XSEC/" + elem + "/grid_4d.npy", grid_4d
-    )
+    np.save(ATOM_XSEC_DIR + elem + '/grid_4d.npy', grid_4d)
 
     return
+
+
+# --------- ----------------------------------------------------------
+# -- LOAD IN THE INTERPOLATION GRID ----------------------------------
+def get_atom_xsec(atom_list):
+
+    temp = np.load(ATOM_XSEC_DIR + 'temp.npy')
+    pressure = np.load(ATOM_XSEC_DIR + 'pressure.npy')
+    X_H2 = np.load(ATOM_XSEC_DIR + 'X_H2.npy')
+    wgrid = np.load(ATOM_XSEC_DIR + 'wgrid.npy')
+    # grid size is 271,100,11,3312
+    # print('atom-xsec grid size T,P,Z,lambda',
+    #      len(temp), len(pressure), len(X_H2), len(wgrid))
+    # print('atom-xsec grid range T',temp[0],temp[-1]) 300-3000
+    # print('atom-xsec grid range P',pressure[0],pressure[-1]) 1e-9-10
+    # print('atom-xsec grid range Z',X_H2[0],X_H2[-1]) 0-1
+    # print('atom-xsec grid range lambda',wgrid[0],wgrid[-1]) 2.86-5.17
+
+    atom_xsec_grid = {}
+    for atom in atom_list:
+        xsec = np.load(ATOM_XSEC_DIR + atom + '/grid_4d.npy')
+        interp_xsec = RegularGridInterpolator(
+            (temp, pressure, X_H2, wgrid), xsec
+        )
+        atom_xsec_grid[atom] = interp_xsec
+
+    return atom_xsec_grid

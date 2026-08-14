@@ -87,6 +87,7 @@ def plot_spectrumfit(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''plot the best fit to the data'''
 
@@ -412,7 +413,8 @@ def plot_spectrumfit(
         plt.legend()
 
     # figgy.tight_layout()
-    # plt.show()
+    if verbose:
+        plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
         plt.savefig(
@@ -486,7 +488,7 @@ def plot_corner(
                 paramValues_bestFit.append(tceqdict['NtoO'])
             elif mixratio and param in mixratio:
                 paramValues_bestFit.append(mixratio[param])
-            elif param in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+            elif param in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
                 paramValues_bestFit.append(666666)
             elif param in ['chi2reduced', '$\\chi^2_{red}$']:
                 paramValues_bestFit.append(1)
@@ -517,7 +519,7 @@ def plot_corner(
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
         elif key.startswith('Tparam') and ('T' in prior_ranges):
             priorlo[ikey], priorhi[ikey] = prior_ranges['T']
-        elif key != '$\\chi^2_{red}$':
+        elif key not in ['$\\chi^2$', '$\\chi^2_{red}$', 'saved chi2']:
             log.warning('--< TROUBLE: prior-range not found %s >--', key)
         # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
     # priorspan = priorhi - priorlo
@@ -562,7 +564,7 @@ def plot_corner(
                 truths.append(truth_params['C/O'])
             elif thiskey == '[N/O]':
                 truths.append(0)
-            elif thiskey in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+            elif thiskey in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
                 truths.append(666666)
             elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
                 truths.append(1)
@@ -621,14 +623,20 @@ def plot_corner(
         # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
         # figure.set_size_inches(16,16)  # this actually makes it smaller
 
+        # print('labels', allkeys)
+        # print('parambest', paramValues_bestFit)
+
         ndim = len(alltraces)
-        if ndim > len(paramValues_bestFit):
-            log.error(
-                '--< ERR: missing bestFit values in corner %s %s >--',
-                ndim,
-                len(paramValues_bestFit),
-            )
-            ndim = len(paramValues_bestFit)
+        # print('ndim', ndim, len(paramValues_bestFit))
+
+        # (if it's a debug plot from atmos, bestFit is not defined yet)
+        # if ndim > len(paramValues_bestFit):
+        #    log.error(
+        #        '--< ERR: missing bestFit values in corner %s %s >--',
+        #        ndim,
+        #        len(paramValues_bestFit),
+        #    )
+        #    ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
         # use larger font size for the axis labels
         for i in range(ndim):
@@ -822,7 +830,7 @@ def plot_vs_prior(
     for iparam in range(Nparam):
         if allkeys[iparam] in [
             'saved logLikelihood',
-            'saved chi2s',
+            'saved chi2',
             '$\\chi^2$',
             'chi2reduced',
             '$\\chi^2_{red}$',

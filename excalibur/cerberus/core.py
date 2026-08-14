@@ -45,6 +45,8 @@ from excalibur.cerberus.bounds import (
     get_profile_limits_hstg141,
     apply_profiling,
 )
+from excalibur.cerberus.atom_xsec import get_atom_xsec
+from excalibur.cerberus.teagrid import get_TEA_grid
 
 import logging
 import os
@@ -54,7 +56,6 @@ import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 from scipy.interpolate import interp1d as itp
-from scipy.interpolate import RegularGridInterpolator
 
 import pymc
 import pytensor.tensor as pytensr
@@ -142,12 +143,6 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
-ATOM_XSEC_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
-)
-INTERP_TEA_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
-)
 
 
 # ----------------- --------------------------------------------------
@@ -686,53 +681,15 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    # atomic xsec loading
+    # load atomic cross-section interpolation grid
     atom_list = ['Ca', 'K', 'Na']
-    atom_xsec = {}
-    temp = np.load(ATOM_XSEC_dir + "temp.npy")
-    pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-    X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
-    wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
-    for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
-        interp_xsec = RegularGridInterpolator(
-            (temp, pressure, X_H2, wgrid), xsec
-        )
-        atom_xsec[atom] = interp_xsec
+    # each species takes up ~8GB; drop for now, to avoid memory problems
+    atom_list = []
+    atom_xsec = get_atom_xsec(atom_list)
     ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
-    # TEA interpolation
-    species_name = [
-        'CH4',
-        'CO2',
-        'CO',
-        'H2O',
-        'H2',
-        'H2S',
-        'He',
-        'N2',
-        'NH3',
-        'O3',
-        'SO2',
-        'HCN',
-        'TIO',
-        'C2H2',
-        'N2O',
-        'NO',
-        'O2',
-        'OH',
-    ]
-    temp = np.load(INTERP_TEA_dir + "grid_parameters/temperature.npy")
-    pressure = np.load(INTERP_TEA_dir + "grid_parameters/pressure.npy")
-    XtoH = np.load(INTERP_TEA_dir + "grid_parameters/XtoH.npy")
-    CtoO = np.load(INTERP_TEA_dir + "grid_parameters/CtoO.npy")
-    interp_tea = {}
-    for molecule in species_name:
-        grid_4d = np.load(INTERP_TEA_dir + molecule + ".npy")
-        interp_mol = RegularGridInterpolator(
-            (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
-        )
-        interp_tea[molecule] = interp_mol
+    # load TEA equilibrium chemistry interpolation grid
+    interp_tea = get_TEA_grid()
     ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
 
     okfit = False
@@ -746,6 +703,7 @@ def atmos(
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
         modfam = ['TEC']
+        # modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -985,8 +943,8 @@ def atmos(
                     if not runtime_params.fitT:
                         fixed_params['T'] = eqtemp
                     if not runtime_params.fitCtoO:
-                        print('inputdata keys', input_data.keys())
-                        print('modelparams', input_data['model_params'])
+                        # print('inputdata keys', input_data.keys())
+                        # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
                         # model_params should always exist, but might be 'None'
                         if 'C/O' in input_data['model_params']:
@@ -1449,6 +1407,7 @@ def atmos(
                     trace = pymc.sample(
                         chainlen,
                         cores=Nchains,
+                        chains=Nchains,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1497,6 +1456,8 @@ def atmos(
                     # seems better when reversed ('F' reverses the indices)
                     mctrace[key] = np.ravel(mctrace[key], order='F')
                 out['data'][p][model]['MCTRACE'] = mctrace
+                out['data'][p][model]['Nchains'] = Nchains
+                out['data'][p][model]['chainlen'] = chainlen
 
                 out['data'][p][model]['prior_ranges'] = prior_ranges
             out['data'][p]['WAVELENGTH'] = np.array(input_data['WB'])
@@ -2166,6 +2127,12 @@ def results(
                         )
                 profiled_traces = np.array(profiled_traces)
 
+                if 'Nchains' in atm[p][model_name]:
+                    Nchains = atm[p][model_name]['Nchains']
+                else:
+                    Nchains = None
+                print('Nchains (passed through from atmos)', Nchains)
+
                 # make note of the bounds placed on each parameter
                 if 'prior_ranges' in atm[p][model_name].keys():
                     prior_ranges = atm[p][model_name]['prior_ranges']
@@ -2702,6 +2669,7 @@ def results(
                         trgt,
                         p,
                         saveDir=save_dir,
+                        verbose=False,
                     )
                 )
 
@@ -2726,8 +2694,10 @@ def results(
                     p,
                     bins=runtime_params.cornerBins,
                     verbose=verbose,
+                    # verbose=False,
                     saveDir=save_dir,
                 )
+
                 # _______________WALKER-EVOLUTION PLOT________________
                 out['data'][p]['plot_walkerevol_' + model_name], _ = (
                     plot_walker_evolution(
@@ -2741,8 +2711,10 @@ def results(
                         model_name,
                         trgt,
                         p,
+                        Nchains=Nchains,
                         saveDir=save_dir,
-                        # verbose=verbose,
+                        verbose=verbose,
+                        # verbose=True,
                     )
                 )
 

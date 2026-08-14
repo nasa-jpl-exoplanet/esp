@@ -855,6 +855,7 @@ def forcepar(overwrite, out, verbose=False):
     # if something has been overwritten, save forcepar as true (shows at top of system.finalize)
     out['PP'].append(forced)
 
+    # check whether any parameters are still needed after overwrites
     for n in out['needed'].copy():
         if ':' not in n:
             try:
@@ -907,7 +908,13 @@ def forcepar(overwrite, out, verbose=False):
                     addback = False
             pass
         if addback:
+            # print('adding a planet back after overwrite!',p)
             out['priors']['planets'].append(p)
+            # also remove it from the ignore list
+            if p in out['ignore']:
+                out['ignore'].pop(out['ignore'].index(p))
+            else:
+                log.error('ERROR: unignoring an unignored planet %s', p)
     starneed = False
     for p in out['needed']:
         if ':' not in p:
