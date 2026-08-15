@@ -904,7 +904,7 @@ def atmos(
                     chemistry = 'TEC'
                 # print('model, chemistry', model, chemistry)
 
-                print('TRUTH PARAMS', input_data['model_params'])
+                # print('TRUTH PARAMS', input_data['model_params'])
                                 
                 # new method for setting priors (no change, but easier to view in bounds.py)
                 prior_range_table = set_prior_bound(eqtemp, runtime_params)

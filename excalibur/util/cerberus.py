@@ -474,9 +474,10 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         HEoH2 = 2.0 * 2.343 * 1e9 / (2.431 * 1e10)
     else:
         HEoH2 = fHe / fH2
+    # if 1:
     if verbose:
-        print('fHe,fH2', fHe, fH2)
-        print('HEoH2', HEoH2)
+        print('fHe,fH2', np.median(fHe), np.median(fH2))
+        # print('HEoH2', HEoH2)
     mrH2 = mrH2He / (1.0 + HEoH2)
     mrHe = HEoH2 * mrH2
     mmw = mrH2 * weights['H2'] + mrHe * weights['He'] + mmw
