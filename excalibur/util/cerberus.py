@@ -61,7 +61,7 @@ def calcTEA(
             'CH4_g',
             'CO2_g',
             'CO_g',
-            'H2CO_g',
+            'H2CO_g',  # not in the TEA interp grid
             'H2O_g',
             'H2_ref',
             'H2S_g',
@@ -74,8 +74,9 @@ def calcTEA(
             'O2_ref',
             'O3_g',
             'OH_g',
-            'PH3_g',
+            'PH3_g',  # not in the TEA interp grid
             'SO2_g',
+            'TiO_g',
         ]
     input_species = species
 
