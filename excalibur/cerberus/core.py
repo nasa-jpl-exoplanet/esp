@@ -686,11 +686,9 @@ def atmos(
     # each species takes up ~8GB; drop for now, to avoid memory problems
     atom_list = []
     atom_xsec = get_atom_xsec(atom_list)
-    ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
 
     # load TEA equilibrium chemistry interpolation grid
     interp_tea = get_TEA_grid()
-    ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
 
     okfit = False
     orbp = fin['priors'].copy()
@@ -703,7 +701,7 @@ def atmos(
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
         modfam = ['TEC']
-        # modfam = ['TEA']
+        modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO'],
@@ -713,12 +711,15 @@ def atmos(
         #   previously (with taurex) there were 8 options. now 4 options:
         # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
+        arielmodel = 'cerberus'
+        if 'TEA' in modfam:
+            arielmodel += 'TEA'
         if runtime_params.fitCloudParameters:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
-            arielmodel = 'cerberus'
+            # arielmodel = 'cerberus'
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
-            arielmodel = 'cerberusNoclouds'
+            arielmodel += 'Noclouds'
 
         # option to fix N/O
         if not runtime_params.fitNtoO:
@@ -745,7 +746,10 @@ def atmos(
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
         if arielmodel not in spc['data']['models']:
-            log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
+            log.error(
+                '--< BIG PROB: ariel model doesnt exist!!! %s >--', arielmodel
+            )
+            return False
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
         modfam = ['TEC', 'PHOTOCHEM']
@@ -893,6 +897,12 @@ def atmos(
 
             for model in modfam:
                 out['data'][p][model] = {}
+
+                if bool('TEA' in model):
+                    chemistry = 'TEA'
+                else:
+                    chemistry = 'TEC'
+                # print('model, chemistry', model, chemistry)
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
                 prior_range_table = set_prior_bound(eqtemp, runtime_params)
@@ -1212,11 +1222,14 @@ def atmos(
                             spc=spc,
                             modparlbl=modparlbl,
                             hzlib=crbhzlib,
+                            chemistry=chemistry,
                             fixed_params=fixed_params,
                             mcmcdat=tspectrum[cleanup],
                             mcmcsig=tspecerr[cleanup],
                             nodeshape=nodeshape,
                             forwardmodel=clearfmcerberus,
+                            atom_xsec=atom_xsec,
+                            interp_tea=interp_tea,
                         )
 
                         # --< MODEL >--
@@ -1356,6 +1369,7 @@ def atmos(
                                 spc=spc,
                                 modparlbl=modparlbl,
                                 hzlib=crbhzlib,
+                                chemistry=chemistry,
                                 fixed_params=fixed_params,
                                 mcmcdat=tspectrum[cleanup],
                                 mcmcsig=tspecerr[cleanup],
@@ -1915,6 +1929,7 @@ def calculateSpectrum(
     fin,
     xsl,
     transitdata,
+    chemistry='TEC',
 ):
     '''
     calculate a spectrum for the given set of fit-parameters
@@ -1941,6 +1956,7 @@ def calculateSpectrum(
         wgrid=transitdata['wavelength'],
         orbp=fin['priors'],
         hzlib=crbhzlib,
+        chemistry=chemistry,
         planet=p,
         knownspecies=runtime_params.knownspecies,
         cialist=runtime_params.cialist,
@@ -2047,6 +2063,11 @@ def results(
                 if model_name in atm[p].keys():
                     models.append(model_name)
             for model_name in models:
+                if bool('TEA' in model_name):
+                    chemistry = 'TEA'
+                else:
+                    chemistry = 'TEC'
+
                 all_traces = []
                 all_keys = []
                 for key in atm[p][model_name]['MCTRACE']:
@@ -2341,6 +2362,7 @@ def results(
                     fin,
                     xsl,
                     transitdata,
+                    chemistry=chemistry,
                 )
 
                 param_values_profiled = [
@@ -2362,6 +2384,7 @@ def results(
                     fin,
                     xsl,
                     transitdata,
+                    chemistry=chemistry,
                 )
                 # print('median params', tpr, tceqdict)
                 # print('chi2 from posterior medians', chi2model)
@@ -2428,6 +2451,7 @@ def results(
                         fin,
                         xsl,
                         transitdata,
+                        chemistry=chemistry,
                     )
 
                 else:
@@ -2520,6 +2544,7 @@ def results(
                             fin,
                             xsl,
                             transitdata,
+                            chemistry=chemistry,
                         )
                         # check to see if this model is the best one
                         # print('chi2 from sample toward best', chi2modelrand)
@@ -3171,7 +3196,7 @@ def release(trgt, fin, out, verbose=False):
     rlsed = False
     plist = fin['priors']['planets']
     thispath = os.path.join(excalibur.context['data_dir'], 'CERBERUS')
-    print('thispath', thispath)
+    # print('thispath', thispath)
     for p in plist:
         intxtf = os.path.join(thispath, 'P.CERBERUS.atmos', trgt + p + '.txt')
         incorrpng = os.path.join(
