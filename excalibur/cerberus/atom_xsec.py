@@ -291,6 +291,10 @@ def get_atom_xsec(atom_list):
         interp_xsec = RegularGridInterpolator(
             (temp, pressure, X_H2, wgrid), xsec
         )
+        # careful with values going outside of bounds.
+        # for now, leave this out, so it will crash. adjust T grid accordingly
+        #    bounds_error=False,
+        #    fill_value=None,
         atom_xsec_grid[atom] = interp_xsec
 
     return atom_xsec_grid
