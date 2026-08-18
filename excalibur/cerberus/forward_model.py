@@ -243,14 +243,15 @@ class crbFM:
                         mxr = interp(grid_points)
                         mixratioprofiles[molecule] = mxr
                     pass
-                    # print('GREAT!!!!!  DONE WITH INTERP ALL MOLECULES YES',mixratioprofiles.keys())
-                    # print('GREAT!!!!!  DONE WITH INTERP ALL MOLECULES YES')
 
                 # Not taking the average since the equilibrium
                 # changes with the layers
                 mixratio = {}
                 for molecule in mixratioprofiles:
                     mixratio[molecule] = mixratioprofiles[molecule]
+                    # mixratio[molecule] = np.median(mixratioprofiles[molecule])
+
+                # print('Model MIXRATIOs', mixratio)
 
                 # print()
                 # print('mixratio in cerb', mixratio)
@@ -663,8 +664,6 @@ def gettau(
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
     for elem in mixratio:
-
-        # print('elem in gettay',elem, elem in mixratio)
         mlp = np.array(mixratio[elem])
         if not mlp.ndim:
             mlp = np.array([float(mlp)] * len(pressure))

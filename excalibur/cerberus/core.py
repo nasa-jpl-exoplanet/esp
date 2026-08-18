@@ -179,26 +179,29 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     cs = False
     planet_letters = []
     for p in spc['data'].keys():
-        if (
-            len(p) == 1
-        ):  # filter out non-planetletter keywords, e.g. 'models','target'
-            if (
-                'WB' in spc['data'][p].keys()
-            ):  # make sure it has a spectrum (Kepler-37e bug)
-                if not only_these_planets or p in only_these_planets:
-                    planet_letters.append(p)
-                else:
-                    log.info(
-                        '--< CERBERUS.XSLIB: skipping non-tier2 planet %s %s >--',
-                        spc['data']['target'],
-                        p,
-                    )
+        if len(p) == 1:
+            # filter out non-planetletter keywords, e.g. 'models','target'
+            if not only_these_planets or p in only_these_planets:
+                planet_letters.append(p)
             else:
                 log.info(
-                    '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
+                    '--< CERBERUS.XSLIB: skipping non-tier2 planet %s %s >--',
                     spc['data']['target'],
                     p,
                 )
+            # make sure it has a spectrum (Kepler-37e bug)
+            # TROUBLE! crashes for JWST data
+            #   JWST has visit and detector subdivisions before WB
+            #   (Gael will fix this)
+            if 'WB' not in spc['data'][p].keys():
+                if 'target' in spc['data']:
+                    log.error(
+                        '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
+                        spc['data']['target'],
+                        p,
+                    )
+                else:
+                    log.error('--< CERBERUS.XSLIB: wavelength grid is missing >--')
     for p in planet_letters:
         out['data'][p] = {}
 
@@ -844,14 +847,17 @@ def atmos(
             # print('eqtemp check',eqtemp1)
             # print('eqtemp check',eqtemp2)
             # print('eqtemp check',orbp[p]['teq'])
-            # print('eqtemp check',inputData['model_params']['Teq'])
+            # print('eqtemp check',input_data['model_params']['Teq'])
 
             # CAREFUL:
             #  equilibrium temperatures from the archive sometimes don't match this!
             #  e.g. GJ 3053=LHS 1140 b,c (the Archive has 379K,709K vs 216,403K here)
             #  that one is wrong it seems. Lillo-Box 2020 has strange extra factor
 
-            # print('model_params',inputData['model_params'])
+            # print('model_params',input_data['model_params'])
+            # print('planet priors', p, fin['priors']
+            # print('spc', p, spc['data'][p][arielmodel].keys())
+            # print('TRUE MIXRATIOs', p, spc['data'][p][arielmodel]['mixratio'])
 
             # bottom line:
             #  use the same Teq as in ariel-sim, otherwise truth/retrieved won't match
@@ -904,8 +910,6 @@ def atmos(
                     chemistry = 'TEC'
                 # print('model, chemistry', model, chemistry)
 
-                # print('TRUTH PARAMS', input_data['model_params'])
-                                
                 # new method for setting priors (no change, but easier to view in bounds.py)
                 prior_range_table = set_prior_bound(eqtemp, runtime_params)
 
@@ -955,7 +959,7 @@ def atmos(
                     if not runtime_params.fitT:
                         fixed_params['T'] = eqtemp
                     if not runtime_params.fitCtoO:
-                        # print('inputdata keys', input_data.keys())
+                        # print('input_data keys', input_data.keys())
                         # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
                         # model_params should always exist, but might be 'None'
@@ -1377,6 +1381,8 @@ def atmos(
                                 mcmcsig=tspecerr[cleanup],
                                 nodeshape=nodeshape,
                                 forwardmodel=cloudyfmcerberus,
+                                atom_xsec=atom_xsec,
+                                interp_tea=interp_tea,
                             )
 
                             # --< MODEL >--
@@ -1492,7 +1498,7 @@ def atmos(
                     out['data'][p]['TRUTH_MODELPARAMS'] = input_data[
                         'model_params'
                     ]
-                    # print('true modelparams in atmos:',inputData['model_params'])
+                    # print('true modelparams in atmos:',input_data['model_params'])
 
             # during debugging (script run) show the results as a corner plot
             if verbose:
