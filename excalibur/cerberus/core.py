@@ -201,7 +201,10 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         p,
                     )
                 else:
-                    log.error('--< CERBERUS.XSLIB: wavelength grid is missing >--')
+                    log.error(
+                        '--< CERBERUS.XSLIB: wavelength grid is missing >--'
+                    )
+                return False
     for p in planet_letters:
         out['data'][p] = {}
 
