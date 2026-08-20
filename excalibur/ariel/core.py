@@ -592,18 +592,18 @@ def simulate_spectra(
                                 )
                             )
                             mixratioprofiles = {}
-                            for molecule in interp_tea:
+                            for molecule, interp in interp_tea.items():
                                 # print('molecule', molecule)
-                                interp = interp_tea[molecule]
+                                # interp = interp_tea[molecule]
                                 mxr = interp(grid_points)
                                 mixratioprofiles[molecule] = mxr
 
                             mixratio = {}
-                            for molecule in mixratioprofiles:
-                                mixratio[molecule] = mixratioprofiles[molecule]
+                            for molecule, mixratioprofile in mixratioprofiles.items():
+                                mixratio[molecule] = mixratioprofile
                                 # Don't average the mixratio?
                                 # mixratio[molecule] = np.log10(
-                                #    np.mean(10.0 ** mixratioprofiles[molecule])
+                                #    np.mean(10.0 ** mixratioprofile)
                                 # )
 
                         elif useTEA:
