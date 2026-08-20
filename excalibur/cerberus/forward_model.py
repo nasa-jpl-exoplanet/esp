@@ -237,9 +237,9 @@ class crbFM:
                         )
                     )
 
-                    for molecule in interp_tea:
+                    for molecule, interp in interp_tea.items():
                         # print('molecule', molecule)
-                        interp = interp_tea[molecule]
+                        # interp = interp_tea[molecule]
                         mxr = interp(grid_points)
                         mixratioprofiles[molecule] = mxr
                     pass
@@ -247,9 +247,9 @@ class crbFM:
                 # Not taking the average since the equilibrium
                 # changes with the layers
                 mixratio = {}
-                for molecule in mixratioprofiles:
-                    mixratio[molecule] = mixratioprofiles[molecule]
-                    # mixratio[molecule] = np.median(mixratioprofiles[molecule])
+                for molecule, mixratioprofile in mixratioprofiles.items():
+                    mixratio[molecule] = mixratioprofile
+                    # mixratio[molecule] = np.median(mixratioprofile)
 
                 # print('Model MIXRATIOs', mixratio)
 
