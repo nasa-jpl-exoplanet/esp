@@ -248,6 +248,12 @@ def calcTEA(
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
     # print('MIXRATIO IN TEA for h2o',np.log10(
     #    np.mean(10.0 ** mixratio['H2O'])))
+
+    # special case for TiO, where online xsec etc have it as all-caps
+    if 'TiO' in mixratio:
+        mixratio['TIO'] = mixratio['TiO']
+        mixratio.pop('TiO')
+
     return mixratio
 
 
