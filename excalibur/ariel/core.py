@@ -599,7 +599,10 @@ def simulate_spectra(
                                 mixratioprofiles[molecule] = mxr
 
                             mixratio = {}
-                            for molecule, mixratioprofile in mixratioprofiles.items():
+                            for (
+                                molecule,
+                                mixratioprofile,
+                            ) in mixratioprofiles.items():
                                 mixratio[molecule] = mixratioprofile
                                 # Don't average the mixratio?
                                 # mixratio[molecule] = np.log10(
