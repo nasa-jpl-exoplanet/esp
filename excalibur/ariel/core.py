@@ -170,12 +170,15 @@ def simulate_spectra(
     atmosModels = [
         'cerberus',
         'cerberusNonisothermal',
-        'cerberusTEANonisothermal',
         'cerberusTEA',
-        'cerberuslowmmw',
+        'cerberusTEANonisothermal',
+        'cerberusTEAgrid',
+        'cerberusTEAgridNonisothermal',
         'cerberusNoclouds',
         'cerberusNocloudsNonisothermal',
         'cerberusTEANoclouds',
+        'cerberusTEAgridNoclouds',
+        'cerberuslowmmw',
         'cerberuslowmmwNoclouds',
         'cerberusGemliNoclouds',
         'cerberusWaterNoclouds',
@@ -365,6 +368,7 @@ def simulate_spectra(
                     print()
                     print('starting Atmospheric Model:', atmosModel)
                 useTEA = bool('TEA' in atmosModel)
+                useTEAgrid = bool('TEAgrid' in atmosModel)
                 if useTEA:
                     chemistry = 'TEA'
                 else:
@@ -572,7 +576,31 @@ def simulate_spectra(
                     # (to compare against FREE chemistry case (especially gemli)
                     # only calculate here if it's not set already as fixed value
                     if not mixratio:
-                        if useTEA:
+                        if useTEAgrid:
+                            grid_points = np.column_stack(
+                                (
+                                    tpp,
+                                    pressure,
+                                    10 ** cheq['XtoH'] * np.ones(pressure.size),
+                                    10 ** cheq['CtoO'] * np.ones(pressure.size),
+                                )
+                            )
+                            mixratioprofiles = {}
+                            for molecule in interp_tea:
+                                # print('molecule', molecule)
+                                interp = interp_tea[molecule]
+                                mxr = interp(grid_points)
+                                mixratioprofiles[molecule] = mxr
+
+                            mixratio = {}
+                            for molecule in mixratioprofiles:
+                                mixratio[molecule] = mixratioprofiles[molecule]
+                                # Don't average the mixratio?
+                                # mixratio[molecule] = np.log10(
+                                #    np.mean(10.0 ** mixratioprofiles[molecule])
+                                # )
+
+                        elif useTEA:
                             # T = model_params['Teq']
                             # tempCoeffs = [0, T, 0, 1, 0, -1, 1, 0, -1, 1]
                             mixratioprofiles = crbutil.calcTEA(
@@ -584,9 +612,11 @@ def simulate_spectra(
                             )
                             mixratio = {}
                             for molecule in mixratioprofiles:
-                                mixratio[molecule] = np.log10(
-                                    np.mean(10.0 ** mixratioprofiles[molecule])
-                                )
+                                mixratio[molecule] = mixratioprofiles[molecule]
+                                # Don't average the mixratio?
+                                # mixratio[molecule] = np.log10(
+                                #    np.mean(10.0 ** mixratioprofiles[molecule])
+                                # )
                         else:
                             mixratio, _, _, _ = crbutil.crbce(
                                 pressure,
