@@ -695,6 +695,8 @@ def atmos(
 
     # load TEA equilibrium chemistry interpolation grid
     interp_tea = get_TEA_grid()
+    # OR.. leave it blank if you truly want the slow version
+    # interp_tea = {}
 
     okfit = False
     orbp = fin['priors'].copy()

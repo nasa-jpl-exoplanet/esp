@@ -426,7 +426,8 @@ def simulate_spectra(
                         for molecule in molecules:
                             if molecule != 'H2O':
                                 mixratio.pop(molecule)
-                        print('mixratio just water!!!', mixratio)
+                        if verbose:
+                            print('mixratio just water!!!', mixratio)
 
                     for molecule, value in mixratio.items():
                         model_params[molecule] = value
