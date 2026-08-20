@@ -587,7 +587,8 @@ def simulate_spectra(
                                     pressure,
                                     10.0 ** model_params['metallicity']
                                     * np.ones(pressure.size),
-                                    0.55 * 10.0 ** model_params['C/O']
+                                    0.55
+                                    * 10.0 ** model_params['C/O']
                                     * np.ones(pressure.size),
                                 )
                             )
