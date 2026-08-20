@@ -27,6 +27,7 @@ from excalibur.ariel.ariel_instrument_model import (
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
 from excalibur.cerberus.forward_model import TPprofile
+from excalibur.cerberus.teagrid import get_TEA_grid
 from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
@@ -191,6 +192,9 @@ def simulate_spectra(
             'cerberusNoclouds',
             'cerberusTEANoclouds',
         ]
+
+    # load TEA equilibrium chemistry interpolation grid
+    interp_tea = get_TEA_grid()
 
     solarCtoO = 0.54951
 
@@ -579,10 +583,12 @@ def simulate_spectra(
                         if useTEAgrid:
                             grid_points = np.column_stack(
                                 (
-                                    tpp,
+                                    model_params['temperatures'],
                                     pressure,
-                                    10 ** cheq['XtoH'] * np.ones(pressure.size),
-                                    10 ** cheq['CtoO'] * np.ones(pressure.size),
+                                    10.0 ** model_params['metallicity']
+                                    * np.ones(pressure.size),
+                                    0.55 * 10.0 ** model_params['C/O'],
+                                    * np.ones(pressure.size),
                                 )
                             )
                             mixratioprofiles = {}
