@@ -694,9 +694,8 @@ def gettau(
                         interpolator = interp_atom[elem]
                         T = np.repeat(temp, len(wgrid))
                         P = np.repeat(pressure, len(wgrid))
-                        X_H2 = np.repeat(fH2 / (fH2 + fHe), len(wgrid))
                         wl = np.tile(wgrid, Nzones)
-                        points = np.column_stack((T, P, X_H2, wl))
+                        points = np.column_stack((T, P, wl))
 
                         # xsec computation
                         sigma = interpolator(points)
