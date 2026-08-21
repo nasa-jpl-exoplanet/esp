@@ -50,7 +50,7 @@ class crbFM:
         hazeloc=None,
         hazeprof='AVERAGE',
         hzlib=None,
-        chemistry='TEC',
+        chemistry=None,
         planet=None,
         rp0=None,
         orbp=None,
@@ -134,6 +134,8 @@ class crbFM:
             wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
         if hzlib is None:
             hzlib = ctxt.hzlib
+        if chemistry is None:
+            chemistry = ctxt.chemistry
 
         ssc = syscore.ssconstants(mks=True)
         pgrid = np.arange(
@@ -176,6 +178,7 @@ class crbFM:
                 log.error('!!! >--< Neither mixratio nor cheq are defined')
                 pass
             if chemistry.startswith('TEC'):
+                # print('using standard TEC')
                 mixratio, mixratioprofiles, fH2, fHe = crbce(
                     pressure,
                     tpp,
@@ -194,11 +197,13 @@ class crbFM:
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
                 if interp_tea is None:
+                    # print('using external TEA grid')
                     # for use outside of the pipeline, give a dictionary
                     # containing the interpolators for each molecule
                     interp_tea = tea_data
                     pass
                 if not interp_tea:
+                    # print('using full=slow TEA calculation')
                     #  (this one gives a div-by-0 error)
                     # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                     #  this is the correct way to pass in to Luke's _make_tp_profile
@@ -214,10 +219,15 @@ class crbFM:
                     )
                     pass
                 else:
+                    # print('using TEA interpolation grid')
                     # species used for the equilibrium are :
-                    # CH4, CO2, CO, H2O, H2, H2S, He, N2,
-                    # NH3, O3, SO2, HCN, TIO, C2H2, N2O,
-                    # NO, O2, OH
+                    # CH4, CO2, CO, H2O, H2, H2S, He, O3, O2, OH,
+                    # SO2, HCN, TIO, C2H2, N2, NH3, N2O, NO
+                    # print('   values check',
+                    #      (tpp[10]),
+                    #      (pressure[10]),
+                    #      (10 ** cheq['XtoH'] * np.ones(pressure.size)[10]),
+                    #      (10 ** cheq['CtoO'] * np.ones(pressure.size))[10])
                     grid_points = np.column_stack(
                         (
                             tpp,
@@ -227,8 +237,9 @@ class crbFM:
                         )
                     )
 
-                    for molecule in interp_tea:
-                        interp = interp_tea[molecule]
+                    for molecule, interp in interp_tea.items():
+                        # print('molecule', molecule)
+                        # interp = interp_tea[molecule]
                         mxr = interp(grid_points)
                         mixratioprofiles[molecule] = mxr
                     pass
@@ -236,8 +247,11 @@ class crbFM:
                 # Not taking the average since the equilibrium
                 # changes with the layers
                 mixratio = {}
-                for molecule in mixratioprofiles:
-                    mixratio[molecule] = mixratioprofiles[molecule]
+                for molecule, mixratioprofile in mixratioprofiles.items():
+                    mixratio[molecule] = mixratioprofile
+                    # mixratio[molecule] = np.median(mixratioprofile)
+
+                # print('Model MIXRATIOs', mixratio)
 
                 # print()
                 # print('mixratio in cerb', mixratio)

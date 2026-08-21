@@ -36,21 +36,30 @@ def get_TEA_grid():
         'OH',
     ]
 
-    temp = np.load(INTERP_TEA_DIR + 'grid_parameters/temperature.npy')
+    interp_tea = {}
+
+    temperature = np.load(INTERP_TEA_DIR + 'grid_parameters/temperature.npy')
     pressure = np.load(INTERP_TEA_DIR + 'grid_parameters/pressure.npy')
     XtoH = np.load(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy')
     CtoO = np.load(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy')
 
-    interp_tea = {}
+    # print('T range', temperature[0], temperature[-1])  # 300-3000
+    # print('XtoH range', XtoH[0], XtoH[-1])  # 0.1-100
+    # print('CtoO range', CtoO[0], CtoO[-1])  # 0.1-10
+    # save these ranges; check whether interp is going outside of range
+    # no wait, don't bother.  use the standard edge flags in the interpolator
+    # interp_tea['Trange'] = (temperature[0], temperature[-1])
+
     for molecule in species_name:
         grid_4d = np.load(INTERP_TEA_DIR + molecule + '.npy')
         interp_mol = RegularGridInterpolator(
-            (temp, pressure, XtoH, CtoO), grid_4d
+            (temperature, pressure, XtoH, CtoO),
+            grid_4d,
+            bounds_error=False,
+            fill_value=None,
         )
         # temporary drop the cubic spline.  takes some cpu during debugging
-        # interp_mol = RegularGridInterpolator(
-        #    (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
-        # )
+        #    method='cubic',
         interp_tea[molecule] = interp_mol
 
     return interp_tea
