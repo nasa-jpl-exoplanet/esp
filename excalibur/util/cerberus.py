@@ -61,7 +61,7 @@ def calcTEA(
             'CH4_g',
             'CO2_g',
             'CO_g',
-            'H2CO_g',
+            'H2CO_g',  # not in the TEA interp grid
             'H2O_g',
             'H2_ref',
             'H2S_g',
@@ -74,8 +74,9 @@ def calcTEA(
             'O2_ref',
             'O3_g',
             'OH_g',
-            'PH3_g',
+            'PH3_g',  # not in the TEA interp grid
             'SO2_g',
+            'TiO_g',
         ]
     input_species = species
 
@@ -247,6 +248,12 @@ def calcTEA(
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
     # print('MIXRATIO IN TEA for h2o',np.log10(
     #    np.mean(10.0 ** mixratio['H2O'])))
+
+    # special case for TiO, where online xsec etc have it as all-caps
+    if 'TiO' in mixratio:
+        mixratio['TIO'] = mixratio['TiO']
+        mixratio.pop('TiO')
+
     return mixratio
 
 
@@ -473,9 +480,10 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         HEoH2 = 2.0 * 2.343 * 1e9 / (2.431 * 1e10)
     else:
         HEoH2 = fHe / fH2
+    # if 1:
     if verbose:
-        print('fHe,fH2', fHe, fH2)
-        print('HEoH2', HEoH2)
+        print('fHe,fH2', np.median(fHe), np.median(fH2))
+        # print('HEoH2', HEoH2)
     mrH2 = mrH2He / (1.0 + HEoH2)
     mrHe = HEoH2 * mrH2
     mmw = mrH2 * weights['H2'] + mrHe * weights['He'] + mmw

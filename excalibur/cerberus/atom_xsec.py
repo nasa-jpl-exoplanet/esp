@@ -111,13 +111,7 @@ def gammavld(gamma_vdw, ms, broadener):
 
 # --------- ----------------------------------------------------------
 # -- COLISIONAL BROADENING -- ----------------------------------------
-def h2hebroadening(
-    gamma0h2,
-    T,
-    pressure,
-    xh2,
-    gamma0he,
-):
+def h2hebroadening(gamma0h2, T, pressure, gamma0he, xh2=0.85):
     gamma = gamma0h2 * np.power((TREF / T), 7e-1) * (
         pressure / PREF
     ) * xh2 + gamma0he * np.power(  # H2+He Lorentzian HWHM for given T, pressure, and J (ang. mom.)
@@ -199,7 +193,6 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
         gamma0h2,
         parameters[:, 0],
         parameters[:, 1],
-        parameters[:, 2],
         gamma0he,
     )
     gamma = gamma + 1e0 / (4e0 * np.pi * (c_cgs)) * line['Rad']
@@ -243,28 +236,24 @@ def atom_xsec(w_grid, specie, parameters):
 
 # --------- ----------------------------------------------------------
 # -- GRID STORING IN /proj/sdp/data/CERBERUS/ATOM_XSEC -- ------------
-def grid_generation(elem, temp, pressure, xh2, wgrid):
+def grid_generation(elem, temp, pressure, wgrid):
 
-    temp_grid, pressure_grid, xh2_grid = np.meshgrid(
-        temp, pressure, xh2, indexing='ij'
-    )
+    temp_grid, pressure_grid = np.meshgrid(temp, pressure, indexing='ij')
 
     temp_comb = temp_grid.flatten()
     pressure_comb = pressure_grid.flatten()
-    xh2_comb = xh2_grid.flatten()
 
-    parameters = np.column_stack((temp_comb, pressure_comb, xh2_comb))
+    parameters = np.column_stack((temp_comb, pressure_comb))
 
     grid = atom_xsec(w_grid=wgrid, specie=elem, parameters=parameters)
 
     np.save(ATOM_XSEC_DIR + 'temp.npy', temp)
     np.save(ATOM_XSEC_DIR + 'pressure.npy', pressure)
-    np.save(ATOM_XSEC_DIR + 'X_H2.npy', xh2)
     np.save(ATOM_XSEC_DIR + 'wgrid.npy', wgrid)
 
-    grid_4d = grid.reshape((len(temp), len(pressure), len(xh2), -1))
+    grid_3d = grid.reshape((len(temp), len(pressure), -1))
 
-    np.save(ATOM_XSEC_DIR + elem + '/grid_4d.npy', grid_4d)
+    np.save(ATOM_XSEC_DIR + elem + '/grid_3d.npy', grid_3d)
 
     return
 
@@ -275,9 +264,13 @@ def get_atom_xsec(atom_list):
 
     temp = np.load(ATOM_XSEC_DIR + 'temp.npy')
     pressure = np.load(ATOM_XSEC_DIR + 'pressure.npy')
-    X_H2 = np.load(ATOM_XSEC_DIR + 'X_H2.npy')
     wgrid = np.load(ATOM_XSEC_DIR + 'wgrid.npy')
-    # grid size is 271,100,11,3312
+    # grid size is 271,100,3312
+    # the pressure grid is now the specified pressure grid for the
+    # atmospheres in the cerberus forward model with :
+    # nlevels = 100
+    # Hsmax = 20.
+    # solrad = 10.
     # print('atom-xsec grid size T,P,Z,lambda',
     #      len(temp), len(pressure), len(X_H2), len(wgrid))
     # print('atom-xsec grid range T',temp[0],temp[-1]) 300-3000
@@ -287,10 +280,12 @@ def get_atom_xsec(atom_list):
 
     atom_xsec_grid = {}
     for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_DIR + atom + '/grid_4d.npy')
-        interp_xsec = RegularGridInterpolator(
-            (temp, pressure, X_H2, wgrid), xsec
-        )
+        xsec = np.load(ATOM_XSEC_DIR + atom + '/grid_3d.npy')
+        interp_xsec = RegularGridInterpolator((temp, pressure, wgrid), xsec)
+        # careful with values going outside of bounds.
+        # for now, leave this out, so it will crash. adjust T grid accordingly
+        #    bounds_error=False,
+        #    fill_value=None,
         atom_xsec_grid[atom] = interp_xsec
 
     return atom_xsec_grid
