@@ -50,9 +50,8 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     for key in [
         'system_validate_selectMostRecent',
         'system_validate_maximizeSelfConsistency',
-        'transit.whitelight.imo',
+        'transit.imo',
         'transit.whitelight.threshold',
-        'transit.spectrum.imo',
         'transit.spectrum.threshold',
         'transit.spectrum.reject',
         'transit.spectrum.ntm',

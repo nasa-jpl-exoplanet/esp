@@ -3721,7 +3721,7 @@ def jwstspectrum(
     nrm,
     fin,
     wht,
-    rtp=None,
+    rtp,
     # chl=int(4e4),
     # rjc=95,
     # thr=5,

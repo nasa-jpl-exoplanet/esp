@@ -150,9 +150,8 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
-        self['transit.whitelight.imo'] = excalibur.ValueScalar()
+        self['transit.imo'] = excalibur.ValueScalar()
         self['transit.whitelight.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.imo'] = excalibur.ValueScalar()
         self['transit.spectrum.threshold'] = excalibur.ValueScalar()
         self['transit.spectrum.reject'] = excalibur.ValueScalar()
         self['transit.spectrum.ntm'] = excalibur.ValueScalar()
@@ -415,9 +414,8 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
-        self['transit.whitelight.imo'] = excalibur.ValueScalar()
+        self['transit.imo'] = excalibur.ValueScalar()
         self['transit.whitelight.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.imo'] = excalibur.ValueScalar()
         self['transit.spectrum.threshold'] = excalibur.ValueScalar()
         self['transit.spectrum.reject'] = excalibur.ValueScalar()
         self['transit.spectrum.ntm'] = excalibur.ValueScalar()
@@ -493,9 +491,8 @@ class StatusSV(dawgie.StateVector):
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
             'transit_pymc_sliceSampler',
-            'transit.whitelight.imo',
+            'transit.imo',
             'transit.whitelight.threshold',
-            'transit.spectrum.imo',
             'transit.spectrum.threshold',
             'transit.spectrum.rejec',
             'transit.spectrum.ntm',

@@ -282,11 +282,9 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
                   type="xs:float" use="required"/>
-    <xs:attribute name="transit.whitelight.imo"
+    <xs:attribute name="transit.imo"
                   type="xs:float" use="required"/>
     <xs:attribute name="transit.whitelight.threshold"
-                  type="xs:float" use="required"/>
-    <xs:attribute name="transit.spectrum.imo"
                   type="xs:float" use="required"/>
     <xs:attribute name="transit.spectrum.threshold"
                   type="xs:float" use="required"/>
