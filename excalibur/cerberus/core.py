@@ -3119,7 +3119,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                     #    true_value = np.log10(true_value/0.54951)  # solar is C/O=0.55
                                     # elif trueparam=='N/O':
                                     #     true_value = true_value
-                                    if fitparam in ['[N/O]', '[S/O]'] and true_value == 666:
+                                    if (
+                                        fitparam in ['[N/O]', '[S/O]']
+                                        and true_value == 666
+                                    ):
                                         truth_values[fitparam].append(0)
                                     else:
                                         truth_values[fitparam].append(

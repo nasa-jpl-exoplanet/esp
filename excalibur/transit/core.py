@@ -167,12 +167,12 @@ ctxt = CONTEXT(
     avi=None,
     ginc=None,
     gttv=None,
-    fixedpars={},
+    fixedpars=None,
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
     spec=None,
-    LETHE=[],
+    LETHE=None,
 )
 
 
