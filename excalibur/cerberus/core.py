@@ -178,7 +178,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     hitemplist = runtime_params.hitemplist
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
-    atomlist = runtime_params.atomlist
+    # *** atomlist is not used yet ***
+    # atomlist = runtime_params.atomlist
 
     cs = False
     planet_letters = []
