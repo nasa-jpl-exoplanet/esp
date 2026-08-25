@@ -310,7 +310,7 @@ def add_priors(
         elif param == 'NtoO':
             prior_ranges['[N/O]'] = prior_range_table['NtoORange']
             loranges.append(prior_range_table['NtoORange'][0])
-            hiranges.append(prior_range_table[NtoORange''][1])
+            hiranges.append(prior_range_table['NtoORange'][1])
         elif param == 'StoO':
             prior_ranges['[S/O]'] = prior_range_table['StoORange']
             loranges.append(prior_range_table['StoORange'][0])

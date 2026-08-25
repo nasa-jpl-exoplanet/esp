@@ -706,7 +706,7 @@ def atmos(
     # load TEA equilibrium chemistry interpolation grid
     interp_tea = get_TEA_grid()
     # OR.. leave it blank if you truly want the slow version
-    interp_tea = {}
+    # interp_tea = {}
 
     okfit = False
     orbp = fin['priors'].copy()
@@ -3119,10 +3119,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                     #    true_value = np.log10(true_value/0.54951)  # solar is C/O=0.55
                                     # elif trueparam=='N/O':
                                     #     true_value = true_value
-                                    if (
-                                        fitparam == '[N/O]'
-                                        or fitparam == '[S/O]'
-                                    ) and true_value == 666:
+                                    if fitparam in ['[N/O]', '[S/O]'] and true_value == 666:
                                         truth_values[fitparam].append(0)
                                     else:
                                         truth_values[fitparam].append(
@@ -3174,7 +3171,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                             'planet_params'
                                         ]['mass']
                                     )
-                                elif trueparam == 'N/O' or trueparam == 'S/O':
+                                elif trueparam in ['N/O', 'S/O']:
                                     truth_values[fitparam].append(0)
                                 else:
                                     truth_values[fitparam].append(666)
