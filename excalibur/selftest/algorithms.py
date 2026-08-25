@@ -322,6 +322,12 @@ class Atmos(dawgie.Algorithm):
                 self.__rt.sv_as_dict()['status'],
                 'cerberus_atmos_fitNtoO',
             ),
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'cerberus_atmos_fitStoO',
+            ),
         ] + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
@@ -374,6 +380,7 @@ class Atmos(dawgie.Algorithm):
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    fitStoO=runtime['cerberus_atmos_fitStoO'],
                     fitmolecules=runtime[
                         'cerberus_crbmodel_fitmolecules'
                     ].molecules,
@@ -394,6 +401,12 @@ class Atmos(dawgie.Algorithm):
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundMetallicity=runtime[
+                        'cerberus_atmos_bounds_metallicity'
+                    ],
+                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                     boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
@@ -664,6 +677,10 @@ class Analysis(dawgie.Analyzer):
                 #    tier=runtime['ariel_simspectrum_tier'].value(),
                 #    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                 #    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                #    boundMetallicity=runtime['cerberus_atmos_bounds_metallicity'],
+                #    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                #    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                #    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                 #    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                 #    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                 #    boundHScale=runtime['cerberus_atmos_bounds_HScale'],

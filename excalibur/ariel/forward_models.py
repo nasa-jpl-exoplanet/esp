@@ -54,6 +54,7 @@ def make_cerberus_atmos(
         tceqdict['XtoH'] = model_params['metallicity']
         tceqdict['CtoO'] = model_params['C/O']
         tceqdict['NtoO'] = 0
+        tceqdict['StoO'] = 0
         # print('cloudfree forward model input chem =', tceqdict)
 
     ssc = syscore.ssconstants(mks=True)
