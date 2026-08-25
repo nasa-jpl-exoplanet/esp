@@ -61,6 +61,13 @@
       <xs:enumeration value="He-H"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="atom">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Ca"/>
+      <xs:enumeration value="K"/>
+      <xs:enumeration value="Na"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name="EXOMOLmolecule">
     <xs:restriction base="xs:string">
       <xs:enumeration value="ALCL"/>
@@ -133,7 +140,7 @@
     (rather than making the big list as a union of those three)
   -->
   <xs:simpleType name="fitMolecule">
-    <xs:union memberTypes="HITEMPmolecule HITRANmolecule EXOMOLmolecule"/>
+    <xs:union memberTypes="HITEMPmolecule HITRANmolecule EXOMOLmolecule atom"/>
   </xs:simpleType>
 
   <xs:complexType name="HITEMPmoleculeList">
@@ -149,6 +156,11 @@
   <xs:complexType name="EXOMOLmoleculeList">
     <xs:sequence>
       <xs:element name="molecule" type="EXOMOLmolecule" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="atomList">
+    <xs:sequence>
+      <xs:element name="molecule" type="atom" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="fitMoleculeList">
@@ -175,9 +187,19 @@
          	  type="HITRANmoleculeList"/>
       <xs:element name="cerberus.crbmodel.EXOMOLmolecules"
          	  type="EXOMOLmoleculeList"/>
+      <xs:element name="cerberus.crbmodel.atoms"
+                  type="atomList"/>
       <xs:element name="cerberus.atmos.bounds.Teq"
 		  type="hilo"/>
       <xs:element name="cerberus.atmos.bounds.abundances"
+		  type="hilo"/>
+      <xs:attribute name="cerberus.atmos.bounds.metallicity"
+		  type="hilo"/>
+      <xs:attribute name="cerberus.atmos.bounds.CtoO"
+                  type="hilo"/>
+      <xs:attribute name="cerberus.atmos.bounds.NtoO"
+		  type="hilo"/>
+      <xs:attribute name="cerberus.atmos.bounds.StoO"
 		  type="hilo"/>
       <xs:element name="cerberus.atmos.bounds.CTP"
 		  type="hilo"/>
@@ -190,9 +212,11 @@
     </xs:sequence>
     <xs:attribute name="cerberus.atmos.fitCloudParameters"
                   type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.fitCtoO"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitNtoO"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.atmos.fitCtoO"
+    <xs:attribute name="cerberus.atmos.fitStoO"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitT"
                   type="xs:boolean" use="required"/>
@@ -212,6 +236,10 @@
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.plotters.cornerBins"
                   type="xs:integer" use="required"/>
+    <xs:attribute name="cerberus.plotters.onlyFitAbove10MEarth"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.plotters.onlyPlotAbove10MEarth"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.arielsample.tier"
                   type="xs:integer" use="required"/>
     <xs:attribute name="cerberus.arielsample.maxvisits"
@@ -254,6 +282,24 @@
                   type="xs:float" use="required"/>
     <xs:attribute name="ariel.simspectrum.CtoOdispersion"
                   type="xs:float" use="required"/>
+    <xs:attribute name="transit.whitelight.imo"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.whitelight.threshold"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.spectrum.imo"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.spectrum.threshold"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.spectrum.reject"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.spectrum.ntm"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.whitelight.chainlen"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.spectrum.chainlen"
+                  type="xs:float" use="required"/>
+    <xs:attribute name="transit.limbdarkening.lethe"
+                  type="xs:boolean" use="required"/>
     <xs:attribute name="transit.pymc.sliceSampler"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="selftest.Nrepeats"
