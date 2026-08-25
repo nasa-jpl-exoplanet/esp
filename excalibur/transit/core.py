@@ -3107,7 +3107,7 @@ def tldlc(
     nint: Integral into discrete sum number of bins
     '''
     # if method == "LETHE":
-    if sys.modules[__name__].ctxt.LETHE != None:
+    if sys.modules[__name__].ctxt.LETHE is not None:
         interpolators_list = sys.modules[__name__].ctxt.LETHE
         # if interpolators_list is None:
         #    interpolators_list = interpolator
