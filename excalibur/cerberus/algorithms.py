@@ -93,7 +93,7 @@ class XSLib(dawgie.Algorithm):
 
             runtime = self.__rt.sv_as_dict()['status']
             runtime_params = crbcore.CerbXSlibParams(
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
@@ -223,7 +223,7 @@ class Atmos(dawgie.Algorithm):
             fitCtoO=runtime['cerberus_atmos_fitCtoO'],
             fitNtoO=runtime['cerberus_atmos_fitNtoO'],
             fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
-            knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+            hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
             cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
             xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
             atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
@@ -414,7 +414,7 @@ class Results(dawgie.Algorithm):
                     'cerberus_results_nrandomwalkers'
                 ].value(),
                 randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,

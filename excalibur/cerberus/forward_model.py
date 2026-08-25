@@ -57,7 +57,7 @@ class crbFM:
         wgrid=None,
         xsecs=None,
         qtgrid=None,
-        knownspecies=None,
+        hitemplist=None,
         cialist=None,
         xmollist=None,
         atomlist=None,
@@ -84,8 +84,8 @@ class crbFM:
             planet = ctxt.planet
         if orbp is None:
             orbp = ctxt.orbp
-        if knownspecies is None:
-            knownspecies = ctxt.knownspecies
+        if hitemplist is None:
+            hitemplist = ctxt.hitemplist
         if cialist is None:
             cialist = ctxt.cialist
         if xmollist is None:

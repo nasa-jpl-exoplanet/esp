@@ -45,7 +45,7 @@ HWOparams = namedtuple(
         'CtoOdaSilva',
         'CtoOaverage',
         'CtoOdispersion',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'atomlist',

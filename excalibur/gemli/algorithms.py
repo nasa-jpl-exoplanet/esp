@@ -96,7 +96,7 @@ class MLfit(dawgie.Algorithm):
                     'cerberus_results_nrandomwalkers'
                 ].value(),
                 randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,

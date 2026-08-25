@@ -59,7 +59,7 @@ ArielParams = namedtuple(
         'CtoOdaSilva',
         'CtoOaverage',
         'CtoOdispersion',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'nlevels',

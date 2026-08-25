@@ -119,7 +119,7 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -217,7 +217,7 @@ class XSLib(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -380,7 +380,7 @@ class Atmos(dawgie.Algorithm):
                     fitmolecules=runtime[
                         'cerberus_crbmodel_fitmolecules'
                     ].molecules,
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -536,7 +536,7 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-                        knownspecies=runtime[
+                        hitemplist=runtime[
                             'cerberus_crbmodel_HITEMPmolecules'
                         ].molecules,
                         cialist=runtime[

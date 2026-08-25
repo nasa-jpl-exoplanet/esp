@@ -104,7 +104,7 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[

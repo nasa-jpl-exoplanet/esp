@@ -67,7 +67,7 @@ pymclog.setLevel(logging.ERROR)
 CerbXSlibParams = namedtuple(
     'cerberus_xslib_params_from_runtime',
     [
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'atomlist',
@@ -90,7 +90,7 @@ CerbAtmosParams = namedtuple(
         'fitNtoO',
         'fitStoO',
         'fitmolecules',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'atomlist',
@@ -116,7 +116,7 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'atomlist',
@@ -175,7 +175,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    knownspecies = runtime_params.knownspecies
+    hitemplist = runtime_params.hitemplist
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
     atomlist = runtime_params.atomlist
@@ -213,7 +213,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
         out['data'][p] = {}
 
         wgrid = np.array(spc['data'][p]['WB'])
-        qtgrid = gettpf(knownspecies)
+        qtgrid = gettpf(hitemplist)
         library = {}
 
         nugrid = (1e4 / np.copy(wgrid))[::-1]
@@ -420,7 +420,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.show()
                 pass
             pass
-        for ks in knownspecies:
+        for ks in hitemplist:
             # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
@@ -626,14 +626,14 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
 
 # ------------------------ -------------------------------------------
 # -- TOTAL PARTITION FUNCTION -- -------------------------------------
-def gettpf(knownspecies, verbose=False):
+def gettpf(hitemplist, verbose=False):
     '''
     G. ROUDIER: Wrapper around HITRAN partition functions (Gamache et al. 2011)
     '''
     grid = {}
     tempgrid = list(np.arange(60.0, 3035.0, 25.0))
 
-    for ks in knownspecies:
+    for ks in hitemplist:
         grid[ks] = {'T': tempgrid, 'Q': [], 'SPL': []}
         with open(os.path.join(tipsdir, ks), 'r', encoding="utf-8") as fp:
             data = fp.readlines()
@@ -1987,7 +1987,7 @@ def calculateSpectrum(
         hzlib=crbhzlib,
         chemistry=chemistry,
         planet=p,
-        knownspecies=runtime_params.knownspecies,
+        hitemplist=runtime_params.hitemplist,
         cialist=runtime_params.cialist,
         xmollist=runtime_params.xmollist,
         atomlist=runtime_params.atomlist,

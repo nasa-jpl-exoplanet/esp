@@ -90,7 +90,7 @@ def make_cerberus_atmos(
         wgrid=wavelength_um,
         planet=planet_letter,
         orbp=model_params,
-        knownspecies=runtime_params.knownspecies,
+        hitemplist=runtime_params.hitemplist,
         cialist=runtime_params.cialist,
         xmollist=runtime_params.xmollist,
         atomlist=runtime_params.atomlist,
