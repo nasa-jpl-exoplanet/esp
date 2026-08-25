@@ -545,9 +545,7 @@ class Results(dawgie.Algorithm):
                         xmollist=runtime[
                             'cerberus_crbmodel_EXOMOLmolecules'
                         ].molecules,
-                        atomlist=runtime[
-                            'cerberus_crbmodel_atoms'
-                        ].molecules,
+                        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
