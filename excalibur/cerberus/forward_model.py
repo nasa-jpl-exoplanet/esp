@@ -1043,12 +1043,12 @@ def absorb(
     select = np.array(xsecs['I']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
-    gself = np.array(xsecs['g_self'])[select]
     nu = np.array(xsecs['nu'])[select]
-    # delta is no longer used (was part of removed line shifting)
+    # these are no longer used (part of removed line shifting,broadening)
+    # gself = np.array(xsecs['g_self'])[select]
     # delta = np.array(xsecs['delta'])[select]
-    eta = np.array(xsecs['eta'])[select]
-    gair = np.array(xsecs['g_air'])[select]
+    # eta = np.array(xsecs['eta'])[select]
+    # gair = np.array(xsecs['g_air'])[select]
 
     Qref = float(qtgrid['SPL'][iso](Tref))
 
@@ -1063,8 +1063,8 @@ def absorb(
     if np.all(~np.isfinite(tips)):
         tips = 0
     sigma = S * tips
-    ps = mmr * pressure
     # gamma is no longer used (was part of removed line broadening)
+    # ps = mmr * pressure
     # gamma = np.array(
     #    np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
     #    + np.asmatrix(ps).T * np.asmatrix(gself)
