@@ -62,7 +62,7 @@ class crbFM:
         knownspecies=None,
         cialist=None,
         xmollist=None,
-        atom_list=None,
+        atomlist=None,
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -82,8 +82,6 @@ class crbFM:
         - VMR profile
         - MMW profile
         '''
-        if atom_list is None:
-            atom_list = ['Ca', 'K', 'Na']
         if planet is None:
             planet = ctxt.planet
         if orbp is None:
@@ -92,28 +90,10 @@ class crbFM:
             knownspecies = ctxt.knownspecies
         if cialist is None:
             cialist = ctxt.cialist
-        # else:
-        #    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
         if xmollist is None:
             xmollist = ctxt.xmollist
-        # else:
-        #    xmollist = [
-        #        'TIO',
-        #        'H2O',
-        #        'H2CO',
-        #        'HCN',
-        #        'CO',
-        #        'CO2',
-        #        'NH3',
-        #        'CH4',
-        #        'C2H2',
-        #    ]
-        # this is passed in. why reset it here?
-        #    # longer list currently used by Luke:
-        #  PUT THIS INTO RUNTIME OPS!!
-        #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
-        # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
-        # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
+        if atomlist is None:
+            atomlist = ctxt.atomlist
         if nlevels is None:
             nlevels = ctxt.nlevels
         if Hsmax is None:
@@ -185,6 +165,7 @@ class crbFM:
                     C2Or=cheq['CtoO'],
                     X2Hr=cheq['XtoH'],
                     N2Or=cheq['NtoO'],
+                    S2Or=cheq['StoO'],
                 )
                 mmw, fH2, fHe = getmmw(
                     mixratio,
@@ -192,7 +173,6 @@ class crbFM:
                     fH2=fH2,
                     fHe=fHe,
                 )
-                pass
 
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
@@ -216,8 +196,8 @@ class crbFM:
                         metallicity=10.0 ** cheq['XtoH'],
                         C_O=0.55 * 10.0 ** cheq['CtoO'],
                         # N_O=?? * 10.0 ** cheq['NtoO'],
+                        # S_O=?? * 10.0 ** cheq['StoO'],
                     )
-                    pass
                 else:
                     # print('using TEA interpolation grid')
                     # species used for the equilibrium are :
@@ -372,7 +352,7 @@ class crbFM:
             lbroadening,
             lshifting,
             cialist,
-            atom_list,
+            atomlist,
             fH2,
             fHe,
             xmollist,
@@ -595,7 +575,7 @@ def gettau(
     lbroadening,
     lshifting,
     cialist,
-    atom_list,
+    atomlist,
     fH2,
     fHe,
     xmollist,
@@ -679,7 +659,7 @@ def gettau(
                 # ignore missing xsecs for molecules without strong features
                 pass
             else:
-                if elem in atom_list:
+                if elem in atomlist:
                     interp_atom = (
                         excalibur.cerberus.forward_model.ctxt.atom_xsec
                     )
@@ -1226,12 +1206,18 @@ def cloudyfmcerberus(*crbinputs):
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
-
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-        # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+            mdpindex += 1
+        if 'StoO' in ctxt.fixedParams:
+            tceqdict['StoO'] = ctxt.fixedParams['StoO']
+        else:
+            tceqdict['StoO'] = mdp[mdpindex]
+            mdpindex += 1
+        # print(' XtoH,CtoO,NtoO,StoO =',
+        #   tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'],tceqdict['StoO'])
         fmc = crbFM().crbmodel(
             tpr,
             ctp,
@@ -1300,12 +1286,18 @@ def clearfmcerberus(*crbinputs):
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
-
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-        # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+            mdpindex += 1
+        if 'StoO' in ctxt.fixedParams:
+            tceqdict['StoO'] = ctxt.fixedParams['StoO']
+        else:
+            tceqdict['StoO'] = mdp[mdpindex]
+            mdpindex += 1
+        # print(' XtoH,CtoO,NtoO,StoO =',
+        #   tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'],tceqdict['StoO'])
 
         # print('calculating forward model XtoH =', tceqdict['XtoH'])
 
@@ -1361,6 +1353,7 @@ def offcerberus(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1407,6 +1400,7 @@ def offcerberus1(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1450,6 +1444,7 @@ def offcerberus2(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1494,6 +1489,7 @@ def offcerberus3(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1537,6 +1533,7 @@ def offcerberus4(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1578,6 +1575,7 @@ def offcerberus5(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1621,6 +1619,7 @@ def offcerberus6(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1662,6 +1661,7 @@ def offcerberus7(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1703,6 +1703,7 @@ def offcerberus8(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
