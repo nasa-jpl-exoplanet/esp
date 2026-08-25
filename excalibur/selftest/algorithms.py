@@ -131,8 +131,6 @@ class SimSpectrum(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
@@ -231,8 +229,6 @@ class XSLib(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                 )
 
                 update = self._xslib(sv, runtime_params, fltrs.index(fltr))
@@ -396,8 +392,6 @@ class Atmos(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
@@ -551,14 +545,15 @@ class Results(dawgie.Algorithm):
                         xmollist=runtime[
                             'cerberus_crbmodel_EXOMOLmolecules'
                         ].molecules,
+                        atomlist=runtime[
+                            'cerberus_crbmodel_atoms'
+                        ].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
                         cornerBins=runtime[
                             'cerberus_plotters_cornerBins'
                         ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
                         isothermal=runtime['cerberus_crbmodel_isothermal'],
                     )
 

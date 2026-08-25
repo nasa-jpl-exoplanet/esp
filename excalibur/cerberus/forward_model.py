@@ -57,8 +57,6 @@ class crbFM:
         wgrid=None,
         xsecs=None,
         qtgrid=None,
-        lbroadening=None,
-        lshifting=None,
         knownspecies=None,
         cialist=None,
         xmollist=None,
@@ -100,10 +98,6 @@ class crbFM:
             Hsmax = ctxt.Hsmax
         if solrad is None:
             solrad = ctxt.solrad
-        if not bool(lshifting):
-            lshifting = ctxt.lshifting
-        if not bool(lbroadening):
-            lbroadening = ctxt.lbroadening
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -349,8 +343,6 @@ class crbFM:
             rp0,
             pressure,
             wgrid,
-            lbroadening,
-            lshifting,
             cialist,
             atomlist,
             fH2,
@@ -572,8 +564,6 @@ def gettau(
     rp0,
     pressure,
     wgrid,
-    lbroadening,
-    lshifting,
     cialist,
     atomlist,
     fH2,
@@ -706,8 +696,6 @@ def gettau(
                     temp,
                     pressure,
                     mmr,
-                    lbroadening,
-                    lshifting,
                     wgrid,
                 )  # cm^2/mol
                 pass
@@ -1042,8 +1030,6 @@ def absorb(
     T,
     pressure,
     mmr,
-    lbroadening,
-    lshifting,
     wgrid,
     iso=0,
     Tref=296.0,
@@ -1081,43 +1067,17 @@ def absorb(
         np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
         + np.asmatrix(ps).T * np.asmatrix(gself)
     )
-    if lbroadening:
-        if lshifting:
-            matnu = np.array(
-                np.asmatrix(np.ones(pressure.size)).T * np.asmatrix(nu)
-                + np.asmatrix(pressure).T * np.asmatrix(delta)
-            )
-        else:
-            matnu = np.array(nu) * np.array([np.ones(len(pressure))]).T
-        pass
-    else:
-        matnu = np.array(nu)
+    matnu = np.array(nu)
     absgrid = []
     nugrid = (1e4 / wgrid)[::-1]
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
-    if lbroadening:
-        for mymatnu, mygamma in zip(matnu, gamma):
-            binsigma = np.asmatrix(sigma) * np.asmatrix(
-                intflor(
-                    nugrid,
-                    dwnu / 2.0,
-                    np.array([mymatnu]).T,
-                    np.array([mygamma]).T,
-                )
-            )
-            binsigma = np.array(binsigma).flatten()
-            absgrid.append(binsigma / dwnu)
-            pass
+    binsigma = []
+    for nubin, dw in zip(nugrid, dwnu):
+        select = (matnu > (nubin - dw / 2.0)) & (matnu <= nubin + dw / 2.0)
+        binsigma.append(np.sum(sigma[select]))
         pass
-    else:
-        binsigma = []
-        for nubin, dw in zip(nugrid, dwnu):
-            select = (matnu > (nubin - dw / 2.0)) & (matnu <= nubin + dw / 2.0)
-            binsigma.append(np.sum(sigma[select]))
-            pass
-        binsigma = np.array(binsigma) / dwnu
-        absgrid.append(binsigma)
-        pass
+    binsigma = np.array(binsigma) / dwnu
+    absgrid.append(binsigma)
     if debug:
         plt.semilogy(1e4 / matnu.T, sigma, '.')
         plt.semilogy(wgrid[::-1], binsigma, 'o')

@@ -101,12 +101,11 @@ class MLfit(dawgie.Algorithm):
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
                 isothermal=runtime['cerberus_crbmodel_isothermal'],
             )
 

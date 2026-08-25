@@ -102,8 +102,6 @@ class XSLib(dawgie.Algorithm):
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
             )
 
             # for Ariel targets, option to only do the actually Tier-2 targets
@@ -232,8 +230,6 @@ class Atmos(dawgie.Algorithm):
             nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
             solrad=runtime['cerberus_crbmodel_solrad'].value(),
             Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-            lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-            lshifting=runtime['cerberus_crbmodel_lshifting'],
             isothermal=runtime['cerberus_crbmodel_isothermal'],
             boundTeq=runtime['cerberus_atmos_bounds_Teq'],
             boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
@@ -428,8 +424,6 @@ class Results(dawgie.Algorithm):
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
                 isothermal=runtime['cerberus_crbmodel_isothermal'],
             )
 

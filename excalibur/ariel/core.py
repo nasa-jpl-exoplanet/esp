@@ -65,8 +65,6 @@ ArielParams = namedtuple(
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )

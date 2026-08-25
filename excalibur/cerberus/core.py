@@ -74,8 +74,6 @@ CerbXSlibParams = namedtuple(
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
     ],
 )
 
@@ -99,8 +97,6 @@ CerbAtmosParams = namedtuple(
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
         'boundTeq',
         'boundAbundances',
@@ -128,8 +124,6 @@ CerbResultsParams = namedtuple(
         'Hsmax',
         'solrad',
         'cornerBins',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )
@@ -545,8 +539,6 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     tstep,
                     pressuregrid,
                     mmr,
-                    runtime_params.lbroadening,
-                    runtime_params.lshifting,
                     wgrid,
                     debug=False,
                 )
@@ -1999,8 +1991,6 @@ def calculateSpectrum(
         cialist=runtime_params.cialist,
         xmollist=runtime_params.xmollist,
         atomlist=runtime_params.atomlist,
-        lbroadening=runtime_params.lbroadening,
-        lshifting=runtime_params.lshifting,
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,

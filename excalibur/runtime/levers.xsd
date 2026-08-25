@@ -222,10 +222,6 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.sliceSampler"
                   type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.crbmodel.lbroadening"
-                  type="xs:boolean" use="required"/>
-    <xs:attribute name="cerberus.crbmodel.lshifting"
-                  type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.crbmodel.isothermal"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.crbmodel.nlevels"

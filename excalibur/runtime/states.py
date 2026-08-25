@@ -185,8 +185,6 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitStoO'] = BoolValue()
         self['cerberus_crbmodel_isothermal'] = BoolValue()
-        self['cerberus_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_crbmodel_lshifting'] = BoolValue()
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
@@ -385,8 +383,6 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitStoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
-        self['cerberus_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_crbmodel_lshifting'] = BoolValue()
         self['cerberus_crbmodel_isothermal'] = BoolValue()
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
@@ -527,8 +523,6 @@ class StatusSV(dawgie.StateVector):
             'cerberus_crbmodel_HITRANmolecules',
             'cerberus_crbmodel_EXOMOLmolecules',
             'cerberus_crbmodel_atoms',
-            'cerberus_crbmodel_lbroadening',
-            'cerberus_crbmodel_lshifting',
             'cerberus_crbmodel_isothermal',
             'cerberus_crbmodel_nlevels',
             'cerberus_crbmodel_solrad',

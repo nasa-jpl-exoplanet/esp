@@ -68,8 +68,6 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'cerberus_crbmodel_nlevels',
         'cerberus_crbmodel_Hsmax',
         'cerberus_crbmodel_solrad',
-        'cerberus_crbmodel_lbroadening',
-        'cerberus_crbmodel_lshifting',
         'cerberus_crbmodel_isothermal',
         'cerberus_crbmodel_fitmolecules',
         'cerberus_crbmodel_HITEMPmolecules',

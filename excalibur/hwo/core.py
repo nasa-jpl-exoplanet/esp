@@ -48,11 +48,10 @@ HWOparams = namedtuple(
         'knownspecies',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )
