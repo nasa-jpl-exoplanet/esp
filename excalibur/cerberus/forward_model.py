@@ -1045,7 +1045,8 @@ def absorb(
     E = np.array(xsecs['Epp'])[select]
     gself = np.array(xsecs['g_self'])[select]
     nu = np.array(xsecs['nu'])[select]
-    delta = np.array(xsecs['delta'])[select]
+    # delta is no longer used (was part of removed line shifting)
+    # delta = np.array(xsecs['delta'])[select]
     eta = np.array(xsecs['eta'])[select]
     gair = np.array(xsecs['g_air'])[select]
 
@@ -1063,10 +1064,11 @@ def absorb(
         tips = 0
     sigma = S * tips
     ps = mmr * pressure
-    gamma = np.array(
-        np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
-        + np.asmatrix(ps).T * np.asmatrix(gself)
-    )
+    # gamma is no longer used (was part of removed line broadening)
+    # gamma = np.array(
+    #    np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+    #    + np.asmatrix(ps).T * np.asmatrix(gself)
+    # )
     matnu = np.array(nu)
     absgrid = []
     nugrid = (1e4 / wgrid)[::-1]
@@ -1115,23 +1117,6 @@ def getciaxs(temp, xsecs):
     nu = nu[select]
     sigma = sigma[select]
     return sigma, nu
-
-
-# ----------------------------- --------------------------------------
-# -- PRESSURE BROADENING -- ------------------------------------------
-def intflor(wave, dwave, nu, gamma):
-    '''
-    G. ROUDIER: Pressure Broadening
-    '''
-    f = (
-        1e0
-        / np.pi
-        * (
-            np.arctan((wave + dwave - nu) / gamma)
-            - np.arctan((wave - dwave - nu) / gamma)
-        )
-    )
-    return f
 
 
 # -------------------------- -----------------------------------------
