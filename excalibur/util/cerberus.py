@@ -265,7 +265,7 @@ def calcTEA(
 
 # ------------ -------------------------------------------------------
 # -- CHEMICAL EQUILIBRIUM -- -----------------------------------------
-def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
+def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0, S2Or=0):
     '''
     G. ROUDIER: BURROWS AND SHARP 1998 + ANDERS & GREVESSE 1989
     '''
@@ -321,10 +321,13 @@ def crbce(p, temp, C2Or=0.0, X2Hr=0.0, N2Or=0.0):
     C2Or = min(C2Or, 10.0)
     N2Or = max(N2Or, -10.0)
     N2Or = min(N2Or, 10.0)
+    S2Or = max(S2Or, -10.0)
+    S2Or = min(S2Or, 10.0)
 
     Xfactor = 10.0**X2Hr
     Cfactor = 10.0**C2Or
     Nfactor = 10.0**C2Or
+    # Sfactor = 10.0**S2Or
 
     # OLD linear method, with max limit at 2.84 dex
     # if Xfactor >= 1.0 / nXsolar:
