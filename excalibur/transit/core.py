@@ -203,12 +203,12 @@ def ctxtupdt(
     avi=None,
     ginc=None,
     gttv=None,
-    fixedpars={},
+    fixedpars=None,
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
     spec=None,
-    LETHE=[],
+    LETHE=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -2086,7 +2086,7 @@ def jwstwl(
     [OPT]:verbose:[BOOL]:messages and plots
     '''
 
-    LETHE = []
+    LETHE = None
     if rtp.lethe:
         # Interpolators for LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
@@ -2102,6 +2102,7 @@ def jwstwl(
             '/grid_F/2.0.npy',
         ]
 
+        LETHE = []
         for name in grid_names:
             grid = np.load(LETHE_dir + name)
             interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
@@ -3106,7 +3107,7 @@ def tldlc(
     nint: Integral into discrete sum number of bins
     '''
     # if method == "LETHE":
-    if sys.modules[__name__].ctxt.LETHE != []:
+    if sys.modules[__name__].ctxt.LETHE != None:
         interpolators_list = sys.modules[__name__].ctxt.LETHE
         # if interpolators_list is None:
         #    interpolators_list = interpolator
@@ -3753,7 +3754,7 @@ def jwstspectrum(
     # TRUANDERIE
     if bserr is None:
         bserr = 1e-3
-    LETHE = []
+    LETHE = None
     if rtp.lethe:
         # LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
@@ -3769,6 +3770,7 @@ def jwstspectrum(
             '/grid_F/2.0.npy',
         ]
 
+        LETHE = []
         for name in grid_names:
             grid = np.load(LETHE_dir + name)
             interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
