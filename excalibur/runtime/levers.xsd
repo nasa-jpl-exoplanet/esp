@@ -193,13 +193,13 @@
 		  type="hilo"/>
       <xs:element name="cerberus.atmos.bounds.abundances"
 		  type="hilo"/>
-      <xs:attribute name="cerberus.atmos.bounds.metallicity"
+      <xs:element name="cerberus.atmos.bounds.metallicity"
 		  type="hilo"/>
-      <xs:attribute name="cerberus.atmos.bounds.CtoO"
+      <xs:element name="cerberus.atmos.bounds.CtoO"
                   type="hilo"/>
-      <xs:attribute name="cerberus.atmos.bounds.NtoO"
+      <xs:element name="cerberus.atmos.bounds.NtoO"
 		  type="hilo"/>
-      <xs:attribute name="cerberus.atmos.bounds.StoO"
+      <xs:element name="cerberus.atmos.bounds.StoO"
 		  type="hilo"/>
       <xs:element name="cerberus.atmos.bounds.CTP"
 		  type="hilo"/>
