@@ -150,14 +150,14 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
-        self['transit.imo'] = excalibur.ValueScalar()
-        self['transit.whitelight.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.reject'] = excalibur.ValueScalar()
-        self['transit.spectrum.ntm'] = excalibur.ValueScalar()
-        self['transit.whitelight.chainlen'] = excalibur.ValueScalar()
-        self['transit.spectrum.chainlen'] = excalibur.ValueScalar()
-        self['transit.limbdarkening.lethe'] = BoolValue()
+        self['transit_imo'] = excalibur.ValueScalar()
+        self['transit_whitelight_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_reject'] = excalibur.ValueScalar()
+        self['transit_spectrum_ntm'] = excalibur.ValueScalar()
+        self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
+        self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
+        self['transit_limbdarkening_lethe'] = BoolValue()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
@@ -195,17 +195,17 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_crbmodel_atoms'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
-        self['cerberus.atmos.bounds.metallicity'] = HiLoValue()
-        self['cerberus.atmos.bounds.CtoO'] = HiLoValue()
-        self['cerberus.atmos.bounds.NtoO'] = HiLoValue()
-        self['cerberus.atmos.bounds.StoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_metallicity'] = HiLoValue()
+        self['cerberus_atmos_bounds_CtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_NtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_StoO'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
         self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
         self['cerberus_atmos_bounds_HScale'] = HiLoValue()
         self['cerberus_atmos_bounds_HThick'] = HiLoValue()
         self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
-        self['cerberus.plotters.onlyFitAbove10MEarth'] = BoolValue()
-        self['cerberus.plotters.onlyPlotAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyFitAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyPlotAbove10MEarth'] = BoolValue()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
@@ -394,30 +394,30 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_crbmodel_atoms'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
-        self['cerberus.atmos.bounds.metallicity'] = HiLoValue()
-        self['cerberus.atmos.bounds.CtoO'] = HiLoValue()
-        self['cerberus.atmos.bounds.NtoO'] = HiLoValue()
-        self['cerberus.atmos.bounds.StoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_metallicity'] = HiLoValue()
+        self['cerberus_atmos_bounds_CtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_NtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_StoO'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
         self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
         self['cerberus_atmos_bounds_HScale'] = HiLoValue()
         self['cerberus_atmos_bounds_HThick'] = HiLoValue()
         self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
-        self['cerberus.plotters.onlyFitAbove10MEarth'] = BoolValue()
-        self['cerberus.plotters.onlyPlotAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyFitAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyPlotAbove10MEarth'] = BoolValue()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
-        self['transit.imo'] = excalibur.ValueScalar()
-        self['transit.whitelight.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.threshold'] = excalibur.ValueScalar()
-        self['transit.spectrum.reject'] = excalibur.ValueScalar()
-        self['transit.spectrum.ntm'] = excalibur.ValueScalar()
-        self['transit.whitelight.chainlen'] = excalibur.ValueScalar()
-        self['transit.spectrum.chainlen'] = excalibur.ValueScalar()
-        self['transit.limbdarkening.lethe'] = BoolValue()
+        self['transit_imo'] = excalibur.ValueScalar()
+        self['transit_whitelight_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_reject'] = excalibur.ValueScalar()
+        self['transit_spectrum_ntm'] = excalibur.ValueScalar()
+        self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
+        self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
+        self['transit_limbdarkening_lethe'] = BoolValue()
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['transit_pymc_sliceSampler'] = BoolValue()
@@ -487,14 +487,14 @@ class StatusSV(dawgie.StateVector):
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
             'transit_pymc_sliceSampler',
-            'transit.imo',
-            'transit.whitelight.threshold',
-            'transit.spectrum.threshold',
-            'transit.spectrum.rejec',
-            'transit.spectrum.ntm',
-            'transit.whitelight.chainlen',
-            'transit.spectrum.chainlen',
-            'transit.limbdarkening.lethe',
+            'transit_imo',
+            'transit_whitelight_threshold',
+            'transit_spectrum_threshold',
+            'transit_spectrum_reject',
+            'transit_spectrum_ntm',
+            'transit_whitelight_chainlen',
+            'transit_spectrum_chainlen',
+            'transit_limbdarkening_lethe',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
@@ -529,17 +529,17 @@ class StatusSV(dawgie.StateVector):
             'cerberus_crbmodel_Hsmax',
             'cerberus_atmos_bounds_Teq',
             'cerberus_atmos_bounds_abundances',
-            'cerberus.atmos.bounds.metallicity',
-            'cerberus.atmos.bounds.CtoO',
-            'cerberus.atmos.bounds.NtoO',
-            'cerberus.atmos.bounds.StoO',
+            'cerberus_atmos_bounds_metallicity',
+            'cerberus_atmos_bounds_CtoO',
+            'cerberus_atmos_bounds_NtoO',
+            'cerberus_atmos_bounds_StoO',
             'cerberus_atmos_bounds_CTP',
             'cerberus_atmos_bounds_HLoc',
             'cerberus_atmos_bounds_HScale',
             'cerberus_atmos_bounds_HThick',
             'cerberus_plotters_cornerBins',
-            'cerberus.plotters.onlyFitAbove10MEarth',
-            'cerberus.plotters.onlyPlotAbove10MEarth',
+            'cerberus_plotters_onlyFitAbove10MEarth',
+            'cerberus_plotters_onlyPlotAbove10MEarth',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
             'selftest_Nrepeats',
