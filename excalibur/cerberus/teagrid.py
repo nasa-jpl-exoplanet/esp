@@ -74,18 +74,17 @@ def grid_generation(parameters, species, verbose=False):
     # Species : list of species with the names from TEA
     # ex : ['CH4_g, N2_ref, ...]
 
-    temp = parameters[:, 0]
-    pressure = parameters[:, 1]
-    metallicities = parameters[:, 2]
-    CtoOs = parameters[:, 3]
-
     # parameters saving
-    np.save(INTERP_TEA_DIR + 'grid_parameters/temperature.npy', temp)
-    np.save(INTERP_TEA_DIR + 'grid_parameters/pressure.npy', pressure)
-    np.save(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy', metallicities)
-    np.save(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy', CtoOs)
+    np.save(
+        INTERP_TEA_DIR + 'grid_parameters/temperature.npy', parameters[:, 0]
+    )
+    np.save(INTERP_TEA_DIR + 'grid_parameters/pressure.npy', parameters[:, 1])
+    np.save(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy', parameters[:, 2])
+    np.save(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy', parameters[:, 3])
 
-    temp_grid, pressure_grid = np.meshgrid(temp, pressure, indexing='ij')
+    temp_grid, pressure_grid = np.meshgrid(
+        parameters[:, 0], parameters[:, 1], indexing='ij'
+    )
     temp_comb = temp_grid.flatten()
     pressure_comb = pressure_grid.flatten()
 
@@ -98,14 +97,19 @@ def grid_generation(parameters, species, verbose=False):
     # dictionary creation
     dic = {
         molecule: np.zeros(
-            (len(temp), len(pressure), len(metallicities), len(CtoOs))
+            (
+                len(parameters[:, 0]),
+                len(parameters[:, 1]),
+                len(parameters[:, 2]),
+                len(parameters[:, 3]),
+            )
         )
         for molecule in species_name
     }
 
     # call TEA for each XtoH and CtoO
-    for XtoH in metallicities:
-        for CtoO in CtoOs:
+    for i, XtoH in enumerate(parameters[:, 2]):
+        for j, CtoO in enumerate(parameters[:, 3]):
             if verbose:
                 # to allow to know at what steps we are for the computation
                 print("metallicity :", 10.0**XtoH)
@@ -120,9 +124,10 @@ def grid_generation(parameters, species, verbose=False):
             )
             for molecule in mixratioprofiles:
                 dic[molecule][:, :, i, j] = np.reshape(
-                    mixratioprofiles[molecule], ((len(temp), len(pressure)))
+                    mixratioprofiles[molecule],
+                    ((len(parameters[:, 0]), len(parameters[:, 1]))),
                 )
 
     # grid saving for each molecule
-    for molecule in mon_dico:
+    for molecule in dic:
         np.save(INTERP_TEA_DIR + molecule + '.npy', dic[molecule])
