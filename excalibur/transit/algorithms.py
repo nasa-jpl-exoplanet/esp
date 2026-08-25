@@ -486,6 +486,7 @@ class Spectrum(dawgie.Algorithm):
                 nrm,
                 fin,
                 wht,
+                runtime_params,
                 verbose=False,
                 debug=False,
                 donotuse=False,
