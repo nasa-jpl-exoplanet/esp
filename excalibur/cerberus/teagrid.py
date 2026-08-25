@@ -6,6 +6,7 @@
 import os
 import numpy as np
 import excalibur
+from excalibur.util.cerberus import calcTEA
 from scipy.interpolate import RegularGridInterpolator
 
 INTERP_TEA_DIR = os.path.join(
@@ -63,3 +64,53 @@ def get_TEA_grid():
         interp_tea[molecule] = interp_mol
 
     return interp_tea
+
+def grid_generation(parameters, species, verbose=False):
+    # Parameter 1 : temperature in K
+    # Parameter 2 : pressure in bar
+    # Parameter 3 : metallicities, log10 values 
+    # Parameter 4 : CtoOs, log10 values 
+    # Species : list of species with the names from TEA
+    # ex : ['CH4_g, N2_ref, ...]
+
+    temp = parameters[:,0]
+    pressure = parameters[:,1]
+    metallicities = parameters[:,2]
+    CtoOs = parameters[:,3]
+
+    # parameters saving
+    np.save(INTERP_TEA_DIR + 'grid_parameters/temperature.npy', temp)
+    np.save(INTERP_TEA_DIR + 'grid_parameters/pressure.npy', pressure)
+    np.save(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy', metallicities)
+    np.save(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy', CtoOs)
+
+    temp_grid, pressure_grid = np.meshgrid(temp, pressure, indexing='ij')
+    temp_comb = temp_grid.flatten()
+    pressure_comb = pressure_grid.flatten()
+
+    # species names for calling the cross sections
+    # TIO for the cross section library
+    species_name = [
+        'TIO' if el == 'TiO_g' else el.split('_')[0]
+        for el in species
+    ]
+
+    # dictionary creation
+    dic = {molecule: np.zeros((len(temp),len(pressure),len(metallicities),len(CtoOs))) for molecule in species_name}
+
+    # call TEA for each XtoH and CtoO
+    for XtoH in metallicities:
+        for CtoO in CtoOs:
+            if verbose:
+                # to allow to know at what steps we are for the computation
+                print("metallicity :", 10.0 ** XtoH)
+                print("C/O :", 10.0 ** CtoO)
+            # TEA computation for all the temperatures and pressures
+            mixratioprofiles = calcTEA(temp_comb,pressure_comb,species,
+                                       metallicity=10.0 ** XtoH,C_O=0.55 * 10.0 ** CtoO)
+            for molecule in mixratioprofiles:
+                dic[molecule][:,:,i,j] = np.reshape(mixratioprofiles[molecule], ((len(temp),len(pressure))))
+
+    # grid saving for each molecule
+    for molecule in mon_dico:
+        np.save(INTERP_TEA_DIR + molecule + '.npy', dic[molecule])
