@@ -399,7 +399,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         # Selection of the transit within a visit
         # A time is selected if it is far up to 2 times
         # the transit duration from the time of mid-transit
-        smaors = priors[p]['sma'] / priors['R*'] / ssc['Rsun/AU']
         tmjd = priors[p]['t0']
         if tmjd > 2400000.5:
             tmjd -= 2400000.5
@@ -541,20 +540,20 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     pass
                 progbar.close()
                 allnorms[thisdet][thisvis] = (
-                    np.array(spectra[elect_transit & seldet & selvis][valid])
+                    np.array(spectra[select_transit & seldet & selvis][valid])
                     / divideme
                 )
                 allnwaves[thisdet][thisvis] = wave[
-                    elect_transit & seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 allz[thisdet][thisvis] = tme['data'][p]['z'][
-                    elect_transit & seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 allt[thisdet][thisvis] = tme['data'][p]['time'][
-                    elect_transit & seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
-                    elect_transit & seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 if verbose:
                     plt.figure(figsize=(12, 9))
