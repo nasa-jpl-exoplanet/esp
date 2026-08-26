@@ -694,8 +694,8 @@ def gettau(
                     xsecs[elem],
                     qtgrid[elem],
                     temp,
-                    pressure,
-                    mmr,
+                    # pressure,
+                    # mmr,
                     wgrid,
                 )  # cm^2/mol
                 pass
@@ -1028,8 +1028,8 @@ def absorb(
     xsecs,
     qtgrid,
     T,
-    pressure,
-    mmr,
+    # pressure,
+    # mmr,
     wgrid,
     iso=0,
     Tref=296.0,

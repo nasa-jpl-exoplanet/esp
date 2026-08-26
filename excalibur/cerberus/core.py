@@ -517,18 +517,18 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.show()
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
-            mmr = 2.3  # Fortney 2015 for hot Jupiters
+            # mmr = 2.3  # Fortney 2015 for hot Jupiters
             # solrad = 10.0
             # hsmax = 20.0
             # nlevels = 100.0
-            pgrid = np.arange(
-                np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                np.log(runtime_params.solrad)
-                + runtime_params.Hsmax / runtime_params.nlevels,
-                runtime_params.Hsmax / (runtime_params.nlevels - 1),
-            )
-            pgrid = np.exp(pgrid)
-            pressuregrid = pgrid[::-1]
+            # pgrid = np.arange(
+            #    np.log(runtime_params.solrad) - runtime_params.Hsmax,
+            #    np.log(runtime_params.solrad)
+            #    + runtime_params.Hsmax / runtime_params.nlevels,
+            #    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+            # )
+            # pgrid = np.exp(pgrid)
+            # pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
@@ -538,8 +538,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     library[ks],
                     qtgrid[ks],
                     tstep,
-                    pressuregrid,
-                    mmr,
+                    # pressuregrid,
+                    # mmr,
                     wgrid,
                     debug=False,
                 )
