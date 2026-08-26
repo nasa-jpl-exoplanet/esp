@@ -1,7 +1,7 @@
 altaipony @ git+https://github.com/gbryden/altaipony.git
 astropy
 astroquery
-dawgie>=2.1.3
+dawgie
 deprecated
 h5py
 joblib

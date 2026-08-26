@@ -107,7 +107,7 @@ def mlfit(
 
     for p in sysfin['priors']['planets']:
 
-        # TEC,TEA params - X/H, C/O, N/O
+        # TEC,TEA params - X/H, C/O, N/O, S/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
@@ -400,11 +400,10 @@ def mlfit(
                 hzlib=crbhzlib,
                 chemistry='TEC',
                 planet=p,
-                knownspecies=runtime_params.knownspecies,
+                hitemplist=runtime_params.hitemplist,
                 cialist=runtime_params.cialist,
                 xmollist=runtime_params.xmollist,
-                lbroadening=runtime_params.lbroadening,
-                lshifting=runtime_params.lshifting,
+                atomlist=runtime_params.atomlist,
                 nlevels=runtime_params.nlevels,
                 Hsmax=runtime_params.Hsmax,
                 solrad=runtime_params.solrad,
@@ -550,6 +549,8 @@ def mlfit(
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'TEA':
@@ -559,6 +560,8 @@ def mlfit(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'PHOTOCHEM':
@@ -585,8 +588,9 @@ def mlfit(
                     prior_ranges = {}
 
                 fit_cloud_parameters = 'CTP' in all_keys
-                fit_n_to_o = '[N/O]' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
+                fit_n_to_o = '[N/O]' in all_keys
+                fit_s_to_o = '[S/O]' in all_keys
                 fit_t = 'T' in all_keys
 
                 # save the relevant info
@@ -698,6 +702,24 @@ def mlfit(
                         else:
                             # default is Solar
                             tceqdict['NtoO'] = 0.0
+
+                    if fit_s_to_o:
+                        if fit_n_to_o:
+                            tceqdict['StoO'] = float(mdp[3])
+                        else:
+                            tceqdict['StoO'] = float(mdp[2])
+                    else:
+                        if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
+                            'StoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
+                        ):
+                            # print('truth params',cerbatmos[p]['TRUTH_MODELPARAMS'])
+                            tceqdict['StoO'] = cerbatmos[p][
+                                'TRUTH_MODELPARAMS'
+                            ]['StoO']
+                        else:
+                            # default is Solar
+                            tceqdict['StoO'] = 0.0
+
                 elif model_name == 'PHOTOCHEM':
                     if len(mdp) != 5:
                         log.warning(
@@ -744,11 +766,10 @@ def mlfit(
                     hzlib=crbhzlib,
                     chemistry='TEC',
                     planet=p,
-                    knownspecies=runtime_params.knownspecies,
+                    hitemplist=runtime_params.hitemplist,
                     cialist=runtime_params.cialist,
                     xmollist=runtime_params.xmollist,
-                    lbroadening=runtime_params.lbroadening,
-                    lshifting=runtime_params.lshifting,
+                    atomlist=runtime_params.atomlist,
                     nlevels=runtime_params.nlevels,
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
@@ -828,6 +849,21 @@ def mlfit(
                             else:
                                 # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                 tceqdict['NtoO'] = 0.0
+                        if fit_s_to_o:
+                            if fit_n_to_o:
+                                tceqdict['NtoO'] = float(mdp[3])
+                            else:
+                                tceqdict['NtoO'] = float(mdp[2])
+                        else:
+                            if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
+                                'StoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
+                            ):
+                                tceqdict['StoO'] = cerbatmos[p][
+                                    'TRUTH_MODELPARAMS'
+                                ]['StoO']
+                            else:
+                                # log.info('--< StoO is missing from TRUTH_MODELPARAMS >--')
+                                tceqdict['StoO'] = 0.0
 
                     elif model_name == 'PHOTOCHEM':
                         tceqdict = None
@@ -854,11 +890,10 @@ def mlfit(
                         chemistry='TEC',
                         cheq=tceqdict,
                         planet=p,
-                        knownspecies=runtime_params.knownspecies,
+                        hitemplist=runtime_params.hitemplist,
                         cialist=runtime_params.cialist,
                         xmollist=runtime_params.xmollist,
-                        lbroadening=runtime_params.lbroadening,
-                        lshifting=runtime_params.lshifting,
+                        atomlist=runtime_params.atomlist,
                         nlevels=runtime_params.nlevels,
                         Hsmax=runtime_params.Hsmax,
                         solrad=runtime_params.solrad,

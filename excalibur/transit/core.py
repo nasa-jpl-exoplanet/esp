@@ -80,10 +80,27 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-TransitPymcParams = namedtuple(
-    'transit_pymc_params_from_runtime',
+TransitWhitelightParams = namedtuple(
+    'transit_whitelight_params_from_runtime',
     [
+        'imo',
+        'threshold',
+        'lethe',
         'sliceSampler',
+        'chainlen',
+    ],
+)
+
+TransitSpectrumParams = namedtuple(
+    'transit_spectrum_params_from_runtime',
+    [
+        'imo',
+        'threshold',
+        'reject',
+        'ntm',
+        'lethe',
+        'sliceSampler',
+        'chainlen',
     ],
 )
 
@@ -150,7 +167,7 @@ ctxt = CONTEXT(
     avi=None,
     ginc=None,
     gttv=None,
-    fixedpars={},
+    fixedpars=None,
     mcmcdat=None,
     mcmcsig=None,
     nodeshape=None,
@@ -2065,9 +2082,9 @@ def jwstwl(
     fin,
     rtp,
     out,
-    imo=4,
-    thr=95,
-    chainlen=int(1e6),
+    # imo=4,
+    # thr=95,
+    # chainlen=int(1e6),
     verbose=False,
     debug=False,
 ):
@@ -2094,26 +2111,28 @@ def jwstwl(
     [OPT]:verbose:[BOOL]:messages and plots
     '''
 
-    # Interpolators for LETHE
-    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
-    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
-    LETHE = []
-    grid_names = [
-        '/grid_G/0.25.npy',
-        '/grid_G/0.5.npy',
-        '/grid_G/0.75.npy',
-        '/grid_G/1.0.npy',
-        '/grid_F/0.5.npy',
-        '/grid_F/1.0.npy',
-        '/grid_F/1.5.npy',
-        '/grid_F/2.0.npy',
-    ]
+    LETHE = None
+    if rtp.lethe:
+        # Interpolators for LETHE
+        z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+        rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+        grid_names = [
+            '/grid_G/0.25.npy',
+            '/grid_G/0.5.npy',
+            '/grid_G/0.75.npy',
+            '/grid_G/1.0.npy',
+            '/grid_F/0.5.npy',
+            '/grid_F/1.0.npy',
+            '/grid_F/1.5.npy',
+            '/grid_F/2.0.npy',
+        ]
 
-    for name in grid_names:
-        grid = np.load(LETHE_dir + name)
-        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
-        LETHE.append(interpolator)
-    ctxtupdt(LETHE=LETHE)
+        LETHE = []
+        for name in grid_names:
+            grid = np.load(LETHE_dir + name)
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+            LETHE.append(interpolator)
+        # ctxtupdt(LETHE=LETHE)
 
     planetloop = [
         thisp
@@ -2160,14 +2179,14 @@ def jwstwl(
                                 ps / np.sqrt(np.sum(v))
                                 for ps, v in zip(pltstdl, vldlist)
                             ]
-                            validl.append(vldlist[prc.index(thr)])
-                            stdl.append(pltstdl[prc.index(thr)])
-                            wht.append(pltavrl[prc.index(thr)])
-                            whterr.append(errlist[prc.index(thr)])
+                            validl.append(vldlist[prc.index(rtp.threshold)])
+                            stdl.append(pltstdl[prc.index(rtp.threshold)])
+                            wht.append(pltavrl[prc.index(rtp.threshold)])
+                            whterr.append(errlist[prc.index(rtp.threshold)])
                             pass
                         else:
                             s = np.abs(1e0 - nsp) <= np.nanpercentile(
-                                np.abs(1e0 - nsp), thr
+                                np.abs(1e0 - nsp), rtp.threshold
                             )
                             validl.append(select & s)
                             stdl.append(np.nanstd(nsp[select & s]))
@@ -2263,7 +2282,7 @@ def jwstwl(
                     # INSTRUMENT MODEL - ALWAYS LAST
                     # PRE-FIT
                     params = lm.Parameters()
-                    for coef in np.arange(imo):
+                    for coef in np.arange(rtp.imo):
                         params.add('c' + str(int(coef)), value=1.0)
                         pass
                     selectfit = np.abs(np.array(whtsep)) > (1.0 + 2.0 * rpors)
@@ -2278,7 +2297,7 @@ def jwstwl(
                     )
                     allcenim = [lmout.params[k].value for k in lmout.params]
                     allstdim = [lmout.params[k].stderr for k in lmout.params]
-                    for ic, coef in enumerate(np.arange(imo)):
+                    for ic, coef in enumerate(np.arange(rtp.imo)):
                         thslbl = 'IM' + str(int(coef))
                         pymcim = pymc.Uniform(
                             thslbl,
@@ -2293,7 +2312,7 @@ def jwstwl(
                         nodes.append(pymcim)
                         pymcim = None
                         pass
-                    nodeshape.append(imo)
+                    nodeshape.append(rtp.imo)
                     # CONTEXT
                     ctxtupdt(
                         orbp=priors[pln],
@@ -2312,6 +2331,7 @@ def jwstwl(
                         mcmcsig=whterr,
                         nodeshape=nodeshape,
                         selectfit=np.array([True] * len(wht)),
+                        LETHE=LETHE,
                     )
                     # FIXED ORBITAL SOLUTION
                     TensorModel = TensorShell()
@@ -2336,9 +2356,9 @@ def jwstwl(
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
                     trace = pymc.sample(
-                        chainlen,
+                        rtp.chainlen,
                         cores=4,
-                        tune=int(chainlen / 2),
+                        tune=int(rtp.chainlen / 2),
                         compute_convergence_checks=False,
                         step=sampler,
                         progressbar=verbose,
@@ -3092,8 +3112,8 @@ def tldlc(
     g6=0.0,
     g7=0.0,
     g8=0.0,
-    method="LETHE",
-    interpolator=None,
+    # method="LETHE",
+    # interpolator=None,
     nint=int(8**2),
 ):
     '''
@@ -3111,10 +3131,11 @@ def tldlc(
                   from ctxt is None
     nint: Integral into discrete sum number of bins
     '''
-    if method == "LETHE":
+    # if method == "LETHE":
+    if sys.modules[__name__].ctxt.LETHE is not None:
         interpolators_list = sys.modules[__name__].ctxt.LETHE
-        if interpolators_list is None:
-            interpolators_list = interpolator
+        # if interpolators_list is None:
+        #    interpolators_list = interpolator
         occulted = occultation(
             z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, interpolators_list
         )
@@ -3726,12 +3747,12 @@ def jwstspectrum(
     nrm,
     fin,
     wht,
-    rtp=None,
-    chl=int(4e4),
-    rjc=95,
-    thr=5,
-    ntm=10,
-    imo=4,
+    rtp,
+    # chl=int(4e4),
+    # rjc=95,
+    # thr=5,
+    # ntm=10,
+    # imo=4,
     verbose=False,
     debug=False,
     donotuse=False,
@@ -3754,28 +3775,32 @@ def jwstspectrum(
     [OPT]:verbose:[BOOL]:plots
     [OPT]:debug:[BOOL]:channel plots
     '''
+
     # TRUANDERIE
     if bserr is None:
         bserr = 1e-3
-    # LETHE
-    z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
-    rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
-    LETHE = []
-    grid_names = [
-        '/grid_G/0.25.npy',
-        '/grid_G/0.5.npy',
-        '/grid_G/0.75.npy',
-        '/grid_G/1.0.npy',
-        '/grid_F/0.5.npy',
-        '/grid_F/1.0.npy',
-        '/grid_F/1.5.npy',
-        '/grid_F/2.0.npy',
-    ]
+    LETHE = None
+    if rtp.lethe:
+        # LETHE
+        z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+        rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+        grid_names = [
+            '/grid_G/0.25.npy',
+            '/grid_G/0.5.npy',
+            '/grid_G/0.75.npy',
+            '/grid_G/1.0.npy',
+            '/grid_F/0.5.npy',
+            '/grid_F/1.0.npy',
+            '/grid_F/1.5.npy',
+            '/grid_F/2.0.npy',
+        ]
 
-    for name in grid_names:
-        grid = np.load(LETHE_dir + name)
-        interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
-        LETHE.append(interpolator)
+        LETHE = []
+        for name in grid_names:
+            grid = np.load(LETHE_dir + name)
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+            LETHE.append(interpolator)
+            pass
         pass
 
     spr = fin['priors'].copy()
@@ -3792,12 +3817,15 @@ def jwstspectrum(
                 trd = np.argsort(nrm['data'][pln]['time'][det][vis])
                 zndata = nrm['data'][pln]['nspec'][det][vis].copy() - 1e0
                 noise = np.nanstd(
-                    zndata[np.abs(zndata) < np.nanpercentile(abs(zndata), rjc)]
+                    zndata[
+                        np.abs(zndata)
+                        < np.nanpercentile(abs(zndata), rtp.reject)
+                    ]
                 )
                 whttrc = wht['data'][pln][det][vis]['mctrace']
                 rpors = np.nanmedian(whttrc['rprs'])
                 # OUTLIERS REJECTION
-                zndata[abs(zndata) > thr * noise] = np.nan
+                zndata[abs(zndata) > rtp.threshold * noise] = np.nan
                 zndata = 1e0 + zndata[trd].T
                 if debug:
                     tsp = '-'
@@ -3806,8 +3834,8 @@ def jwstspectrum(
                     plt.title(pln + tsp + det + tsp + vis, fontsize=20)
                     im = plt.imshow(
                         zndata,
-                        vmin=1e0 - rpors**2 - thr * noise,
-                        vmax=1e0 + thr * noise,
+                        vmin=1e0 - rpors**2 - rtp.threshold * noise,
+                        vmax=1e0 + rtp.threshold * noise,
                         aspect='auto',
                     )
                     plt.tick_params(axis='both', labelsize=18)
@@ -3864,10 +3892,12 @@ def jwstspectrum(
                     argsdict, det + ' ' + vis, zndata
                 )
                 for chn, slc in enumerate(zndata):
-                    slc[np.abs(1e0 - slc) > thr * noise] = np.nan
+                    slc[np.abs(1e0 - slc) > rtp.threshold * noise] = np.nan
                     # ERROR ESTIMATED ON DATA
                     sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
-                    transiting = np.sum(np.isfinite(slc[np.abs(zst) < 1])) > ntm
+                    transiting = (
+                        np.sum(np.isfinite(slc[np.abs(zst) < 1])) > rtp.ntm
+                    )
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
                     ) and transiting:
@@ -3923,7 +3953,7 @@ def jwstspectrum(
                                 for t in whttrc
                                 if t.startswith('IM')
                             ]
-                            for ic, coef in enumerate(np.arange(imo)):
+                            for ic, coef in enumerate(np.arange(rtp.imo)):
                                 thslbl = 'IM' + str(int(coef))
                                 pymcim = pymc.Normal(
                                     thslbl,
@@ -3938,7 +3968,7 @@ def jwstspectrum(
                                 nodes.append(pymcim)
                                 pymcim = None
                                 pass
-                            nodeshape.append(imo)
+                            nodeshape.append(rtp.imo)
                             # CONTEXT
                             ssz, _ = tm.time2z(
                                 tst[np.isfinite(slc)],
@@ -4011,9 +4041,9 @@ def jwstspectrum(
                                 pass
                             else:
                                 trace = pymc.sample(
-                                    chl,
+                                    rtp.chainlen,
                                     cores=4,
-                                    tune=int(chl / 2),
+                                    tune=int(rtp.chainlen / 2),
                                     compute_convergence_checks=False,
                                     step=sampler,
                                     progressbar=debug,
