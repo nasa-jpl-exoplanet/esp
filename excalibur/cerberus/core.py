@@ -2861,6 +2861,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
     svname = 'cerberus.atmos'
 
+    chemModel = 'TEC'
+    chemModel = 'TEA'
+
     alltargetlists = get_target_lists()
 
     # set prior_ranges to avoid possible used-before-assignment problem
@@ -2988,19 +2991,20 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                             pass
 
                         elif (
-                            'TEC'
+                            chemModel
                             not in atmos_fit['data'][planet_letter][
                                 'MODELPARNAMES'
                             ]
                         ):
-                            log.warning(
-                                '--< CERBERUS ANALYSIS: BIG PROBLEM theres no TEC model! %s %s >--',
+                            log.error(
+                                '--< CERBERUS ANALYSIS: model is missing! %s %s %s >--',
+                                chemModel,
                                 filt,
                                 trgt,
                             )
                         elif (
                             'prior_ranges'
-                            not in atmos_fit['data'][planet_letter]['TEC']
+                            not in atmos_fit['data'][planet_letter][chemModel]
                         ):
                             log.warning(
                                 '--< CERBERUS ANALYSIS: SKIP (no prior info) - %s %s >--',
@@ -3024,27 +3028,27 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
                             # (prior range should be the same for all the targets)
                             prior_ranges = atmos_fit['data'][planet_letter][
-                                'TEC'
+                                chemModel
                             ]['prior_ranges']
 
                             all_traces = []
                             all_keys = []
-                            for key in atmos_fit['data'][planet_letter]['TEC'][
+                            for key in atmos_fit['data'][planet_letter][chemModel][
                                 'MCTRACE'
                             ]:
                                 all_traces.append(
-                                    atmos_fit['data'][planet_letter]['TEC'][
+                                    atmos_fit['data'][planet_letter][chemModel][
                                         'MCTRACE'
                                     ][key]
                                 )
 
-                                if key in ('TEC[0]', 'TEC'):
+                                if key in (chemModel + '[0]', chemModel):
                                     all_keys.append('[X/H]')
-                                elif key == 'TEC[1]':
+                                elif key == chemModel + '[1]':
                                     all_keys.append('[C/O]')
-                                elif key == 'TEC[2]':
+                                elif key == chemModel + '[2]':
                                     all_keys.append('[N/O]')
-                                elif key == 'TEC[3]':
+                                elif key == chemModel + '[3]':
                                     all_keys.append('[S/O]')
                                 else:
                                     all_keys.append(key)
