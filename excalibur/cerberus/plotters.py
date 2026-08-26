@@ -1111,11 +1111,16 @@ def plot_fits_vs_truths(
 ):
     '''
     Compare the retrieved values against the original inputs
+    Also show a histogram of (fit-truth)/uncertainty
     Also (optionally) show a histogram of the uncertainty values
     '''
 
     # for ppt, stack the two panels on top of each other
     switch_to_vert_stack = False
+
+    # compare histogram against a bell curve (Gaussian statistics)
+    gaussianDist = np.random.normal(size=10000)
+    gaussianDist = np.concatenate((gaussianDist, -gaussianDist))
 
     paramlist = []
     for param in ['T', '[X/H]', '[C/O]', '[N/O]']:
@@ -1132,11 +1137,11 @@ def plot_fits_vs_truths(
     for param in paramlist:
 
         if switch_to_vert_stack:
-            figure = plt.figure(figsize=(5, 9))
-            ax = figure.add_subplot(2, 1, 1)
+            figure = plt.figure(figsize=(5, 16))
+            ax = figure.add_subplot(3, 1, 1)
         else:
-            figure = plt.figure(figsize=(11, 5))
-            ax = figure.add_subplot(1, 2, 1)
+            figure = plt.figure(figsize=(16, 5))
+            ax = figure.add_subplot(1, 3, 1)
 
         for truth, fit, error in zip(
             truth_values[param], fit_values[param], fit_errors[param]
@@ -1277,15 +1282,47 @@ def plot_fits_vs_truths(
 
         # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
         if switch_to_vert_stack:
-            ax2 = figure.add_subplot(2, 1, 2)
+            ax2 = figure.add_subplot(3, 1, 3)
         else:
-            ax2 = figure.add_subplot(1, 2, 2)
+            ax2 = figure.add_subplot(1, 3, 3)
         if param == 'T':
             errors = np.array(fit_errors[param]) / np.array(fit_values[param])
             ax2.set_xlabel(param + ' fractional uncertainty', fontsize=14)
         else:
             errors = np.array(fit_errors[param])
             ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+        # the histogram range has to go past the data range or you get a vertical line on the right
+        lower = errors.min() / 2.0
+        upper = errors.max() * 2.0
+        # print('uncertainty range (logged)',param,lower,upper)
+        plt.hist(
+            errors,
+            range=(lower, upper),
+            bins=1000,
+            cumulative=True,
+            density=True,
+            histtype='step',
+            color='black',
+            zorder=1,
+            label='',
+        )
+        plt.title('cumulative histogram of ' + str(len(errors)) + ' planets')
+        ax2.semilogx()
+        ax2.set_xlim(lower, upper)
+        ax2.set_ylim(0, 1)
+        ax2.set_ylabel('fraction of planets', fontsize=14)
+
+        # UNCERTAINTY HISTOGRAMS IN THIRD PANEL
+        if switch_to_vert_stack:
+            ax3 = figure.add_subplot(3, 1, 3)
+        else:
+            ax3 = figure.add_subplot(1, 3, 3)
+        if param == 'T':
+            errors = np.array(fit_errors[param]) / np.array(fit_values[param])
+            ax3.set_xlabel(param + ' fractional uncertainty', fontsize=14)
+        else:
+            errors = np.array(fit_errors[param])
+            ax3.set_xlabel(param + ' uncertainty', fontsize=14)
         if len(errors) > 0:
             # the histogram range has to go past the data range or you get a vertical line on the right
             lower = errors.min() / 1.5
@@ -1305,10 +1342,10 @@ def plot_fits_vs_truths(
             plt.title(
                 'cumulative histogram of ' + str(len(errors)) + ' planets'
             )
-            ax2.semilogx()
-            ax2.set_xlim(lower, upper)
-        ax2.set_ylim(0, 1)
-        ax2.set_ylabel('fraction of planets', fontsize=14)
+            ax3.semilogx()
+            ax3.set_xlim(lower, upper)
+        ax3.set_ylim(0, 1)
+        ax3.set_ylabel('fraction of planets', fontsize=14)
 
         figure.tight_layout()
 
@@ -1514,15 +1551,14 @@ def plot_mass_vs_metals(
     fit_errors,
     prior_ranges,
     filt,
+    onlyFitAbove10MEarth,
+    onlyPlotAbove10MEarth,
     saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
     verbose=False,
 ):
     '''how well do we retrieve the input mass-metallicity relation?'''
-
-    onlyFitAbove10MEarth = True
-    onlyPlotAbove10MEarth = True
 
     MEarth = 5.972e27 / 1.898e30
 

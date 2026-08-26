@@ -57,12 +57,10 @@ class crbFM:
         wgrid=None,
         xsecs=None,
         qtgrid=None,
-        lbroadening=None,
-        lshifting=None,
-        knownspecies=None,
+        hitemplist=None,
         cialist=None,
         xmollist=None,
-        atom_list=None,
+        atomlist=None,
         nlevels=None,
         Hsmax=None,
         solrad=None,
@@ -82,48 +80,24 @@ class crbFM:
         - VMR profile
         - MMW profile
         '''
-        if atom_list is None:
-            atom_list = ['Ca', 'K', 'Na']
         if planet is None:
             planet = ctxt.planet
         if orbp is None:
             orbp = ctxt.orbp
-        if knownspecies is None:
-            knownspecies = ctxt.knownspecies
+        if hitemplist is None:
+            hitemplist = ctxt.hitemplist
         if cialist is None:
             cialist = ctxt.cialist
-        # else:
-        #    cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
         if xmollist is None:
             xmollist = ctxt.xmollist
-        # else:
-        #    xmollist = [
-        #        'TIO',
-        #        'H2O',
-        #        'H2CO',
-        #        'HCN',
-        #        'CO',
-        #        'CO2',
-        #        'NH3',
-        #        'CH4',
-        #        'C2H2',
-        #    ]
-        # this is passed in. why reset it here?
-        #    # longer list currently used by Luke:
-        #  PUT THIS INTO RUNTIME OPS!!
-        #    # xmollist = ['TIO', 'H2O', 'HCN', 'CO', 'CO2', 'NH3', 'CH4', 'H2S','PH3', 'C2H2', 'OH', 'O2', 'O3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO']
-        # hmm some of these are actually in HITRAN, nor EXOMOL, e.g. O2 O3
-        # new ones: 'H2S','PH3', 'SO2', 'C2H6', 'C3H8', 'CH3CHO'
+        if atomlist is None:
+            atomlist = ctxt.atomlist
         if nlevels is None:
             nlevels = ctxt.nlevels
         if Hsmax is None:
             Hsmax = ctxt.Hsmax
         if solrad is None:
             solrad = ctxt.solrad
-        if not bool(lshifting):
-            lshifting = ctxt.lshifting
-        if not bool(lbroadening):
-            lbroadening = ctxt.lbroadening
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -185,6 +159,7 @@ class crbFM:
                     C2Or=cheq['CtoO'],
                     X2Hr=cheq['XtoH'],
                     N2Or=cheq['NtoO'],
+                    S2Or=cheq['StoO'],
                 )
                 mmw, fH2, fHe = getmmw(
                     mixratio,
@@ -192,7 +167,6 @@ class crbFM:
                     fH2=fH2,
                     fHe=fHe,
                 )
-                pass
 
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
@@ -216,8 +190,8 @@ class crbFM:
                         metallicity=10.0 ** cheq['XtoH'],
                         C_O=0.55 * 10.0 ** cheq['CtoO'],
                         # N_O=?? * 10.0 ** cheq['NtoO'],
+                        # S_O=?? * 10.0 ** cheq['StoO'],
                     )
-                    pass
                 else:
                     # print('using TEA interpolation grid')
                     # species used for the equilibrium are :
@@ -369,10 +343,8 @@ class crbFM:
             rp0,
             pressure,
             wgrid,
-            lbroadening,
-            lshifting,
             cialist,
-            atom_list,
+            atomlist,
             fH2,
             fHe,
             xmollist,
@@ -592,10 +564,8 @@ def gettau(
     rp0,
     pressure,
     wgrid,
-    lbroadening,
-    lshifting,
     cialist,
-    atom_list,
+    atomlist,
     fH2,
     fHe,
     xmollist,
@@ -679,7 +649,7 @@ def gettau(
                 # ignore missing xsecs for molecules without strong features
                 pass
             else:
-                if elem in atom_list:
+                if elem in atomlist:
                     interp_atom = (
                         excalibur.cerberus.forward_model.ctxt.atom_xsec
                     )
@@ -724,10 +694,8 @@ def gettau(
                     xsecs[elem],
                     qtgrid[elem],
                     temp,
-                    pressure,
-                    mmr,
-                    lbroadening,
-                    lshifting,
+                    # pressure,
+                    # mmr,
                     wgrid,
                 )  # cm^2/mol
                 pass
@@ -1060,10 +1028,8 @@ def absorb(
     xsecs,
     qtgrid,
     T,
-    pressure,
-    mmr,
-    lbroadening,
-    lshifting,
+    # pressure,
+    # mmr,
     wgrid,
     iso=0,
     Tref=296.0,
@@ -1077,11 +1043,12 @@ def absorb(
     select = np.array(xsecs['I']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
-    gself = np.array(xsecs['g_self'])[select]
     nu = np.array(xsecs['nu'])[select]
-    delta = np.array(xsecs['delta'])[select]
-    eta = np.array(xsecs['eta'])[select]
-    gair = np.array(xsecs['g_air'])[select]
+    # these are no longer used (part of removed line shifting,broadening)
+    # gself = np.array(xsecs['g_self'])[select]
+    # delta = np.array(xsecs['delta'])[select]
+    # eta = np.array(xsecs['eta'])[select]
+    # gair = np.array(xsecs['g_air'])[select]
 
     Qref = float(qtgrid['SPL'][iso](Tref))
 
@@ -1096,48 +1063,23 @@ def absorb(
     if np.all(~np.isfinite(tips)):
         tips = 0
     sigma = S * tips
-    ps = mmr * pressure
-    gamma = np.array(
-        np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
-        + np.asmatrix(ps).T * np.asmatrix(gself)
-    )
-    if lbroadening:
-        if lshifting:
-            matnu = np.array(
-                np.asmatrix(np.ones(pressure.size)).T * np.asmatrix(nu)
-                + np.asmatrix(pressure).T * np.asmatrix(delta)
-            )
-        else:
-            matnu = np.array(nu) * np.array([np.ones(len(pressure))]).T
-        pass
-    else:
-        matnu = np.array(nu)
+    # gamma is no longer used (was part of removed line broadening)
+    # ps = mmr * pressure
+    # gamma = np.array(
+    #    np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+    #    + np.asmatrix(ps).T * np.asmatrix(gself)
+    # )
+    matnu = np.array(nu)
     absgrid = []
     nugrid = (1e4 / wgrid)[::-1]
     dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
-    if lbroadening:
-        for mymatnu, mygamma in zip(matnu, gamma):
-            binsigma = np.asmatrix(sigma) * np.asmatrix(
-                intflor(
-                    nugrid,
-                    dwnu / 2.0,
-                    np.array([mymatnu]).T,
-                    np.array([mygamma]).T,
-                )
-            )
-            binsigma = np.array(binsigma).flatten()
-            absgrid.append(binsigma / dwnu)
-            pass
+    binsigma = []
+    for nubin, dw in zip(nugrid, dwnu):
+        select = (matnu > (nubin - dw / 2.0)) & (matnu <= nubin + dw / 2.0)
+        binsigma.append(np.sum(sigma[select]))
         pass
-    else:
-        binsigma = []
-        for nubin, dw in zip(nugrid, dwnu):
-            select = (matnu > (nubin - dw / 2.0)) & (matnu <= nubin + dw / 2.0)
-            binsigma.append(np.sum(sigma[select]))
-            pass
-        binsigma = np.array(binsigma) / dwnu
-        absgrid.append(binsigma)
-        pass
+    binsigma = np.array(binsigma) / dwnu
+    absgrid.append(binsigma)
     if debug:
         plt.semilogy(1e4 / matnu.T, sigma, '.')
         plt.semilogy(wgrid[::-1], binsigma, 'o')
@@ -1177,23 +1119,6 @@ def getciaxs(temp, xsecs):
     return sigma, nu
 
 
-# ----------------------------- --------------------------------------
-# -- PRESSURE BROADENING -- ------------------------------------------
-def intflor(wave, dwave, nu, gamma):
-    '''
-    G. ROUDIER: Pressure Broadening
-    '''
-    f = (
-        1e0
-        / np.pi
-        * (
-            np.arctan((wave + dwave - nu) / gamma)
-            - np.arctan((wave - dwave - nu) / gamma)
-        )
-    )
-    return f
-
-
 # -------------------------- -----------------------------------------
 # -- PYMC DETERMINISTIC FUNCTIONS -- ---------------------------------
 def cloudyfmcerberus(*crbinputs):
@@ -1226,12 +1151,18 @@ def cloudyfmcerberus(*crbinputs):
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
-
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-        # print(' XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+            mdpindex += 1
+        if 'StoO' in ctxt.fixedParams:
+            tceqdict['StoO'] = ctxt.fixedParams['StoO']
+        else:
+            tceqdict['StoO'] = mdp[mdpindex]
+            mdpindex += 1
+        # print(' XtoH,CtoO,NtoO,StoO =',
+        #   tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'],tceqdict['StoO'])
         fmc = crbFM().crbmodel(
             tpr,
             ctp,
@@ -1300,12 +1231,18 @@ def clearfmcerberus(*crbinputs):
         else:
             tceqdict['CtoO'] = mdp[mdpindex]
             mdpindex += 1
-
         if 'NtoO' in ctxt.fixedParams:
             tceqdict['NtoO'] = ctxt.fixedParams['NtoO']
         else:
             tceqdict['NtoO'] = mdp[mdpindex]
-        # print('XtoH,CtoO,NtoO =',tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'])
+            mdpindex += 1
+        if 'StoO' in ctxt.fixedParams:
+            tceqdict['StoO'] = ctxt.fixedParams['StoO']
+        else:
+            tceqdict['StoO'] = mdp[mdpindex]
+            mdpindex += 1
+        # print(' XtoH,CtoO,NtoO,StoO =',
+        #   tceqdict['XtoH'],tceqdict['CtoO'],tceqdict['NtoO'],tceqdict['StoO'])
 
         # print('calculating forward model XtoH =', tceqdict['XtoH'])
 
@@ -1361,6 +1298,7 @@ def offcerberus(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1407,6 +1345,7 @@ def offcerberus1(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1450,6 +1389,7 @@ def offcerberus2(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1494,6 +1434,7 @@ def offcerberus3(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1537,6 +1478,7 @@ def offcerberus4(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1578,6 +1520,7 @@ def offcerberus5(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1621,6 +1564,7 @@ def offcerberus6(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1662,6 +1606,7 @@ def offcerberus7(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,
@@ -1703,6 +1648,7 @@ def offcerberus8(*crbinputs):
         tceqdict['XtoH'] = float(mdp[0])
         tceqdict['CtoO'] = float(mdp[1])
         tceqdict['NtoO'] = float(mdp[2])
+        # tceqdict['StoO'] = float(mdp[3])
         fmc = crbFM().crbmodel(
             float(tpr),
             ctp,

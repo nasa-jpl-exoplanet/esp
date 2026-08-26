@@ -67,14 +67,13 @@ pymclog.setLevel(logging.ERROR)
 CerbXSlibParams = namedtuple(
     'cerberus_xslib_params_from_runtime',
     [
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
     ],
 )
 
@@ -89,18 +88,22 @@ CerbAtmosParams = namedtuple(
         'fitT',
         'fitCtoO',
         'fitNtoO',
+        'fitStoO',
         'fitmolecules',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
         'boundTeq',
         'boundAbundances',
+        'boundMetallicity',
+        'boundCtoO',
+        'boundNtoO',
+        'boundStoO',
         'boundCTP',
         'boundHLoc',
         'boundHScale',
@@ -113,15 +116,14 @@ CerbResultsParams = namedtuple(
     [
         'nrandomwalkers',
         'randomseed',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'Hsmax',
         'solrad',
         'cornerBins',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )
@@ -130,8 +132,14 @@ CerbAnalysisParams = namedtuple(
     'cerberus_analysis_params_from_runtime',
     [
         'tier',
+        'onlyFitAbove10MEarth',
+        'onlyPlotAbove10MEarth',
         'boundTeq',
         'boundAbundances',
+        'boundMetallicity',
+        'boundCtoO',
+        'boundNtoO',
+        'boundStoO',
         'boundCTP',
         'boundHLoc',
         'boundHScale',
@@ -167,14 +175,11 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
-    # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-    # alternate list used by Luke:
-    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4','C2H2', 'C2H6', 'C3H8', 'CH3CHO', 'SO2','H2S']
-    knownspecies = runtime_params.knownspecies
+    hitemplist = runtime_params.hitemplist
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
+    # *** atomlist is not used yet ***
+    # atomlist = runtime_params.atomlist
 
     cs = False
     planet_letters = []
@@ -209,7 +214,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
         out['data'][p] = {}
 
         wgrid = np.array(spc['data'][p]['WB'])
-        qtgrid = gettpf(knownspecies)
+        qtgrid = gettpf(hitemplist)
         library = {}
 
         nugrid = (1e4 / np.copy(wgrid))[::-1]
@@ -416,7 +421,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.show()
                 pass
             pass
-        for ks in knownspecies:
+        for ks in hitemplist:
             # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
@@ -512,18 +517,18 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.show()
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
-            mmr = 2.3  # Fortney 2015 for hot Jupiters
+            # mmr = 2.3  # Fortney 2015 for hot Jupiters
             # solrad = 10.0
             # hsmax = 20.0
             # nlevels = 100.0
-            pgrid = np.arange(
-                np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                np.log(runtime_params.solrad)
-                + runtime_params.Hsmax / runtime_params.nlevels,
-                runtime_params.Hsmax / (runtime_params.nlevels - 1),
-            )
-            pgrid = np.exp(pgrid)
-            pressuregrid = pgrid[::-1]
+            # pgrid = np.arange(
+            #    np.log(runtime_params.solrad) - runtime_params.Hsmax,
+            #    np.log(runtime_params.solrad)
+            #    + runtime_params.Hsmax / runtime_params.nlevels,
+            #    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+            # )
+            # pgrid = np.exp(pgrid)
+            # pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
@@ -533,10 +538,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     library[ks],
                     qtgrid[ks],
                     tstep,
-                    pressuregrid,
-                    mmr,
-                    runtime_params.lbroadening,
-                    runtime_params.lshifting,
+                    # pressuregrid,
+                    # mmr,
                     wgrid,
                     debug=False,
                 )
@@ -624,14 +627,14 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
 
 # ------------------------ -------------------------------------------
 # -- TOTAL PARTITION FUNCTION -- -------------------------------------
-def gettpf(knownspecies, verbose=False):
+def gettpf(hitemplist, verbose=False):
     '''
     G. ROUDIER: Wrapper around HITRAN partition functions (Gamache et al. 2011)
     '''
     grid = {}
     tempgrid = list(np.arange(60.0, 3035.0, 25.0))
 
-    for ks in knownspecies:
+    for ks in hitemplist:
         grid[ks] = {'T': tempgrid, 'Q': [], 'SPL': []}
         with open(os.path.join(tipsdir, ks), 'r', encoding="utf-8") as fp:
             data = fp.readlines()
@@ -711,9 +714,21 @@ def atmos(
         modfam = ['TEC']
         modfam = ['TEA']
         modparlbl = {
-            'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
+        # option to fix C/O
+        if runtime_params.fitCtoO:
+            modparlbl['TEA'].remove('CtoO')
+            modparlbl['TEC'].remove('CtoO')
+        # option to fix N/O
+        if runtime_params.fitNtoO:
+            modparlbl['TEA'].remove('NtoO')
+            modparlbl['TEC'].remove('NtoO')
+        # option to fix S/O
+        if runtime_params.fitStoO:
+            modparlbl['TEA'].remove('StoO')
+            modparlbl['TEC'].remove('StoO')
 
         # ** select which Ariel model to fit **
         #   previously (with taurex) there were 8 options. now 4 options:
@@ -728,13 +743,6 @@ def atmos(
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel += 'Noclouds'
-
-        # option to fix N/O
-        if not runtime_params.fitNtoO:
-            modparlbl = {'TEC': ['XtoH', 'CtoO'], 'TEA': ['XtoH', 'CtoO']}
-        # option to fix C/O
-        if not runtime_params.fitCtoO:
-            modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
 
         if not runtime_params.isothermal:
             if 'cerberusNonisothermal' in spc['data']['models']:
@@ -762,8 +770,8 @@ def atmos(
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
         modfam = ['TEC', 'PHOTOCHEM']
         modparlbl = {
-            'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
+            # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
             'PHOTOCHEM': runtime_params.fitmolecules,
         }
@@ -773,6 +781,9 @@ def atmos(
         if not runtime_params.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
             # modparlbl['TEA'].remove('CtoO')
+        if not runtime_params.fitStoO:
+            modparlbl['TEC'].remove('StoO')
+            # modparlbl['TEA'].remove('StoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -976,6 +987,8 @@ def atmos(
                             fixed_params['CtoO'] = 0.0
                     if not runtime_params.fitNtoO:
                         fixed_params['NtoO'] = 0.0
+                    if not runtime_params.fitStoO:
+                        fixed_params['StoO'] = 0.0
                     # print('fixedparams',fixed_params)
 
                     # OFFSET BETWEEN STIS AND WFC3 filters
@@ -1529,6 +1542,8 @@ def atmos(
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model == 'TEA':
@@ -1538,6 +1553,8 @@ def atmos(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
@@ -1971,11 +1988,10 @@ def calculateSpectrum(
         hzlib=crbhzlib,
         chemistry=chemistry,
         planet=p,
-        knownspecies=runtime_params.knownspecies,
+        hitemplist=runtime_params.hitemplist,
         cialist=runtime_params.cialist,
         xmollist=runtime_params.xmollist,
-        lbroadening=runtime_params.lbroadening,
-        lshifting=runtime_params.lshifting,
+        atomlist=runtime_params.atomlist,
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
@@ -2037,7 +2053,7 @@ def results(
     for p in fin['priors']['planets']:
         # print('post-analysis for planet:',p)
 
-        # TEC,TEA params - X/H, C/O, N/O
+        # TEC,TEA params - X/H, C/O, N/O, S/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
@@ -2111,6 +2127,8 @@ def results(
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'TEA':
@@ -2120,6 +2138,8 @@ def results(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'PHOTOCHEM':
@@ -2174,8 +2194,9 @@ def results(
                     prior_ranges = {}
 
                 fit_cloud_parameters = 'CTP' in all_keys
-                fit_n_to_o = '[N/O]' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
+                fit_n_to_o = '[N/O]' in all_keys
+                fit_s_to_o = '[S/O]' in all_keys
                 fit_t = 'T' in all_keys
                 fit_TPprofile = 'Tparam[0]' in all_keys
 
@@ -2332,6 +2353,26 @@ def results(
                             # default is Solar
                             tceqdict['NtoO'] = 0.0
                         tceqdict_profiled['NtoO'] = tceqdict['NtoO']
+
+                    if fit_s_to_o:
+                        if fit_n_to_o:
+                            tceqdict['StoO'] = float(mdp[3])
+                            tceqdict_profiled['StoO'] = float(mdp_profiled[3])
+                        else:
+                            tceqdict['StoO'] = float(mdp[2])
+                            tceqdict_profiled['StoO'] = float(mdp_profiled[2])
+                    else:
+                        if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                            'StoO' in atm[p]['TRUTH_MODELPARAMS']
+                        ):
+                            # print('truth params',atm[p]['TRUTH_MODELPARAMS'])
+                            tceqdict['NtoO'] = atm[p]['TRUTH_MODELPARAMS'][
+                                'StoO'
+                            ]
+                        else:
+                            # default is Solar
+                            tceqdict['StoO'] = 0.0
+                        tceqdict_profiled['StoO'] = tceqdict['StoO']
                 elif model_name == 'PHOTOCHEM':
                     if len(mdp) != 5:
                         log.warning(
@@ -2446,6 +2487,8 @@ def results(
                             param_values_bestfit[5]['CtoO'] = trace[ibest]
                         elif key == '[N/O]':
                             param_values_bestfit[5]['NtoO'] = trace[ibest]
+                        elif key == '[S/O]':
+                            param_values_bestfit[5]['StoO'] = trace[ibest]
                         elif key == 'mixratio':
                             param_values_bestfit[5] = 666
                             log.error('not done yet. geoff to do')
@@ -2530,6 +2573,21 @@ def results(
                                 else:
                                     # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                     tceqdict['NtoO'] = 0.0
+                            if fit_s_to_o:
+                                if fit_n_to_o:
+                                    tceqdict['StoO'] = float(mdp[3])
+                                else:
+                                    tceqdict['StoO'] = float(mdp[2])
+                            else:
+                                if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                                    'StoO' in atm[p]['TRUTH_MODELPARAMS']
+                                ):
+                                    tceqdict['StoO'] = atm[p][
+                                        'TRUTH_MODELPARAMS'
+                                    ]['StoO']
+                                else:
+                                    # log.info('--< StoO is missing from TRUTH_MODELPARAMS >--')
+                                    tceqdict['StoO'] = 0.0
 
                         elif model_name == 'PHOTOCHEM':
                             tceqdict = None
@@ -2803,6 +2861,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
     svname = 'cerberus.atmos'
 
+    chemModel = 'TEC'
+    chemModel = 'TEA'
+
     alltargetlists = get_target_lists()
 
     # set prior_ranges to avoid possible used-before-assignment problem
@@ -2930,19 +2991,20 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                             pass
 
                         elif (
-                            'TEC'
+                            chemModel
                             not in atmos_fit['data'][planet_letter][
                                 'MODELPARNAMES'
                             ]
                         ):
-                            log.warning(
-                                '--< CERBERUS ANALYSIS: BIG PROBLEM theres no TEC model! %s %s >--',
+                            log.error(
+                                '--< CERBERUS ANALYSIS: model is missing! %s %s %s >--',
+                                chemModel,
                                 filt,
                                 trgt,
                             )
                         elif (
                             'prior_ranges'
-                            not in atmos_fit['data'][planet_letter]['TEC']
+                            not in atmos_fit['data'][planet_letter][chemModel]
                         ):
                             log.warning(
                                 '--< CERBERUS ANALYSIS: SKIP (no prior info) - %s %s >--',
@@ -2966,26 +3028,28 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
                             # (prior range should be the same for all the targets)
                             prior_ranges = atmos_fit['data'][planet_letter][
-                                'TEC'
+                                chemModel
                             ]['prior_ranges']
 
                             all_traces = []
                             all_keys = []
-                            for key in atmos_fit['data'][planet_letter]['TEC'][
-                                'MCTRACE'
-                            ]:
+                            for key in atmos_fit['data'][planet_letter][
+                                chemModel
+                            ]['MCTRACE']:
                                 all_traces.append(
-                                    atmos_fit['data'][planet_letter]['TEC'][
+                                    atmos_fit['data'][planet_letter][chemModel][
                                         'MCTRACE'
                                     ][key]
                                 )
 
-                                if key in ('TEC[0]', 'TEC'):
+                                if key in (chemModel + '[0]', chemModel):
                                     all_keys.append('[X/H]')
-                                elif key == 'TEC[1]':
+                                elif key == chemModel + '[1]':
                                     all_keys.append('[C/O]')
-                                elif key == 'TEC[2]':
+                                elif key == chemModel + '[2]':
                                     all_keys.append('[N/O]')
+                                elif key == chemModel + '[3]':
+                                    all_keys.append('[S/O]')
                                 else:
                                     all_keys.append(key)
 
@@ -3027,8 +3091,15 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                 truth_params = []
 
                             for trueparam, fitparam in zip(
-                                ['Teq', 'metallicity', 'C/O', 'N/O', 'Mp'],
-                                ['T', '[X/H]', '[C/O]', '[N/O]', 'Mp'],
+                                [
+                                    'Teq',
+                                    'metallicity',
+                                    'C/O',
+                                    'N/O',
+                                    'S/O',
+                                    'Mp',
+                                ],
+                                ['T', '[X/H]', '[C/O]', '[N/O]', '[S/O]', 'Mp'],
                             ):
                                 if trueparam in truth_params:
                                     true_value = float(
@@ -3044,7 +3115,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                     # elif trueparam=='N/O':
                                     #     true_value = true_value
                                     if (
-                                        fitparam == '[N/O]'
+                                        fitparam in ['[N/O]', '[S/O]']
                                         and true_value == 666
                                     ):
                                         truth_values[fitparam].append(0)
@@ -3098,7 +3169,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                             'planet_params'
                                         ]['mass']
                                     )
-                                elif trueparam == 'N/O':
+                                elif trueparam in ['N/O', 'S/O']:
                                     truth_values[fitparam].append(0)
                                 else:
                                     truth_values[fitparam].append(666)
@@ -3129,7 +3200,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 fit_no_plot = plotarray[3]
         else:
             # for real data, make a histogram of the retrieved uncertainties
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
+            #  note that the length of plotarray depends on whether S/O,N/O,C/O are fit parameters
             plotarray = plot_fit_uncertainties(
                 fit_values,
                 fit_errors,
@@ -3153,6 +3224,11 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
+            # runtime_params.onlyFitAbove10MEarth,
+            # runtime_params.onlyPlotAbove10MEarth,
+            # (runtime doesn't work yet for aspects?)
+            True,
+            True,
             saveDir=save_dir,
             verbose=verbose,
         )

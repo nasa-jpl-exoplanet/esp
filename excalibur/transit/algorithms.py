@@ -202,8 +202,12 @@ class WhiteLight(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         runtime = self.__rt.sv_as_dict()['status']
-        runtime_params = trncore.TransitPymcParams(
+        runtime_params = trncore.TransitWhitelightParams(
+            imo=runtime['transit_imo'],
+            threshold=runtime['transit_whitelight_threshold'],
+            lethe=runtime['transit_limbdarkening_lethe'],
             sliceSampler=runtime['transit_pymc_sliceSampler'],
+            chainlen=runtime['transit_whitelight_chainlen'],
         )
 
         svupdate = []
@@ -337,7 +341,6 @@ class WhiteLight(dawgie.Algorithm):
                 fin,
                 runtime_params,
                 out,
-                chainlen=chain_length,
                 verbose=False,
             )
         else:
@@ -421,8 +424,14 @@ class Spectrum(dawgie.Algorithm):
                 log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = trncore.TransitPymcParams(
+                runtime_params = trncore.TransitSpectrumParams(
+                    imo=runtime['transit_imo'],
+                    threshols=runtime['transit_spectrum_threshold'],
+                    reject=runtime['transit_spectrum_reject'],
+                    ntm=runtime['transit_spectrum_ntm'],
+                    lethe=runtime['transit_limbdarkening_lethe'],
                     sliceSampler=runtime['transit_pymc_sliceSampler'],
+                    chainlen=runtime['transit_spectrum_chainlen'],
                 )
 
                 update = self._spectrum(
@@ -477,7 +486,7 @@ class Spectrum(dawgie.Algorithm):
                 nrm,
                 fin,
                 wht,
-                chl=int(4e3),
+                runtime_params,
                 verbose=False,
                 debug=False,
                 donotuse=False,

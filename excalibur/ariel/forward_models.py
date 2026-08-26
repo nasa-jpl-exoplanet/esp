@@ -54,6 +54,7 @@ def make_cerberus_atmos(
         tceqdict['XtoH'] = model_params['metallicity']
         tceqdict['CtoO'] = model_params['C/O']
         tceqdict['NtoO'] = 0
+        tceqdict['StoO'] = 0
         # print('cloudfree forward model input chem =', tceqdict)
 
     ssc = syscore.ssconstants(mks=True)
@@ -89,11 +90,10 @@ def make_cerberus_atmos(
         wgrid=wavelength_um,
         planet=planet_letter,
         orbp=model_params,
-        knownspecies=runtime_params.knownspecies,
+        hitemplist=runtime_params.hitemplist,
         cialist=runtime_params.cialist,
         xmollist=runtime_params.xmollist,
-        lbroadening=runtime_params.lbroadening,
-        lshifting=runtime_params.lshifting,
+        atomlist=runtime_params.atomlist,
         nlevels=runtime_params.nlevels,
         Hsmax=runtime_params.Hsmax,
         solrad=runtime_params.solrad,
