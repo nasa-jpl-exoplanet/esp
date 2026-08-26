@@ -3033,9 +3033,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
                             all_traces = []
                             all_keys = []
-                            for key in atmos_fit['data'][planet_letter][chemModel][
-                                'MCTRACE'
-                            ]:
+                            for key in atmos_fit['data'][planet_letter][
+                                chemModel
+                            ]['MCTRACE']:
                                 all_traces.append(
                                     atmos_fit['data'][planet_letter][chemModel][
                                         'MCTRACE'
