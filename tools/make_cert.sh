@@ -1,44 +1,34 @@
 #! /usr/bin/env bash
 
-if [[ $# -ne 2 ]]
-then
-    echo "usage: make_cert.sh <filename>"
-fi
+make_cert () {
+    openssl req -new -nodes -newkey rsa:2048 \
+            -keyout ${1}.key -out ${1}.csr \
+            -subj "/CN=$(id -un)"
+    sudo -u sdppiped /proj/sdp/bin/sign.sh ${1}.csr signed.public.pem.$1
+    cat ${1}.key signed.public.pem.$1 > ${1}.ca.signed.pem
+    chmod 600 ${1}.ca.signed.pem
+}
 
-# make CSR
-openssl req -newkey rsa:2048 -nodes -keyout device.key \
-        -subj "/C=US/ST=CA/L=LA/O=None/CN=excalibur.jpl.nasa.gov" -out device.csr
-# write the v3.ext file
-echo "authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
-keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-subjectAltName = @alt_names
+selfsign() {
+    EXT=$(mktemp)
+    trap 'rm -f "${EXT}"' EXIT
+    cat > "${EXT}" <<EOF
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=clientAuth,serverAuth
+EOF
+    openssl x509 -req -in ${1}.csr -signkey ${1}.key -days 36500 \
+            -out ${1}.crt -extfile "${EXT}"
+    cat ${1}.key ${1}.crt > ${1}.self.signed.pem
+    chmod 600 ${1}.self.signed.pem
+}
 
-[alt_names]
-DNS.1 = excalibur.jpl.nasa.gov
-DNS.2 = mentor0.jpl.nasa.gov
-DNS.3 = mentor3.jpl.nasa.gov
-DNS.4 = mentor4.jpl.nasa.gov
-DNS.5 = mentor5.jpl.nasa.gov
-DNS.6 = mentor6.jpl.nasa.gov
-DNS.7 = mentor7.jpl.nasa.gov
-DNS.8 = mentor8.jpl.nasa.gov
-DNS.9 = mentor9.jpl.nasa.gov
-" > v3.ext
+loc=${HOME}/.ssh
+user=$(id -un)
 
-# build the certificate
-openssl x509 -req -in device.csr -signkey device.key -out device.crt \
-        -sha256 -extfile v3.ext -days 36500 
-# build the complete pem and just public bit for being a guest
-cat device.key device.crt > $1
-chmod 600 $1
-mv device.crt $1.public
-rm device.csr device.key v3.ext
-
-if [ -d /proj/sdp/data/certs ]
-then
-    cp $1.public /proj/sdp/data/certs/dawgie.public.pem.${USER}
-    chmod 664 /proj/sdp/data/certs/dawgie.public.pem.${USER}
-else
-    echo "You need to manually copy ${1}.public to /proj/sdp/data/certs/dawgie.public.pem.${USER}"
-fi
+mkdir -p ${loc}
+chmod 700 ${loc}
+cd ${loc}
+make_cert ${user}
+selfsign ${user}
+mv signed.public.pem.${user} /proj/sdp/data/certs/
