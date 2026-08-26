@@ -54,14 +54,12 @@ def get_TEA_grid():
 
     for molecule in species_name:
         grid_4d = np.load(INTERP_TEA_DIR + molecule + '.npy')
-        interp_mol = RegularGridInterpolator(
+        interp_tea[molecule] = RegularGridInterpolator(
             (temperature, pressure, XtoH, CtoO),
             grid_4d,
             bounds_error=False,
             fill_value=None,
             method='cubic',
         )
-        # temporary drop the cubic spline?  (takes some cpu during debugging)
-        interp_tea[molecule] = interp_mol
 
     return interp_tea
