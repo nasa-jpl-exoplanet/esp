@@ -59,14 +59,12 @@ ArielParams = namedtuple(
         'CtoOdaSilva',
         'CtoOaverage',
         'CtoOdispersion',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )
@@ -123,7 +121,7 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
 
     # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
-    # assume solar C/O and N/O for now
+    # assume solar C/O,N/O,S/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
 
     mmw_kg = mmw * cst.m_p  # [kg]
@@ -437,6 +435,7 @@ def simulate_spectra(
                     model_params['metallicity'] = 0.0  # dex
                     model_params['C/O'] = 0.0  # [C/O] (relative to solar)
                     model_params['N/O'] = 0.0  # [N/O] (relative to solar)
+                    model_params['S/O'] = 0.0  # [S/O] (relative to solar)
                 else:
                     model_params['metallicity*'] = metallicity_star_dex
                     # model_params['metallicity'] = metallicity_star_dex + metallicity_planet_dex
@@ -458,6 +457,7 @@ def simulate_spectra(
                         model_params['N/O'] = ancil_params['NO*']
                     else:
                         model_params['N/O'] = 0
+                    model_params['S/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
                 _, _, Hs = calc_mmw_Hs(

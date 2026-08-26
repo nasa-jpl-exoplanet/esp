@@ -150,6 +150,14 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self._version_ = dawgie.VERSION(1, 0, 0)
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
+        self['transit_imo'] = excalibur.ValueScalar()
+        self['transit_whitelight_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_reject'] = excalibur.ValueScalar()
+        self['transit_spectrum_ntm'] = excalibur.ValueScalar()
+        self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
+        self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
+        self['transit_limbdarkening_lethe'] = BoolValue()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['ariel_simspectrum_thorngrenMassMetals'] = BoolValue()
         self['ariel_simspectrum_chachanMassMetals'] = BoolValue()
@@ -175,9 +183,8 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_atmos_fitT'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
+        self['cerberus_atmos_fitStoO'] = BoolValue()
         self['cerberus_crbmodel_isothermal'] = BoolValue()
-        self['cerberus_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_crbmodel_lshifting'] = BoolValue()
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_Hsmax'] = excalibur.ValueScalar()
@@ -185,13 +192,20 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
         self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
         self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_atoms'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
+        self['cerberus_atmos_bounds_metallicity'] = HiLoValue()
+        self['cerberus_atmos_bounds_CtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_NtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_StoO'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
         self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
         self['cerberus_atmos_bounds_HScale'] = HiLoValue()
         self['cerberus_atmos_bounds_HThick'] = HiLoValue()
         self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
+        self['cerberus_plotters_onlyFitAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyPlotAbove10MEarth'] = BoolValue()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
@@ -365,11 +379,10 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_arielsample_masslimit'] = excalibur.ValueScalar()
         self['cerberus_arielsample_tessmaglimit'] = excalibur.ValueScalar()
         self['cerberus_atmos_fitCloudParameters'] = BoolValue()
-        self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
+        self['cerberus_atmos_fitNtoO'] = BoolValue()
+        self['cerberus_atmos_fitStoO'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
-        self['cerberus_crbmodel_lbroadening'] = BoolValue()
-        self['cerberus_crbmodel_lshifting'] = BoolValue()
         self['cerberus_crbmodel_isothermal'] = BoolValue()
         self['cerberus_crbmodel_nlevels'] = excalibur.ValueScalar()
         self['cerberus_crbmodel_solrad'] = excalibur.ValueScalar()
@@ -378,18 +391,33 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_crbmodel_HITEMPmolecules'] = MoleculeValue()
         self['cerberus_crbmodel_HITRANmolecules'] = MoleculeValue()
         self['cerberus_crbmodel_EXOMOLmolecules'] = MoleculeValue()
+        self['cerberus_crbmodel_atoms'] = MoleculeValue()
         self['cerberus_atmos_bounds_Teq'] = HiLoValue()
         self['cerberus_atmos_bounds_abundances'] = HiLoValue()
+        self['cerberus_atmos_bounds_metallicity'] = HiLoValue()
+        self['cerberus_atmos_bounds_CtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_NtoO'] = HiLoValue()
+        self['cerberus_atmos_bounds_StoO'] = HiLoValue()
         self['cerberus_atmos_bounds_CTP'] = HiLoValue()
         self['cerberus_atmos_bounds_HLoc'] = HiLoValue()
         self['cerberus_atmos_bounds_HScale'] = HiLoValue()
         self['cerberus_atmos_bounds_HThick'] = HiLoValue()
         self['cerberus_plotters_cornerBins'] = excalibur.ValueScalar()
+        self['cerberus_plotters_onlyFitAbove10MEarth'] = BoolValue()
+        self['cerberus_plotters_onlyPlotAbove10MEarth'] = BoolValue()
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['cerberus_chains'] = excalibur.ValueScalar()
         self['cerberus_steps'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
+        self['transit_imo'] = excalibur.ValueScalar()
+        self['transit_whitelight_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_threshold'] = excalibur.ValueScalar()
+        self['transit_spectrum_reject'] = excalibur.ValueScalar()
+        self['transit_spectrum_ntm'] = excalibur.ValueScalar()
+        self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
+        self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
+        self['transit_limbdarkening_lethe'] = BoolValue()
         self['spectrum_chains'] = excalibur.ValueScalar()
         self['spectrum_steps'] = excalibur.ValueScalar()
         self['transit_pymc_sliceSampler'] = BoolValue()
@@ -459,6 +487,14 @@ class StatusSV(dawgie.StateVector):
             'system_validate_selectMostRecent',
             'system_validate_maximizeSelfConsistency',
             'transit_pymc_sliceSampler',
+            'transit_imo',
+            'transit_whitelight_threshold',
+            'transit_spectrum_threshold',
+            'transit_spectrum_reject',
+            'transit_spectrum_ntm',
+            'transit_whitelight_chainlen',
+            'transit_spectrum_chainlen',
+            'transit_limbdarkening_lethe',
             'ariel_simspectrum_includeMetallicityDispersion',
             'ariel_simspectrum_randomCloudProperties',
             'ariel_simspectrum_thorngrenMassMetals',
@@ -480,24 +516,30 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_fitT',
             'cerberus_atmos_fitCtoO',
             'cerberus_atmos_fitNtoO',
+            'cerberus_atmos_fitStoO',
             'cerberus_atmos_fitCloudParameters',
             'cerberus_crbmodel_fitmolecules',
             'cerberus_crbmodel_HITEMPmolecules',
             'cerberus_crbmodel_HITRANmolecules',
             'cerberus_crbmodel_EXOMOLmolecules',
-            'cerberus_crbmodel_lbroadening',
-            'cerberus_crbmodel_lshifting',
+            'cerberus_crbmodel_atoms',
             'cerberus_crbmodel_isothermal',
             'cerberus_crbmodel_nlevels',
             'cerberus_crbmodel_solrad',
             'cerberus_crbmodel_Hsmax',
             'cerberus_atmos_bounds_Teq',
             'cerberus_atmos_bounds_abundances',
+            'cerberus_atmos_bounds_metallicity',
+            'cerberus_atmos_bounds_CtoO',
+            'cerberus_atmos_bounds_NtoO',
+            'cerberus_atmos_bounds_StoO',
             'cerberus_atmos_bounds_CTP',
             'cerberus_atmos_bounds_HLoc',
             'cerberus_atmos_bounds_HScale',
             'cerberus_atmos_bounds_HThick',
             'cerberus_plotters_cornerBins',
+            'cerberus_plotters_onlyFitAbove10MEarth',
+            'cerberus_plotters_onlyPlotAbove10MEarth',
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
             'selftest_Nrepeats',
