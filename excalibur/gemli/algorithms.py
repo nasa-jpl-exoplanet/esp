@@ -96,17 +96,16 @@ class MLfit(dawgie.Algorithm):
                     'cerberus_results_nrandomwalkers'
                 ].value(),
                 randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
                 isothermal=runtime['cerberus_crbmodel_isothermal'],
             )
 
@@ -324,6 +323,12 @@ class Analysis(dawgie.Analyzer):
                     tier=2,
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundMetallicity=runtime[
+                        'cerberus_atmos_bounds_metallicity'
+                    ],
+                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                     boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],

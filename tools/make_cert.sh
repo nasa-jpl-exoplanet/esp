@@ -5,7 +5,7 @@ make_cert () {
             -keyout ${1}.key -out ${1}.csr \
             -subj "/CN=$(id -un)"
     sudo -u sdppiped /proj/sdp/bin/sign.sh ${1}.csr signed.public.pem.$1
-    cat ${1}.key signed.public.pem.$1 > ${1}.ca.signed.pem
+    cat ${1}.key /proj/sdp/data/certs/signed.public.pem.$1 > ${1}.ca.signed.pem
     chmod 600 ${1}.ca.signed.pem
 }
 
@@ -23,12 +23,10 @@ EOF
     chmod 600 ${1}.self.signed.pem
 }
 
-loc=${HOME}/.ssh
+loc=${1:-${HOME}/.ssh}
 user=$(id -un)
 
 mkdir -p ${loc}
-chmod 700 ${loc}
 cd ${loc}
 make_cert ${user}
 selfsign ${user}
-mv signed.public.pem.${user} /proj/sdp/data/certs/

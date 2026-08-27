@@ -93,16 +93,15 @@ class XSLib(dawgie.Algorithm):
 
             runtime = self.__rt.sv_as_dict()['status']
             runtime_params = crbcore.CerbXSlibParams(
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
             )
 
             # for Ariel targets, option to only do the actually Tier-2 targets
@@ -224,17 +223,20 @@ class Atmos(dawgie.Algorithm):
             fitCtoO=runtime['cerberus_atmos_fitCtoO'],
             fitNtoO=runtime['cerberus_atmos_fitNtoO'],
             fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
-            knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+            hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
             cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
             xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+            atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
             nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
             solrad=runtime['cerberus_crbmodel_solrad'].value(),
             Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-            lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-            lshifting=runtime['cerberus_crbmodel_lshifting'],
             isothermal=runtime['cerberus_crbmodel_isothermal'],
             boundTeq=runtime['cerberus_atmos_bounds_Teq'],
             boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+            boundMetallicity=runtime['cerberus_atmos_bounds_metallicity'],
+            boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+            boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+            boundStoO=runtime['cerberus_atmos_bounds_StoO'],
             boundCTP=runtime['cerberus_atmos_bounds_CTP'],
             boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
             boundHScale=runtime['cerberus_atmos_bounds_HScale'],
@@ -412,17 +414,16 @@ class Results(dawgie.Algorithm):
                     'cerberus_results_nrandomwalkers'
                 ].value(),
                 randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
                 isothermal=runtime['cerberus_crbmodel_isothermal'],
             )
 
@@ -619,8 +620,20 @@ class Analysis(dawgie.Analyzer):
                 runtime_params = crbcore.CerbAnalysisParams(
                     # tier=runtime['ariel_simspectrum_tier'].value(),
                     tier=2,
+                    onlyFitAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyFitAbove10MEarth'
+                    ],
+                    onlyPlotAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyPlotAbove10MEarth'
+                    ],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundMetallicity=runtime[
+                        'cerberus_atmos_bounds_metallicity'
+                    ],
+                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                     boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
