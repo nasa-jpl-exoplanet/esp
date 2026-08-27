@@ -434,9 +434,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         select_transit = np.any(
             diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
         )
-        import pdb
-
-        pdb.set_trace()
 
         if verbose:
             log.info('>-- Planet: %s', p)
@@ -2435,7 +2432,7 @@ def jwstwl(
                 out['data'][pln][det][vis]['lcmodel'] = bestlc
                 out['data'][pln][det][vis]['flatwht'] = flatwht
                 out['data'][pln][det][vis]['inmodel'] = instmodel
-                out['data'][pln][det][vis]['ref_IM'] = ref_IM
+                out['data'][pln][det][vis]['ref_IM'] = ctxt.ref_IM
                 pass
             out['STATUS'].append(True)
             pass
