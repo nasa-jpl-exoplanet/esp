@@ -137,6 +137,7 @@ ctxtglobals = [
     'nodeshape',
     'spec',
     'LETHE',
+    'ref_IM',
 ]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
@@ -173,6 +174,7 @@ ctxt = CONTEXT(
     nodeshape=None,
     spec=None,
     LETHE=None,
+    ref_IM=None,
 )
 
 
@@ -209,6 +211,7 @@ def ctxtupdt(
     nodeshape=None,
     spec=None,
     LETHE=None,
+    ref_IM=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -246,6 +249,7 @@ def ctxtupdt(
         nodeshape=nodeshape,
         spec=spec,
         LETHE=LETHE,
+        ref_IM=ref_IM,
     )
     return
 
@@ -413,6 +417,24 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
     ]
 
     for p in events:
+        # Selection of the transit within a visit
+        # A time is selected if it is far up to 2 times
+        # the transit duration from the time of mid-transit
+        tmjd = priors[p]['t0']
+        if tmjd > 2400000.5:
+            tmjd -= 2400000.5
+            pass
+        timeredo = tme['data'][p]['time']
+        t_min = np.min(timeredo)
+        t_max = np.max(timeredo)
+        k_min = int(np.ceil((t_min - tmjd) / priors[p]['period']))
+        k_max = int(np.floor((t_max - tmjd) / priors[p]['period']))
+        transit_times = tmjd + np.arange(k_min, k_max + 1) * priors[p]['period']
+        diffs = np.abs(timeredo[:, np.newaxis] - transit_times[np.newaxis, :])
+        select_transit = np.any(
+            diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
+        )
+
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
@@ -422,6 +444,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             tme['data'][p]['visits'] = tme['data'][p]['visits'][:test]
             pass
         visp = tme['data'][p]['visits']
+        visp_transit = tme['data'][p]['transit']
         rp = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         # TEMPLATES
         allwavet = {}
@@ -432,56 +455,70 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             allwavet[thisdet] = {}
             allvisits[thisdet] = {}
             seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
-            for thisvis in np.unique(visp):
+            for thisvis in visp_transit:
                 strvis = str(int(thisvis))
                 selvis = visp == thisvis
-                zdetvis = tme['data'][p]['z'][seldet & selvis]
-                neg = np.min(zdetvis) < 0
-                pos = np.max(zdetvis) > 0
-                intransit = np.sum(abs(zdetvis) < 1.0) > 3
-                if neg and pos and intransit:
-                    orderme = np.argsort(
-                        tme['data'][p]['time'][seldet & selvis]
-                    )
-                    dt = np.diff(
-                        tme['data'][p]['time'][seldet & selvis][orderme]
-                    )
-                    # Multi observations per visit
-                    thr = np.max(np.unique(dt))
-                    if thr > 1e1 * np.median(dt):
-                        if np.all(
-                            zdetvis[orderme][: list(dt).index(thr) + 1] < 0
-                        ):
-                            nanme = (
-                                np.arange(orderme.size)
-                                < list(dt).index(thr) + 1
-                            )
-                            pass
-                        else:
-                            nanme = (
-                                np.arange(orderme.size)
-                                > list(dt).index(thr) + 1
-                            )
-                            pass
-                        znan = zdetvis[orderme]
-                        znan[nanme] = np.nan
-                        zdetvis[orderme] = znan
+                zdetvis = tme['data'][p]['z'][select_transit & seldet & selvis]
+                if len(zdetvis):
+                    neg = np.min(zdetvis) < 0
+                    pos = np.max(zdetvis) > 0
+                    intransit = np.sum(abs(zdetvis) < 1.0) > 3
+                    if neg and pos and intransit:
+                        orderme = np.argsort(
+                            tme['data'][p]['time'][
+                                select_transit & seldet & selvis
+                            ]
+                        )
+                        dt = np.diff(
+                            tme['data'][p]['time'][
+                                select_transit & seldet & selvis
+                            ][orderme]
+                        )
+                        # Multi observations per visit
+                        indexes = [
+                            i
+                            for i, val in enumerate(dt)
+                            if val > 1e1 * np.median(dt)
+                        ]
+                        if len(indexes):
+                            for _, index in enumerate(indexes):
+                                if np.all(zdetvis[orderme][: index + 1] < 0):
+                                    nanme = np.arange(orderme.size) < index + 1
+                                    pass
+                                elif np.all(zdetvis[orderme][index + 1 :] > 0):
+                                    nanme = np.arange(orderme.size) > index
+                                    pass
+                                else:
+                                    nanme = np.array([False] * len(zdetvis))
+                                    pass
+                                znan = zdetvis[orderme]
+                                znan[nanme] = np.nan
+                                zdetvis[orderme] = znan
+                                pass
+                        oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
+                        wavet, template = scube(
+                            spectra[select_transit & seldet & selvis][oot],
+                            wave[select_transit & seldet & selvis][oot],
+                            name=thisdet + ' [' + strvis + ']',
+                            verbose=verbose,
+                        )
+                        alltemplates[thisdet][strvis] = np.array(template)
+                        allwavet[thisdet][strvis] = np.array(wavet)
+                        allvisits[thisdet][strvis] = np.isfinite(zdetvis)
                         pass
-                    oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
-                    wavet, template = scube(
-                        spectra[seldet & selvis][oot],
-                        wave[seldet & selvis][oot],
-                        name=thisdet + ' [' + strvis + ']',
-                        verbose=verbose,
+                    pass
+                elif verbose:
+                    print(
+                        "tknot or transit duration mismatch for "
+                        + thisdet
+                        + ", "
+                        + thisvis
                     )
-                    alltemplates[thisdet][strvis] = np.array(template)
-                    allwavet[thisdet][strvis] = np.array(wavet)
-                    allvisits[thisdet][strvis] = np.isfinite(zdetvis)
                     pass
                 pass
             if verbose:
                 plt.figure(figsize=(12, 9))
-                for thisvis in allvisits[thisdet]:
+                for thisvis in allvisits.get(thisdet, []):
                     plt.plot(
                         allwavet[thisdet][thisvis],
                         alltemplates[thisdet][thisvis],
@@ -519,13 +556,17 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 name = thisdet + ' [' + thisvis + ']'
                 selvis = visp == int(thisvis)
                 valid = allvisits[thisdet][thisvis]
-                divideme = np.nan * wave[seldet & selvis][valid][0]
+                divideme = (
+                    np.nan * wave[select_transit & seldet & selvis][valid][0]
+                )
                 progbar = nerdclub.Progressbar(
                     argsdict, '>-- NORM ' + name, divideme
                 )
                 for idiv, _ in enumerate(divideme):
                     # GMR: Assumes subpixel pointing stability during the whole transit
-                    thiswave = wave[seldet & selvis][valid][0][idiv]
+                    thiswave = wave[select_transit & seldet & selvis][valid][0][
+                        idiv
+                    ]
                     if np.isfinite(thiswave):
                         thisdiff = np.abs(allwavet[thisdet][thisvis] - thiswave)
                         itemp = list(thisdiff).index(np.nanmin(thisdiff))
@@ -535,17 +576,20 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     pass
                 progbar.close()
                 allnorms[thisdet][thisvis] = (
-                    np.array(spectra[seldet & selvis][valid]) / divideme
+                    np.array(spectra[select_transit & seldet & selvis][valid])
+                    / divideme
                 )
-                allnwaves[thisdet][thisvis] = wave[seldet & selvis][valid]
-                allz[thisdet][thisvis] = tme['data'][p]['z'][seldet & selvis][
-                    valid
-                ]
+                allnwaves[thisdet][thisvis] = wave[
+                    select_transit & seldet & selvis
+                ][valid]
+                allz[thisdet][thisvis] = tme['data'][p]['z'][
+                    select_transit & seldet & selvis
+                ][valid]
                 allt[thisdet][thisvis] = tme['data'][p]['time'][
-                    seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
-                    seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 if verbose:
                     plt.figure(figsize=(12, 9))
@@ -2081,6 +2125,7 @@ def jwstwl(
           out['data'][p][det][vis]['lcmodel']:[ARRAY] Light curve best model
           out['data'][p][det][vis]['flatwht']:[ARRAY] White light curve
           out['data'][p][det][vis]['inmodel']:[ARRAY] Instrument Model
+          out['data'][p][det][vis]['ref_IM']:[ARRAY] Instrument Model time reference
     [OPT]:imo:[INT]:Instrument Model polynomial order
     [OPT]:thr:[INT]:percentile for valid data in [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
@@ -2197,6 +2242,9 @@ def jwstwl(
                 )
                 lclds = [c[0] for c in ldcoefs]
                 out['data'][pln][det]['whiteld'] = lclds
+                # Reset the value at None for each different light-curve
+                # before the IM fitting
+                ctxtupdt(ref_IM=None)
                 # PRIORS
                 rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
                 tmjd = priors[pln]['t0']
@@ -2307,6 +2355,7 @@ def jwstwl(
                         nodeshape=nodeshape,
                         selectfit=np.array([True] * len(wht)),
                         LETHE=LETHE,
+                        ref_IM=np.nanmean(np.array(whttim)[selectfit]),
                     )
                     # FIXED ORBITAL SOLUTION
                     TensorModel = TensorShell()
@@ -2383,6 +2432,7 @@ def jwstwl(
                 out['data'][pln][det][vis]['lcmodel'] = bestlc
                 out['data'][pln][det][vis]['flatwht'] = flatwht
                 out['data'][pln][det][vis]['inmodel'] = instmodel
+                out['data'][pln][det][vis]['ref_IM'] = ctxt.ref_IM
                 pass
             out['STATUS'].append(True)
             pass
@@ -3962,6 +4012,7 @@ def jwstspectrum(
                                 lclds=lclds,
                                 spec=True,
                                 LETHE=LETHE,
+                                ref_IM=wht['data'][pln][det][vis]['ref_IM'],
                             )
                             # PYMC SHELL
                             TensorModel = TensorShell()
@@ -4742,7 +4793,10 @@ def orbitalim(ts, imnodes):
     '''
     coeffs = [float(c) for c in imnodes]
     p = np.poly1d(coeffs)
-    out = p(ts - np.nanmean(ts))
+    if ctxt.ref_IM is not None:
+        out = p(ts - ctxt.ref_IM)
+    else:
+        out = p(ts - np.nanmean(ts))
     return out
 
 
