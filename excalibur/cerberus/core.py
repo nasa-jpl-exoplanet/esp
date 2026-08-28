@@ -155,7 +155,7 @@ exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 # ----------------- --------------------------------------------------
 # -- JWST CROSS SECTION LIB WRAPPER -- -------------------------------
-def jwstwxs(spc, rtp, svout, otp, verbose=False):
+def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
     '''
     GMR + CB
     Wrapper for JWST filters since visits are separated
@@ -163,13 +163,14 @@ def jwstwxs(spc, rtp, svout, otp, verbose=False):
     cs = False
     thisspc = {'data':{}}
     svout['data'] = {}
+    total = []
     for p in spc['data']:
         thisspc['data'][p] = {}
         svout['data'][p] = {}
         detlist = [k for k in spc['data'][p]]
         # ONLY WORKS FOR NRS CHANGE THAT LATER
         for v in spc['data'][p][detlist[0]]:
-            xslout = {}
+            xslout = {'data':{}, 'STATUS':[]}
             svout['data'][p][v] = xslout
             wgrid = []
             for d in detlist:
@@ -183,10 +184,15 @@ def jwstwxs(spc, rtp, svout, otp, verbose=False):
                 only_these_planets=otp,
                 verbose=verbose
             )
-            svout['data'][p][v] = xslout[p]
+            svout['data'][p][v] = xslout['data'][p]
+            total.append(cs)
             pass
         pass
-    return cs
+    if svout['data'].keys():
+        svout['STATUS'].extend(total)
+        pass
+    # CB EST RUDE
+    return ~np.any(~np.array(total))
 # ------------------------------------ -------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
 def myxsecsversion():
