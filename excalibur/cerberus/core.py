@@ -154,6 +154,40 @@ exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 
 # ----------------- --------------------------------------------------
+# -- JWST CROSS SECTION LIB WRAPPER -- -------------------------------
+def jwstwxs(spc, rtp, svout, otp, verbose=False):
+    '''
+    GMR + CB
+    Wrapper for JWST filters since visits are separated
+    '''
+    cs = False
+    thisspc = {'data':{}}
+    svout['data'] = {}
+    for p in spc['data']:
+        thisspc['data'][p] = {}
+        svout['data'][p] = {}
+        detlist = [k for k in spc['data'][p]]
+        # ONLY WORKS FOR NRS CHANGE THAT LATER
+        for v in spc['data'][p][detlist[0]]:
+            xslout = {}
+            svout['data'][p][v] = xslout
+            wgrid = []
+            for d in detlist:
+                wgrid.extend([w for w in spc['data'][p][d][v]['WB']])
+                pass
+            thisspc['data'][p]['WB'] = np.array(wgrid)
+            cs = myxsecs(
+                thisspc,
+                rtp,
+                xslout,
+                only_these_planets=otp,
+                verbose=verbose
+            )
+            svout['data'][p][v] = xslout[p]
+            pass
+        pass
+    return cs
+# ------------------------------------ -------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
 def myxsecsversion():
     '''
