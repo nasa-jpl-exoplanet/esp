@@ -507,7 +507,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                         allvisits[thisdet][strvis] = np.isfinite(zdetvis)
                         pass
                     pass
-                else:
+                elif verbose:
                     print(
                         "tknot or transit duration mismatch for "
                         + thisdet
