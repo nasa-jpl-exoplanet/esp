@@ -150,14 +150,26 @@ class XSLib(dawgie.Algorithm):
 
     def _xslib(self, spc, runtime_params, only_these_planets, index):
         '''Core code call'''
-        cs = crbcore.myxsecs(
-            spc,
-            runtime_params,
-            self.__out[index],
-            only_these_planets=only_these_planets,
-            verbose=False,
-        )
+        if 'JWST' in fltr:
+            cs = crbcore.jwstwxs(
+                spc,
+                runtime_params,
+                self.__out[fltrs.index(fltr)],
+                only_these_planets=only_these_planets,
+                verbose=False,
+            )
+            pass
+        else:
+            cs = crbcore.myxsecs(
+                spc,
+                runtime_params,
+                self.__out[fltrs.index(fltr)],
+                only_these_planets=only_these_planets,
+                verbose=False,
+            )
+            pass
         return cs
+
 
     @staticmethod
     def _failure(errstr, target):
