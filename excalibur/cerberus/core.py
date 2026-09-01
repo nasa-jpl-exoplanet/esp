@@ -1989,7 +1989,6 @@ def calculateSpectrum(
         cheq=tceqdict,
         rp0=rp0,
         xsecs=xsl[p]['XSECS'],
-        qtgrid=xsl[p]['QTGRID'],
         wgrid=transitdata['wavelength'],
         orbp=fin['priors'],
         hzlib=crbhzlib,

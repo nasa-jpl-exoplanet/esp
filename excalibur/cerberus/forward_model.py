@@ -56,7 +56,6 @@ class crbFM:
         orbp=None,
         wgrid=None,
         xsecs=None,
-        qtgrid=None,
         hitemplist=None,
         cialist=None,
         xmollist=None,
@@ -102,8 +101,6 @@ class crbFM:
             rp0 = ctxt.rp0
         if xsecs is None:
             xsecs = ctxt.xsl['data'][ctxt.planet]['XSECS']
-        if qtgrid is None:
-            qtgrid = ctxt.xsl['data'][ctxt.planet]['QTGRID']
         if wgrid is None:
             wgrid = np.array(ctxt.spc['data'][ctxt.planet]['WB'])
         if hzlib is None:
@@ -334,7 +331,6 @@ class crbFM:
         rho = pressure * 1e5 / (cst.Boltzmann * tpp)
         tau, tau_by_molecule, wtau = gettau(
             xsecs,
-            qtgrid,
             tpp,
             mixratio,
             z,
@@ -554,7 +550,6 @@ def TPprofile(sparseTgrid, pressures):
 # -- TAU -- ----------------------------------------------------------
 def gettau(
     xsecs,
-    qtgrid,
     temp,
     mixratio,
     z,
