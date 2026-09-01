@@ -697,7 +697,8 @@ def atmos(
     atom_xsec = get_atom_xsec(atom_list)
 
     # load TEA equilibrium chemistry interpolation grid
-    interp_tea = get_TEA_grid()
+    modelName = 'Pgrid_' + str(runtime_params.nlevels) + 'levels' + str(runtime_params.Hsmax) + 'scaleHeights'
+    interp_tea = get_TEA_grid(modelName)
     # OR.. leave it blank if you truly want the slow version
     # interp_tea = {}
 
