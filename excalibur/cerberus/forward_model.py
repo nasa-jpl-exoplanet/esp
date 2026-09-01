@@ -688,7 +688,7 @@ def gettau(
         else:
             # note that HITRAN version is not used here anymore; just EXOMOL
             # getxmolxs() is for EXOMOL format
-            # absorb() would be for HITRAN format  (deleted!)
+            # absorb() is for HITRAN format (moved inside core/myxsecs)
 
             # EXOMOL HILL ET AL. 2013 ----------------------------------------
             sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
@@ -1011,12 +1011,80 @@ def gettau(
     return tau, tau_by_molecule, 1e4 / lsig
 
 
+# --------- ----------------------------------------------------------
+# -- ATTENUATION COEFFICIENT -- --------------------------------------
+def absorb(
+    xsecs,
+    qtgrid,
+    T,
+    # pressure,
+    # mmr,
+    wgrid,
+    iso=0,
+    Tref=296.0,
+    debug=False,
+):
+    '''
+    G. ROUDIER: HITRAN HITEMP database parser
+    '''
+
+    select = np.array(xsecs['I']) == (iso + 1)
+    select = np.array(xsecs['I']) == iso + 1
+    S = np.array(xsecs['S'])[select]
+    E = np.array(xsecs['Epp'])[select]
+    nu = np.array(xsecs['nu'])[select]
+    # these are no longer used (part of removed line shifting,broadening)
+    # gself = np.array(xsecs['g_self'])[select]
+    # delta = np.array(xsecs['delta'])[select]
+    # eta = np.array(xsecs['eta'])[select]
+    # gair = np.array(xsecs['g_air'])[select]
+
+    Qref = float(qtgrid['SPL'][iso](Tref))
+
+    try:
+        Q = float(qtgrid['SPL'][iso](T))
+    except ValueError:
+        Q = np.nan
+    c2 = 1e2 * cst.h * cst.c / cst.Boltzmann
+    tips = (Qref * np.exp(-c2 * E / T) * (1.0 - np.exp(-c2 * nu / T))) / (
+        Q * np.exp(-c2 * E / Tref) * (1.0 - np.exp(-c2 * nu / Tref))
+    )
+    if np.all(~np.isfinite(tips)):
+        tips = 0
+    sigma = S * tips
+    # gamma is no longer used (was part of removed line broadening)
+    # ps = mmr * pressure
+    # gamma = np.array(
+    #    np.asmatrix(pressure - ps).T * np.asmatrix(gair * (Tref / T) ** eta)
+    #    + np.asmatrix(ps).T * np.asmatrix(gself)
+    # )
+    matnu = np.array(nu)
+    absgrid = []
+    nugrid = (1e4 / wgrid)[::-1]
+    dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
+    binsigma = []
+    for nubin, dw in zip(nugrid, dwnu):
+        select = (matnu > (nubin - dw / 2.0)) & (matnu <= nubin + dw / 2.0)
+        binsigma.append(np.sum(sigma[select]))
+        pass
+    binsigma = np.array(binsigma) / dwnu
+    absgrid.append(binsigma)
+    if debug:
+        plt.semilogy(1e4 / matnu.T, sigma, '.')
+        plt.semilogy(wgrid[::-1], binsigma, 'o')
+        plt.xlabel('Wavelength $\\lambda$[$\\mu m$]')
+        plt.ylabel('Absorption Coeff [$cm^{2}.molecule^{-1}$]')
+        plt.show()
+        pass
+    return absgrid, nugrid
+
+
 # --------------------------------------------------------------------
 # -- EXOMOL ----------------------------------------------------------
 def getxmolxs(temp, xsecs):
     '''
     G. ROUDIER: Wrapper around EXOMOL Cerberus library
-    Also used for HITRAN now (instead of absorb(), which is deleted)
+    Also used to read HITRAN data (saved by myxsecs in same format as XOMOL)
     '''
     # sigma = np.array(list(xsecs['SPL']))
     sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
