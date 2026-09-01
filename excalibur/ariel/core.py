@@ -62,6 +62,7 @@ ArielParams = namedtuple(
         'hitemplist',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'solrad',
         'Hsmax',
@@ -192,7 +193,8 @@ def simulate_spectra(
         ]
 
     # load TEA equilibrium chemistry interpolation grid
-    interp_tea = get_TEA_grid()
+    modelName = 'Pgrid_' + str(runtime_params.nlevels) + 'levels' + str(runtime_params.Hsmax) + 'scaleHeights'
+    interp_tea = get_TEA_grid(modelName)
 
     solarCtoO = 0.54951
 
