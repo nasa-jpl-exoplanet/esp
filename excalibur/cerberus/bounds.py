@@ -68,12 +68,12 @@ def set_prior_bound(eqtemp, runtime_params):
         runtime_params.boundCtoO.hi,
     )
     prior_ranges['NtoORange'] = (
-        runtime_params.NtoObound.lo,
-        runtime_params.NtoObound.hi,
+        runtime_params.boundNtoO.lo,
+        runtime_params.boundNtoO.hi,
     )
     prior_ranges['StoORange'] = (
-        runtime_params.StoObound.lo,
-        runtime_params.StoObound.hi,
+        runtime_params.boundStoO.lo,
+        runtime_params.boundStoO.hi,
     )
     prior_ranges['CTP'] = (
         runtime_params.boundCTP.lo,

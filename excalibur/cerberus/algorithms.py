@@ -222,6 +222,7 @@ class Atmos(dawgie.Algorithm):
             fitT=runtime['cerberus_atmos_fitT'],
             fitCtoO=runtime['cerberus_atmos_fitCtoO'],
             fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+            fitStoO=runtime['cerberus_atmos_fitStoO'],
             fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
             hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
             cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
