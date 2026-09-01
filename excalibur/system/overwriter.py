@@ -66,21 +66,23 @@ def ppar():
     #    'R*':0.637, 'R*_uperr':0.063, 'R*_lowerr':-0.063,
     #    'R*_ref':'Prieto-Arranz et al. 2018',
     # }
-    overwrite['HAT-P-11'] = {
-        #  archive gives Yee 2018 but it's rounded to 0.68 for some reason
-        'R*': 0.683,
-        'R*_uperr': 0.009,
-        'R*_lowerr': -0.009,
-        'R*_ref': 'Yee et al. 2018',
-        # Yee 2018 table 2 doesn't seem to have any error bars.  archive has 7e-5; we have 3e-7
-        #  there's no error bar on t0 either. strange.  oh it says that both come from Huber 2017
-        'b': {
-            'period': 4.887802443,
-            'period_uperr': 3e-7,
-            'period_lowerr': -3e-7,
-            'period_ref': 'Yee et al. 2018',
-        },
-    }
+    # overwrite['HAT-P-11'] = {
+    #  archive gives Yee 2018 but it's rounded to 0.68 for some reason
+    #    'R*': 0.683,
+    #    'R*_uperr': 0.009,
+    #    'R*_lowerr': -0.009,
+    #    'R*_ref': 'Yee et al. 2018',
+    # Yee 2018 table 2 doesn't seem to have any error bars.
+    # archive has 7e-5; we have 3e-7
+    #  there's no error bar on t0 either. strange.
+    # oh it says that both come from Huber 2017
+    #    'b': {
+    #        'period': 4.887802443,
+    #        'period_uperr': 3e-7,
+    #        'period_lowerr': -3e-7,
+    #        'period_ref': 'Yee et al. 2018',
+    #    },
+    # }
     # overwrite['HAT-P-17'] = {
     # stassun 2017 default is similar (0.87 vs 0.838).  let's drop this one
     # 'R*':0.838, 'R*_uperr':0.021, 'R*_lowerr':-0.021,
@@ -1259,6 +1261,115 @@ def ppar():
         },
     }
 
+    overwrite["GJ 357"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 60282.3413,
+            't0_uperr': 3e-5,
+            't0_lowerr': -3e-5,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/adee92/pdf',
+        },
+    }
+
+    overwrite["K2-18"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 59964.969453,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/2041-8213/acf577/pdf',
+        },
+    }
+
+    overwrite["HAT-P-11"] = {
+        # --< CB: JWST NIRSPEC
+        'R*': 0.872,
+        'b': {
+            'period': 4.88781501,
+            'period_uperr': 6.8e-7,
+            'period_lowerr': -6.8e-7,
+            'period_ref': 'Winn et al 2010',
+            'inc': 89.17,
+            'inc_uperr': 0.46,
+            'inc_lowerr': -0.60,
+            'inc_ref': 'Winn et al 2010',
+            'sma': 0.05196,
+            'sma_ref': 'Winn et al 2010',
+            't0': 60504.965,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+        },
+    }
+
+    overwrite["HAT-P-14"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 59729.203001524,
+            't0_uperr': 0.000010,
+            't0_lowerr': -0.000010,
+            't0_ref': 'https://iopscience.iop.org/article/10.1088/1538-3873/aca3d3/pdf',
+        },
+    }
+
+    overwrite["HAT-P-26"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            'period': 4.2344923,
+            'period_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            't0': 60110.30657380267,
+            't0_uperr': 0.000036,
+            't0_lowerr': -0.000036,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'sma': 0.0459,
+            'sma_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'inc': 87.8,
+            'inc_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'ecc': 0.0,
+            'ecc_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+        },
+    }
+
+    overwrite["HD 15337"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 60142.14151,
+            't0_uperr': 0.00011,
+            't0_lowerr': -0.00011,
+            't0_ref': 'https://ntrs.nasa.gov/api/citations/20260005584/downloads/20260005584-TOI_402_01.pdf',
+        },
+        "c": {
+            't0': 60149.25631,
+            't0_uperr': 0.00012,
+            't0_lowerr': -0.00012,
+            't0_ref': 'https://arxiv.org/pdf/2602.22327',
+            'inc': 88.0,
+            'inc_uperr': 0.1,
+            'inc_lowerr': -0.1,
+            'inc_ref': 'https://arxiv.org/pdf/2602.22327',
+            'sma': 0.1113,
+            'sma_ref': 'https://arxiv.org/pdf/2602.22327',
+        },
+    }
+
+    overwrite["LHS 3844"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 58325.22129184415,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+            't0_ref': 'file:///Users/cbernard/Downloads/s41550-026-02860-3-3.pdf',
+        },
+    }
+
+    overwrite["LTT 1445 A"] = {
+        # --< CB: JWST NIRSPEC
+        "c": {
+            't0': 58412.076569440804,
+            't0_uperr': 0.00078,
+            't0_lowerr': -0.00074,
+        },
+    }
+
     # overwrite['WASP-87'] = {
     #    'FEH*':0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
     #    'FEH*_units':'[dex]', 'FEH*_ref':"Default to solar metallicity"}
@@ -1498,15 +1609,15 @@ def ppar():
     }
 
     # 11/10/23 period update to match G141 phase
-    overwrite['HAT-P-26'] = {
-        # 'b':{'period':4.234520,  # this is the default. decreasing it a bit
-        'b': {
-            'period': 4.2345002,
-            'period_uperr': 7e-7,
-            'period_lowerr': -7e-7,
-            'period_ref': 'Kokori et al. 2022',
-        }
-    }
+    # overwrite['HAT-P-26'] = {
+    #    # 'b':{'period':4.234520,  # this is the default. decreasing it a bit
+    #    'b': {
+    #        'period': 4.2345002,
+    #        'period_uperr': 7e-7,
+    #        'period_lowerr': -7e-7,
+    #        'period_ref': 'Kokori et al. 2022',
+    #    }
+    # }
 
     # 11/12/23 period updates to match G141 phase
     # overwrite['HAT-P-18'] = {
