@@ -1,7 +1,7 @@
 '''cerberus teagrid ds'''
 
 # Heritage code shame:
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,too-many-locals
 
 import os
 import numpy as np
