@@ -1022,7 +1022,7 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if runtime_params.fitCTP or runtime_params.fitHaze:
+        if rtp.fitCloudParameters:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
@@ -1212,7 +1212,11 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCTP:
+                    if not rtp.fitCloudParameters and 'sim' in ext:
+                        # only consider cloud-free case for simulated data
+                        #  for Ariel, cloud params are fixed to model_params values
+                        #  if blank, set parameters to a cloud/haze-free case
+
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -1282,13 +1286,8 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if 'STIS-WFC3' in ext:
-                        log.warning(
-                            '--< STIS-WFC offset models removed! (Sept. 2026) >--'
-                        )
-                    elif (
-                        not runtime_params.fitCTP and not runtime_params.fitHaze
-                    ):
+                    if not rtp.fitCloudParameters and 'sim' in ext:
+                        # print('TURNING OFF CLOUDS!')
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
@@ -1372,6 +1371,8 @@ def atmos(
 
                         TensorModel = TensorShell()
 
+                            # --< MODEL >--
+                            TensorModel = TensorShell()
                         pymc.CustomDist(
                             "likelihood for cloudy spectrum",
                             nodes,
