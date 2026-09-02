@@ -1058,6 +1058,7 @@ def absorb(
         pass
     return absgrid, nugrid
 
+
 # --------------------------------------------------------------------
 # -- ATOMS ----------------------------------------------------------
 def getatomxs(temp, pressure, wgrid, interpolator):
@@ -1079,7 +1080,7 @@ def getatomxs(temp, pressure, wgrid, interpolator):
 
     return sigma, lsig
 
-                        
+
 # --------------------------------------------------------------------
 # -- EXOMOL ----------------------------------------------------------
 def getxmolxs(temp, xsecs):
