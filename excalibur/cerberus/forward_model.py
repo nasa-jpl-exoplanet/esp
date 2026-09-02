@@ -1077,7 +1077,7 @@ def getatomxs(temp, pressure, wgrid, interpolator):
     sigma = sigma * 1e-4  # m^2/mol
     lsig = 1e4 / wgrid[::-1]
 
-return sigma, lsig
+    return sigma, lsig
 
                         
 # --------------------------------------------------------------------
