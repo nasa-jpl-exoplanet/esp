@@ -109,9 +109,9 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
         modelDir = INTERP_TEA_DIR + modelName + '/'
         if not os.path.isdir(modelDir):
             os.mkdir(modelDir)
-            os.chmod(modelDir, 0o777)  # set permissions to read-write-x
+            # os.chmod(modelDir, 0o777)  # set permissions to read-write-x
             os.mkdir(modelDir + 'grid_parameters/')
-            os.chmod(modelDir + 'grid_parameters/', 0o777)
+            # os.chmod(modelDir + 'grid_parameters/', 0o777)
             # print('creating', modelDir)
         # else:
         #    print(modelDir, 'already exists')
@@ -121,7 +121,7 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
     for iparam, param in enumerate(parameter_names):
         filename = modelDir + 'grid_parameters/' + param + '.npy'
         np.save(filename, parameters[iparam])
-        os.chmod(filename, 0o666)  # set permissions to read-write
+        # os.chmod(filename, 0o666)  # set permissions to read-write
 
     temp_grid, pressure_grid = np.meshgrid(
         parameters[0], parameters[1], indexing='ij'
@@ -137,7 +137,7 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
     # save the list of molecules
     filename = modelDir + 'grid_parameters/species.npy'
     np.save(filename, species_name)
-    os.chmod(filename, 0o666)  # set permissions to read-write
+    # os.chmod(filename, 0o666)  # set permissions to read-write
 
     # empty initialization
     TEA_mixratio_grids = {
@@ -176,6 +176,6 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
     for molecule in TEA_mixratio_grids:
         filename = modelDir + molecule + '.npy'
         np.save(filename, TEA_mixratio_grids[molecule])
-        os.chmod(filename, 0o666)  # set permissions to read-write
+        # os.chmod(filename, 0o666)  # set permissions to read-write
 
     return
