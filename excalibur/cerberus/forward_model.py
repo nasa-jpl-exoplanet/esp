@@ -648,36 +648,23 @@ def gettau(
                     )
                     if interp_atom is None:
                         interp_atom = atom_data
-                        pass
+
                     if interp_atom is not None:
                         # interpolator loading, the interpolation is made on temperature and
                         # pressure but not on the wavelengths
                         # The wavelengths have to be the nods of the grid used for interpolation
                         # The grid I commited the first time was for JWST in terms of wavelength
-                        interpolator = interp_atom[elem]
-                        T = np.repeat(temp, len(wgrid))
-                        P = np.repeat(pressure, len(wgrid))
-                        wl = np.tile(wgrid, Nzones)
-                        points = np.column_stack((T, P, wl))
-
-                        # xsec computation
-                        sigma = interpolator(points)
-                        sigma = np.reshape(
-                            sigma, (Nzones, len(wgrid))
-                        )  # cm^2/mol
-                        sigma = sigma[:, ::-1].T
-
-                        # sigma.shape(n_waves, n_pressure)
-                        sigma = sigma * 1e-4  # m^2/mol
-                        lsig = 1e4 / wgrid[::-1]
-                        pass
-                    pass
+                        sigma, lsig = getatomxs(
+                            temp,
+                            pressure,
+                            wgrid,
+                            interp_atom[elem],
+                        )
                 else:
                     log.error(
                         'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
                         elem,
                     )
-
         else:
             # note that HITRAN version is not used here anymore; just EXOMOL
             # getxmolxs() is for EXOMOL format
@@ -686,37 +673,37 @@ def gettau(
             # EXOMOL HILL ET AL. 2013 ----------------------------------------
             sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
 
-            if True in (sigma < 0):
-                sigma[sigma < 0] = 0e0
-                pass
-            if True in ~np.isfinite(sigma):
-                sigma[~np.isfinite(sigma)] = 0e0
-                pass
-            sigma = sigma * 1e-4  # m^2/mol
+        if True in (sigma < 0):
+            sigma[sigma < 0] = 0e0
+            pass
+        if True in ~np.isfinite(sigma):
+            sigma[~np.isfinite(sigma)] = 0e0
+            pass
+        sigma = sigma * 1e-4  # m^2/mol
 
-            top_sigma = sigma[:, -1]
-            # this is a 1-D array, not 3-D.  just a function of wavelength
-            toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
-            # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
-            # print('toptau shape', toptau_by_molecule[elem].shape) #103
+        top_sigma = sigma[:, -1]
+        # this is a 1-D array, not 3-D.  just a function of wavelength
+        toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
+        # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
+        # print('toptau shape', toptau_by_molecule[elem].shape) #103
 
-            if extendedBoundaryCondition:
-                # analytictau = analyticIntegral * rho * top_mmr * top_sigma
-                # print(analyticIntegral.shape,
-                #      rho.shape,
-                #      mmr.shape,
-                #      sigma.shape)
+        if extendedBoundaryCondition:
+            # analytictau = analyticIntegral * rho * top_mmr * top_sigma
+            # print(analyticIntegral.shape,
+            #      rho.shape,
+            #      mmr.shape,
+            #      sigma.shape)
 
-                # two options: use the full range of sigma
-                #  or, to be fair, just use the 50th element to match below
-                # ok also mmr should just take the top value, if it's true B.C.
-                analytictau_by_molecule[elem] = (
-                    analyticIntegral[:, np.newaxis]
-                    * rho[:, np.newaxis]
-                    * mmr[:, np.newaxis][49, :][np.newaxis, :]
-                    * sigma.T[49, :][np.newaxis, :]
-                )
-                # print('anal shape', analytictau_by_molecule[elem].shape)
+            # two options: use the full range of sigma
+            #  or, to be fair, just use the 50th element to match below
+            # ok also mmr should just take the top value, if it's true B.C.
+            analytictau_by_molecule[elem] = (
+                analyticIntegral[:, np.newaxis]
+                * rho[:, np.newaxis]
+                * mmr[:, np.newaxis][49, :][np.newaxis, :]
+                * sigma.T[49, :][np.newaxis, :]
+            )
+            # print('anal shape', analytictau_by_molecule[elem].shape)
 
         tau_by_molecule[elem] = (rho * mmr * sigma).T
         tau = tau + tau_by_molecule[elem]
@@ -1071,7 +1058,28 @@ def absorb(
         pass
     return absgrid, nugrid
 
+# --------------------------------------------------------------------
+# -- ATOMS ----------------------------------------------------------
+def getatomxs(temp, pressure, wgrid, interpolator):
 
+    Nzones = len(pressure)
+
+    T = np.repeat(temp, len(wgrid))
+    P = np.repeat(pressure, len(wgrid))
+    wl = np.tile(wgrid, Nzones)
+    points = np.column_stack((T, P, wl))
+
+    # xsec computation
+    sigma = interpolator(points)
+    sigma = np.reshape(sigma, (Nzones, len(wgrid)))  # cm^2/mol
+    sigma = sigma[:, ::-1].T
+
+    sigma = sigma * 1e-4  # m^2/mol
+    lsig = 1e4 / wgrid[::-1]
+
+return sigma, lsig
+
+                        
 # --------------------------------------------------------------------
 # -- EXOMOL ----------------------------------------------------------
 def getxmolxs(temp, xsecs):
