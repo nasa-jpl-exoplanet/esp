@@ -12,7 +12,7 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.cerberus.fmcontext import (ctxtupdt, dctxupdt)
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
@@ -203,9 +203,6 @@ def myxsecsversion():
     Done to speed up processing of CH4 HITEMP line list
     '''
     return dawgie.VERSION(1, 1, 3)
-
-
-# GMR: Should be in the param list
 
 
 def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
@@ -727,10 +724,14 @@ def jwstatmos(
     [I]:xsl:[DICT]:cerberus.xslib SV as dict
     [I]:spc:[DICT]:transit.spectrum SV as dict
     [I]:rtp:[DICT]:runtime.autofill SV as dict
-        rtp['cerberus_crbmodel_fitmolecules'].molecules:[LIST]:FREE model
+        rtp['cerberus_crbmodel_fitmolecules'].molecules:[LIST]:FREE model species
         rtp['cerberus_atmos_fitCtoO']:[BOOL]:[C/O] Free parameter
         rtp['cerberus_atmos_fitNtoO']:[BOOL]:[N/O] Free parameter
         rtp['cerberus_atmos_fitStoO']:[BOOL]:[S/O] Free parameter
+        rtp['cerberus_atmos_bounds_Teq']:[HiLoValue]: Teq bounds
+        rtp['cerberus_atmos_bounds_metallicity']:[HiLoValue]: [X/H] bounds
+        rtp['cerberus_atmos_bounds_*toO']:[HiLoValue]: [*/O] bounds
+        rtp['cerberus_atmos_bounds_abundances']:[HiLoValue]: gas bounds
     [I/O]:out:[SV]:AtmosSv() see states.py
           out['STATUS']:[LIST]:appending True for each planet/instrument added
           out['data']['SYSPAR']:[DICT]:copy of system parameters used (fin)
@@ -740,10 +741,10 @@ def jwstatmos(
     [OPT]:hazedir:[STR]:path to Jupiter hazes density profiles
     [OPT]:verbose:[BOOL]:messages and plots
     '''
-    # SAVING SYS PAR
-    out['data']['SYSPAR'] = fin.copy()
-    # TEA GRID BY CB
-    interp_tea = get_TEA_grid()
+    # SAVING SYSTEM PARAMETERS
+    out['data']['SYSPAR'] = fin['priors'].copy()
+    # CB TEA GRID
+    interp_tea = get_TEA_grid(verbose=verbose)
     # INITS
     atm = False
     ssc = syscore.ssconstants(mks=True)
@@ -760,6 +761,9 @@ def jwstatmos(
         'TEA': tealst,
         'FREE': rtp['cerberus_crbmodel_fitmolecules'].molecules,
         }
+    if debug:
+        modparlbl.pop('FREE')
+        pass
     if verbose:
         log.info('>--< MODELS >--')
         for model in modparlbl:
@@ -770,11 +774,13 @@ def jwstatmos(
         detlist = [k for k in spc['data'][p]]
         vislist = [v for v in spc['data'][p][detlist[0]]]
         out['data'][p] = {}
+        out['data'][p]['MODELS'] = modparlbl
         for v in vislist:
             spctrm = []
             spcerr = []
             wavmcr = []
             cleanup = []
+            wthr = None
             for d in detlist:
                 res = np.array([np.mean(np.abs(m - d))
                                 for m, d
@@ -788,7 +794,20 @@ def jwstatmos(
                            3.0*np.std(res[res < np.percentile(res, 50 + 68 / 2)])
                            )
                 )
+                if '1' in d:
+                    if wthr is None:
+                        wthr = np.nanmax(spc['data'][p][d][v]['WB'])
+                        pass
+                    else: wthr += np.nanmax(spc['data'][p][d][v]['WB'])
+                    pass
+                if '2' in d:
+                    if wthr is None:
+                        wthr = np.nanmin(spc['data'][p][d][v]['WB'])
+                        pass
+                    else: wthr += np.nanmin(spc['data'][p][d][v]['WB'])
+                    pass
                 pass
+            wthr /= 2.
             if verbose:
                 fig = plt.figure(figsize=(12, 9))
                 plt.errorbar(np.array(wavmcr)[np.array(cleanup)],
@@ -799,6 +818,7 @@ def jwstatmos(
                              marker='o',
                              linestyle='None',
                              alpha=0.5)
+                plt.axvline(wthr, ls='-.')
                 plt.ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
                 plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
                 plt.tick_params(axis='both', labelsize=18)
@@ -809,8 +829,117 @@ def jwstatmos(
             out['data'][p][v]['ESerr'] = np.array(spcerr)
             out['data'][p][v]['WB'] = np.array(wavmcr)
             out['data'][p][v]['VALID'] = np.array(cleanup)
+            rp0 = fin['priors'][p]['rp'] * ssc['Rjup']  # mk
+            fixed = {'CTP':3.,
+                     'HScale':-10., 'HLoc':3., 'HThick':0.,
+                     'T':float(fin['priors'][p]['teq'])
+                     }
+            nodes = []
+            priors = {}
+            # CTP
+            # TB UPDATED: FREE
+            priors['CTP'] = (
+                rtp['cerberus_atmos_bounds_CTP'].lo,
+                rtp['cerberus_atmos_bounds_CTP'].hi,
+            )
+            fixed.pop('CTP')
+            # HAZES
+            # TB UPDATED: FIXED
+            # T
+            if rtp['cerberus_atmos_fitT']:
+                priors['T'] = (
+                    rtp['cerberus_atmos_bounds_Teq'].lo * fixed['T'],
+                    rtp['cerberus_atmos_bounds_Teq'].hi * fixed['T'],
+                )
+                fixed.pop('T')
+                pass
+            for m in modparlbl:
+                # GMR: We want control on when we init/update this thing
+                dctx = dctxupdt()
+                with pymc.Model():
+                    out['data'][p][m] = {}
+                    klist = [k for k in modparlbl[m] if k not in ['XtoH']]
+                    if m in ['TEA', 'TEC']:
+                        priors['XtoH'] = (
+                            rtp['cerberus_atmos_bounds_metallicity'].lo,
+                            rtp['cerberus_atmos_bounds_metallicity'].hi,
+                        )
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_' + k].lo,
+                                rtp['cerberus_atmos_bounds_' + k].hi,
+                            )
+                            pass
+                        pass
+                    if m in ['FREE']:
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_abundances'].lo,
+                                rtp['cerberus_atmos_bounds_abundances'].hi,
+                            )
+                            pass
+                        pass
+                    fwdmdl = None
+                    if 'NRS' in detlist[0]:
+                        priors['NRS2-NRS1'] = (-100, 100)  # ppm to be added in runtime
+                        fwdmdl = 'NRS'
+                        pass
+                    TensorModel = None
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
+                    for n in priors:
+                        nodes.append(pymc.Uniform(n, priors[n][0], priors[n][1]))
+                        pass
+                    # UPDATE DICTIONNARY CONTEXT
+                    dctxupdt(
+                        {
+                            'runtime'=rtp,
+                            'cleanup'=np.array(cleanup),
+                            'model'=m,
+                            'planet'=p,
+                            'rp0'=rp0,
+                            'orbp'=fin['priors'],
+                            'xsl'=xsl,
+                            'modparlbl'=modparlbl,
+                            'hzlib'=crbhzlib,
+                            'fixed_params'=fixed,
+                            'mcmcdat'=np.array(spctrm),
+                            'mcmcsig'=np.array(spcerr),
+                            'mcmcwav'=np.array(wavmcr),
+                            'offsetthr'=wthr,
+                            'forwardmodel'=fwdmdl,
+                            'interp_tea'=interp_tea,
+                        }
+                    )
+                    TensorModel = TensorShell()
+                    _ = pymc.CustomDist(
+                        "Likelihood",
+                        nodes,
+                        observed=np.array(spctrm)[np.array(cleanup)],
+                        logp=LogLH,
+                    )
+                    pymc.Deterministic(
+                        "Chi2",
+                        -2.0 * pytensr.sum(LogLH(np.array(spctrm)[np.array(cleanup)],
+                                                 nodes)),
+                    )
+                    log.info('>-- MCMC nodes: %s', str(priors.keys()))
+                    trace = pymc.sample(
+                        rtp['cerberus_steps'].value(),
+                        cores=rtp['cerberus_chains'].value(),
+                        tune=int(int(rtp['cerberus_steps'].value()) / 2),
+                        step=pymc.Metropolis(),
+                        compute_convergence_checks=False,
+                        progressbar=verbose,
+                    )
+                    pass
+                pass
             pass
         pass
+    # CHANGE atm
     import pdb; pdb.set_trace()
     return atm
 

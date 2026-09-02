@@ -27,7 +27,6 @@ log = logging.getLogger(__name__)
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
 ctxt = ctxtinit()
 
-
 # --------------------------------------------------------------------
 # -- CERBERUS FORWARD MODEL ------------------------------------------
 class crbFM:

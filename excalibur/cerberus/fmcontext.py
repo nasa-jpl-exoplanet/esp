@@ -8,69 +8,128 @@ import excalibur
 
 from collections import namedtuple
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
+# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS --
+ndctx = {
+    'atom_xsec'=None,
+    'atomlist'=None,
+    'chemistry'=None,
+    'cialist'=None,
+    'cleanup'=None,
+    'fixedParams'=None,
+    'forwardmodel'=None,
+    'hitemplist'=None,
+    'Hsmax'=None,
+    'hzlib'=None,
+    'interp_tea'=None,
+    'isothermal'=None,
+    'mcmcdat'=None,
+    'mcmcsig'=None,
+    'mcmcwav'=None,
+    'model'=None,
+    'modparlbl'=None,
+    'nlevels'=None,
+    'nodeshape'=None,
+    'offsetthr'=None,
+    'orbp'=None,
+    'planet'=None,
+    'rp0'=None,
+    'runtime'=None,
+    'solrad'=None,
+    'spc'=None,
+    'tspectrum'=None,
+    'xmollist'=None,
+    'xsl'=None,
+}
+
+def dctxupdt(dct={}):
+    '''
+    GMR: Rewriting this as it was intended to start with
+    '''
+    if not dct:  # INIT
+        dctx = ndctx
+        pass
+    else:  # UPDATE
+        dctx = excalibur.cerberus.forward_model.dctx
+        for k in dct:
+            dctx[k] = dct[k]
+            pass
+        pass
+    excalibur.cerberus.forward_model.dctx = dctx
+    excalibur.util.tensor.dctx = dctx
+    return
+
+# -- -------------------------------------- --
 
 CONTEXT = namedtuple(
     'CONTEXT',
     [
-        'cleanup',
-        'model',
-        'planet',
-        'rp0',
-        'orbp',
-        'tspectrum',
-        'xsl',
-        'spc',
-        'modparlbl',
-        'hzlib',
+        'atom_xsec',
+        'atomlist',
         'chemistry',
+        'cialist',
+        'cleanup',
         'fixedParams',
-        'mcmcdat',
-        'mcmcsig',
-        'nodeshape',
         'forwardmodel',
         'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
         'Hsmax',
-        'isothermal',
-        'atom_xsec',
+        'hzlib',
         'interp_tea',
+        'isothermal',
+        'mcmcdat',
+        'mcmcsig',
+        'mcmcwav',
+        'model',
+        'modparlbl',
+        'nlevels',
+        'nodeshape',
+        'offsetthr',
+        'orbp',
+        'planet',
+        'rp0',
+        'runtime',
+        'solrad',
+        'spc',
+        'tspectrum',
+        'xmollist',
+        'xsl',
     ],
 )
 
-
 def ctxtinit():
+    '''
+    GMR: Init context variables
+    Old method ditch that someday
+    '''
     ctxt = CONTEXT(
-        cleanup=None,
-        model=None,
-        planet=None,
-        rp0=None,
-        orbp=None,
-        tspectrum=None,
-        xsl=None,
-        spc=None,
-        modparlbl=None,
-        hzlib=None,
+        atom_xsec=None,
+        atomlist=None,
         chemistry=None,
+        cialist=None,
+        cleanup=None,
         fixedParams=None,
-        mcmcdat=None,
-        mcmcsig=None,
-        nodeshape=None,
         forwardmodel=None,
         hitemplist=None,
-        cialist=None,
-        xmollist=None,
-        atomlist=None,
-        nlevels=None,
-        solrad=None,
         Hsmax=None,
-        isothermal=None,
-        atom_xsec=None,
+        hzlib=None,
         interp_tea=None,
+        isothermal=None,
+        mcmcdat=None,
+        mcmcsig=None,
+        mcmcwav=None,
+        model=None,
+        modparlbl=None,
+        nlevels=None,
+        nodeshape=None,
+        offsetthr=None,
+        orbp=None,
+        planet=None,
+        rp0=None,
+        runtime=None,
+        solrad=None,
+        spc=None,
+        tspectrum=None,
+        xmollist=None,
+        xsl=None,
     )
     return ctxt
 
@@ -99,7 +158,6 @@ def ctxtupdt(
     '''
     G. ROUDIER: Update global context for pymc deterministics
     '''
-    # sys.modules[__name__].ctxt = CONTEXT(
     excalibur.cerberus.forward_model.ctxt = CONTEXT(
         cleanup=cleanup,
         model=model,
