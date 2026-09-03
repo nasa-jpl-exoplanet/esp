@@ -6,6 +6,7 @@
 import os
 import numpy as np
 import excalibur
+from excalibur.util import nerdclub
 from excalibur.util.cerberus import calcTEA
 from scipy.interpolate import RegularGridInterpolator
 
@@ -14,8 +15,17 @@ INTERP_TEA_DIR = os.path.join(
 )
 
 
-def get_TEA_grid():
-
+def get_TEA_grid(verbose=False):
+    '''
+    CB
+    GMR: Need better description below
+    print('T range', temperature[0], temperature[-1])  # 300-3000
+    print('XtoH range', XtoH[0], XtoH[-1])  # 0.1-100
+    print('CtoO range', CtoO[0], CtoO[-1])  # 0.1-10
+    save these ranges; check whether interp is going outside of range
+    no wait, don't bother.  use the standard edge flags in the interpolator
+    interp_tea['Trange'] = (temperature[0], temperature[-1])
+    '''
     species_name = [
         'CH4',
         'CO2',
@@ -38,21 +48,18 @@ def get_TEA_grid():
         'O2',
         'OH',
     ]
-
     interp_tea = {}
-
     temperature = np.load(INTERP_TEA_DIR + 'grid_parameters/temperature.npy')
     pressure = np.load(INTERP_TEA_DIR + 'grid_parameters/pressure.npy')
     XtoH = np.load(INTERP_TEA_DIR + 'grid_parameters/XtoH.npy')
     CtoO = np.load(INTERP_TEA_DIR + 'grid_parameters/CtoO.npy')
-
-    # print('T range', temperature[0], temperature[-1])  # 300-3000
-    # print('XtoH range', XtoH[0], XtoH[-1])  # 0.1-100
-    # print('CtoO range', CtoO[0], CtoO[-1])  # 0.1-10
-    # save these ranges; check whether interp is going outside of range
-    # no wait, don't bother.  use the standard edge flags in the interpolator
-    # interp_tea['Trange'] = (temperature[0], temperature[-1])
-
+    argsdict = {
+        'progbar': verbose,
+        'progsizemax': 35,
+        'lbllen': 15,
+        'proginprompt': verbose,
+    }
+    progbar = nerdclub.Progressbar(argsdict, '>-- COCOGRID', species_name)    
     for molecule in species_name:
         grid_4d = np.load(INTERP_TEA_DIR + molecule + '.npy')
         interp_tea[molecule] = RegularGridInterpolator(
@@ -62,17 +69,22 @@ def get_TEA_grid():
             fill_value=None,
             method='cubic',
         )
-
+        progbar.update()
+        pass
+    progbar.close()
     return interp_tea
 
 
 def grid_generation(parameters, species, verbose=False):
-    # Parameter 1 : temperature in K
-    # Parameter 2 : pressure in bar
-    # Parameter 3 : metallicities, log10 values
-    # Parameter 4 : CtoOs, log10 values
-    # Species : list of species with the names from TEA
-    # ex : ['CH4_g, N2_ref, ...]
+    '''
+    CB
+    Parameter 1 : temperature in K
+    Parameter 2 : pressure in bar
+    Parameter 3 : metallicities, log10 values
+    Parameter 4 : CtoOs, log10 values
+    Species : list of species with the names from TEA
+    ex : ['CH4_g, N2_ref, ...]
+    '''
 
     # parameters saving
     np.save(

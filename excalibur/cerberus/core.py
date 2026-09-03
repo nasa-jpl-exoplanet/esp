@@ -12,7 +12,7 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.cerberus.fmcontext import (ctxtupdt, dctxupdt)
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
@@ -28,6 +28,7 @@ from excalibur.cerberus.forward_model import (
     offcerberus6,
     offcerberus7,
     offcerberus8,
+    crbnrs,
 )
 from excalibur.cerberus.plotters import (
     rebin_data,
@@ -154,6 +155,44 @@ exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
 
 
 # ----------------- --------------------------------------------------
+# -- JWST CROSS SECTION LIB WRAPPER -- -------------------------------
+def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
+    '''
+    GMR + CB
+    Wrapper for JWST filters since visits are separated
+    '''
+    cs = False
+    thisspc = {'data': {}}
+    svout['data'] = {}
+    total = []
+    for p in spc['data']:
+        thisspc['data'][p] = {}
+        svout['data'][p] = {}
+        detlist = [k for k in spc['data'][p]]
+        # ONLY WORKS FOR NRS CHANGE THAT LATER
+        for v in spc['data'][p][detlist[0]]:
+            xslout = {'data': {}, 'STATUS': []}
+            svout['data'][p][v] = xslout
+            wgrid = []
+            for d in detlist:
+                wgrid.extend([w for w in spc['data'][p][d][v]['WB']])
+                pass
+            thisspc['data'][p]['WB'] = np.array(wgrid)
+            cs = myxsecs(
+                thisspc, rtp, xslout, only_these_planets=otp, verbose=verbose
+            )
+            svout['data'][p][v] = xslout['data'][p]
+            total.append(cs)
+            pass
+        pass
+    if svout['data'].keys():
+        svout['STATUS'].extend(total)
+        pass
+    # CB EST RUDE
+    return ~np.any(~np.array(total))
+
+
+# ------------------------------------ -------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
 def myxsecsversion():
     '''
@@ -165,9 +204,6 @@ def myxsecsversion():
     Done to speed up processing of CH4 HITEMP line list
     '''
     return dawgie.VERSION(1, 1, 3)
-
-
-# GMR: Should be in the param list
 
 
 def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
@@ -671,12 +707,262 @@ def atmosversion():
     '''
     return dawgie.VERSION(1, 3, 2)
 
+def jwstatmos(
+        fin,
+        xsl,
+        spc,
+        rtp,
+        out,
+        hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
+        verbose=False,
+        debug=False,
+):
+    '''
+    GMR: JWST Atmos
+    Going for a rewrite instead of a wrapper
+    Atmos needs a cleanup
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I]:xsl:[DICT]:cerberus.xslib SV as dict
+    [I]:spc:[DICT]:transit.spectrum SV as dict
+    [I]:rtp:[DICT]:runtime.autofill SV as dict
+        rtp['cerberus_crbmodel_fitmolecules'].molecules:[LIST]:FREE model species
+        rtp['cerberus_atmos_fitCtoO']:[BOOL]:[C/O] Free parameter
+        rtp['cerberus_atmos_fitNtoO']:[BOOL]:[N/O] Free parameter
+        rtp['cerberus_atmos_fitStoO']:[BOOL]:[S/O] Free parameter
+        rtp['cerberus_atmos_bounds_Teq']:[HiLoValue]: Teq bounds
+        rtp['cerberus_atmos_bounds_metallicity']:[HiLoValue]: [X/H] bounds
+        rtp['cerberus_atmos_bounds_*toO']:[HiLoValue]: [*/O] bounds
+        rtp['cerberus_atmos_bounds_abundances']:[HiLoValue]: gas bounds
+        rtp['cerberus_crbmodel_HITEMPmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_HITRANmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_EXOMOLmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_nlevels']:[INT]: number of atm layers
+        rtp['cerberus_crbmodel_Hsmax']:[INT]: number of scale heights above solid radius
+        rtp['cerberus_crbmodel_solrad']:[FLOAT]: solid radius pressure level [log10(bar)]
+        rtp['cerberus_steps']:[INT]: PYMC chain length per core
+        rtp['cerberus_chains']:[INT]: PYMC number of cores
+    [I/O]:out:[SV]:AtmosSv() see states.py
+          out['STATUS']:[LIST]:appending True for each planet/instrument added
+          out['data']['SYSPAR']:[DICT]:copy of system parameters used (fin)
+          out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
+          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment          
+    [OPT]:hazedir:[STR]:path to Jupiter hazes density profiles
+    [OPT]:verbose:[BOOL]:messages and plots
+    '''
+    # SAVING SYSTEM PARAMETERS
+    out['data']['SYSPAR'] = fin['priors'].copy()
+    # CB TEA GRID
+    interp_tea = get_TEA_grid(verbose=verbose)
+    # INITS
+    atm = False
+    ssc = syscore.ssconstants(mks=True)
+    crbhzlib = {'PROFILE': []}
+    hazelib(crbhzlib, hazedir=hazedir, verbose=False)
+    plnkey = [p for p in map(chr, range(97, 123)) if p in spc['data']]
+    # MODELS
+    modfam = ['TEA', 'FREE']
+    tealst = ['XtoH', 'CtoO', 'NtoO', 'StoO']
+    if not rtp['cerberus_atmos_fitCtoO']: tealst.remove('CtoO')
+    if not rtp['cerberus_atmos_fitNtoO']: tealst.remove('NtoO')
+    if not rtp['cerberus_atmos_fitStoO']: tealst.remove('StoO')
+    modparlbl = {
+        'TEA': tealst,
+        'FREE': rtp['cerberus_crbmodel_fitmolecules'].molecules,
+        }
+    if debug:
+        modparlbl.pop('FREE')
+        pass
+    if verbose:
+        log.info('>--< MODELS >--')
+        for model in modparlbl:
+            log.info('>--< %s: %s', model, [p for p in modparlbl[model]])
+            pass
+        pass
+    for p in plnkey:
+        detlist = [k for k in spc['data'][p]]
+        vislist = [v for v in spc['data'][p][detlist[0]]]
+        out['data'][p] = {}
+        out['data'][p]['MODELS'] = modparlbl
+        for v in vislist:
+            spctrm = []
+            spcerr = []
+            wavmcr = []
+            cleanup = []
+            wthr = None
+            for d in detlist:
+                res = np.array([np.mean(np.abs(m - d))
+                                for m, d
+                                in zip(spc['data'][p][d][v]['LCFIT'], 
+                                       spc['data'][p][d][v]['LCDATA'])])
+                spctrm.extend(np.array(spc['data'][p][d][v]['ES']))
+                spcerr.extend(np.array(spc['data'][p][d][v]['ESerr']))
+                wavmcr.extend(np.array(spc['data'][p][d][v]['WB']))
+                cleanup.extend(
+                    res < (np.percentile(res, 50) +
+                           3.0*np.std(res[res < np.percentile(res, 50 + 68 / 2)])
+                           )
+                )
+                if '1' in d:
+                    if wthr is None:
+                        wthr = np.nanmax(spc['data'][p][d][v]['WB'])
+                        pass
+                    else: wthr += np.nanmax(spc['data'][p][d][v]['WB'])
+                    pass
+                if '2' in d:
+                    if wthr is None:
+                        wthr = np.nanmin(spc['data'][p][d][v]['WB'])
+                        pass
+                    else: wthr += np.nanmin(spc['data'][p][d][v]['WB'])
+                    pass
+                pass
+            wthr /= 2.
+            if verbose:
+                fig = plt.figure(figsize=(12, 9))
+                plt.errorbar(np.array(wavmcr)[np.array(cleanup)],
+                             (np.array(spctrm)[np.array(cleanup)])**2, 
+                             yerr = ((np.array(spcerr)[np.array(cleanup)])**2 +
+                                     2.*np.array(spcerr)[np.array(cleanup)]*
+                                     np.array(spctrm)[np.array(cleanup)]), 
+                             marker='o',
+                             linestyle='None',
+                             alpha=0.5)
+                plt.axvline(wthr, ls='-.')
+                plt.ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
+                plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                plt.tick_params(axis='both', labelsize=18)
+                plt.show()
+                pass
+            out['data'][p][v] = {}
+            out['data'][p][v]['SP'] = np.array(spctrm)**2
+            out['data'][p][v]['SPerr'] = (
+                np.array(spcerr)**2 + 2.*np.array(spcerr)*np.array(spctrm)
+            )
+            out['data'][p][v]['WB'] = np.array(wavmcr)
+            out['data'][p][v]['VALID'] = np.array(cleanup)
+            rp0 = fin['priors'][p]['rp'] * ssc['Rjup']  # mk
+            fixed = {'CTP':3.,
+                     'HScale':-10., 'HLoc':3., 'HThick':0.,
+                     'T':float(fin['priors'][p]['teq'])
+                     }
+            nodes = []
+            priors = {}
+            # CTP
+            # TB UPDATED: FREE
+            priors['CTP'] = (
+                rtp['cerberus_atmos_bounds_CTP'].lo,
+                rtp['cerberus_atmos_bounds_CTP'].hi,
+            )
+            fixed.pop('CTP')
+            # HAZES
+            # TB UPDATED: FIXED
+            # T
+            if rtp['cerberus_atmos_fitT']:
+                priors['T'] = (
+                    rtp['cerberus_atmos_bounds_Teq'].lo * fixed['T'],
+                    rtp['cerberus_atmos_bounds_Teq'].hi * fixed['T'],
+                )
+                fixed.pop('T')
+                pass
+            for m in modparlbl:
+                # GMR: We want control on when we init/update this thing
+                with pymc.Model():
+                    dctx = dctxupdt()
+                    out['data'][p][m] = {}
+                    klist = [k for k in modparlbl[m] if k not in ['XtoH']]
+                    if m in ['TEA', 'TEC']:
+                        priors['XtoH'] = (
+                            rtp['cerberus_atmos_bounds_metallicity'].lo,
+                            rtp['cerberus_atmos_bounds_metallicity'].hi,
+                        )
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_' + k].lo,
+                                rtp['cerberus_atmos_bounds_' + k].hi,
+                            )
+                            pass
+                        pass
+                    if m in ['FREE']:
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_abundances'].lo,
+                                rtp['cerberus_atmos_bounds_abundances'].hi,
+                            )
+                            pass
+                        pass
+                    fwdmdl = None
+                    if 'NRS' in detlist[0]:
+                        priors['NRS2-NRS1'] = (-100, 100)  # ppm to be added in runtime
+                        fwdmdl = crbnrs
+                        pass
+                    out['data'][p][m]['priors'] = priors
+                    # NODES FROM PRIORS
+                    nodes = []
+                    for n in priors:
+                        nodes.append(pymc.Uniform(n, priors[n][0], priors[n][1]))
+                        pass
+                    # UPDATE DICTIONNARY CONTEXT
+                    dctx = dctxupdt(
+                        {
+                            'runtime':rtp,
+                            'cleanup':out['data'][p][v]['VALID'],
+                            'model':m,
+                            'planet':p,
+                            'rp0':rp0,
+                            'orbp':fin['priors'],
+                            'xsl':xsl['data'][p][v],
+                            'modparlbl':modparlbl,
+                            'hzlib':crbhzlib,
+                            'mcmcdat':out['data'][p][v]['SP'],
+                            'mcmcsig':out['data'][p][v]['SPerr'],
+                            'mcmcwav':out['data'][p][v]['WB'],
+                            'offsetthr':wthr,
+                            'forwardmodel':fwdmdl,
+                            'interp_tea':interp_tea,
+                            'fixedParams':fixed,
+                            'priors':priors,
+                        },
+                        freeze=True,
+                    )
+                    TensorModel = TensorShell()
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
+
+                    _ = pymc.CustomDist(
+                        "Likelihood",
+                        nodes,
+                        observed=dctx['mcmcdat'][dctx['cleanup']],
+                        logp=LogLH,
+                    )
+
+                    _ = pymc.Deterministic(
+                        "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
+                    )
+                    log.info('>-- MCMC nodes: %s', str(priors.keys()))
+                    trace = pymc.sample(
+                        rtp['cerberus_steps'].value(),
+                        cores=rtp['cerberus_chains'].value(),
+                        tune=int(int(rtp['cerberus_steps'].value()) / 2),
+                        step=pymc.Metropolis(),
+                        compute_convergence_checks=False,
+                        progressbar=verbose,
+                    )
+                    pass
+                pass
+            pass
+        pass
+    # CHANGE atm
+    import pdb; pdb.set_trace()
+    return atm
+
 
 def atmos(
     fin,
     xsl,
     spc,
-    runtime_params,
+    rtp,
     out,
     ext,
     only_these_planets=None,
@@ -718,15 +1004,15 @@ def atmos(
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if runtime_params.fitCtoO:
+        if rtp.fitCtoO:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if runtime_params.fitNtoO:
+        if rtp.fitNtoO:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if runtime_params.fitStoO:
+        if rtp.fitStoO:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
@@ -737,14 +1023,14 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if runtime_params.fitCloudParameters:
+        if rtp.fitCloudParameters:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel += 'Noclouds'
 
-        if not runtime_params.isothermal:
+        if not rtp.isothermal:
             if 'cerberusNonisothermal' in spc['data']['models']:
                 # arielmodel = 'cerberusNonisothermal'
                 # arielmodel = 'cerberusTEANonisothermal'
@@ -773,15 +1059,15 @@ def atmos(
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
-            'PHOTOCHEM': runtime_params.fitmolecules,
+            'PHOTOCHEM': rtp.fitmolecules,
         }
-        if not runtime_params.fitNtoO:
+        if not rtp.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
             # modparlbl['TEA'].remove('NtoO')
-        if not runtime_params.fitCtoO:
+        if not rtp.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
             # modparlbl['TEA'].remove('CtoO')
-        if not runtime_params.fitStoO:
+        if not rtp.fitStoO:
             modparlbl['TEC'].remove('StoO')
             # modparlbl['TEA'].remove('StoO')
 
@@ -927,7 +1213,7 @@ def atmos(
                 # print('model, chemistry', model, chemistry)
 
                 # new method for setting priors (no change, but easier to view in bounds.py)
-                prior_range_table = set_prior_bound(eqtemp, runtime_params)
+                prior_range_table = set_prior_bound(eqtemp, rtp)
 
                 out['data'][p][model]['prior_ranges'] = {}
                 # keep track of the bounds put on each parameter
@@ -939,7 +1225,7 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                    if not rtp.fitCloudParameters and 'sim' in ext:
                         # only consider cloud-free case for simulated data
                         #  for Ariel, cloud params are fixed to model_params values
                         #  if blank, set parameters to a cloud/haze-free case
@@ -972,9 +1258,9 @@ def atmos(
 
                     # print('model params',input_data['model_params'])
 
-                    if not runtime_params.fitT:
+                    if not rtp.fitT:
                         fixed_params['T'] = eqtemp
-                    if not runtime_params.fitCtoO:
+                    if not rtp.fitCtoO:
                         # print('input_data keys', input_data.keys())
                         # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
@@ -1229,13 +1515,13 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                    if not rtp.fitCloudParameters and 'sim' in ext:
                         # print('TURNING OFF CLOUDS!')
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
-                            runtime=runtime_params,
+                            runtime=rtp,
                             cleanup=cleanup,
                             model=model,
                             planet=p,
@@ -1257,9 +1543,6 @@ def atmos(
                         )
 
                         # --< MODEL >--
-                        # print('nodes going into the tensor model', nodes)
-                        # print('nodes going into the tensor model', len(nodes))
-
                         TensorModel = TensorShell()
 
                         # GMR: CustomDist needs a list that has consistent dims,
@@ -1379,10 +1662,10 @@ def atmos(
                                 pass
                         if 'STIS-WFC3' not in ext:
                             log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
-
-                            # before calling MCMC, save the fixed-parameter info in the context
+                            # before calling MCMC
+                            # save the fixed-parameter info in the context
                             ctxtupdt(
-                                runtime=runtime_params,
+                                runtime=rtp,
                                 cleanup=cleanup,
                                 model=model,
                                 planet=p,
@@ -1404,9 +1687,6 @@ def atmos(
                             )
 
                             # --< MODEL >--
-                            # print('nodes going into the tensor model', nodes)
-                            # print('nodes going into the tensor model', len(nodes))
-
                             TensorModel = TensorShell()
 
                             pymc.CustomDist(
@@ -1431,14 +1711,13 @@ def atmos(
                             # --------------
                         pass
 
-                    if runtime_params.MCMC_sliceSampler:
+                    if rtp.MCMC_sliceSampler:
                         log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
                         log.info('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # asdf: careful here. #-chains and #-cores are same thing?
@@ -1455,40 +1734,26 @@ def atmos(
                     )
                     # ----------------
                     stats_summary = pymc.stats.summary(trace)
-                    # print('stats summary',stats_summary)
-                    # print('stats summary',stats_summary.keys())
-                    #  ['mean', 'sd', 'hdi_3%', 'hdi_97%', 'mcse_mean', 'mcse_sd',
-                    #   'ess_bulk', 'ess_tail', 'r_hat']
-
-                # N_TEC = len(trace.posterior.TEC_dim_0)
-                # print('# of TEC parameters',N_TEC)
-
+                    pass
                 saved_chi2s = trace.posterior['saved chi2'].values
-                # print('shape of loglikelihoods', saved_chi2s.shape)
                 # have to unravel these, to match the unraveled pymc traces
                 out['data'][p][model]['chi2'] = np.ravel(saved_chi2s, order='F')
                 degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
-                # print('DOF', degrees_of_freedom,
-                #      len(tspectrum[cleanup]), len(nodes))
                 out['data'][p][model]['chi2reduced'] = np.ravel(
                     saved_chi2s / degrees_of_freedom, order='F'
                 )
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
-                    # print('key', key)
                     tracekeys = key.split('[')
                     keyname = tracekeys[0]
-                    # print('tracekeys,keyname', tracekeys, keyname)
                     if len(tracekeys) > 1:
-                        # print('tracekeys', tracekeys)
                         param_index = int(tracekeys[1][:-1])
                         mctrace[key] = trace.posterior[keyname][
                             :, :, param_index
                         ]
                     else:
                         mctrace[key] = trace.posterior[key]
-                    # print('mctrace shape', key, mctrace[key].shape)
 
                     # convert Nchain x Nstep 2-D posteriors to a single chain
                     # mctrace[key] = np.ravel(mctrace[key])
@@ -1509,22 +1774,20 @@ def atmos(
                     out['data'][p]['TRUTH_SPECTRUM'] = np.array(
                         input_data['true_spectrum']['fluxDepth']
                     )
-                    # wavelength should be the same as just above, but just in case load it here too
+                    # wavelength should be the same as just above
+                    # but just in case load it here too
                     out['data'][p]['TRUTH_WAVELENGTH'] = np.array(
                         input_data['true_spectrum']['wavelength_um']
                     )
                     out['data'][p]['TRUTH_MODELPARAMS'] = input_data[
                         'model_params'
                     ]
-                    # print('true modelparams in atmos:',input_data['model_params'])
 
             # during debugging (script run) show the results as a corner plot
             if verbose:
-                # print('tracekeys', tracekeys)
                 all_traces = []
                 all_keys = []
                 for key, thistrace in mctrace.items():
-                    # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if key == 'saved chi2':
                         all_keys.append('$\\chi^2$')
@@ -1558,11 +1821,6 @@ def atmos(
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
-                        # print(
-                        #    'UPDATE THIS to use runtime params!!!',
-                        #    runtime_params.fitmolecules,
-                        # )
-                        # print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
@@ -1577,7 +1835,6 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                # print('allKeys', all_keys)
 
                 param_values_median = None
                 plot_corner(
@@ -1591,7 +1848,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=rtp.cornerBins,
                     verbose=verbose,
                 )
                 plot_walker_evolution(
