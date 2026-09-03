@@ -733,12 +733,19 @@ def jwstatmos(
         rtp['cerberus_atmos_bounds_metallicity']:[HiLoValue]: [X/H] bounds
         rtp['cerberus_atmos_bounds_*toO']:[HiLoValue]: [*/O] bounds
         rtp['cerberus_atmos_bounds_abundances']:[HiLoValue]: gas bounds
+        rtp['cerberus_crbmodel_HITEMPmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_HITRANmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_EXOMOLmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_nlevels']:[INT]: number of atm layers
+        rtp['cerberus_crbmodel_Hsmax']:[INT]: number of scale heights above solid radius
+        rtp['cerberus_crbmodel_solrad']:[FLOAT]: solid radius pressure level [log10(bar)]
+        rtp['cerberus_steps']:[INT]: PYMC chain length per core
+        rtp['cerberus_chains']:[INT]: PYMC number of cores
     [I/O]:out:[SV]:AtmosSv() see states.py
           out['STATUS']:[LIST]:appending True for each planet/instrument added
           out['data']['SYSPAR']:[DICT]:copy of system parameters used (fin)
           out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
-          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment
-          
+          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment          
     [OPT]:hazedir:[STR]:path to Jupiter hazes density profiles
     [OPT]:verbose:[BOOL]:messages and plots
     '''
@@ -912,10 +919,7 @@ def jwstatmos(
                             'forwardmodel':fwdmdl,
                             'interp_tea':interp_tea,
                             'fixedParams':fixed,
-                            rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
-                            'cialist':rtp['cerberus_crbmodel_HITRANmolecules'].molecules,
-                            'xmollist':rtp['cerberus_crbmodel_EXOMOLmolecules
-                            '].molecules,
+                            'priors':priors,
                         },
                         freeze=True,
                     )
@@ -937,7 +941,6 @@ def jwstatmos(
                         "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
                     log.info('>-- MCMC nodes: %s', str(priors.keys()))
-                    import pdb; pdb.set_trace()
                     trace = pymc.sample(
                         rtp['cerberus_steps'].value(),
                         cores=rtp['cerberus_chains'].value(),

@@ -1656,7 +1656,7 @@ def crbnrs(*nodes):
     '''
     GMR: JWST NRS FORWARD MODEL
     '''
-    nms = [n.name for n in nodes]
+    nms = [n for n in ctxt.priors]
     temperature = nodes[nms.index('T')]
     cloudtop = nodes[nms.index('CTP')]
     offset = nodes[nms.index('NRS2-NRS1')]
@@ -1668,6 +1668,10 @@ def crbnrs(*nodes):
         pass
     if ctxt.model in ['TEA', 'CEA']:
         cheq = dctprm
+        fk = [k for k in ['XtoH', 'CtoO', 'NtoO', 'StoO'] if k not in cheq]
+        for k in fk:
+            cheq[k] = 0.
+            pass
         pass
     if ctxt.model in ['FREE']:
         mixratio = dctprm
