@@ -84,7 +84,8 @@ CerbAtmosParams = namedtuple(
         'MCMC_chain_length',
         'MCMC_sliceSampler',
         'cornerBins',
-        'fitCloudParameters',
+        'fitCTP',
+        'fitHaze',
         'fitT',
         'fitCtoO',
         'fitNtoO',
@@ -744,7 +745,7 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if runtime_params.fitCloudParameters:
+        if runtime_params.fitCTP or runtime_params.fitHaze:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
@@ -946,7 +947,7 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                    if not runtime_params.fitCloudParameters:
                         # only consider cloud-free case for simulated data
                         #  for Ariel, cloud params are fixed to model_params values
                         #  if blank, set parameters to a cloud/haze-free case
@@ -1236,7 +1237,7 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
+                    if not runtime_params.fitCloudParameters:
                         # print('TURNING OFF CLOUDS!')
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 

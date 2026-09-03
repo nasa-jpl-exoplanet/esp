@@ -9,6 +9,9 @@ import os
 
 import excalibur
 
+# import excalibur.target.algorithms as targalg
+# from excalibur.util.checksv import checksv
+
 from . import core
 from . import states
 from importlib import import_module as fetch  # avoid cyclic-import
@@ -123,6 +126,7 @@ class Create(dawgie.Analyzer):
     def __init__(self):
         '''init the create process'''
         self._version_ = dawgie.VERSION(1, 0, 1)
+        # self.__targetcreate = targalg.Create()
         self.__table = [
             states.FilterSV(),
             states.PymcSV('cerberuschains'),
@@ -139,13 +143,29 @@ class Create(dawgie.Analyzer):
         '''database name'''
         return 'create'
 
+    # def previous(self):
+    #    '''Input State Vectors: target.create'''
+    #    return [
+    #        dawgie.ALG_REF(fetch('excalibur.target').analysis, self.__targetcreate),
+    # ]
+
     def run(self, aspects: dawgie.Aspect) -> None:
         '''load the configuration file then process it'''
 
+        # targetcrt results are actually used here
+        # this is just a confirmation that the SV exists
+        # and it puts runtime.create downstream of target.create
+        # so it might help with triggering runtime after new targets added
+        # targetcrt = self.__targetcreate.sv_as_dict()
+        # valid, errstring = checksv(targetcrt['starIDs'])
+        # if not valid:
+        #    self._failure(errstring)
+        # else:
+        log.info('--< RUNTIME CREATE >--')
         try:
-            # log.info('starting load of config')
+            log.info('starting load of config')
             core.load(self.sv_as_dict(), dawgie.db.targets())
-            # log.info('updating state vector')
+            log.info('updating state vector')
             aspects.ds().update()
         except FileNotFoundError as e:
             log.exception(e)

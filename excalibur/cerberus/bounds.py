@@ -244,7 +244,7 @@ def add_priors(
 
     prior_ranges = {}
 
-    if runtime_params.fitCloudParameters or 'sim' not in ext:
+    if runtime_params.fitCloudParameters:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
