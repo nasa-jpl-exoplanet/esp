@@ -627,6 +627,7 @@ def gettau(
 
     # GAS ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
     for elem in mixratio:
+        sigma = None
         mlp = np.array(mixratio[elem])
         if not mlp.ndim:
             mlp = np.array([float(mlp)] * len(pressure))
@@ -666,49 +667,54 @@ def gettau(
                         elem,
                     )
         else:
-            # note that HITRAN version is not used here anymore; just EXOMOL
-            # getxmolxs() is for EXOMOL format
-            # absorb() is for HITRAN format (moved inside core/myxsecs)
+            if elem in hitranlist or elem in xmollist:
+                # getxmolxs() is for EXOMOL format
+                # absorb() is for HITRAN format (moved inside core/myxsecs)
+                # note that HITRAN version is not used here anymore
 
-            # EXOMOL HILL ET AL. 2013 ----------------------------------------
-            sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+                # EXOMOL HILL ET AL. 2013 ----------------------------------
+                sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+            else:
+                log.warning('UNUSUAL: molecule %s has cross-sections, but it is not included in the spectrum', elem)
 
-        if True in (sigma < 0):
-            sigma[sigma < 0] = 0e0
+        if sigma:
+            if True in (sigma < 0):
+                sigma[sigma < 0] = 0e0
+                pass
+            if True in ~np.isfinite(sigma):
+                sigma[~np.isfinite(sigma)] = 0e0
+                pass
+            sigma = sigma * 1e-4  # m^2/mol
+
+            tau_by_molecule[elem] = (rho * mmr * sigma).T
+            tau = tau + tau_by_molecule[elem]
+
+            top_sigma = sigma[:, -1]
+            # this is a 1-D array, not 3-D.  just a function of wavelength
+            toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
+            # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
+            # print('toptau shape', toptau_by_molecule[elem].shape) #103
+
+            if extendedBoundaryCondition:
+                # analytictau = analyticIntegral * rho * top_mmr * top_sigma
+                # print(analyticIntegral.shape,
+                #      rho.shape,
+                #      mmr.shape,
+                #      sigma.shape)
+
+                # two options: use the full range of sigma
+                #  or, to be fair, just use the 50th element to match below
+                # ok also mmr should just take the top value, if it's true B.C.
+                analytictau_by_molecule[elem] = (
+                    analyticIntegral[:, np.newaxis]
+                    * rho[:, np.newaxis]
+                    * mmr[:, np.newaxis][49, :][np.newaxis, :]
+                    * sigma.T[49, :][np.newaxis, :]
+                )
+                # print('anal shape', analytictau_by_molecule[elem].shape)
             pass
-        if True in ~np.isfinite(sigma):
-            sigma[~np.isfinite(sigma)] = 0e0
-            pass
-        sigma = sigma * 1e-4  # m^2/mol
-
-        top_sigma = sigma[:, -1]
-        # this is a 1-D array, not 3-D.  just a function of wavelength
-        toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
-        # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
-        # print('toptau shape', toptau_by_molecule[elem].shape) #103
-
-        if extendedBoundaryCondition:
-            # analytictau = analyticIntegral * rho * top_mmr * top_sigma
-            # print(analyticIntegral.shape,
-            #      rho.shape,
-            #      mmr.shape,
-            #      sigma.shape)
-
-            # two options: use the full range of sigma
-            #  or, to be fair, just use the 50th element to match below
-            # ok also mmr should just take the top value, if it's true B.C.
-            analytictau_by_molecule[elem] = (
-                analyticIntegral[:, np.newaxis]
-                * rho[:, np.newaxis]
-                * mmr[:, np.newaxis][49, :][np.newaxis, :]
-                * sigma.T[49, :][np.newaxis, :]
-            )
-            # print('anal shape', analytictau_by_molecule[elem].shape)
-
-        tau_by_molecule[elem] = (rho * mmr * sigma).T
-        tau = tau + tau_by_molecule[elem]
-
         pass
+
     # CIA ARRAY, ZPRIME VERSUS WAVELENGTH  ---------------------------------------
     for cia in cialist:
         if cia == 'H2-H2':
