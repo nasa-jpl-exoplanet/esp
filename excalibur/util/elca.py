@@ -17,7 +17,7 @@ from scipy.optimize import least_squares, curve_fit, brentq
 from scipy.signal import savgol_filter
 from scipy.interpolate import griddata
 from scipy import spatial
-from ultranest import ReactiveNestedSampler
+#from ultranest import ReactiveNestedSampler
 
 # from astropy import units  # CI problem.  strange
 import astropy.units

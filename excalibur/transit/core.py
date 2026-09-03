@@ -17,7 +17,7 @@ import excalibur
 import excalibur.data.core as datcore
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
-import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
+#import excalibur.util.monkey_patch  # side effects # noqa: F401 # pylint: disable=unused-import
 from excalibur.util import elca, nerdclub
 from excalibur.util import time as tm
 from excalibur.util.plotters import (
@@ -38,7 +38,7 @@ import lmfit as lm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
-from ultranest import ReactiveNestedSampler  # GMR:? SPITZER?
+#from ultranest import ReactiveNestedSampler  # GMR:? SPITZER?
 
 import pymc
 import pytensor.graph as tnsrgraph
@@ -67,8 +67,8 @@ from collections import namedtuple
 
 # LDTK
 # We should get rid of the imports + the parts of the code that are still calling this
-from ldtk import LDPSetCreator, BoxcarFilter
-from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
+#from ldtk import LDPSetCreator, BoxcarFilter
+#from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
 
 # LADY OF THE LAKE
 import os

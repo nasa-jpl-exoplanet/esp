@@ -4,7 +4,7 @@ astroquery
 dawgie>2.1.1
 deprecated
 h5py
-joblibpip
+joblib
 ldtk
 lmfit
 matplotlib<3.9   # needs fixed - see #317
