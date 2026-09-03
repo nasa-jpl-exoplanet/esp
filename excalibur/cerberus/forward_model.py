@@ -675,7 +675,10 @@ def gettau(
                 # EXOMOL HILL ET AL. 2013 ----------------------------------
                 sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
             else:
-                log.warning('UNUSUAL: molecule %s has cross-sections, but it is not included in the spectrum', elem)
+                log.warning(
+                    'UNUSUAL: molecule %s has cross-sections, but it is not included in the spectrum',
+                    elem,
+                )
 
         if sigma:
             if True in (sigma < 0):
