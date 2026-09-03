@@ -8,40 +8,43 @@ import excalibur
 
 from collections import namedtuple
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS --
+# GLOBAL CONTEXT FOR PYMC DETERMINISTICS
+# GMR: Labels are defined here and nowhere else
 ndctx = {
-    'atom_xsec'=None,
-    'atomlist'=None,
-    'chemistry'=None,
-    'cialist'=None,
-    'cleanup'=None,
-    'fixedParams'=None,
-    'forwardmodel'=None,
-    'hitemplist'=None,
-    'Hsmax'=None,
-    'hzlib'=None,
-    'interp_tea'=None,
-    'isothermal'=None,
-    'mcmcdat'=None,
-    'mcmcsig'=None,
-    'mcmcwav'=None,
-    'model'=None,
-    'modparlbl'=None,
-    'nlevels'=None,
-    'nodeshape'=None,
-    'offsetthr'=None,
-    'orbp'=None,
-    'planet'=None,
-    'rp0'=None,
-    'runtime'=None,
-    'solrad'=None,
-    'spc'=None,
-    'tspectrum'=None,
-    'xmollist'=None,
-    'xsl'=None,
+    'atom_xsec':None,
+    'atomlist':None,
+    'chemistry':None,
+    'cialist':None,
+    'cleanup':None,
+    'fixedParams':None,
+    'forwardmodel':None,
+    'hitemplist':None,
+    'Hsmax':None,
+    'hzlib':None,
+    'interp_tea':None,
+    'isothermal':None,
+    'mcmcdat':None,
+    'mcmcsig':None,
+    'mcmcwav':None,
+    'model':None,
+    'modparlbl':None,
+    'nlevels':None,
+    'nodeshape':None,
+    'offsetthr':None,
+    'orbp':None,
+    'planet':None,
+    'rp0':None,
+    'runtime':None,
+    'solrad':None,
+    'spc':None,
+    'tspectrum':None,
+    'xmollist':None,
+    'xsl':None,
 }
 
-def dctxupdt(dct={}):
+CONTEXT = namedtuple('CONTEXT', ndctx.keys())
+
+def dctxupdt(dct={}, freeze=False):
     '''
     GMR: Rewriting this as it was intended to start with
     '''
@@ -56,83 +59,24 @@ def dctxupdt(dct={}):
         pass
     excalibur.cerberus.forward_model.dctx = dctx
     excalibur.util.tensor.dctx = dctx
-    return
+    # GMR: Immutables are no good at creation for us, use dicts.
+    # Should freeze context before sampling and use namedtuples in forward model.
+    if freeze:
+        ctxt = CONTEXT(**dctx)
+        excalibur.cerberus.forward_model.ctxt = ctxt
+        excalibur.util.tensor.ctxt = ctxt
+        pass
+    return dctx
 
-# -- -------------------------------------- --
-
-CONTEXT = namedtuple(
-    'CONTEXT',
-    [
-        'atom_xsec',
-        'atomlist',
-        'chemistry',
-        'cialist',
-        'cleanup',
-        'fixedParams',
-        'forwardmodel',
-        'hitemplist',
-        'Hsmax',
-        'hzlib',
-        'interp_tea',
-        'isothermal',
-        'mcmcdat',
-        'mcmcsig',
-        'mcmcwav',
-        'model',
-        'modparlbl',
-        'nlevels',
-        'nodeshape',
-        'offsetthr',
-        'orbp',
-        'planet',
-        'rp0',
-        'runtime',
-        'solrad',
-        'spc',
-        'tspectrum',
-        'xmollist',
-        'xsl',
-    ],
-)
+# --------------------------------
+# -- DITCH WHAT S BELOW SOMEDAY --
 
 def ctxtinit():
     '''
     GMR: Init context variables
-    Old method ditch that someday
     '''
-    ctxt = CONTEXT(
-        atom_xsec=None,
-        atomlist=None,
-        chemistry=None,
-        cialist=None,
-        cleanup=None,
-        fixedParams=None,
-        forwardmodel=None,
-        hitemplist=None,
-        Hsmax=None,
-        hzlib=None,
-        interp_tea=None,
-        isothermal=None,
-        mcmcdat=None,
-        mcmcsig=None,
-        mcmcwav=None,
-        model=None,
-        modparlbl=None,
-        nlevels=None,
-        nodeshape=None,
-        offsetthr=None,
-        orbp=None,
-        planet=None,
-        rp0=None,
-        runtime=None,
-        solrad=None,
-        spc=None,
-        tspectrum=None,
-        xmollist=None,
-        xsl=None,
-    )
+    ctxt = CONTEXT(**ndctx)
     return ctxt
-
 
 def ctxtupdt(
     runtime=None,
@@ -157,6 +101,7 @@ def ctxtupdt(
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
+    GMR: Actual version is not what was intended. See dctxupdt docstring.
     '''
     excalibur.cerberus.forward_model.ctxt = CONTEXT(
         cleanup=cleanup,

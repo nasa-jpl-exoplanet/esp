@@ -51,10 +51,12 @@ def LogLikelihood(inputs):
     '''
     if dctx:
         cln = dctx['cleanup']
-        fmd = dctx['forwardmodel'](*inputs)
-        dat = dctx['mcmcdat']
-        sgm = dctx['mcmcsig']
-        return -(((dat[cln] - fmd[cln]) / sgm[cln]) ** 2) / 2e0
+        fmd = dctx['forwardmodel'](*inputs)[cln]
+        fmd = fmd - np.nanmean(fmd)
+        dat = dctx['mcmcdat'][cln]
+        dat = dat - np.nanmean(dat)
+        sgm = dctx['mcmcsig'][cln]
+        return -(((dat - fmd) / sgm) ** 2) / 2e0
     else:
         newnodes = []
         newindex = 0

@@ -28,6 +28,7 @@ from excalibur.cerberus.forward_model import (
     offcerberus6,
     offcerberus7,
     offcerberus8,
+    crbnrs,
 )
 from excalibur.cerberus.plotters import (
     rebin_data,
@@ -825,8 +826,10 @@ def jwstatmos(
                 plt.show()
                 pass
             out['data'][p][v] = {}
-            out['data'][p][v]['ES'] = np.array(spctrm)
-            out['data'][p][v]['ESerr'] = np.array(spcerr)
+            out['data'][p][v]['SP'] = np.array(spctrm)**2
+            out['data'][p][v]['SPerr'] = (
+                np.array(spcerr)**2 + 2.*np.array(spcerr)*np.array(spctrm)
+            )
             out['data'][p][v]['WB'] = np.array(wavmcr)
             out['data'][p][v]['VALID'] = np.array(cleanup)
             rp0 = fin['priors'][p]['rp'] * ssc['Rjup']  # mk
@@ -855,8 +858,8 @@ def jwstatmos(
                 pass
             for m in modparlbl:
                 # GMR: We want control on when we init/update this thing
-                dctx = dctxupdt()
                 with pymc.Model():
+                    dctx = dctxupdt()
                     out['data'][p][m] = {}
                     klist = [k for k in modparlbl[m] if k not in ['XtoH']]
                     if m in ['TEA', 'TEC']:
@@ -882,51 +885,59 @@ def jwstatmos(
                     fwdmdl = None
                     if 'NRS' in detlist[0]:
                         priors['NRS2-NRS1'] = (-100, 100)  # ppm to be added in runtime
-                        fwdmdl = 'NRS'
+                        fwdmdl = crbnrs
                         pass
-                    TensorModel = None
+                    out['data'][p][m]['priors'] = priors
+                    # NODES FROM PRIORS
+                    nodes = []
+                    for n in priors:
+                        nodes.append(pymc.Uniform(n, priors[n][0], priors[n][1]))
+                        pass
+                    # UPDATE DICTIONNARY CONTEXT
+                    dctx = dctxupdt(
+                        {
+                            'runtime':rtp,
+                            'cleanup':out['data'][p][v]['VALID'],
+                            'model':m,
+                            'planet':p,
+                            'rp0':rp0,
+                            'orbp':fin['priors'],
+                            'xsl':xsl['data'][p][v],
+                            'modparlbl':modparlbl,
+                            'hzlib':crbhzlib,
+                            'mcmcdat':out['data'][p][v]['SP'],
+                            'mcmcsig':out['data'][p][v]['SPerr'],
+                            'mcmcwav':out['data'][p][v]['WB'],
+                            'offsetthr':wthr,
+                            'forwardmodel':fwdmdl,
+                            'interp_tea':interp_tea,
+                            'fixedParams':fixed,
+                            rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                            'cialist':rtp['cerberus_crbmodel_HITRANmolecules'].molecules,
+                            'xmollist':rtp['cerberus_crbmodel_EXOMOLmolecules
+                            '].molecules,
+                        },
+                        freeze=True,
+                    )
+                    TensorModel = TensorShell()
                     def LogLH(_, nodes):
                         '''
                         GMR: Fill in model tensor shell
                         '''
                         return TensorModel(nodes)
-                    for n in priors:
-                        nodes.append(pymc.Uniform(n, priors[n][0], priors[n][1]))
-                        pass
-                    # UPDATE DICTIONNARY CONTEXT
-                    dctxupdt(
-                        {
-                            'runtime'=rtp,
-                            'cleanup'=np.array(cleanup),
-                            'model'=m,
-                            'planet'=p,
-                            'rp0'=rp0,
-                            'orbp'=fin['priors'],
-                            'xsl'=xsl,
-                            'modparlbl'=modparlbl,
-                            'hzlib'=crbhzlib,
-                            'fixed_params'=fixed,
-                            'mcmcdat'=np.array(spctrm),
-                            'mcmcsig'=np.array(spcerr),
-                            'mcmcwav'=np.array(wavmcr),
-                            'offsetthr'=wthr,
-                            'forwardmodel'=fwdmdl,
-                            'interp_tea'=interp_tea,
-                        }
-                    )
-                    TensorModel = TensorShell()
+
                     _ = pymc.CustomDist(
                         "Likelihood",
                         nodes,
-                        observed=np.array(spctrm)[np.array(cleanup)],
+                        observed=dctx['mcmcdat'][dctx['cleanup']],
                         logp=LogLH,
                     )
-                    pymc.Deterministic(
-                        "Chi2",
-                        -2.0 * pytensr.sum(LogLH(np.array(spctrm)[np.array(cleanup)],
-                                                 nodes)),
+
+                    _ = pymc.Deterministic(
+                        "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
                     log.info('>-- MCMC nodes: %s', str(priors.keys()))
+                    import pdb; pdb.set_trace()
                     trace = pymc.sample(
                         rtp['cerberus_steps'].value(),
                         cores=rtp['cerberus_chains'].value(),
