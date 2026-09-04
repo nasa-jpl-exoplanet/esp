@@ -817,7 +817,7 @@ def mlfit(
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
-                    # if runtime_params.fitCloudParameters:
+                    # if runtime_params.fitCTP:
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', hazeloc)

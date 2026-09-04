@@ -1128,9 +1128,19 @@ def cloudyfmcerberus(*crbinputs):
     '''
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
-        ctp, hazescale, hazeloc, hazethick, mdp = crbinputs
+        if 'CTP' in ctxt.fixedParams:
+            hazescale, hazeloc, hazethick, mdp = crbinputs
+        elif 'HScale' in ctxt.fixedParams:
+            ctp, mdp = crbinputs
+        else:
+            ctp, hazescale, hazeloc, hazethick, mdp = crbinputs
     else:
-        ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
+        if 'CTP' in ctxt.fixedParams:
+            hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
+        elif 'HScale' in ctxt.fixedParams:
+            ctp, tpr, mdp = crbinputs
+        else:
+            ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
 
     # this extra list[] is needed for the single param case (only metallicity)
     if not isinstance(mdp, list):

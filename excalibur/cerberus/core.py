@@ -947,11 +947,7 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters:
-                        # only consider cloud-free case for simulated data
-                        #  for Ariel, cloud params are fixed to model_params values
-                        #  if blank, set parameters to a cloud/haze-free case
-
+                    if not runtime_params.fitCTP:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -959,6 +955,8 @@ def atmos(
                         else:
                             # cloud deck is very deep - 1000 bars
                             fixed_params['CTP'] = 3.0
+
+                    if not runtime_params.fitHaze:
                         if 'HScale' in input_data['model_params']:
                             fixed_params['HScale'] = input_data['model_params'][
                                 'HScale'
@@ -1237,7 +1235,8 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters:
+                    if not runtime_params.fitCTP and \
+                       not runtime_params.fitHaze:
                         # print('TURNING OFF CLOUDS!')
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
@@ -2550,7 +2549,7 @@ def results(
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
-                        # if runtime_params.fitCloudParameters:
+                        # if runtime_params.fitCTP:
                         #    print('fit results; CTP:', ctp)
                         #    print('fit results; HScale:', hazescale)
                         #    print('fit results; HLoc:', hazeloc)
