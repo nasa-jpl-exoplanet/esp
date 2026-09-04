@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements,too-many-branches
 
 # -- IMPORTS --------------------------------------------------------
 import numpy as np
@@ -236,7 +236,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
 
 
 def add_priors(
-    nodes, nodeshape, prior_range_table, runtime_params, ext, model, modparlbls
+    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
 ):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
@@ -244,13 +244,14 @@ def add_priors(
 
     prior_ranges = {}
 
-    if runtime_params.fitCloudParameters or 'sim' not in ext:
+    if runtime_params.fitCTP:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
         )
         nodeshape.append(1)
 
+    if runtime_params.fitHaze:
         prior_ranges['HScale'] = prior_range_table['HScale']
         nodes.append(
             pymc.Uniform(

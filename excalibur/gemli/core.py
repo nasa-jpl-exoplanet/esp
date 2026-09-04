@@ -394,7 +394,6 @@ def mlfit(
                 cheq=None,
                 rp0=Rp,
                 xsecs=cerbxsl[p]['XSECS'],
-                qtgrid=cerbxsl[p]['QTGRID'],
                 wgrid=transitdata['wavelength'],
                 orbp=sysfin['priors'],
                 hzlib=crbhzlib,
@@ -760,7 +759,6 @@ def mlfit(
                     cheq=tceqdict,
                     rp0=rp0,
                     xsecs=cerbxsl[p]['XSECS'],
-                    qtgrid=cerbxsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
                     orbp=sysfin['priors'],
                     hzlib=crbhzlib,
@@ -819,7 +817,7 @@ def mlfit(
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
-                    # if runtime_params.fitCloudParameters:
+                    # if runtime_params.fitCTP:
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', hazeloc)
@@ -883,7 +881,6 @@ def mlfit(
                         mixratio=mixratio,
                         rp0=rp0,
                         xsecs=cerbxsl[p]['XSECS'],
-                        qtgrid=cerbxsl[p]['QTGRID'],
                         wgrid=transitdata['wavelength'],
                         orbp=sysfin['priors'],
                         hzlib=crbhzlib,

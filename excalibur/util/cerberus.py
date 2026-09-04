@@ -252,6 +252,7 @@ def calcTEA(
         if sp in df.columns
     }
     mixratio = {sp: vmr_to_logppm(v) for sp, v in mixratio.items()}
+    # print('mixratio H2O',mixratio['H2O'])
     # print('MIXRATIO IN TEA for h2o',np.log10(
     #    np.mean(10.0 ** mixratio['H2O'])))
 
