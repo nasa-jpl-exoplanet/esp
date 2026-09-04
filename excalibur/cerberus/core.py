@@ -889,18 +889,6 @@ def atmos(
 
             tspecerr = abs(tspc**2 - (tspc + terr) ** 2)
             tspectrum = tspc**2
-            if 'STIS-WFC3' in ext:
-                filters = np.array(input_data['Fltrs'])
-                cond_spec_g750 = filters == 'HST-STIS-CCD-G750L-STARE'
-                # MASKING G750 WAV > 0.80
-                twav_g750 = twav[cond_spec_g750]
-                tspec_g750 = tspectrum[cond_spec_g750]
-                tspecerr_g750 = tspecerr[cond_spec_g750]
-                mask = (twav_g750 > 0.80) & (twav_g750 < 0.95)
-                tspec_g750[mask] = np.nan
-                tspecerr_g750[mask] = np.nan
-                tspectrum[cond_spec_g750] = tspec_g750
-                tspecerr[cond_spec_g750] = tspecerr_g750
 
             #  Clean up
             if 'sim' not in ext:
