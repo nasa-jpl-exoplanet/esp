@@ -997,7 +997,9 @@ def atmos(
 
                     # CERBERUS MCMC
                     if 'STIS-WFC3' in ext:
-                        log.warning('--< STIS-WFC offset models removed! (Sept. 2026) >--')
+                        log.warning(
+                            '--< STIS-WFC offset models removed! (Sept. 2026) >--'
+                        )
                     elif (
                         not runtime_params.fitCTP and not runtime_params.fitHaze
                     ):
