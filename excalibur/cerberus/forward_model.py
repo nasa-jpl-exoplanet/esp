@@ -671,7 +671,7 @@ def gettau(
                         elem,
                     )
         else:
-            if elem in hitranlist or elem in xmollist:
+            if elem in hitemplist or elem in xmollist:
                 # getxmolxs() is for EXOMOL format
                 # absorb() is for HITRAN format (moved inside core/myxsecs)
                 # note that HITRAN version is not used here anymore
