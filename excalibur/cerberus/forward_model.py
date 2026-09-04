@@ -684,7 +684,7 @@ def gettau(
                     elem,
                 )
 
-        if sigma:
+        if sigma is not None:
             if True in (sigma < 0):
                 sigma[sigma < 0] = 0e0
                 pass
