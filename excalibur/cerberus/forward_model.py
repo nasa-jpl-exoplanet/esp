@@ -339,7 +339,9 @@ class crbFM:
             rp0,
             pressure,
             wgrid,
+            hitemplist,
             cialist,
+            xmollist,
             atomlist,
             fH2,
             fHe,
@@ -558,7 +560,9 @@ def gettau(
     rp0,
     pressure,
     wgrid,
+    hitemplist,
     cialist,
+    xmollist,
     atomlist,
     fH2,
     fHe,
@@ -1129,15 +1133,23 @@ def cloudyfmcerberus(*crbinputs):
     if 'T' in ctxt.fixedParams:
         tpr = ctxt.fixedParams['T']
         if 'CTP' in ctxt.fixedParams:
+            ctp = ctxt.fixedParams['CTP']
             hazescale, hazeloc, hazethick, mdp = crbinputs
         elif 'HScale' in ctxt.fixedParams:
+            hazescale = ctxt.fixedParams['HScale']
+            hazeloc = ctxt.fixedParams['HLoc']
+            hazethick = ctxt.fixedParams['HThick']
             ctp, mdp = crbinputs
         else:
             ctp, hazescale, hazeloc, hazethick, mdp = crbinputs
     else:
         if 'CTP' in ctxt.fixedParams:
+            ctp = ctxt.fixedParams['CTP']
             hazescale, hazeloc, hazethick, tpr, mdp = crbinputs
         elif 'HScale' in ctxt.fixedParams:
+            hazescale = ctxt.fixedParams['HScale']
+            hazeloc = ctxt.fixedParams['HLoc']
+            hazethick = ctxt.fixedParams['HThick']
             ctp, tpr, mdp = crbinputs
         else:
             ctp, hazescale, hazeloc, hazethick, tpr, mdp = crbinputs

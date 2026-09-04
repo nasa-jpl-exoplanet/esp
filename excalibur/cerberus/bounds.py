@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements,too-many-branches
 
 # -- IMPORTS --------------------------------------------------------
 import numpy as np
@@ -236,7 +236,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
 
 
 def add_priors(
-    nodes, nodeshape, prior_range_table, runtime_params, ext, model, modparlbls
+    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
 ):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus

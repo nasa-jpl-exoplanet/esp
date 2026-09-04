@@ -982,7 +982,6 @@ def atmos(
                         nodeshape,
                         prior_range_table,
                         runtime_params,
-                        ext,
                         model,
                         modparlbl[model],
                     )
