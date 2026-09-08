@@ -210,7 +210,9 @@
       <xs:element name="cerberus.atmos.bounds.HThick"
 		  type="hilo"/>
     </xs:sequence>
-    <xs:attribute name="cerberus.atmos.fitCloudParameters"
+    <xs:attribute name="cerberus.atmos.fitCTP"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="cerberus.atmos.fitHaze"
                   type="xs:boolean" use="required"/>
     <xs:attribute name="cerberus.atmos.fitCtoO"
                   type="xs:boolean" use="required"/>

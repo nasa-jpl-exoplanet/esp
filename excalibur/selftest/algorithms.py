@@ -298,7 +298,13 @@ class Atmos(dawgie.Algorithm):
                 rtime.task,
                 self.__rt,
                 self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCloudParameters',
+                'cerberus_atmos_fitCTP',
+            ),
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'cerberus_atmos_fitHaze',
             ),
             dawgie.V_REF(
                 rtime.task,
@@ -369,9 +375,8 @@ class Atmos(dawgie.Algorithm):
                     # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-                    fitCloudParameters=runtime[
-                        'cerberus_atmos_fitCloudParameters'
-                    ],
+                    fitCTP=runtime['cerberus_atmos_fitCTP'],
+                    fitHaze=runtime['cerberus_atmos_fitHaze'],
                     cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],

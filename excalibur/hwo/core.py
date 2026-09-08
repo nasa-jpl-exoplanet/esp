@@ -375,16 +375,6 @@ def simulate_spectra(
                         if verbose:
                             print('CALCulating cross-sections START')
                         _ = myxsecs(tempspc, runtime_params, xslib)
-                        # import pickle
-                        # if 0:
-                        #    _ = myxsecs(tempspc, runtime_params, xslib)
-                        #    file = open('hwoxslibsave.pkl', 'bw')
-                        #    pickle.dump(xslib, file)
-                        #    file.close()
-                        # else:
-                        #    with open('hwoxslibsave.pkl', 'br') as file:
-                        #        xslib = pickle.load(file)
-
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:

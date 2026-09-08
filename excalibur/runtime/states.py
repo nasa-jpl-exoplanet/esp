@@ -179,7 +179,8 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_arielsample_masslimit'] = excalibur.ValueScalar()
         self['cerberus_arielsample_tessmaglimit'] = excalibur.ValueScalar()
         self['cerberus_atmos_sliceSampler'] = BoolValue()
-        self['cerberus_atmos_fitCloudParameters'] = BoolValue()
+        self['cerberus_atmos_fitCTP'] = BoolValue()
+        self['cerberus_atmos_fitHaze'] = BoolValue()
         self['cerberus_atmos_fitT'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
@@ -378,7 +379,8 @@ class StatusSV(dawgie.StateVector):
         self['cerberus_arielsample_massknown'] = BoolValue()
         self['cerberus_arielsample_masslimit'] = excalibur.ValueScalar()
         self['cerberus_arielsample_tessmaglimit'] = excalibur.ValueScalar()
-        self['cerberus_atmos_fitCloudParameters'] = BoolValue()
+        self['cerberus_atmos_fitCTP'] = BoolValue()
+        self['cerberus_atmos_fitHaze'] = BoolValue()
         self['cerberus_atmos_fitCtoO'] = BoolValue()
         self['cerberus_atmos_fitNtoO'] = BoolValue()
         self['cerberus_atmos_fitStoO'] = BoolValue()
@@ -517,7 +519,8 @@ class StatusSV(dawgie.StateVector):
             'cerberus_atmos_fitCtoO',
             'cerberus_atmos_fitNtoO',
             'cerberus_atmos_fitStoO',
-            'cerberus_atmos_fitCloudParameters',
+            'cerberus_atmos_fitCTP',
+            'cerberus_atmos_fitHaze',
             'cerberus_crbmodel_fitmolecules',
             'cerberus_crbmodel_HITEMPmolecules',
             'cerberus_crbmodel_HITRANmolecules',
