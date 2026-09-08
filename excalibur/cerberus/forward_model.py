@@ -27,12 +27,14 @@ log = logging.getLogger(__name__)
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
 ctxt = ctxtinit()
 
+
 # --------------------------------------------------------------------
 # -- CERBERUS FORWARD MODEL ------------------------------------------
 class crbFM:
     '''
     Joe Docstring
     '''
+
     def __init__(self):
         '''
         Init
@@ -1288,43 +1290,51 @@ def crbnrs(*nodes):
     mixratio = None
     dctprm = {}
     for p in ctxt.modparlbl[ctxt.model]:
-        dctprm[p]=nodes[nms.index(p)]
+        dctprm[p] = nodes[nms.index(p)]
         pass
     if ctxt.model in ['TEA', 'CEA']:
         cheq = dctprm
         fk = [k for k in ['XtoH', 'CtoO', 'NtoO', 'StoO'] if k not in cheq]
         for k in fk:
-            cheq[k] = 0.
+            cheq[k] = 0.0
             pass
         pass
     if ctxt.model in ['FREE']:
         mixratio = dctprm
         pass
-    out = crbFM().crbmodel(
-        temperature,
-        cloudtop,
-        cheq=cheq,
-        mixratio=mixratio,
-        hazescale=ctxt.fixedParams['HScale'],
-        hazethick=ctxt.fixedParams['HThick'],
-        hazeloc=ctxt.fixedParams['HLoc'],
-        chemistry=ctxt.model,
-        planet=ctxt.planet,
-        rp0=ctxt.rp0,
-        orbp=ctxt.orbp,
-        wgrid=ctxt.mcmcwav,
-        xsecs=ctxt.xsl['XSECS'],
-        qtgrid=ctxt.xsl['QTGRID'],
-        hitemplist=ctxt.runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
-        cialist=ctxt.runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-        xmollist=ctxt.runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
-        nlevels=ctxt.runtime['cerberus_crbmodel_nlevels'].value(),
-        Hsmax=ctxt.runtime['cerberus_crbmodel_Hsmax'].value(),
-        solrad=ctxt.runtime['cerberus_crbmodel_solrad'].value(),
-        tea_data=ctxt.interp_tea,
-        improvedBoundaryCondition=True,
-    ).spectrum
+    out = (
+        crbFM()
+        .crbmodel(
+            temperature,
+            cloudtop,
+            cheq=cheq,
+            mixratio=mixratio,
+            hazescale=ctxt.fixedParams['HScale'],
+            hazethick=ctxt.fixedParams['HThick'],
+            hazeloc=ctxt.fixedParams['HLoc'],
+            chemistry=ctxt.model,
+            planet=ctxt.planet,
+            rp0=ctxt.rp0,
+            orbp=ctxt.orbp,
+            wgrid=ctxt.mcmcwav,
+            xsecs=ctxt.xsl['XSECS'],
+            qtgrid=ctxt.xsl['QTGRID'],
+            hitemplist=ctxt.runtime[
+                'cerberus_crbmodel_HITEMPmolecules'
+            ].molecules,
+            cialist=ctxt.runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+            xmollist=ctxt.runtime[
+                'cerberus_crbmodel_EXOMOLmolecules'
+            ].molecules,
+            nlevels=ctxt.runtime['cerberus_crbmodel_nlevels'].value(),
+            Hsmax=ctxt.runtime['cerberus_crbmodel_Hsmax'].value(),
+            solrad=ctxt.runtime['cerberus_crbmodel_solrad'].value(),
+            tea_data=ctxt.interp_tea,
+            improvedBoundaryCondition=True,
+        )
+        .spectrum
+    )
     select = dctx['mcmcwav'] > dctx['offsetthr']
     out[select] = out[select] - offset
-    
+
     return out

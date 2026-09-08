@@ -8,10 +8,11 @@ import numpy as np
 import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
-from excalibur.cerberus.fmcontext import (ctxtinit, dctxupdt)
+from excalibur.cerberus.fmcontext import ctxtinit, dctxupdt
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
 ctxt = ctxtinit()
+
 
 class TensorShell(tnsrgraph.Op):
     '''
@@ -46,7 +47,7 @@ class TensorShell(tnsrgraph.Op):
 def LogLikelihood(inputs):
     '''
     GMR: Gregoire Vassal legacy
-    User defined loglikelihood 
+    User defined loglikelihood
     We stick to the proper definition of it
     '''
     if dctx:

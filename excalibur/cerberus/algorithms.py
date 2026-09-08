@@ -170,7 +170,6 @@ class XSLib(dawgie.Algorithm):
             pass
         return cs
 
-
     @staticmethod
     def _failure(errstr, target):
         '''Failure log'''
@@ -263,7 +262,7 @@ class Atmos(dawgie.Algorithm):
             boundHScale=runtime['cerberus_atmos_bounds_HScale'],
             boundHThick=runtime['cerberus_atmos_bounds_HThick'],
         )
-            
+
         svupdate = []
         # for fltr in ['Ariel-sim']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
@@ -351,9 +350,7 @@ class Atmos(dawgie.Algorithm):
             )
         return
 
-    def _atmos(
-        self, fin, xsl, spc, rtp, only_these_planets, fltr
-    ):
+    def _atmos(self, fin, xsl, spc, rtp, only_these_planets, fltr):
         '''
         Core code call
         '''

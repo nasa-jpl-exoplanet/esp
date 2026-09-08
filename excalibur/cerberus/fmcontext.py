@@ -11,38 +11,39 @@ from collections import namedtuple
 # GLOBAL CONTEXT FOR PYMC DETERMINISTICS
 # GMR: Labels are defined here and nowhere else
 ndctx = {
-    'atom_xsec':None,
-    'atomlist':None,
-    'chemistry':None,
-    'cialist':None,
-    'cleanup':None,
-    'fixedParams':None,
-    'forwardmodel':None,
-    'hitemplist':None,
-    'Hsmax':None,
-    'hzlib':None,
-    'interp_tea':None,
-    'isothermal':None,
-    'mcmcdat':None,
-    'mcmcsig':None,
-    'mcmcwav':None,
-    'model':None,
-    'modparlbl':None,
-    'nlevels':None,
-    'nodeshape':None,
-    'offsetthr':None,
-    'orbp':None,
-    'planet':None,
-    'rp0':None,
-    'runtime':None,
-    'solrad':None,
-    'spc':None,
-    'tspectrum':None,
-    'xmollist':None,
-    'xsl':None,
+    'atom_xsec': None,
+    'atomlist': None,
+    'chemistry': None,
+    'cialist': None,
+    'cleanup': None,
+    'fixedParams': None,
+    'forwardmodel': None,
+    'hitemplist': None,
+    'Hsmax': None,
+    'hzlib': None,
+    'interp_tea': None,
+    'isothermal': None,
+    'mcmcdat': None,
+    'mcmcsig': None,
+    'mcmcwav': None,
+    'model': None,
+    'modparlbl': None,
+    'nlevels': None,
+    'nodeshape': None,
+    'offsetthr': None,
+    'orbp': None,
+    'planet': None,
+    'rp0': None,
+    'runtime': None,
+    'solrad': None,
+    'spc': None,
+    'tspectrum': None,
+    'xmollist': None,
+    'xsl': None,
 }
 
 CONTEXT = namedtuple('CONTEXT', ndctx.keys())
+
 
 def dctxupdt(dct={}, freeze=False):
     '''
@@ -68,8 +69,10 @@ def dctxupdt(dct={}, freeze=False):
         pass
     return dctx
 
+
 # --------------------------------
 # -- DITCH WHAT S BELOW SOMEDAY --
+
 
 def ctxtinit():
     '''
@@ -77,6 +80,7 @@ def ctxtinit():
     '''
     ctxt = CONTEXT(**ndctx)
     return ctxt
+
 
 def ctxtupdt(
     runtime=None,
