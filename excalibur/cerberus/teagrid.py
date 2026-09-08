@@ -82,7 +82,7 @@ def get_TEA_grid(modelName=None, verbose=False):
         'proginprompt': verbose,
     }
     progbar = nerdclub.Progressbar(argsdict, '>-- COCOGRID', species_name)  
-        
+
     # print('T', temperature)
     # print('P', pressure)
     # print('XtoH range', XtoH)
