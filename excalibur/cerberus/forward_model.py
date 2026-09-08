@@ -1280,7 +1280,7 @@ def crbnrs(*nodes):
     '''
     GMR: JWST NRS FORWARD MODEL
     '''
-    nms = [n for n in ctxt.priors]
+    nms = [n.name for n in nodes]
     temperature = nodes[nms.index('T')]
     cloudtop = nodes[nms.index('CTP')]
     offset = nodes[nms.index('NRS2-NRS1')]

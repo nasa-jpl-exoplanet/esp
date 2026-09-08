@@ -911,7 +911,9 @@ def jwstatmos(
                             'forwardmodel':fwdmdl,
                             'interp_tea':interp_tea,
                             'fixedParams':fixed,
-                            'priors':priors,
+                            rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                            'cialist':rtp['cerberus_crbmodel_HITRANmolecules'].molecules,
+                            'xmollist':rtp['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                         },
                         freeze=True,
                     )
@@ -933,6 +935,7 @@ def jwstatmos(
                         "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
                     log.info('>-- MCMC nodes: %s', str(priors.keys()))
+                    import pdb; pdb.set_trace()
                     trace = pymc.sample(
                         rtp['cerberus_steps'].value(),
                         cores=rtp['cerberus_chains'].value(),

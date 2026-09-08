@@ -33,7 +33,6 @@ ndctx = {
     'offsetthr':None,
     'orbp':None,
     'planet':None,
-    'priors':None,
     'rp0':None,
     'runtime':None,
     'solrad':None,
