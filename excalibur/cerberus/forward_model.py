@@ -242,6 +242,7 @@ class crbFM:
                     # print('originalmetals', originalmetals/1.e6)
 
                     # print(' ozone mixratio before', mixratio['O3'])
+                    mixratio['O3'] = mixratio['O3'] * 0 + 2.0
                     # mixratio['O3'] = mixratio['O3'] * 0 + 5.0
                     # mixratio['O3'] = mixratio['O3'] * 0 + 7.0
                     # print(' NEW OZONE mixratio', mixratio['O3'])
