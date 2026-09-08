@@ -911,7 +911,7 @@ def jwstatmos(
                             'forwardmodel':fwdmdl,
                             'interp_tea':interp_tea,
                             'fixedParams':fixed,
-                            rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                            'hitemplist':rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
                             'cialist':rtp['cerberus_crbmodel_HITRANmolecules'].molecules,
                             'xmollist':rtp['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                         },
@@ -935,7 +935,6 @@ def jwstatmos(
                         "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
                     log.info('>-- MCMC nodes: %s', str(priors.keys()))
-                    import pdb; pdb.set_trace()
                     trace = pymc.sample(
                         rtp['cerberus_steps'].value(),
                         cores=rtp['cerberus_chains'].value(),
@@ -944,12 +943,18 @@ def jwstatmos(
                         compute_convergence_checks=False,
                         progressbar=verbose,
                     )
+                    # GMR: nodes were casted into arrays somewhere
+                    # change that someday
+                    # Need to save Chi2
+                    mctrace = {}
+                    for k in priors:
+                        mctrace[k] = np.array(trace['posterior'][k]).flatten()
+                        pass
                     pass
                 pass
+            atm = atm or True
             pass
         pass
-    # CHANGE atm
-    import pdb; pdb.set_trace()
     return atm
 
 
