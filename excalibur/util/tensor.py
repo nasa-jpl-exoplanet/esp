@@ -8,7 +8,7 @@ import numpy as np
 import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
-from excalibur.cerberus.fmcontext import ctxtinit, dctxupdt
+from excalibur.cerberus.fmcontext import ctxtinit
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
 ctxt = ctxtinit()
@@ -33,10 +33,10 @@ class TensorShell(tnsrgraph.Op):
         raise NotImplementedError('not expecting this method to be used')
 
     def perform(
-        self,
-        node: tnsrgraph.Apply,
-        inputs: list[np.ndarray],  # maybe make this floats?
-        output_storage: list[list[None]],
+            self,
+            node: tnsrgraph.Apply,
+            inputs: list[np.ndarray],  # maybe make this floats?
+            output_storage: list[list[None]],
     ) -> None:
         output_storage[0][0] = np.asarray(LogLikelihood(inputs))
         return
@@ -50,15 +50,7 @@ def LogLikelihood(inputs):
     User defined loglikelihood
     We stick to the proper definition of it
     '''
-    if dctx:
-        cln = dctx['cleanup']
-        fmd = dctx['forwardmodel'](*inputs)[cln]
-        fmd = fmd - np.nanmean(fmd)
-        dat = dctx['mcmcdat'][cln]
-        dat = dat - np.nanmean(dat)
-        sgm = dctx['mcmcsig'][cln]
-        return -(((dat - fmd) / sgm) ** 2) / 2e0
-    else:
+    if ctxt.nodeshape is not None:  # Flatten nodes
         newnodes = []
         newindex = 0
         for ns in ctxt.nodeshape:
@@ -70,14 +62,28 @@ def LogLikelihood(inputs):
                 pass
             newindex += ns
             pass
-        ForwardModel = ctxt.forwardmodel(*newnodes)
-        out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
-        # this is a useful check; chi2_red should decrease toward ~1 (for simulated data)
-        # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
-        # normalize the log(Likelihood); as a constant, it shouldn't have any effect
-        # actually let's not normalize it, since it should be no effect anyway
-        # then we just have the output as chi^2, more or less; useful for cornerplot
-        # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
-        # out -= Norm
-        return out
-    pass
+        pass
+    else:
+        newnodes = inputs
+        pass
+    if ctxt.cleanup is not None:
+        cln = ctxt.cleanup
+        pass
+    else:
+        cln = np.array([True]*np.size(ctxt.mcmcdat))
+        pass
+
+    fmd = ctxt.forwardmodel(*newnodes)[cln]
+    fmd = fmd - np.nanmean(fmd)
+    dat = ctxt.mcmcdat[cln]
+    dat = dat - np.nanmean(dat)
+    out = -(((dat - fmd) / ctxt.mcmcsig[cln]) ** 2) / 2e0
+
+    # this is a useful check; chi2_red should decrease toward ~1 (for simulated data)
+    # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
+    # normalize the log(Likelihood); as a constant, it shouldn't have any effect
+    # actually let's not normalize it, since it should be no effect anyway
+    # then we just have the output as chi^2, more or less; useful for cornerplot
+    # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
+    # out -= Norm
+    return out

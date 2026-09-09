@@ -9,7 +9,7 @@ import excalibur
 from collections import namedtuple
 
 # GLOBAL CONTEXT FOR PYMC DETERMINISTICS
-# GMR: Labels are defined here and nowhere else
+# GMR: Labels are defined here and nowhere else, overcomplicated for retrocomp
 ndctx = {
     'atom_xsec': None,
     'atomlist': None,
@@ -33,6 +33,7 @@ ndctx = {
     'offsetthr': None,
     'orbp': None,
     'planet': None,
+    'priors': None,
     'rp0': None,
     'runtime': None,
     'solrad': None,
@@ -45,11 +46,11 @@ ndctx = {
 CONTEXT = namedtuple('CONTEXT', ndctx.keys())
 
 
-def dctxupdt(dct={}, freeze=False):
+def dctxupdt(dct=None, freeze=False):
     '''
     GMR: Rewriting this as it was intended to start with
     '''
-    if not dct:  # INIT
+    if dct is None:  # INIT
         dctx = ndctx
         pass
     else:  # UPDATE
@@ -59,12 +60,13 @@ def dctxupdt(dct={}, freeze=False):
             pass
         pass
     excalibur.cerberus.forward_model.dctx = dctx
-    excalibur.util.tensor.dctx = dctx
     # GMR: Immutables are no good at creation for us, use dicts.
     # Should freeze context before sampling and use namedtuples in forward model.
     if freeze:
         ctxt = CONTEXT(**dctx)
         excalibur.cerberus.forward_model.ctxt = ctxt
+        # GMR: We do not want to duplicate heavy context interpolators
+        # Clean that up someday        
         excalibur.util.tensor.ctxt = ctxt
         pass
     return dctx

@@ -472,7 +472,6 @@ class crbFM:
                 pass
             plt.show()
             pass
-        self.__rprs = np.sqrt(model)
         self.__spectrum = model
         self.__breakdown_by_molecule = models_by_molecule
         self.__pressureGrid = pressure
@@ -1282,9 +1281,19 @@ def crbnrs(*nodes):
     '''
     GMR: JWST NRS FORWARD MODEL
     '''
-    nms = [n.name for n in nodes]
-    temperature = nodes[nms.index('T')]
-    cloudtop = nodes[nms.index('CTP')]
+    nms = list(ctxt.priors)
+    if 'T' in nms:
+        temperature = nodes[nms.index('T')]
+        pass
+    else:  # Change that for general case
+        temperature = 1000
+        pass
+    if 'CTP' in nms:
+        cloudtop = nodes[nms.index('CTP')]
+        pass
+    else:
+        cloudtop = 1.
+        pass
     offset = nodes[nms.index('NRS2-NRS1')]
     cheq = None
     mixratio = None
@@ -1318,7 +1327,6 @@ def crbnrs(*nodes):
             orbp=ctxt.orbp,
             wgrid=ctxt.mcmcwav,
             xsecs=ctxt.xsl['XSECS'],
-            qtgrid=ctxt.xsl['QTGRID'],
             hitemplist=ctxt.runtime[
                 'cerberus_crbmodel_HITEMPmolecules'
             ].molecules,
@@ -1334,7 +1342,7 @@ def crbnrs(*nodes):
         )
         .spectrum
     )
-    select = dctx['mcmcwav'] > dctx['offsetthr']
-    out[select] = out[select] - offset
+    select = ctxt.mcmcwav > ctxt.offsetthr
+    out[select] = out[select] - (offset * 1e-6)
 
     return out

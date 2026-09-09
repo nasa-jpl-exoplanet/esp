@@ -160,14 +160,14 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
     for p in spc['data']:
         thisspc['data'][p] = {}
         svout['data'][p] = {}
-        detlist = [k for k in spc['data'][p]]
+        detlist = list(spc['data'][p])
         # ONLY WORKS FOR NRS CHANGE THAT LATER
         for v in spc['data'][p][detlist[0]]:
             xslout = {'data': {}, 'STATUS': []}
             svout['data'][p][v] = xslout
             wgrid = []
             for d in detlist:
-                wgrid.extend([w for w in spc['data'][p][d][v]['WB']])
+                wgrid.extend(list(spc['data'][p][d][v]['WB']))
                 pass
             thisspc['data'][p]['WB'] = np.array(wgrid)
             cs = myxsecs(
@@ -753,30 +753,33 @@ def jwstatmos(
     hazelib(crbhzlib, hazedir=hazedir, verbose=False)
     plnkey = [p for p in map(chr, range(97, 123)) if p in spc['data']]
     # MODELS
-    modfam = ['TEA', 'FREE']
     tealst = ['XtoH', 'CtoO', 'NtoO', 'StoO']
     if not rtp['cerberus_atmos_fitCtoO']:
         tealst.remove('CtoO')
+        pass
     if not rtp['cerberus_atmos_fitNtoO']:
         tealst.remove('NtoO')
+        pass
     if not rtp['cerberus_atmos_fitStoO']:
         tealst.remove('StoO')
+        pass
     modparlbl = {
         'TEA': tealst,
         'FREE': rtp['cerberus_crbmodel_fitmolecules'].molecules,
     }
     if debug:
-        modparlbl.pop('FREE')
+        modparlbl.pop('TEA')
+        # modparlbl.pop('FREE')
         pass
     if verbose:
-        log.info('>--< MODELS >--')
-        for model in modparlbl:
-            log.info('>--< %s: %s', model, [p for p in modparlbl[model]])
+        log.info('>--< MODELS')
+        for m, mp in modparlbl.items():
+            log.info('>--< %s: %s', m, mp)
             pass
         pass
     for p in plnkey:
-        detlist = [k for k in spc['data'][p]]
-        vislist = [v for v in spc['data'][p][detlist[0]]]
+        detlist = list(spc['data'][p])
+        vislist = list(spc['data'][p][detlist[0]])
         out['data'][p] = {}
         out['data'][p]['MODELS'] = modparlbl
         for v in vislist:
@@ -861,14 +864,16 @@ def jwstatmos(
             nodes = []
             priors = {}
             # CTP
-            # TB UPDATED: FREE
-            priors['CTP'] = (
-                rtp['cerberus_atmos_bounds_CTP'].lo,
-                rtp['cerberus_atmos_bounds_CTP'].hi,
-            )
-            fixed.pop('CTP')
+            if rtp['cerberus_atmos_fitCTP']:
+                priors['CTP'] = (
+                    rtp['cerberus_atmos_bounds_CTP'].lo,
+                    rtp['cerberus_atmos_bounds_CTP'].hi,
+                )
+                fixed.pop('CTP')
+                pass
             # HAZES
-            # TB UPDATED: FIXED
+            # if rtp['cerberus_atmos_fitHaze']:
+            #     pass
             # T
             if rtp['cerberus_atmos_fitT']:
                 priors['T'] = (
@@ -877,12 +882,11 @@ def jwstatmos(
                 )
                 fixed.pop('T')
                 pass
-            for m in modparlbl:
-                # GMR: We want control on when we init/update this thing
+            for m, mp in modparlbl.items():
                 with pymc.Model():
                     dctx = dctxupdt()
-                    out['data'][p][m] = {}
-                    klist = [k for k in modparlbl[m] if k not in ['XtoH']]
+                    out['data'][p][v][m] = {}
+                    klist = [k for k in mp if k not in ['XtoH']]
                     if m in ['TEA', 'TEC']:
                         priors['XtoH'] = (
                             rtp['cerberus_atmos_bounds_metallicity'].lo,
@@ -908,15 +912,15 @@ def jwstatmos(
                         priors['NRS2-NRS1'] = (
                             -100,
                             100,
-                        )  # ppm to be added in runtime
+                        )
                         fwdmdl = crbnrs
                         pass
-                    out['data'][p][m]['priors'] = priors
+                    out['data'][p][v][m]['PRIORS'] = priors
                     # NODES FROM PRIORS
                     nodes = []
-                    for n in priors:
+                    for n, nl in priors.items():
                         nodes.append(
-                            pymc.Uniform(n, priors[n][0], priors[n][1])
+                            pymc.Uniform(n, nl[0], nl[1])
                         )
                         pass
                     # UPDATE DICTIONNARY CONTEXT
@@ -935,6 +939,7 @@ def jwstatmos(
                             'mcmcsig': out['data'][p][v]['SPerr'],
                             'mcmcwav': out['data'][p][v]['WB'],
                             'offsetthr': wthr,
+                            'priors': priors,
                             'forwardmodel': fwdmdl,
                             'interp_tea': interp_tea,
                             'fixedParams': fixed,
@@ -969,7 +974,7 @@ def jwstatmos(
                         "Chi2",
                         -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
-                    log.info('>-- MCMC nodes: %s', str(priors.keys()))
+                    log.info('>--< MCMC nodes: %s', str(priors.keys()))
                     trace = pymc.sample(
                         rtp['cerberus_steps'].value(),
                         cores=rtp['cerberus_chains'].value(),
@@ -980,11 +985,13 @@ def jwstatmos(
                     )
                     # GMR: nodes were casted into arrays somewhere
                     # change that someday
-                    # Need to save Chi2
                     mctrace = {}
-                    for k in priors:
+                    allkeys = list(priors)
+                    allkeys.append('Chi2')
+                    for k in allkeys:
                         mctrace[k] = np.array(trace['posterior'][k]).flatten()
                         pass
+                    out['data'][p][v][m]['TRACE'] = mctrace
                     pass
                 pass
             atm = atm or True
@@ -1020,9 +1027,9 @@ def atmos(
     # load TEA equilibrium chemistry interpolation grid
     modelName = (
         'Pgrid_'
-        + str(runtime_params.nlevels)
+        + str(rtp.nlevels)
         + 'levels'
-        + str(runtime_params.Hsmax)
+        + str(rtp.Hsmax)
         + 'scaleHeights'
     )
     interp_tea = get_TEA_grid(modelName)
@@ -1065,7 +1072,7 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if runtime_params.fitCTP or runtime_params.fitHaze:
+        if rtp.fitCTP or rtp.fitHaze:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
@@ -1255,7 +1262,7 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCTP:
+                    if not rtp.fitCTP:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -1264,7 +1271,7 @@ def atmos(
                             # cloud deck is very deep - 1000 bars
                             fixed_params['CTP'] = 3.0
 
-                    if not runtime_params.fitHaze:
+                    if not rtp.fitHaze:
                         if 'HScale' in input_data['model_params']:
                             fixed_params['HScale'] = input_data['model_params'][
                                 'HScale'
@@ -1299,9 +1306,9 @@ def atmos(
                             ]
                         else:
                             fixed_params['CtoO'] = 0.0
-                    if not runtime_params.fitNtoO:
+                    if not rtp.fitNtoO:
                         fixed_params['NtoO'] = 0.0
-                    if not runtime_params.fitStoO:
+                    if not rtp.fitStoO:
                         fixed_params['StoO'] = 0.0
                     # print('fixedparams',fixed_params)
 
@@ -1310,7 +1317,7 @@ def atmos(
                         nodes,
                         nodeshape,
                         prior_range_table,
-                        runtime_params,
+                        rtp,
                         model,
                         modparlbl[model],
                     )
@@ -1330,7 +1337,7 @@ def atmos(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
                     elif (
-                        not runtime_params.fitCTP and not runtime_params.fitHaze
+                        not rtp.fitCTP and not rtp.fitHaze
                     ):
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
@@ -1387,7 +1394,7 @@ def atmos(
 
                         # before calling MCMC, save the fixed-parameter info in the context
                         ctxtupdt(
-                            runtime=runtime_params,
+                            runtime=rtp,
                             cleanup=cleanup,
                             model=model,
                             planet=p,

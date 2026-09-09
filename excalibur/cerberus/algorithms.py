@@ -126,7 +126,7 @@ class XSLib(dawgie.Algorithm):
             if vspc and targetlistcheck:
                 log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
                 update = self._xslib(
-                    sv, runtime_params, only_these_planets, fltrs.index(fltr)
+                    sv, runtime_params, only_these_planets, fltr
                 )
             else:
                 if targetlistcheck:
@@ -148,14 +148,13 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, runtime_params, only_these_planets, index):
+    def _xslib(self, spc, runtime_params, only_these_planets, fltr):
         '''Core code call'''
         if 'JWST' in fltr:
             cs = crbcore.jwstwxs(
                 spc,
                 runtime_params,
                 self.__out[fltrs.index(fltr)],
-                only_these_planets=only_these_planets,
                 verbose=False,
             )
             pass
