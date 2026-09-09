@@ -12,7 +12,7 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import (ctxtupdt, dctxupdt)
+from excalibur.cerberus.fmcontext import ctxtupdt, dctxupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
@@ -699,15 +699,16 @@ def atmosversion():
     '''
     return dawgie.VERSION(1, 3, 2)
 
+
 def jwstatmos(
-        fin,
-        xsl,
-        spc,
-        rtp,
-        out,
-        hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
-        verbose=False,
-        debug=False,
+    fin,
+    xsl,
+    spc,
+    rtp,
+    out,
+    hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
+    verbose=False,
+    debug=False,
 ):
     '''
     GMR: JWST Atmos
@@ -737,7 +738,7 @@ def jwstatmos(
           out['STATUS']:[LIST]:appending True for each planet/instrument added
           out['data']['SYSPAR']:[DICT]:copy of system parameters used (fin)
           out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
-          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment          
+          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment
     [OPT]:hazedir:[STR]:path to Jupiter hazes density profiles
     [OPT]:verbose:[BOOL]:messages and plots
     '''
@@ -754,13 +755,16 @@ def jwstatmos(
     # MODELS
     modfam = ['TEA', 'FREE']
     tealst = ['XtoH', 'CtoO', 'NtoO', 'StoO']
-    if not rtp['cerberus_atmos_fitCtoO']: tealst.remove('CtoO')
-    if not rtp['cerberus_atmos_fitNtoO']: tealst.remove('NtoO')
-    if not rtp['cerberus_atmos_fitStoO']: tealst.remove('StoO')
+    if not rtp['cerberus_atmos_fitCtoO']:
+        tealst.remove('CtoO')
+    if not rtp['cerberus_atmos_fitNtoO']:
+        tealst.remove('NtoO')
+    if not rtp['cerberus_atmos_fitStoO']:
+        tealst.remove('StoO')
     modparlbl = {
         'TEA': tealst,
         'FREE': rtp['cerberus_crbmodel_fitmolecules'].molecules,
-        }
+    }
     if debug:
         modparlbl.pop('FREE')
         pass
@@ -782,42 +786,57 @@ def jwstatmos(
             cleanup = []
             wthr = None
             for d in detlist:
-                res = np.array([np.mean(np.abs(m - d))
-                                for m, d
-                                in zip(spc['data'][p][d][v]['LCFIT'], 
-                                       spc['data'][p][d][v]['LCDATA'])])
+                res = np.array(
+                    [
+                        np.mean(np.abs(m - d))
+                        for m, d in zip(
+                            spc['data'][p][d][v]['LCFIT'],
+                            spc['data'][p][d][v]['LCDATA'],
+                        )
+                    ]
+                )
                 spctrm.extend(np.array(spc['data'][p][d][v]['ES']))
                 spcerr.extend(np.array(spc['data'][p][d][v]['ESerr']))
                 wavmcr.extend(np.array(spc['data'][p][d][v]['WB']))
                 cleanup.extend(
-                    res < (np.percentile(res, 50) +
-                           3.0*np.std(res[res < np.percentile(res, 50 + 68 / 2)])
-                           )
+                    res
+                    < (
+                        np.percentile(res, 50)
+                        + 3.0
+                        * np.std(res[res < np.percentile(res, 50 + 68 / 2)])
+                    )
                 )
                 if '1' in d:
                     if wthr is None:
                         wthr = np.nanmax(spc['data'][p][d][v]['WB'])
                         pass
-                    else: wthr += np.nanmax(spc['data'][p][d][v]['WB'])
+                    else:
+                        wthr += np.nanmax(spc['data'][p][d][v]['WB'])
                     pass
                 if '2' in d:
                     if wthr is None:
                         wthr = np.nanmin(spc['data'][p][d][v]['WB'])
                         pass
-                    else: wthr += np.nanmin(spc['data'][p][d][v]['WB'])
+                    else:
+                        wthr += np.nanmin(spc['data'][p][d][v]['WB'])
                     pass
                 pass
-            wthr /= 2.
+            wthr /= 2.0
             if verbose:
                 fig = plt.figure(figsize=(12, 9))
-                plt.errorbar(np.array(wavmcr)[np.array(cleanup)],
-                             (np.array(spctrm)[np.array(cleanup)])**2, 
-                             yerr = ((np.array(spcerr)[np.array(cleanup)])**2 +
-                                     2.*np.array(spcerr)[np.array(cleanup)]*
-                                     np.array(spctrm)[np.array(cleanup)]), 
-                             marker='o',
-                             linestyle='None',
-                             alpha=0.5)
+                plt.errorbar(
+                    np.array(wavmcr)[np.array(cleanup)],
+                    (np.array(spctrm)[np.array(cleanup)]) ** 2,
+                    yerr=(
+                        (np.array(spcerr)[np.array(cleanup)]) ** 2
+                        + 2.0
+                        * np.array(spcerr)[np.array(cleanup)]
+                        * np.array(spctrm)[np.array(cleanup)]
+                    ),
+                    marker='o',
+                    linestyle='None',
+                    alpha=0.5,
+                )
                 plt.axvline(wthr, ls='-.')
                 plt.ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
                 plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
@@ -825,17 +844,20 @@ def jwstatmos(
                 plt.show()
                 pass
             out['data'][p][v] = {}
-            out['data'][p][v]['SP'] = np.array(spctrm)**2
-            out['data'][p][v]['SPerr'] = (
-                np.array(spcerr)**2 + 2.*np.array(spcerr)*np.array(spctrm)
-            )
+            out['data'][p][v]['SP'] = np.array(spctrm) ** 2
+            out['data'][p][v]['SPerr'] = np.array(spcerr) ** 2 + 2.0 * np.array(
+                spcerr
+            ) * np.array(spctrm)
             out['data'][p][v]['WB'] = np.array(wavmcr)
             out['data'][p][v]['VALID'] = np.array(cleanup)
             rp0 = fin['priors'][p]['rp'] * ssc['Rjup']  # mk
-            fixed = {'CTP':3.,
-                     'HScale':-10., 'HLoc':3., 'HThick':0.,
-                     'T':float(fin['priors'][p]['teq'])
-                     }
+            fixed = {
+                'CTP': 3.0,
+                'HScale': -10.0,
+                'HLoc': 3.0,
+                'HThick': 0.0,
+                'T': float(fin['priors'][p]['teq']),
+            }
             nodes = []
             priors = {}
             # CTP
@@ -883,41 +905,53 @@ def jwstatmos(
                         pass
                     fwdmdl = None
                     if 'NRS' in detlist[0]:
-                        priors['NRS2-NRS1'] = (-100, 100)  # ppm to be added in runtime
+                        priors['NRS2-NRS1'] = (
+                            -100,
+                            100,
+                        )  # ppm to be added in runtime
                         fwdmdl = crbnrs
                         pass
                     out['data'][p][m]['priors'] = priors
                     # NODES FROM PRIORS
                     nodes = []
                     for n in priors:
-                        nodes.append(pymc.Uniform(n, priors[n][0], priors[n][1]))
+                        nodes.append(
+                            pymc.Uniform(n, priors[n][0], priors[n][1])
+                        )
                         pass
                     # UPDATE DICTIONNARY CONTEXT
                     dctx = dctxupdt(
                         {
-                            'runtime':rtp,
-                            'cleanup':out['data'][p][v]['VALID'],
-                            'model':m,
-                            'planet':p,
-                            'rp0':rp0,
-                            'orbp':fin['priors'],
-                            'xsl':xsl['data'][p][v],
-                            'modparlbl':modparlbl,
-                            'hzlib':crbhzlib,
-                            'mcmcdat':out['data'][p][v]['SP'],
-                            'mcmcsig':out['data'][p][v]['SPerr'],
-                            'mcmcwav':out['data'][p][v]['WB'],
-                            'offsetthr':wthr,
-                            'forwardmodel':fwdmdl,
-                            'interp_tea':interp_tea,
-                            'fixedParams':fixed,
-                            'hitemplist':rtp['cerberus_crbmodel_HITEMPmolecules'].molecules,
-                            'cialist':rtp['cerberus_crbmodel_HITRANmolecules'].molecules,
-                            'xmollist':rtp['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                            'runtime': rtp,
+                            'cleanup': out['data'][p][v]['VALID'],
+                            'model': m,
+                            'planet': p,
+                            'rp0': rp0,
+                            'orbp': fin['priors'],
+                            'xsl': xsl['data'][p][v],
+                            'modparlbl': modparlbl,
+                            'hzlib': crbhzlib,
+                            'mcmcdat': out['data'][p][v]['SP'],
+                            'mcmcsig': out['data'][p][v]['SPerr'],
+                            'mcmcwav': out['data'][p][v]['WB'],
+                            'offsetthr': wthr,
+                            'forwardmodel': fwdmdl,
+                            'interp_tea': interp_tea,
+                            'fixedParams': fixed,
+                            'hitemplist': rtp[
+                                'cerberus_crbmodel_HITEMPmolecules'
+                            ].molecules,
+                            'cialist': rtp[
+                                'cerberus_crbmodel_HITRANmolecules'
+                            ].molecules,
+                            'xmollist': rtp[
+                                'cerberus_crbmodel_EXOMOLmolecules'
+                            ].molecules,
                         },
                         freeze=True,
                     )
                     TensorModel = TensorShell()
+
                     def LogLH(_, nodes):
                         '''
                         GMR: Fill in model tensor shell
@@ -932,7 +966,8 @@ def jwstatmos(
                     )
 
                     _ = pymc.Deterministic(
-                        "Chi2", -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
+                        "Chi2",
+                        -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
                     )
                     log.info('>-- MCMC nodes: %s', str(priors.keys()))
                     trace = pymc.sample(
