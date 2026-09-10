@@ -561,9 +561,17 @@ def plot_corner(
                 truths.append(truth_params['metallicity'])
             elif thiskey == '[C/O]':
                 # truths.append(np.log10(truth_params['C/O'] / 0.54951))
-                truths.append(truth_params['C/O'])
+                truths.append(truth_params['C/O'])  # 0 means solar itk
             elif thiskey == '[N/O]':
-                truths.append(0)
+                if 'N/O' in truth_params:
+                    truths.append(truth_params['N/O'])
+                else:
+                    truths.append(0)
+            elif thiskey == '[S/O]':
+                if 'S/O' in truth_params:
+                    truths.append(truth_params['S/O'])
+                else:
+                    truths.append(0)
             elif thiskey in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
                 truths.append(666666)
             elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
