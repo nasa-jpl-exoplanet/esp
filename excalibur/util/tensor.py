@@ -33,10 +33,10 @@ class TensorShell(tnsrgraph.Op):
         raise NotImplementedError('not expecting this method to be used')
 
     def perform(
-            self,
-            node: tnsrgraph.Apply,
-            inputs: list[np.ndarray],  # maybe make this floats?
-            output_storage: list[list[None]],
+        self,
+        node: tnsrgraph.Apply,
+        inputs: list[np.ndarray],  # maybe make this floats?
+        output_storage: list[list[None]],
     ) -> None:
         output_storage[0][0] = np.asarray(LogLikelihood(inputs))
         return
@@ -70,7 +70,7 @@ def LogLikelihood(inputs):
         cln = ctxt.cleanup
         pass
     else:
-        cln = np.array([True]*np.size(ctxt.mcmcdat))
+        cln = np.array([True] * np.size(ctxt.mcmcdat))
         pass
 
     fmd = ctxt.forwardmodel(*newnodes)[cln]

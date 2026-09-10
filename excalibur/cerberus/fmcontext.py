@@ -66,7 +66,7 @@ def dctxupdt(dct=None, freeze=False):
         ctxt = CONTEXT(**dctx)
         excalibur.cerberus.forward_model.ctxt = ctxt
         # GMR: We do not want to duplicate heavy context interpolators
-        # Clean that up someday        
+        # Clean that up someday
         excalibur.util.tensor.ctxt = ctxt
         pass
     return dctx

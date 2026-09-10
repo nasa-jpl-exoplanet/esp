@@ -919,9 +919,7 @@ def jwstatmos(
                     # NODES FROM PRIORS
                     nodes = []
                     for n, nl in priors.items():
-                        nodes.append(
-                            pymc.Uniform(n, nl[0], nl[1])
-                        )
+                        nodes.append(pymc.Uniform(n, nl[0], nl[1]))
                         pass
                     # UPDATE DICTIONNARY CONTEXT
                     dctx = dctxupdt(
@@ -1026,11 +1024,7 @@ def atmos(
 
     # load TEA equilibrium chemistry interpolation grid
     modelName = (
-        'Pgrid_'
-        + str(rtp.nlevels)
-        + 'levels'
-        + str(rtp.Hsmax)
-        + 'scaleHeights'
+        'Pgrid_' + str(rtp.nlevels) + 'levels' + str(rtp.Hsmax) + 'scaleHeights'
     )
     interp_tea = get_TEA_grid(modelName)
     # OR.. leave it blank if you truly want the slow version
@@ -1336,9 +1330,7 @@ def atmos(
                         log.warning(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
-                    elif (
-                        not rtp.fitCTP and not rtp.fitHaze
-                    ):
+                    elif not rtp.fitCTP and not rtp.fitHaze:
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context

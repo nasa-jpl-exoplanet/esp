@@ -1292,7 +1292,7 @@ def crbnrs(*nodes):
         cloudtop = nodes[nms.index('CTP')]
         pass
     else:
-        cloudtop = 1.
+        cloudtop = 1.0
         pass
     offset = nodes[nms.index('NRS2-NRS1')]
     cheq = None
