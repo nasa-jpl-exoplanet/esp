@@ -172,6 +172,10 @@ def load(sv_dict: {str: {}}, targets) -> None:
     3. have pybgen binding module parse the XML
     4. move data into state vectors
     '''
+    # this is how you can check what's in __all__
+    # for t in targets:
+    #     print('runtime create.core.load target', t)
+
     fn = os.environ[ENV_NAME]
     with open(fn, 'rt', encoding='utf-8') as file:
         xml = file.read()
