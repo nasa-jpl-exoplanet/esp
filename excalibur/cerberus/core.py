@@ -278,7 +278,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 myspl = itp(x, y, bounds_error=False, fill_value=0)
                 library[myexomol]['SPL'].append(myspl)
                 library[myexomol]['SPLNU'].append(iline)
-                if verbose and myexomol=='too many plots here!':
+                if verbose and myexomol == 'too many plots here!':
                     plt.plot(x, y, 'o')
                     xp = np.arange(101) / 100.0 * (3000.0 - np.min(x)) + np.min(
                         x
