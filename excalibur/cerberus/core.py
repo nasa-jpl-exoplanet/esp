@@ -826,7 +826,7 @@ def jwstatmos(
                 pass
             wthr /= 2.0
             if verbose:
-                fig = plt.figure(figsize=(12, 9))
+                plt.figure(figsize=(12, 9))
                 plt.errorbar(
                     np.array(wavmcr)[np.array(cleanup)],
                     (np.array(spctrm)[np.array(cleanup)]) ** 2,
