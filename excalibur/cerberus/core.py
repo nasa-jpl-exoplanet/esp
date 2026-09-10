@@ -278,12 +278,13 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 myspl = itp(x, y, bounds_error=False, fill_value=0)
                 library[myexomol]['SPL'].append(myspl)
                 library[myexomol]['SPLNU'].append(iline)
-                if verbose:
+                if verbose and myexomol=='too many plots here!':
                     plt.plot(x, y, 'o')
                     xp = np.arange(101) / 100.0 * (3000.0 - np.min(x)) + np.min(
                         x
                     )
                     plt.plot(xp, myspl(xp))
+                    plt.title(myexomol)
                     plt.show()
                     pass
                 pass
@@ -710,22 +711,23 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        modfam = ['TEC']
+        # modfam = ['TEC']
+        # no longer fit with TEC; use TEA (grid method)
         modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if runtime_params.fitCtoO:
+        if not runtime_params.fitCtoO:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if runtime_params.fitNtoO:
+        if not runtime_params.fitNtoO:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if runtime_params.fitStoO:
+        if not runtime_params.fitStoO:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
@@ -767,22 +769,23 @@ def atmos(
             return False
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        modfam = ['TEC', 'PHOTOCHEM']
+        # modfam = ['TEC', 'PHOTOCHEM']
+        # no longer fit with TEC; use TEA (grid method)
+        modfam = ['TEA', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'PHOTOCHEM': runtime_params.fitmolecules,
         }
         if not runtime_params.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
-            # modparlbl['TEA'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
         if not runtime_params.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
-            # modparlbl['TEA'].remove('CtoO')
+            modparlbl['TEA'].remove('CtoO')
         if not runtime_params.fitStoO:
             modparlbl['TEC'].remove('StoO')
-            # modparlbl['TEA'].remove('StoO')
+            modparlbl['TEA'].remove('StoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -1119,8 +1122,7 @@ def atmos(
 
                     # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
-
-                    # asdf: careful here. #-chains and #-cores are same thing?
+                    # print('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # --< SAMPLING >--
                     trace = pymc.sample(
