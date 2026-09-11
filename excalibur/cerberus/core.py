@@ -1104,8 +1104,7 @@ def atmos(
         modfam = ['TEA', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'PHOTOCHEM': rtp.fitmolecules,
         }
         if not rtp.fitNtoO:
