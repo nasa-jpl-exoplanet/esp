@@ -31,7 +31,14 @@ ctxt = ctxtinit()
 # --------------------------------------------------------------------
 # -- CERBERUS FORWARD MODEL ------------------------------------------
 class crbFM:
+    '''
+    Joe Docstring
+    '''
+
     def __init__(self):
+        '''
+        Init
+        '''
         self.__spectrum = np.empty(0)
         self.__breakdown_by_molecule = {}
         self.__moleculeProfiles = {}
@@ -119,24 +126,19 @@ class crbFM:
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
         temp = np.array(temp)
-        # print('  temp', temp)
         if temp.ndim:
             tpp = temp
         else:
             tpp = np.array([float(temp)] * nlevels)
             pass
-        # print('  tpp', tpp)
         # option for non-isothermal T-P profile
         #  if the temperature array has just a handful of elements,
         #  then it's actually the parameters for a T-P profile
         if len(tpp) not in [int(nlevels)]:
-            # print('tpp forward model with non-Isothermal T-P profile!!')
             tpp = TPprofile(temp, pressure)
-        # print('  tpp', tpp)
-
+            pass
         # verify that the temperature array has the right length (nlevels)
         if len(tpp) not in [int(nlevels)]:
-            print('!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels)
             log.error(
                 '!!! >--< TP PROFILE != PRESSURE GRID: %s nlevels', nlevels
             )
@@ -164,7 +166,7 @@ class crbFM:
                     fH2=fH2,
                     fHe=fHe,
                 )
-
+                pass
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
                 if interp_tea is None:
@@ -198,11 +200,6 @@ class crbFM:
                     # species used for the equilibrium are :
                     # CH4, CO2, CO, H2O, H2, H2S, He, O3, O2, OH,
                     # SO2, HCN, TIO, C2H2, N2, NH3, N2O, NO
-                    # print('   values check',
-                    #      (tpp[10]),
-                    #      (pressure[10]),
-                    #      (10 ** cheq['XtoH'] * np.ones(pressure.size)[10]),
-                    #      (10 ** cheq['CtoO'] * np.ones(pressure.size))[10])
                     grid_points = np.column_stack(
                         (
                             tpp,
@@ -225,17 +222,10 @@ class crbFM:
                 for molecule, mixratioprofile in mixratioprofiles.items():
                     mixratio[molecule] = mixratioprofile
                     # mixratio[molecule] = np.median(mixratioprofile)
-
-                # print('Model MIXRATIOs', mixratio)
-
-                # print()
-                # print('mixratio in cerb', mixratio)
+                    pass
                 mmw, fH2, fHe = getmmw(mixratio)
-                # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
 
                 if 'ozone' in chemistry:
-                    # print()
-                    # print('OZONE CHECK')
                     if 'O3' not in mixratio:
                         log.error('O3 not selected for ozone model!!')
 
@@ -243,32 +233,27 @@ class crbFM:
                     originalmetals = 0
                     for molecule in mixratio:
                         originalmetals += 10.0 ** mixratio[molecule]
-                    # print('originalmetals', originalmetals/1.e6)
 
                     # print(' ozone mixratio before', mixratio['O3'])
                     mixratio['O3'] = mixratio['O3'] * 0 + 2.0
                     # mixratio['O3'] = mixratio['O3'] * 0 + 5.0
                     # mixratio['O3'] = mixratio['O3'] * 0 + 7.0
-                    # print(' NEW OZONE mixratio', mixratio['O3'])
 
                     # totalmetals = 0
                     # for molecule in mixratio:
                     #     totalmetals += 10.0 ** mixratio[molecule]
-                    # print('totalmetals', totalmetals/1.e6)
 
                     newsum = originalmetals + 10.0 ** mixratio['O3']
 
                     for molecule in mixratio:
                         mixratio[molecule] -= np.log10(newsum / originalmetals)
-                    # print(' ozone mixratio renorm', mixratio['O3'])
                     # totalmetals = 0
                     # for molecule in mixratio:
                     #    totalmetals += 10.0 ** mixratio[molecule]
-                    # print('totalmetals', totalmetals/1.e6)
 
                     mmw, fH2, fHe = getmmw(mixratio)
-                    # print('TEA mmw, fH2, fHe', mmw, fH2, fHe)
-
+                    pass
+                pass
             else:
                 fH2 = 0
                 fHe = 0
@@ -288,6 +273,8 @@ class crbFM:
                 mixratioprofiles[molecule] = np.full(
                     (len(pressure)), mixratio[molecule]
                 )
+                pass
+            pass
 
         # make sure that the mixing ratios are 1-d arrays over the pressure grid
         #  (otherwise later calls may get mis-matched broadcasting problems)
@@ -320,11 +307,6 @@ class crbFM:
             * tpp
             / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
         )  # [m]
-
-        # print('T',tpp)
-        # print('mmw',mmw)
-        # print('logg',10.0 ** float(orbp[planet]['logg']))
-        # print('Hs!!!!!', Hs)
 
         # when the Pressure grid is log-spaced, rdz is a constant
         #  drop dz[] and dzprime[] arrays and just use this constant instead
@@ -421,7 +403,6 @@ class crbFM:
         atmdepth = (
             2e0 * np.asmatrix(geometrygrid) * np.asmatrix(absorptiongrid)
         ).flatten()
-
         model = (rp0**2 + atmdepth) / (orbp['R*'] * ssc['Rsun']) ** 2
         # model is a 1xN matrix; it needs to be a 1-d array
         #  otherwise some subsequent * or ** operations fail
@@ -539,9 +520,6 @@ def TPprofile(sparseTgrid, pressures):
     '''
     interpolate a small set of temperatures over the full pressure grid
     '''
-
-    # print('P range in TPprofile', pressures[0], pressures[-1])
-
     sparsePgrid = np.linspace(
         np.log10(pressures[0]), np.log10(pressures[-1]), len(sparseTgrid)
     )
@@ -1305,3 +1283,74 @@ def clearfmcerberus(*crbinputs):
     #     fmc += np.nanmean(ctxt.mcmcdat - fmc)
 
     return fmc
+
+
+def crbnrs(*nodes):
+    '''
+    GMR: JWST NRS FORWARD MODEL
+    '''
+    nms = list(ctxt.priors)
+    if 'T' in nms:
+        temperature = nodes[nms.index('T')]
+        pass
+    else:  # Change that for general case
+        temperature = 1000
+        pass
+    if 'CTP' in nms:
+        cloudtop = nodes[nms.index('CTP')]
+        pass
+    else:
+        cloudtop = 1.0
+        pass
+    offset = nodes[nms.index('NRS2-NRS1')]
+    cheq = None
+    mixratio = None
+    dctprm = {}
+    for p in ctxt.modparlbl[ctxt.model]:
+        dctprm[p] = nodes[nms.index(p)]
+        pass
+    if ctxt.model in ['TEA', 'CEA']:
+        cheq = dctprm
+        fk = [k for k in ['XtoH', 'CtoO', 'NtoO', 'StoO'] if k not in cheq]
+        for k in fk:
+            cheq[k] = 0.0
+            pass
+        pass
+    if ctxt.model in ['FREE']:
+        mixratio = dctprm
+        pass
+    out = (
+        crbFM()
+        .crbmodel(
+            temperature,
+            cloudtop,
+            cheq=cheq,
+            mixratio=mixratio,
+            hazescale=ctxt.fixedParams['HScale'],
+            hazethick=ctxt.fixedParams['HThick'],
+            hazeloc=ctxt.fixedParams['HLoc'],
+            chemistry=ctxt.model,
+            planet=ctxt.planet,
+            rp0=ctxt.rp0,
+            orbp=ctxt.orbp,
+            wgrid=ctxt.mcmcwav,
+            xsecs=ctxt.xsl['XSECS'],
+            hitemplist=ctxt.runtime[
+                'cerberus_crbmodel_HITEMPmolecules'
+            ].molecules,
+            cialist=ctxt.runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+            xmollist=ctxt.runtime[
+                'cerberus_crbmodel_EXOMOLmolecules'
+            ].molecules,
+            nlevels=ctxt.runtime['cerberus_crbmodel_nlevels'].value(),
+            Hsmax=ctxt.runtime['cerberus_crbmodel_Hsmax'].value(),
+            solrad=ctxt.runtime['cerberus_crbmodel_solrad'].value(),
+            tea_data=ctxt.interp_tea,
+            improvedBoundaryCondition=True,
+        )
+        .spectrum
+    )
+    select = ctxt.mcmcwav > ctxt.offsetthr
+    out[select] = out[select] - (offset * 1e-6)
+
+    return out
