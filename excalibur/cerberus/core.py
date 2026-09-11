@@ -314,12 +314,13 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 myspl = itp(x, y, bounds_error=False, fill_value=0)
                 library[myexomol]['SPL'].append(myspl)
                 library[myexomol]['SPLNU'].append(iline)
-                if verbose:
+                if verbose and myexomol == 'too many plots here!':
                     plt.plot(x, y, 'o')
                     xp = np.arange(101) / 100.0 * (3000.0 - np.min(x)) + np.min(
                         x
                     )
                     plt.plot(xp, myspl(xp))
+                    plt.title(myexomol)
                     plt.show()
                     pass
                 pass
@@ -1040,7 +1041,8 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        modfam = ['TEC']
+        # modfam = ['TEC']
+        # no longer fit with TEC; use TEA (grid method)
         modfam = ['TEA']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
@@ -1097,7 +1099,9 @@ def atmos(
             return False
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        modfam = ['TEC', 'PHOTOCHEM']
+        # modfam = ['TEC', 'PHOTOCHEM']
+        # no longer fit with TEC; use TEA (grid method)
+        modfam = ['TEA', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
@@ -1106,13 +1110,13 @@ def atmos(
         }
         if not rtp.fitNtoO:
             modparlbl['TEC'].remove('NtoO')
-            # modparlbl['TEA'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
         if not rtp.fitCtoO:
             modparlbl['TEC'].remove('CtoO')
-            # modparlbl['TEA'].remove('CtoO')
+            modparlbl['TEA'].remove('CtoO')
         if not rtp.fitStoO:
             modparlbl['TEC'].remove('StoO')
-            # modparlbl['TEA'].remove('StoO')
+            modparlbl['TEA'].remove('StoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -1443,8 +1447,7 @@ def atmos(
                         sampler = pymc.Metropolis()
 
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
-
-                    # asdf: careful here. #-chains and #-cores are same thing?
+                    # print('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # --< SAMPLING >--
                     trace = pymc.sample(

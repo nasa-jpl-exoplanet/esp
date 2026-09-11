@@ -78,8 +78,6 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     calculate the mean molecular weight and scale height
     '''
 
-    # INCLUDE C/O RATIO HERE????  ASDF
-
     if useTEA:
         # log.error('TEA removed for now')
         # tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
