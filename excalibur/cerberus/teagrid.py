@@ -8,6 +8,7 @@ import numpy as np
 import logging
 
 import excalibur
+from excalibur.util import nerdclub
 from excalibur.util.cerberus import calcTEA
 from scipy.interpolate import RegularGridInterpolator
 
@@ -18,8 +19,17 @@ INTERP_TEA_DIR = os.path.join(
 )
 
 
-def get_TEA_grid(modelName=None):
-
+def get_TEA_grid(modelName=None, verbose=False):
+    '''
+    CB
+    GMR: Need better description below
+    print('T range', temperature[0], temperature[-1])  # 300-3000
+    print('XtoH range', XtoH[0], XtoH[-1])  # 0.1-100
+    print('CtoO range', CtoO[0], CtoO[-1])  # 0.1-10
+    save these ranges; check whether interp is going outside of range
+    no wait, don't bother.  use the standard edge flags in the interpolator
+    interp_tea['Trange'] = (temperature[0], temperature[-1])
+    '''
     if modelName is None:
         # log.info('no model name for TEA grid')
         modelDir = INTERP_TEA_DIR
@@ -54,7 +64,6 @@ def get_TEA_grid(modelName=None):
         'O2',
         'OH',
     ]
-
     interp_tea = {}
 
     temperature = np.load(modelDir + 'grid_parameters/temperature.npy')
@@ -65,6 +74,14 @@ def get_TEA_grid(modelName=None):
         species_name = np.load(modelDir + 'grid_parameters/species.npy')
     else:
         log.warning('TEA species list is missing!')
+        pass
+    argsdict = {
+        'progbar': verbose,
+        'progsizemax': 35,
+        'lbllen': 15,
+        'proginprompt': verbose,
+    }
+    progbar = nerdclub.Progressbar(argsdict, '>-- COCOGRID', species_name)
 
     # print('T', temperature)
     # print('P', pressure)
@@ -92,16 +109,22 @@ def get_TEA_grid(modelName=None):
             fill_value=None,
             method='cubic',  # comment out during debugging (linear is faster)
         )
-
+        progbar.update()
+        pass
+    progbar.close()
     return interp_tea
 
 
 def grid_generation(parameters, species, modelName=None, verbose=False):
-    # Parameter 1 : temperature in K
-    # Parameter 2 : pressure in bar
-    # Parameter 3 : metallicities, log10 values
-    # Parameter 4 : CtoOs, log10 values
-    # Species : list of species names from TEA, e.g. CH4_g, N2_ref
+    '''
+    CB
+    Parameter 1 : temperature in K
+    Parameter 2 : pressure in bar
+    Parameter 3 : metallicities, log10 values
+    Parameter 4 : CtoOs, log10 values
+    Species : list of species with the names from TEA
+    ex : ['CH4_g, N2_ref, ...]
+    '''
 
     if modelName is None:
         modelDir = INTERP_TEA_DIR
