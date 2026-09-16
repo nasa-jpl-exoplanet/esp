@@ -715,11 +715,11 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             )
             for itemp in range(len(temperatures)):
                 for ipress in range(len(pressures)):
-                    for iwave in range(len(wgrid)):
+                    for iwave, thiswave in enumerate(wgrid):
                         # print(iwave,'   ',T,P)
                         select = np.where(
-                            (wavelengths > wgrid[iwave] - dwgrid[iwave] / 2)
-                            & (wavelengths < wgrid[iwave] + dwgrid[iwave] / 2)
+                            (wavelengths > thiswave - dwgrid[iwave] / 2)
+                            & (wavelengths < thiswgrid + dwgrid[iwave] / 2)
                         )
                         # print('select',select)
                         # print('len',len(select[0]))
@@ -789,8 +789,10 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(f'{thisatom} (atom)   P = {Pplot:1.1e} bar',
-                      fontsize=fontsize + 4)
+            plt.title(
+                f'{thisatom} (atom)   P = {Pplot:1.1e} bar',
+                fontsize=fontsize + 4,
+            )
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
             plt.tick_params(axis='both', labelsize=fontsize)
