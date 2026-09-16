@@ -367,6 +367,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             if verbose:
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         for mycia in cialist:
             # log.info('>-- %s', str(mycia))
@@ -430,7 +431,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     myspl = itp(x, y, bounds_error=False, fill_value=0)
                     library[mycia]['SPL'].append(myspl)
                     library[mycia]['SPLNU'].append(iline)
-                    if verbose and myexomol == 'too many plots here!':
+                    if verbose and mycia == 'too many plots here!':
                         plt.plot(x, y, 'o')
                         xp = np.arange(101) / 100.0 * (
                             np.max(x) - np.min(x)
@@ -482,6 +483,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             if verbose:
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         for ks in hitemplist:
             # log.info('>-- %s', str(ks))
@@ -564,7 +566,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
-            if verbose and myexomol == 'too many plots here!':
+            if verbose and ks == 'too many plots here!':
                 for i in set(library[ks]['I']):
                     select = np.array(library[ks]['I']) == i
                     plt.semilogy(
@@ -668,18 +670,19 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             if verbose:
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         # ------- atomic species (e.g. Na) --------
         # load in the pre-calculated grid of atomic cross sections
         temperatures = np.load(atomdir + 'temp.npy')
         pressures = np.load(atomdir + 'pressure.npy')
         wavelengths = np.load(atomdir + 'wgrid.npy')
-        print(
-            'atom-xsec grid size T,P,lambda',
-            len(temperatures),
-            len(pressures),
-            len(wavelengths),
-        )
+        # print(
+        #    'atom-xsec grid size T,P,lambda',
+        #    len(temperatures),
+        #    len(pressures),
+        #    len(wavelengths),
+        # )
         # print('atom-xsec grid range T',temperatures[0],temperatures[-1])
         # print('atom-xsec grid range P',pressures[0],pressures[-1])
         # print('atom-xsec grid range lambda',wavelengths[0],wavelengths[-1])
@@ -687,21 +690,15 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
         for thisatom in atomlist:
             # log.info('>-- %s', str(thisatom))
             xsec = np.load(atomdir + thisatom + '/grid_3d.npy')
-            interp3d_xsec = RegularGridInterpolator(
-                (temperatures, pressures, wavelengths), xsec
-            )
-            # careful with values going outside of bounds.
-            # for now, leave this out, so it will crash. adjust T grid accordingly
-            #    bounds_error=False,
-            #    fill_value=None,
-            # print('shape check for xsec',xsec.shape)
+            # use this interpolator for validating interp2d_xsec below
+            # interp3d_xsec = RegularGridInterpolator(
+            #    (temperatures, pressures, wavelengths), xsec
+            # )
 
             library[thisatom] = {
                 'I': [],
                 'T': [],
                 'P': [],
-                # 'nu': 1e4 / wgrid[::-1],
-                #'nu': 1e4 / wgrid,
                 'nu': [],
                 'SPL': [],
                 'SPLNU': [],
@@ -711,18 +708,11 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             xsec_matchingwgrid = (
                 np.ones((xsec.shape[0], xsec.shape[1], len(wgrid))) * 666
             )
-            # print('sum check', np.sum(xsec_matchingwgrid))
-            # print('sum check', xsec_matchingwgrid.shape)
 
             dwgrid = (wgrid[2:] - wgrid[:-2]) / 2.0
             dwgrid = np.concat(
                 (np.array([dwgrid[0]]), dwgrid, np.array([dwgrid[-1]]))
             )
-            # print(wgrid)
-            # print('diff',dwgrid)
-            # print(' ',len(wgrid))
-            # print(' ',len(dwgrid))
-            # print('sum',np.sum(dwgrid),wgrid[-1]-wgrid[0])
             for itemp in range(len(temperatures)):
                 for ipress in range(len(pressures)):
                     for iwave in range(len(wgrid)):
@@ -736,7 +726,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         if len(select[0]) == 0:
                             log.error(
                                 'ERROR: pre-calculated wavelength grid isnt fine enough for atom: %s',
-                                atom,
+                                thisatom,
                             )
                             xsec_matchingwgrid[itemp, ipress, iwave] = 0
                         else:
@@ -748,83 +738,35 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                             # library[thisatom]['T'].append(temperatures[itemp])
                             # library[thisatom]['P'].append(pressures[ipress])
                             # library[thisatom]['nu'].append(1e4 / wgrid[iwave])
-
-            # print(' grid len check',len(wgrid))
-            # print(' nu len check',len(set(library[thisatom]['nu'])))
-
             # for inu, nu in enumerate(set(library[thisatom]['nu'])):
-            # select = np.array(library[thisatom]['nu']) == nu
-            # Is = np.array(library[thisatom]['I'])[select]
-            # Ts = np.array(library[thisatom]['T'])[select]
-            # Ps = np.array(library[thisatom]['P'])[select]
-            # sortme = np.argsort(Ts)
-            # Is = Is[sortme]
-            # Ts = Ts[sortme]
+            #     select = np.array(library[thisatom]['nu']) == nu
+            #     Is = np.array(library[thisatom]['I'])[select]
+            #     Ts = np.array(library[thisatom]['T'])[select]
+            #     Ps = np.array(library[thisatom]['P'])[select]
+            #     sortme = np.argsort(Ts)
+            #     Is = Is[sortme]
+            #     Ts = Ts[sortme]
             # myspl = itp(Ts, Is, bounds_error=False, fill_value=0)
+
             for iwave in range(len(wgrid)):
                 myspl = RegularGridInterpolator(
-                    (temperatures, pressures), xsec_matchingwgrid[:, :, iwave]
+                    (temperatures, pressures),
+                    xsec_matchingwgrid[:, :, iwave],
+                    # careful with values going outside of bounds
+                    bounds_error=False,
+                    fill_value=None
                 )
                 library[thisatom]['SPL'].append(myspl)
 
-            # set the range of temperatures and pressures
-            # temperatures = np.logspace(2.5, 3.5, 10)
-            # pressures = np.logspace(1, -7, 10)
-            # temperatures = np.logspace(2.8, 3.2, 8)
-            # pressures = np.logspace(0, -4, 8)
-            # pressures = np.logspace(0, -2, 8)
-            # pressures = np.logspace(0, -2, len(temperatures))
-            # pressures = np.logspace(1, 1, len(temperatures))
-
-            # pressures = np.arange(
-            #    np.log(runtime_params.solrad) - runtime_params.Hsmax,
-            #    np.log(runtime_params.solrad)
-            #    + runtime_params.Hsmax / 50,
-            #    runtime_params.Hsmax / 49
-            #    #+ runtime_params.Hsmax / runtime_params.nlevels,
-            #    #runtime_params.Hsmax / (runtime_params.nlevels - 1)
-            # )
-            # pressures = np.exp(pressures)
-            # pressures = pressures[::-1]
-            # print('pressures', pressures)
-            # include check to see if wgrid going outside of range
-
-            temp_grid, press_grid = np.meshgrid(temperatures, pressures)
-
-            if 0:
-                T = np.repeat(temperatures, len(wgrid))
-                P = np.repeat(pressures, len(wgrid))
-                wl = np.tile(wgrid, len(pressures))
-                points = np.column_stack((T, P, wl))
-                sigma = interp3d_xsec(points)
-                sigma = np.reshape(sigma, (len(pressures), len(wgrid)))
-                sigma = sigma[:, ::-1].T
-
-                sigma = sigma * 1e-4  # m^2/mol
-                lsig = 1e4 / wgrid[::-1]
-                print('sigma shape (3d)', sigma.shape)
-
-            # pressuretoPlot = 0.011  # show range of temperatures with fixed P
-            # temperaturetoPlot = 1000  # show range of pressures with fixed T
-
-            # redo the sigma calculation with the new SPL interpolators
-            #  (loop over a bunch of 2-d interps, rather than full 3-d interp)
+            # for checking/ploting, make a 3-d array of cross-sections
+            #  using the new SPL interpolators
+            # (loop over a bunch of 2-d interps, rather than full 3-d interp)
             sigmas = []
-            # print('NUMBER OF INTERP2Ds',len(library[thisatom]['SPL']))
+            temp_grid, press_grid = np.meshgrid(temperatures, pressures)
             for interp2d_xsec in library[thisatom]['SPL']:
-                # sigma = []
-                # for T, P in zip(temperatures, pressures):
-                #    sigma.append(interp2d_xsec((T, pressuretoPlot)))
-                # alt simpler version:
-                # sigma = interp2d_xsec(
-                #    (temperatures, [pressuretoPlot] * len(temperatures))
-                # )
-                sigma = interp2d_xsec((temp_grid, press_grid))
-                sigmas.append(sigma)
+                sigmas.append(interp2d_xsec((temp_grid, press_grid)))
             sigma = np.array(sigmas)
-            # print('sigma',sigma)
-            print('sigma shape (2d)', sigma.shape)
-
+            # print('sigma shape (2d)', sigma.shape)
 
             # plot the cross-sections for this species as a function of T
             thisfig = plt.figure(figsize=(10, 6))
@@ -836,19 +778,18 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             ).astype(int)
             for itemp, temp in zip(Tselect, temperatures[Tselect]):
                 # choose one pressure value to plot bunch of temperatures
-                ipressure = int(len(pressures) / 2)
-                Pplot = pressures[ipressure]
+                ipress = int(len(pressures) / 2)
+                Pplot = pressures[ipress]
                 plt.semilogy(
-                    # wgrid[::-1],
                     wgrid,
-                    sigma[:, ipressure, itemp],
+                    sigma[:, ipress, itemp],
                     label=str(int(temp)) + ' K',
                 )
             maxsigma = np.max(sigma)
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(f'{thisatom} + (atom)   P = {Pplot:1.1e} bar',
+            plt.title(f'{thisatom} (atom)   P = {Pplot:1.1e} bar',
                       fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
@@ -864,6 +805,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             )
             if verbose:
                 plt.show()
+            plt.close(thisfig)
 
             # plot the cross-sections for this species as a function of P
             thisfig = plt.figure(figsize=(10, 6))
@@ -874,18 +816,17 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 np.linspace(0, len(pressures) - 1, Npressures)
             ).astype(int)
             for ipress, press in zip(Pselect, pressures[Pselect]):
-                # choose one temperature value to plot bunch of pressures
+                # choose one temperature value; plot a bunch of pressures
                 itemp = int(len(temperatures) / 2)
                 Tplot = temperatures[itemp]
                 plt.semilogy(
-                    # wgrid[::-1],
                     wgrid,
                     sigma[:, ipress, itemp],
                     label=f'{press:1.1e} bar',
                 )
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(f'{thisatom} + (atom)   T = {int(Tplot):d} K',
+            plt.title(f'{thisatom} (atom)   T = {int(Tplot):d} K',
                       fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
@@ -901,6 +842,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             )
             if verbose:
                 plt.show()
+            plt.close(thisfig)
+            pass
+
         out['data'][p]['XSECS'] = library
         out['data'][p]['QTGRID'] = qtgrid
         pass
