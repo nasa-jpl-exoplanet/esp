@@ -4,6 +4,7 @@
 # pylint: disable=invalid-name,no-member
 # pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as cst
@@ -661,6 +662,39 @@ def gettau(
 
                 # EXOMOL HILL ET AL. 2013 ----------------------------------
                 sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+
+                # special inclusion of the Hartley-band cross-section for ozone
+                if elem == 'O3':
+                    supplementaldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/SUPPLEMENT/')
+                    filename = 'O3_VIS_UV.txt'
+                    with open(os.path.join(supplementaldir, filename), 'r') as f:
+                        filedata = f.readlines()
+                        f.close()
+                    ozoneUVdata = {'wavelength':[], 'xsec':[]}
+                    for data in filedata:
+                        columns = data.replace('\n','').split(' ')
+                        ozoneUVdata['wavelength'].append(float(columns[0]))
+                        ozoneUVdata['xsec'].append(float(columns[1]))
+                    # print('ozone data', ozoneUVdata)
+                    # convert nm to micron
+                    ozoneUVdata['wavelength'] = np.array(ozoneUVdata['wavelength']) / 1000.
+                    print('wavelength range for ozone opacity table',
+                          ozoneUVdata['wavelength'][0],
+                          ozoneUVdata['wavelength'][-1])
+                    # units for the cross-section?!
+                    ozoneUVdata['xsec'] = np.array(ozoneUVdata['xsec'])
+                    for inu, nu in enumerate(lsig):
+                        wave = 1.e4 / nu
+                        iwave = np.where(ozoneUVdata['wavelength'] > wave)[0]
+                        # print('  iwave', wave, iwave)
+                        if len(iwave) > 0:
+                            # print('check', wave, iwave[0], len(ozoneUVdata['wavelength']))
+                            if (iwave[0] >= 0) and (iwave[0] < len(ozoneUVdata['wavelength'])):
+                                sigma[inu] += ozoneUVdata['xsec'][iwave[0]]
+                        #    else:
+                        #        print('spectrum shorter than opacity table', wave)
+                        # else:
+                        #    print('spectrum longer than opacity table', wave)
             else:
                 log.warning(
                     'UNUSUAL: molecule %s has cross-sections, but it is not included in the spectrum',
