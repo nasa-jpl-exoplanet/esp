@@ -26,13 +26,13 @@ class XslibSv(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            myfig = plt.figure()
             # formerly xslib just showed a weird dog
             # crblogo = img.imread(
             #    os.path.join(
             #        excalibur.context['data_dir'], 'CERBERUS/cerberus.png'
             #    )
             # )
+            # myfig = plt.figure()
             # plt.imshow(crblogo)
             # plt.axis('off')
 
@@ -41,18 +41,13 @@ class XslibSv(ExcaliburSV):
                 for dictkey in self['data'][planet_letter].keys():
                     if dictkey.startswith('plot_'):
                         # if dictkey == 'plot_depthprobed':
-                        title = '------ cross-sections for '
+                        title = '------ cross-sections for planet '
 
                         visitor.add_image(
                             '...',
-                            title
-                            + target
-                            + ' '
-                            + planet_letter
-                            + ' ------',
-                            self['data'][planet_letter][model][
-                                dictkey
-                            ],
+                            # title + target + ' ' + planet_letter + ' ------',
+                            title + planet_letter + ' ------',
+                            self['data'][planet_letter][dictkey],
                         )
                         pass
                     pass
