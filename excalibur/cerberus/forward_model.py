@@ -701,7 +701,9 @@ def gettau(
                     )
                     filename = 'O3_VIS_UV.txt'
                     with open(
-                            os.path.join(supplementaldir, filename), 'r', encoding='utf-8'
+                        os.path.join(supplementaldir, filename),
+                        'r',
+                        encoding='utf-8',
                     ) as f:
                         filedata = f.readlines()
                         f.close()
@@ -713,7 +715,7 @@ def gettau(
                     # print('ozone data', ozoneUVdata)
                     # convert nm to micron
                     ozoneUVdata['wavelength'] = (
-                        np.array(ozoneUVdata['wavelength']) / 1000.
+                        np.array(ozoneUVdata['wavelength']) / 1000.0
                     )
                     # print('wavelength range for ozone opacity table',
                     #      ozoneUVdata['wavelength'][0],
@@ -727,7 +729,7 @@ def gettau(
                         if len(iwave) > 0:
                             # print('check', wave, iwave[0], len(ozoneUVdata['wavelength']))
                             if (iwave[0] >= 0) and (
-                                    iwave[0] < len(ozoneUVdata['wavelength'])
+                                iwave[0] < len(ozoneUVdata['wavelength'])
                             ):
                                 sigma[inu] += ozoneUVdata['xsec'][iwave[0]]
                         #    else:

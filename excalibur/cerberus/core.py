@@ -1547,10 +1547,12 @@ def atmos(
                         modparlbl[model],
                     )
 
-                    dctx = dctxupdt({
-                        'fixedParams': fixed_params,
-                        'nodeshape': nodeshape,
-                    })
+                    dctx = dctxupdt(
+                        {
+                            'fixedParams': fixed_params,
+                            'nodeshape': nodeshape,
+                        }
+                    )
 
                     # fixes the possibly-used-before-assignment error
                     TensorModel = None
