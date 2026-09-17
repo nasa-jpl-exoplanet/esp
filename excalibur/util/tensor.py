@@ -8,10 +8,10 @@ import numpy as np
 import pytensor.graph as tnsrgraph
 import pytensor.tensor as tnsr
 
-# from excalibur.cerberus.fmcontext import ctxtinit
+from excalibur.cerberus.fmcontext import ctxtinit
 
 # this doesn't change results at all; just needed to avoid undefined-variable pylint
-# ctxt = ctxtinit()
+ctxt = ctxtinit()
 
 
 class TensorShell(tnsrgraph.Op):
