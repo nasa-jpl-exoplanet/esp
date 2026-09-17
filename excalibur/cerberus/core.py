@@ -12,7 +12,7 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt, dctxupdt
+from excalibur.cerberus.fmcontext import dctxupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
@@ -446,7 +446,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # select a subsample of the temperature array
             # there are 10 different default colors, so let's plot 10
             Ntemps = 10
-            haha = list(set(library[myexomol]['T']))
+            haha = list(set(library[mycia]['T']))
             haha = np.sort(np.array(haha))
             # haha = haha[::-1]
             Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
@@ -719,7 +719,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         # print(iwave,'   ',T,P)
                         select = np.where(
                             (wavelengths > thiswave - dwgrid[iwave] / 2)
-                            & (wavelengths < thiswgrid + dwgrid[iwave] / 2)
+                            & (wavelengths < thiswave + dwgrid[iwave] / 2)
                         )
                         # print('select',select)
                         # print('len',len(select[0]))
@@ -1458,6 +1458,7 @@ def atmos(
                 nodes = []
                 nodeshape = []
                 with pymc.Model():
+                    dctx = dctxupdt()
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
@@ -1540,26 +1541,29 @@ def atmos(
                         log.info('--< RUNNING MCMC - NO CLOUDS! >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
-                        ctxtupdt(
-                            runtime=rtp,
-                            cleanup=cleanup,
-                            model=model,
-                            planet=p,
-                            rp0=rp0,
-                            orbp=orbp,
-                            tspectrum=tspectrum,
-                            xsl=xsl,
-                            spc=spc,
-                            modparlbl=modparlbl,
-                            hzlib=crbhzlib,
-                            chemistry=chemistry,
-                            fixed_params=fixed_params,
-                            mcmcdat=tspectrum[cleanup],
-                            mcmcsig=tspecerr[cleanup],
-                            nodeshape=nodeshape,
-                            forwardmodel=clearfmcerberus,
-                            atom_xsec=atom_xsec,
-                            interp_tea=interp_tea,
+                        dctx = dctxupdt(
+                            {
+                                'runtime': rtp,
+                                'cleanup': cleanup,
+                                'model': model,
+                                'planet': p,
+                                'rp0': rp0,
+                                'orbp': orbp,
+                                'tspectrum': tspectrum,
+                                'xsl': xsl,
+                                'spc': spc,
+                                'modparlbl': modparlbl,
+                                'hzlib': crbhzlib,
+                                'chemistry': chemistry,
+                                'fixedParams': fixed_params,
+                                'mcmcdat': tspectrum[cleanup],
+                                'mcmcsig': tspecerr[cleanup],
+                                'nodeshape': nodeshape,
+                                'forwardmodel': clearfmcerberus,
+                                'atom_xsec': atom_xsec,
+                                'interp_tea': interp_tea,
+                            },
+                            freeze=True,
                         )
 
                         # --< MODEL >--
@@ -1591,26 +1595,29 @@ def atmos(
                         log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
 
                         # before calling MCMC, save the fixed-parameter info in the context
-                        ctxtupdt(
-                            runtime=rtp,
-                            cleanup=cleanup,
-                            model=model,
-                            planet=p,
-                            rp0=rp0,
-                            orbp=orbp,
-                            tspectrum=tspectrum,
-                            xsl=xsl,
-                            spc=spc,
-                            modparlbl=modparlbl,
-                            hzlib=crbhzlib,
-                            chemistry=chemistry,
-                            fixed_params=fixed_params,
-                            mcmcdat=tspectrum[cleanup],
-                            mcmcsig=tspecerr[cleanup],
-                            nodeshape=nodeshape,
-                            forwardmodel=cloudyfmcerberus,
-                            atom_xsec=atom_xsec,
-                            interp_tea=interp_tea,
+                        dctx = dctxupdt(
+                            {
+                                'runtime': rtp,
+                                'cleanup': cleanup,
+                                'model': model,
+                                'planet': p,
+                                'rp0': rp0,
+                                'orbp': orbp,
+                                'tspectrum': tspectrum,
+                                'xsl': xsl,
+                                'spc': spc,
+                                'modparlbl': modparlbl,
+                                'hzlib': crbhzlib,
+                                'chemistry': chemistry,
+                                'fixedParams': fixed_params,
+                                'mcmcdat': tspectrum[cleanup],
+                                'mcmcsig': tspecerr[cleanup],
+                                'nodeshape': nodeshape,
+                                'forwardmodel': cloudyfmcerberus,
+                                'atom_xsec': atom_xsec,
+                                'interp_tea': interp_tea,
+                            },
+                            freeze=True,
                         )
 
                         # --< MODEL >--
