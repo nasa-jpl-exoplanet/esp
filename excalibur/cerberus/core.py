@@ -754,7 +754,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     xsec_matchingwgrid[:, :, iwave],
                     # careful with values going outside of bounds
                     bounds_error=False,
-                    fill_value=None
+                    fill_value=None,
                 )
                 library[thisatom]['SPL'].append(myspl)
 
@@ -802,8 +802,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 frameon=True,
             )
             plt.tight_layout()
-            out['data'][p]['plot_crossSections_vsT_' + thisatom] = save_plot_tosv(
-                thisfig
+            out['data'][p]['plot_crossSections_vsT_' + thisatom] = (
+                save_plot_tosv(thisfig)
             )
             if verbose:
                 plt.show()
@@ -828,8 +828,10 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 )
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(f'{thisatom} (atom)   T = {int(Tplot):d} K',
-                      fontsize=fontsize + 4)
+            plt.title(
+                f'{thisatom} (atom)   T = {int(Tplot):d} K',
+                fontsize=fontsize + 4,
+            )
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
             plt.tick_params(axis='both', labelsize=fontsize)
@@ -839,8 +841,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 frameon=True,
             )
             plt.tight_layout()
-            out['data'][p]['plot_crossSections_vsP_' + thisatom] = save_plot_tosv(
-                thisfig
+            out['data'][p]['plot_crossSections_vsP_' + thisatom] = (
+                save_plot_tosv(thisfig)
             )
             if verbose:
                 plt.show()
@@ -1458,7 +1460,27 @@ def atmos(
                 nodes = []
                 nodeshape = []
                 with pymc.Model():
-                    dctx = dctxupdt()
+                    dctx = dctxupdt()  # initialize context dict (None filled)
+                    dctx = dctxupdt(
+                        {
+                            'runtime': rtp,
+                            'cleanup': cleanup,
+                            'model': model,
+                            'planet': p,
+                            'rp0': rp0,
+                            'orbp': orbp,
+                            'tspectrum': tspectrum,
+                            'xsl': xsl,
+                            'spc': spc,
+                            'modparlbl': modparlbl,
+                            'hzlib': crbhzlib,
+                            'chemistry': chemistry,
+                            'mcmcdat': tspectrum[cleanup],
+                            'mcmcsig': tspecerr[cleanup],
+                            'atom_xsec': atom_xsec,
+                            'interp_tea': interp_tea,
+                        },
+                    )
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
@@ -1523,6 +1545,11 @@ def atmos(
                         modparlbl[model],
                     )
 
+                    dctx = dctxupdt({
+                        'fixedParams': fixed_params,
+                        'nodeshape': nodeshape,
+                    })
+
                     # fixes the possibly-used-before-assignment error
                     TensorModel = None
 
@@ -1537,102 +1564,36 @@ def atmos(
                         log.warning(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
-                    elif not rtp.fitCTP and not rtp.fitHaze:
-                        log.info('--< RUNNING MCMC - NO CLOUDS! >--')
-
-                        # before calling MCMC, save the fixed-parameter info in the context
-                        dctx = dctxupdt(
-                            {
-                                'runtime': rtp,
-                                'cleanup': cleanup,
-                                'model': model,
-                                'planet': p,
-                                'rp0': rp0,
-                                'orbp': orbp,
-                                'tspectrum': tspectrum,
-                                'xsl': xsl,
-                                'spc': spc,
-                                'modparlbl': modparlbl,
-                                'hzlib': crbhzlib,
-                                'chemistry': chemistry,
-                                'fixedParams': fixed_params,
-                                'mcmcdat': tspectrum[cleanup],
-                                'mcmcsig': tspecerr[cleanup],
-                                'nodeshape': nodeshape,
-                                'forwardmodel': clearfmcerberus,
-                                'atom_xsec': atom_xsec,
-                                'interp_tea': interp_tea,
-                            },
-                            freeze=True,
-                        )
+                    else:
+                        if not rtp.fitCTP and not rtp.fitHaze:
+                            log.info('--< RUNNING MCMC - NO CLOUDS! >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': clearfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloud-free spectrum'
+                        else:
+                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': cloudyfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloudy spectrum'
 
                         # --< MODEL >--
                         TensorModel = TensorShell()
+
+                        # print('nodes going into the tensor model', nodes)
+                        # print('nodes going into the tensor model', len(nodes))
 
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
                         _ = pymc.CustomDist(
-                            "likelihood for cloud-free spectrum",
+                            likeliName,
                             nodes,
                             observed=tspectrum[cleanup],
                             logp=LogLH,
                         )
-                        # save the logLikelihood values for each pymc step
-                        # pymc.Deterministic(
-                        #    "saved logLikelihood",
-                        #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                        # )
-                        # save the chi-squared values for each pymc step
-                        # (mulitply the logLikelihood by -2)
-                        pymc.Deterministic(
-                            "saved chi2",
-                            -2.0
-                            * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                        )
-                        # --------------
-                        pass
-                    else:
-                        log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
-
-                        # before calling MCMC, save the fixed-parameter info in the context
-                        dctx = dctxupdt(
-                            {
-                                'runtime': rtp,
-                                'cleanup': cleanup,
-                                'model': model,
-                                'planet': p,
-                                'rp0': rp0,
-                                'orbp': orbp,
-                                'tspectrum': tspectrum,
-                                'xsl': xsl,
-                                'spc': spc,
-                                'modparlbl': modparlbl,
-                                'hzlib': crbhzlib,
-                                'chemistry': chemistry,
-                                'fixedParams': fixed_params,
-                                'mcmcdat': tspectrum[cleanup],
-                                'mcmcsig': tspecerr[cleanup],
-                                'nodeshape': nodeshape,
-                                'forwardmodel': cloudyfmcerberus,
-                                'atom_xsec': atom_xsec,
-                                'interp_tea': interp_tea,
-                            },
-                            freeze=True,
-                        )
-
-                        # --< MODEL >--
-                        # print('nodes going into the tensor model', nodes)
-                        # print('nodes going into the tensor model', len(nodes))
-
-                        TensorModel = TensorShell()
-
-                        pymc.CustomDist(
-                            "likelihood for cloudy spectrum",
-                            nodes,
-                            observed=tspectrum[cleanup],
-                            logp=LogLH,
-                        )
-
                         # save the logLikelihood values for each pymc step
                         # pymc.Deterministic(
                         #    "saved logLikelihood",
