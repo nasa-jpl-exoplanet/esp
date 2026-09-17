@@ -1254,15 +1254,15 @@ def atmos(
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if rtp.fitCtoO:
+        if not rtp.fitCtoO:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if rtp.fitNtoO:
+        if not rtp.fitNtoO:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if rtp.fitStoO:
+        if not rtp.fitStoO:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
