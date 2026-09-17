@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name,no-member
-# pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
 import os
 import numpy as np
@@ -93,18 +93,41 @@ class crbFM:
             orbp = ctxt.orbp
         if hitemplist is None:
             hitemplist = ctxt.hitemplist
+            if hitemplist is None:
+                hitemplist = ctxt.runtime.hitemplist
+                # hitemplist = ctxt.runtime[
+                #    'cerberus_crbmodel_HITEMPmolecules'
+                # ].molecules
         if cialist is None:
             cialist = ctxt.cialist
+            if cialist is None:
+                cialist = ctxt.runtime.cialist
+                # cialist = ctxt.runtime[
+                #                    'cerberus_crbmodel_HITRANmolecules'
+                #                ].molecules
         if xmollist is None:
             xmollist = ctxt.xmollist
+            if xmollist is None:
+                xmollist = ctxt.runtime.xmollist
+                # xmollist = ctxt.runtime[
+                #    'cerberus_crbmodel_EXOMOLmolecules'
+                # ].molecules
         if atomlist is None:
             atomlist = ctxt.atomlist
+            if atomlist is None:
+                atomlist = ctxt.runtime.atomlist
         if nlevels is None:
             nlevels = ctxt.nlevels
+            if nlevels is None:
+                nlevels = ctxt.runtime.nlevels
         if Hsmax is None:
             Hsmax = ctxt.Hsmax
+            if Hsmax is None:
+                Hsmax = ctxt.runtime.Hsmax
         if solrad is None:
             solrad = ctxt.solrad
+            if solrad is None:
+                solrad = ctxt.runtime.solrad
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -627,8 +650,12 @@ def gettau(
         top_mmr = mmr[-1]
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
-            if elem in ['H2', 'He']:
+            if elem in ['H2', 'He', 'Ne']:
                 # ignore missing xsecs for molecules without strong features
+                pass
+            elif elem in ['Fe', 'Mg', 'Si', 'FeO', 'FeS', 'SiO']:
+                # we don't have cross-sections for these; strength unknown
+                # EXOMOL has SiO  https://exomol.com/data/molecules/SiO/
                 pass
             else:
                 if elem in atomlist:
@@ -649,11 +676,15 @@ def gettau(
                             wgrid,
                             interp_atom[elem],
                         )
+                    pass
                 else:
                     log.error(
-                        'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                        'MISSING CROSS-SECTION: add this molecule to xslib (via runtime EXOMOL)  %s',
                         elem,
                     )
+                    pass
+                pass
+            pass
         else:
             if elem in hitemplist or elem in xmollist:
                 # getxmolxs() is for EXOMOL format
@@ -678,9 +709,9 @@ def gettau(
                     # print('ozone data', ozoneUVdata)
                     # convert nm to micron
                     ozoneUVdata['wavelength'] = np.array(ozoneUVdata['wavelength']) / 1000.
-                    print('wavelength range for ozone opacity table',
-                          ozoneUVdata['wavelength'][0],
-                          ozoneUVdata['wavelength'][-1])
+                    # print('wavelength range for ozone opacity table',
+                    #      ozoneUVdata['wavelength'][0],
+                    #      ozoneUVdata['wavelength'][-1])
                     # units for the cross-section?!
                     ozoneUVdata['xsec'] = np.array(ozoneUVdata['xsec'])
                     for inu, nu in enumerate(lsig):
