@@ -162,7 +162,8 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
     # species names for calling the cross sections
     #  TiO,MgO special cases; lower-case is capitalized in our dir structure
     species_name = [
-        'MGO' if el == 'MgO_g' else 'TIO' if el == 'TiO_g' else el.split('_')[0] for el in species
+        'MGO' if el == 'MgO_g' else 'TIO' if el == 'TiO_g' else el.split('_')[0]
+        for el in species
     ]
     # save the list of molecules
     filename = modelDir + 'grid_parameters/species.npy'
