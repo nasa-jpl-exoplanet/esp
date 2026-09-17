@@ -1485,7 +1485,9 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not rtp.fitCTP:
+                    # if not rtp.fitCTP:
+                    #  this is dumb, to avoid lint 'unused variable' dctx
+                    if not dctx['runtime'].fitCTP:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
