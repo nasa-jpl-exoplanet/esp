@@ -21,6 +21,7 @@ from excalibur.system.autofill import (
     fillUncertainty,
     fill_in_some_blank_omegas,
     derive_RHOstar_from_M_and_R,
+    derive_Mstar_from_RHO_and_R,
     derive_SMA_from_P_and_Mstar,
     derive_LOGGstar_from_R_and_M,
     derive_LOGGplanet_from_R_and_M,
@@ -183,6 +184,20 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         autofill['starID'][target]['RHO*_lowerr'] = RHO_lowerr_derived
         autofill['starID'][target]['RHO*_uperr'] = RHO_uperr_derived
         autofill['starID'][target]['RHO*_ref'] = RHO_ref_derived
+
+    # use stellar density,radius to fill in blank stellar mass
+    M_derived, M_lowerr_derived, M_uperr_derived, M_ref_derived = (
+        derive_Mstar_from_RHO_and_R(autofill['starID'][target])
+    )
+    if autofill['starID'][target]['M*'] != M_derived:
+        # print('M before ',autofill['starID'][target]['M*'])
+        # print('M derived',M_derived)
+        # print('M_ref derived',M_ref_derived)
+        # print('M_ref before ',autofill['starID'][target]['M*_ref'])
+        autofill['starID'][target]['M*'] = M_derived
+        autofill['starID'][target]['M*_lowerr'] = M_lowerr_derived
+        autofill['starID'][target]['M*_uperr'] = M_uperr_derived
+        autofill['starID'][target]['M*_ref'] = M_ref_derived
 
     # use a/Rp to fill in semi-major axis
     #  (make sure this comes before sma is derived from period,M*)
