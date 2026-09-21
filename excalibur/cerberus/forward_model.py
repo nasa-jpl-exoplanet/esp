@@ -193,13 +193,13 @@ class crbFM:
                 pass
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
-                if interp_tea is None:
+                if interp_tea is None and tea_data is not None:
                     log.info('using external TEA grid')
-                    # for use outside of the pipeline, give a dictionary
-                    # containing the interpolators for each molecule
+                    # option to pass in tea grid when used outside of the pipeline
+                    # also used for ariel-sim call, which doesn't use context
                     interp_tea = tea_data
                     pass
-                if not interp_tea:
+                if interp_tea is None:
                     log.info('using full=slow TEA calculation')
                     #  (this one gives a div-by-0 error)
                     # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -228,8 +228,8 @@ class crbFM:
                         (
                             tpp,
                             pressure,
-                            10 ** cheq['XtoH'] * np.ones(pressure.size),
-                            10 ** cheq['CtoO'] * np.ones(pressure.size),
+                            cheq['XtoH'] * np.ones(pressure.size),
+                            cheq['CtoO'] * np.ones(pressure.size),
                         )
                     )
 
@@ -276,6 +276,12 @@ class crbFM:
                     #    totalmetals += 10.0 ** mixratio[molecule]
 
                     mmw, fH2, fHe = getmmw(mixratio)
+                    if verbose:
+                        print('mmw', np.median(mmw))
+                        for molecule, amounts in mixratio.items():
+                            print('mixing ratios', molecule, np.median(amounts))
+                            pass
+                        pass
                     pass
                 pass
             else:

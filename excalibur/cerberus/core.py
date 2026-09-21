@@ -1127,7 +1127,7 @@ def jwstatmos(
                     for n, nl in priors.items():
                         nodes.append(pymc.Uniform(n, nl[0], nl[1]))
                         pass
-                    # UPDATE DICTIONNARY CONTEXT
+                    # UPDATE DICTIONARY CONTEXT
                     dctx = dctxupdt(
                         {
                             'runtime': rtp,
