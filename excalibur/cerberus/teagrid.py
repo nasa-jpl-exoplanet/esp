@@ -106,9 +106,9 @@ def get_TEA_grid(modelName=None, verbose=False):
             (temperature, pressure, XtoH, CtoO),
             grid_4d,
             bounds_error=False,
-            fill_value=np.nan,
-            # fill_value=None,
-            # method='cubic',  # comment out during debugging (linear is faster)
+            # fill_value=np.nan,
+            fill_value=None,
+            method='cubic',  # comment out during debugging (linear is faster)
         )
         progbar.update()
         pass
