@@ -9,7 +9,6 @@ from importlib import import_module as fetch
 from excalibur.system.autofill import (
     derive_LOGGplanet_from_R_and_M,
     derive_Teqplanet_from_Lstar_and_sma,
-    derive_RHOstar_from_M_and_R,
 )
 
 
