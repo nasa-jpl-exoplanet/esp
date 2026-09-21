@@ -9,6 +9,7 @@ from importlib import import_module as fetch
 from excalibur.system.autofill import (
     derive_LOGGplanet_from_R_and_M,
     derive_Teqplanet_from_Lstar_and_sma,
+    derive_RHOstar_from_M_and_R,
 )
 
 
@@ -1367,6 +1368,7 @@ def ppar():
             't0': 58412.076569440804,
             't0_uperr': 0.00078,
             't0_lowerr': -0.00074,
+            't0_ref': 'CB',
         },
     }
 
@@ -2117,7 +2119,13 @@ def ppar():
         'M*_uperr': 0.25,
         'M*_lowerr': -0.25,
         'M*_ref': 'Staussun et al. 2019',
+        'RHO*': 1.13,  # from R*=0.93
+        'RHO*_uperr': 0.25,
+        'RHO*_lowerr': -0.25,
+        'RHO*_ref': 'derived from M*,R*',
     }
+    # 6/21/26 have to fill in mandatory RHO*
+
     # ~50 are missing transit duration. update analytically?
 
     # 5/21/26 Sophia Grusnis finds T0 is off in the JWST data
