@@ -78,7 +78,15 @@ def calcTEA(
             'OH_g',
             'PH3_g',
             'SO2_g',
-            'TiO_g',
+            # 'TiO_g',
+            'Ne_ref',
+            # 'Fe_g',
+            # 'Mg_g',
+            # 'Si_g',
+            # 'FeS_g',
+            # 'FeO_g',
+            # 'SiO_g',
+            # 'MgO_g',
         ]
     input_species = species
 
