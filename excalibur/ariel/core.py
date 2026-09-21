@@ -381,7 +381,10 @@ def simulate_spectra(
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
-
+                if useTEAgrid:
+                    teagrid = interp_tea
+                else:
+                    teagrid = None
                 # consider non-isothermal T-P profiles
                 isothermal = not bool('Nonisothermal' in atmosModel)
                 if isothermal:
@@ -577,6 +580,7 @@ def simulate_spectra(
                         xslib,
                         planet_letter,
                         chemistry=chemistry,
+                        teagrid=teagrid,
                         mixratios=mixratio,
                     )
                     # pressures should be the same thing as pressure
