@@ -29,6 +29,7 @@ from excalibur.ariel.plotters import (
     plot_depthprobed,
     plot_vertical_profiles,
 )
+from excalibur.cerberus.teagrid import get_TEA_grid
 
 log = logging.getLogger(__name__)
 
@@ -102,13 +103,15 @@ def simulate_spectra(
         # 'cerberuslowmmwNoclouds',
     ]
 
-    if testTarget:
-        atmosModels = [
-            # 'cerberus',
-            'cerberusTEA',
-            # 'cerberusNoclouds',
-            # 'cerberusTEANoclouds',
-        ]
+    # load TEA equilibrium chemistry interpolation grid
+    modelName = (
+        'Pgrid_'
+        + str(runtime_params.nlevels)
+        + 'levels'
+        + str(runtime_params.Hsmax)
+        + 'scaleHeights'
+    )
+    interp_tea = get_TEA_grid(modelName)
 
     solarCtoO = 0.54951
 
@@ -375,6 +378,16 @@ def simulate_spectra(
                         if verbose:
                             print('CALCulating cross-sections START')
                         _ = myxsecs(tempspc, runtime_params, xslib)
+                        # import pickle
+                        # hwosavename = 'hwoxslibsave1.pkl'
+                        # if 0:
+                        #    _ = myxsecs(tempspc, runtime_params, xslib)
+                        #    file = open(hwosavename, 'bw')
+                        #    pickle.dump(xslib, file)
+                        #    file.close()
+                        # else:
+                        #    with open(hwosavename, 'br') as file:
+                        #        xslib = pickle.load(file)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -404,6 +417,8 @@ def simulate_spectra(
                         xslib,
                         planet_letter,
                         chemistry=chemistry,
+                        teagrid=interp_tea,
+                        verbose=verbose,
                     )
                     # pressures should be the same thing as pressure
                     if np.any(pressures != pressure):
@@ -579,6 +594,7 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
+                temps = system_params[planet_letter]['teq'] * len(pressure)
                 out['data'][planet_letter][atmosModel][
                     'plot_vertical_profiles'
                 ] = plot_vertical_profiles(
@@ -586,6 +602,7 @@ def simulate_spectra(
                     planet_letter,
                     moleculeProfiles,
                     pressure,
+                    temperature=temps,
                     verbose=verbose,
                 )
 
