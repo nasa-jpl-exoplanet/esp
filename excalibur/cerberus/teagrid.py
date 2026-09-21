@@ -99,11 +99,14 @@ def get_TEA_grid(modelName=None, verbose=False):
     # no wait, don't bother.  use the standard edge flags in the interpolator
     # interp_tea['Trange'] = (temperature[0], temperature[-1])
 
+    # NOTE: interpolation grid has to use log(P) not linear P
+    #  otherwise there will be visible scalloping in the mixratio-vs-P plot
+
     for molecule in species_name:
         grid_4d = np.load(modelDir + molecule + '.npy')
         # print('grid shape', grid_4d.shape, molecule)
         interp_tea[molecule] = RegularGridInterpolator(
-            (temperature, pressure, XtoH, CtoO),
+            (temperature, np.log10(pressure), XtoH, CtoO),
             grid_4d,
             bounds_error=False,
             # fill_value=np.nan,

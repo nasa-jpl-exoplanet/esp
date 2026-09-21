@@ -227,7 +227,7 @@ class crbFM:
                     grid_points = np.column_stack(
                         (
                             tpp,
-                            pressure,
+                            np.log10(pressure),
                             cheq['XtoH'] * np.ones(pressure.size),
                             cheq['CtoO'] * np.ones(pressure.size),
                         )
