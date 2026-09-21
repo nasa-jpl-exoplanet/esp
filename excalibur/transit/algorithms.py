@@ -203,11 +203,11 @@ class WhiteLight(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         runtime_params = trncore.TransitWhitelightParams(
-            imo=runtime['transit_imo'],
-            threshold=runtime['transit_whitelight_threshold'],
+            imo=runtime['transit_imo'].value(),
+            threshold=runtime['transit_whitelight_threshold'].value(),
             lethe=runtime['transit_limbdarkening_lethe'],
             sliceSampler=runtime['transit_pymc_sliceSampler'],
-            chainlen=runtime['transit_whitelight_chainlen'],
+            chainlen=runtime['transit_whitelight_chainlen'].value(),
         )
 
         svupdate = []
