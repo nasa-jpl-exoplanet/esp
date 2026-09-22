@@ -30,12 +30,10 @@ def createversion():
 # ------------ -------------------------------------------------------
 # -- TARGET LIST -- --------------------------------------------------
 # FIRST COL HAS TO BE SOLVABLE BY
-# -- Obsolete https://archive.stsci.edu/hst/
 # https://mast.stsci.edu/portal/Mashup/Clients/Mast/Portal.html
 # SECOND COL [OPTIONAL] HAS TO BE 'Default Alias' RETURNED FROM
 # https://exoplanetarchive.ipac.caltech.edu/index.html
 # OR ALIAS KNOWN BY https://archive.stsci.edu/hst/
-# MINOR CHANGE
 def targetlist():
     '''
     55 Cnc :
@@ -142,6 +140,7 @@ def targetlist():
     Kepler-125 :
     Kepler-126 :
     Kepler-127 :
+    Kepler-13 :
     Kepler-1339 :
     Kepler-138 :
     Kepler-14 :
@@ -153,6 +152,7 @@ def targetlist():
     Kepler-16 :
     Kepler-1625 :
     Kepler-1651 :
+    Kepler-1658 :
     Kepler-167 :
     Kepler-17 :
     Kepler-18 :
@@ -439,7 +439,6 @@ def targetlist():
     KELT-4 A :
     KELT-6 :
     KELT-8 :
-    KOI-13 :
     KOI-94 :
     KPS-1 :
     Kepler-105 :
@@ -768,7 +767,6 @@ def targetlist():
     K2-99 :
     Kepler-1515 :
     Kepler-1517 :
-    Kepler-1658 :
     Kepler-411 :
     Kepler-91 :
     KOI-12 :
