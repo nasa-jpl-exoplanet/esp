@@ -1,0 +1,50 @@
+{
+  "k": 5,
+  "mean_topk_overlap": 0.9282,
+  "example_true_top5": [
+    [
+      "HCN",
+      "H2O",
+      "CH4",
+      "NH3",
+      "CO2"
+    ],
+    [
+      "CO",
+      "C2H2",
+      "NH3",
+      "HCN",
+      "CO2"
+    ],
+    [
+      "CO2",
+      "CO",
+      "CH4",
+      "HCN",
+      "C2H2"
+    ]
+  ],
+  "example_pred_top5": [
+    [
+      "HCN",
+      "H2O",
+      "NH3",
+      "CH4",
+      "CO2"
+    ],
+    [
+      "CO",
+      "C2H2",
+      "NH3",
+      "HCN",
+      "CO2"
+    ],
+    [
+      "CO2",
+      "CH4",
+      "CO",
+      "C2H2",
+      "HCN"
+    ]
+  ]
+}

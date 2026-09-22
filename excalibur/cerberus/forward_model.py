@@ -38,6 +38,37 @@ class crbFM:
         self.__opticalDepthProfiles = {}
         self.__pressureGrid = np.empty(0)
 
+    def __getitem__(self, key):
+        if key == 'spectrum':
+            return self.__spectrum
+        if key == 'breakdown_by_molecule':
+            return self.__breakdown_by_molecule
+        if key == 'pressureGrid':
+            return self.__pressureGrid
+        if key == 'moleculeProfiles':
+            return self.__moleculeProfiles
+        if key == 'opticalDepthProfiles':
+            return self.__opticalDepthProfiles
+        raise KeyError(f'Unknown crbFM field: {key}')
+
+    def __setitem__(self, key, value):
+        if key == 'spectrum':
+            self.__spectrum = value
+            return
+        if key == 'breakdown_by_molecule':
+            self.__breakdown_by_molecule = value
+            return
+        if key == 'pressureGrid':
+            self.__pressureGrid = value
+            return
+        if key == 'moleculeProfiles':
+            self.__moleculeProfiles = value
+            return
+        if key == 'opticalDepthProfiles':
+            self.__opticalDepthProfiles = value
+            return
+        raise KeyError(f'Unknown crbFM field: {key}')
+
     def crbmodel(
         self,
         temp,
@@ -145,7 +176,7 @@ class crbFM:
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
-        temp = np.array(temp)
+        temp = np.asarray(temp, dtype=float)
         # print('  temp', temp)
         if temp.ndim:
             tpp = temp
@@ -306,11 +337,13 @@ class crbFM:
         if not np.array(fHe).ndim:
             fHe = np.array([float(fHe)] * len(tpp))
         for molecule in mixratio:
-            # mixratio[molecule] = np.array(mixratio[molecule])
-            if not mixratio[molecule].ndim:
+            mixratio_value = np.asarray(mixratio[molecule], dtype=float)
+            if not mixratio_value.ndim:
                 mixratio[molecule] = np.array(
-                    [float(mixratio[molecule])] * len(tpp)
+                    [float(mixratio_value)] * len(tpp), dtype=float
                 )
+            else:
+                mixratio[molecule] = mixratio_value
 
             # verify that the mixratio array has the right length (nlevels)
             if len(mixratio[molecule]) not in [int(nlevels)]:

@@ -1,0 +1,15 @@
+{
+  "num_samples": 1000,
+  "num_features": 329,
+  "num_species": 7,
+  "species": [
+    "H2O",
+    "CO2",
+    "CH4",
+    "CO",
+    "NH3",
+    "HCN",
+    "C2H2"
+  ],
+  "dataset_path": "/Users/siddharthmanikandan/Documents/Excalibur/datasets/abundance_ranker_dataset.npz"
+}
