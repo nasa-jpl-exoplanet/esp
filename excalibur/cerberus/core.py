@@ -2350,7 +2350,8 @@ def results(
                 else:
                     prior_ranges = {}
 
-                fit_cloud_parameters = 'CTP' in all_keys
+                fit_CTP = 'CTP' in all_keys
+                fit_haze = 'HScale' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
                 fit_n_to_o = '[N/O]' in all_keys
                 fit_s_to_o = '[S/O]' in all_keys
@@ -2426,22 +2427,27 @@ def results(
                     mdptrace_profiled.append(
                         atm[p][model_name]['MCTRACE'][key][keepers]
                     )
-                if fit_cloud_parameters:
+                if fit_CTP:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
-                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    hazescale = np.median(hazescaletrace)
-                    hazeloc = np.median(hazeloctrace)
-                    hazethick = np.median(hazethicktrace)
                     # print('fit results; CTP:', ctp)
-                    # print('fit results; HScale:', hazescale)
-                    # print('fit results; HLoc:', hazeloc)
-                    # print('fit results; HThick:', hazethick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
+                    ctp_profiled = np.median(ctptrace_profiled)
+                else:
+                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
+                    ctp_profiled = ctp
+                if fit_haze:
+                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
+                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
+                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    hazescale = np.median(hazescaletrace)
+                    hazeloc = np.median(hazeloctrace)
+                    hazethick = np.median(hazethicktrace)
+                    # print('fit results; HScale:', hazescale)
+                    # print('fit results; HLoc:', hazeloc)
+                    # print('fit results; HThick:', hazethick)
                     hazescaletrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HScale'
                     ][keepers]
@@ -2451,16 +2457,13 @@ def results(
                     hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
-                    ctp_profiled = np.median(ctptrace_profiled)
                     hazescale_profiled = np.median(hazescaletrace_profiled)
                     hazeloc_profiled = np.median(hazeloctrace_profiled)
                     hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
-                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
                     hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     hazeloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
                     hazethick = atm[p]['TRUTH_MODELPARAMS']['HThick']
-                    ctp_profiled = ctp
                     hazescale_profiled = hazescale
                     hazeloc_profiled = hazeloc
                     hazethick_profiled = hazethick
