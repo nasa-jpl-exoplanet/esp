@@ -662,9 +662,7 @@ def derive_Mstar_from_RHO_and_R(starInfo):
                     (3.0 * float(Rerr1) / float(R)) ** 2
                     + (float(RHOerr1) / float(RHO)) ** 2
                 )
-                M_lowerr_derived.append(
-                    f'{(newM * newMfractionalError1):6.4f}'
-                )
+                M_lowerr_derived.append(f'{(newM * newMfractionalError1):6.4f}')
             if Rerr2 == '' or RHOerr2 == '':
                 M_uperr_derived.append('')
             else:
@@ -672,9 +670,7 @@ def derive_Mstar_from_RHO_and_R(starInfo):
                     (3.0 * float(Rerr2) / float(R)) ** 2
                     + (float(RHOerr2) / float(RHO)) ** 2
                 )
-                M_uperr_derived.append(
-                    f'{(newM * newMfractionalError2):6.4f}'
-                )
+                M_uperr_derived.append(f'{(newM * newMfractionalError2):6.4f}')
         else:
             M_derived.append(M)
             M_lowerr_derived.append(Merr1)
