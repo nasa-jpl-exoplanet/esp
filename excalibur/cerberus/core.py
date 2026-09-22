@@ -12,7 +12,7 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt, dctxupdt
+from excalibur.cerberus.fmcontext import dctxupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
@@ -31,6 +31,7 @@ from excalibur.cerberus.plotters import (
     plot_fit_uncertainties,
     plot_mass_vs_metals,
 )
+from excalibur.util.plotters import save_plot_tosv
 from excalibur.cerberus.bounds import (
     set_prior_bound,
     add_priors,
@@ -48,6 +49,7 @@ import matplotlib.image as img
 from collections import defaultdict
 from collections import namedtuple
 from scipy.interpolate import interp1d as itp
+from scipy.interpolate import RegularGridInterpolator
 
 import pymc
 import pytensor.tensor as pytensr
@@ -144,6 +146,7 @@ hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
+atomdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/')
 
 
 # ----------------- --------------------------------------------------
@@ -206,8 +209,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     hitemplist = runtime_params.hitemplist
     cialist = runtime_params.cialist
     xmollist = runtime_params.xmollist
-    # *** atomlist is not used yet ***
-    # atomlist = runtime_params.atomlist
+    atomlist = runtime_params.atomlist
+
+    fontsize = 20
 
     cs = False
     planet_letters = []
@@ -324,45 +328,46 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     plt.show()
                     pass
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            haha = list(set(library[myexomol]['T']))
+            haha = np.sort(np.array(haha))
+            haha = haha[::-1]
+            # select a subsample of the temperature array
+            # there are 10 different default colors, so let's plot 10
+            Ntemps = 10
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+                int
+            )
+            for temp in haha[Tselect]:
+                select = np.array(library[myexomol]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[myexomol]['nu'])[select]),
+                    np.array(library[myexomol]['I'])[select],
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            maxsigma = np.max(library[myexomol]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(myexomol + ' (EXOMOL)', fontsize=fontsize + 4)
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + myexomol] = save_plot_tosv(
+                thisfig
+            )
             if verbose:
-                fts = 20
-                plt.figure(figsize=(16, 12))
-                haha = list(set(library[myexomol]['T']))
-                haha = np.sort(np.array(haha))
-                haha = haha[::-1]
-                for temp in haha:
-                    select = np.array(library[myexomol]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[myexomol]['nu'])[select]),
-                        np.array(library[myexomol]['I'])[select],
-                        label=str(int(temp)) + 'K',
-                    )
-                    pass
-                plt.title(myexomol)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]', fontsize=fts + 4)
-                plt.ylabel(
-                    'Cross Section [$cm^{2}.molecule^{-1}$]', fontsize=fts + 4
-                )
-                plt.tick_params(axis='both', labelsize=fts)
-                plt.legend(
-                    bbox_to_anchor=(0.95, 0.0, 0.12, 1),
-                    loc=5,
-                    ncol=1,
-                    mode='expand',
-                    numpoints=1,
-                    borderaxespad=0.0,
-                    frameon=True,
-                )
-                # GMR: Put this in keyword saveplot
-                # plt.savefig(
-                #    excalibur.context['data_dir']
-                #    + '/bryden/'
-                #    + myexomol
-                #    + '_xslib.png',
-                #    dpi=200,
-                # )
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         for mycia in cialist:
             # log.info('>-- %s', str(mycia))
@@ -426,7 +431,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     myspl = itp(x, y, bounds_error=False, fill_value=0)
                     library[mycia]['SPL'].append(myspl)
                     library[mycia]['SPLNU'].append(iline)
-                    if verbose:
+                    if verbose and mycia == 'too many plots here!':
                         plt.plot(x, y, 'o')
                         xp = np.arange(101) / 100.0 * (
                             np.max(x) - np.min(x)
@@ -436,19 +441,49 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the temperature array
+            # there are 10 different default colors, so let's plot 10
+            Ntemps = 10
+            haha = list(set(library[mycia]['T']))
+            haha = np.sort(np.array(haha))
+            # haha = haha[::-1]
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+                int
+            )
+            for temp in haha[Tselect]:
+                select = np.array(library[mycia]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[mycia]['nu'])[select]),
+                    np.array(library[mycia]['I'])[select],
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            maxsigma = np.max(library[mycia]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(mycia + ' (EXOMOL)', fontsize=fontsize + 4)
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel(
+                'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]',
+                fontsize=fontsize,
+            )
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + mycia] = save_plot_tosv(
+                thisfig
+            )
             if verbose:
-                for temp in set(library[mycia]['T']):
-                    select = np.array(library[mycia]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[mycia]['nu'])[select]),
-                        np.array(library[mycia]['I'])[select],
-                    )
-                    pass
-                plt.title(mycia)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]')
-                plt.ylabel('Line intensity $S(T)$ [$cm^{5}.molecule^{-2}$]')
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         for ks in hitemplist:
             # log.info('>-- %s', str(ks))
@@ -531,7 +566,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
-            if verbose:
+            if verbose and ks == 'too many plots here!':
                 for i in set(library[ks]['I']):
                     select = np.array(library[ks]['I']) == i
                     plt.semilogy(
@@ -541,23 +576,11 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     )
                     pass
                 plt.title(ks)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]')
-                plt.ylabel('Line intensity $S_{296K}$ [$cm.molecule^{-1}$]')
+                plt.xlabel('Wavelength [$\\mu m$]')
+                plt.ylabel('Line intensity $S_{296K}$ [$cm/molecule$]')
                 plt.show()
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
-            # mmr = 2.3  # Fortney 2015 for hot Jupiters
-            # solrad = 10.0
-            # hsmax = 20.0
-            # nlevels = 100.0
-            # pgrid = np.arange(
-            #    np.log(runtime_params.solrad) - runtime_params.Hsmax,
-            #    np.log(runtime_params.solrad)
-            #    + runtime_params.Hsmax / runtime_params.nlevels,
-            #    runtime_params.Hsmax / (runtime_params.nlevels - 1),
-            # )
-            # pgrid = np.exp(pgrid)
-            # pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
@@ -567,8 +590,6 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     library[ks],
                     qtgrid[ks],
                     tstep,
-                    # pressuregrid,
-                    # mmr,
                     wgrid,
                     debug=False,
                 )
@@ -612,38 +633,222 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 library[ks]['SPL'].append(myspl)
                 library[ks]['SPLNU'].append(iline)
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            haha = list(set(library[ks]['T']))
+            haha = np.sort(np.array(haha))
+            haha = haha[::-1]
+            # select a subsample of the temperature array
+            # there are 10 different default colors, so let's plot 10
+            Ntemps = 10
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+                int
+            )
+            for temp in haha[Tselect]:
+                select = np.array(library[ks]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[ks]['nu'])[select]),
+                    np.array(library[ks]['I'])[select],
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
+            maxsigma = np.max(library[ks]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + ks] = save_plot_tosv(thisfig)
             if verbose:
-                fts = 20
-                plt.figure(figsize=(16, 12))
-                haha = list(set(library[ks]['T']))
-                haha = np.sort(np.array(haha))
-                haha = haha[::-1]
-                for temp in haha:
-                    select = np.array(library[ks]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[ks]['nu'])[select]),
-                        np.array(library[ks]['I'])[select],
-                        label=str(int(temp)) + 'K',
-                    )
-                    pass
-                plt.title(ks)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]', fontsize=fts + 4)
-                plt.ylabel(
-                    'Cross Section [$cm^{2}.molecule^{-1}$]', fontsize=fts + 4
-                )
-                plt.tick_params(axis='both', labelsize=fts)
-                plt.legend(
-                    bbox_to_anchor=(0.95, 0.0, 0.12, 1),
-                    loc=5,
-                    ncol=1,
-                    mode='expand',
-                    numpoints=1,
-                    borderaxespad=0.0,
-                    frameon=True,
-                )
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
+        # ------- atomic species (e.g. Na) --------
+        # load in the pre-calculated grid of atomic cross sections
+        temperatures = np.load(atomdir + 'temp.npy')
+        pressures = np.load(atomdir + 'pressure.npy')
+        wavelengths = np.load(atomdir + 'wgrid.npy')
+        # print(
+        #    'atom-xsec grid size T,P,lambda',
+        #    len(temperatures),
+        #    len(pressures),
+        #    len(wavelengths),
+        # )
+        # print('atom-xsec grid range T',temperatures[0],temperatures[-1])
+        # print('atom-xsec grid range P',pressures[0],pressures[-1])
+        # print('atom-xsec grid range lambda',wavelengths[0],wavelengths[-1])
+
+        for thisatom in atomlist:
+            # log.info('>-- %s', str(thisatom))
+            xsec = np.load(atomdir + thisatom + '/grid_3d.npy')
+            # use this interpolator for validating interp2d_xsec below
+            # interp3d_xsec = RegularGridInterpolator(
+            #    (temperatures, pressures, wavelengths), xsec
+            # )
+
+            library[thisatom] = {
+                'I': [],
+                'T': [],
+                'P': [],
+                'nu': [],
+                'SPL': [],
+                'SPLNU': [],
+            }
+
+            # generic xsec grid has to be binned to coarser-resolution wgrid
+            xsec_matchingwgrid = (
+                np.ones((xsec.shape[0], xsec.shape[1], len(wgrid))) * 666
+            )
+
+            dwgrid = (wgrid[2:] - wgrid[:-2]) / 2.0
+            dwgrid = np.concat(
+                (np.array([dwgrid[0]]), dwgrid, np.array([dwgrid[-1]]))
+            )
+            for itemp in range(len(temperatures)):
+                for ipress in range(len(pressures)):
+                    for iwave, thiswave in enumerate(wgrid):
+                        # print(iwave,'   ',T,P)
+                        select = np.where(
+                            (wavelengths > thiswave - dwgrid[iwave] / 2)
+                            & (wavelengths < thiswave + dwgrid[iwave] / 2)
+                        )
+                        # print('select',select)
+                        # print('len',len(select[0]))
+                        if len(select[0]) == 0:
+                            log.error(
+                                'ERROR: pre-calculated wavelength grid isnt fine enough for atom: %s',
+                                thisatom,
+                            )
+                            xsec_matchingwgrid[itemp, ipress, iwave] = 0
+                        else:
+                            avsigma = np.average(xsec[itemp, ipress, select])
+                            xsec_matchingwgrid[itemp, ipress, iwave] = avsigma
+
+                            # don't bother saving this info. slows and uses space
+                            # library[thisatom]['I'].append(avsigma)
+                            # library[thisatom]['T'].append(temperatures[itemp])
+                            # library[thisatom]['P'].append(pressures[ipress])
+                            # library[thisatom]['nu'].append(1e4 / wgrid[iwave])
+            # for inu, nu in enumerate(set(library[thisatom]['nu'])):
+            #     select = np.array(library[thisatom]['nu']) == nu
+            #     Is = np.array(library[thisatom]['I'])[select]
+            #     Ts = np.array(library[thisatom]['T'])[select]
+            #     Ps = np.array(library[thisatom]['P'])[select]
+            #     sortme = np.argsort(Ts)
+            #     Is = Is[sortme]
+            #     Ts = Ts[sortme]
+            # myspl = itp(Ts, Is, bounds_error=False, fill_value=0)
+
+            for iwave in range(len(wgrid)):
+                myspl = RegularGridInterpolator(
+                    (temperatures, pressures),
+                    xsec_matchingwgrid[:, :, iwave],
+                    # careful with values going outside of bounds
+                    bounds_error=False,
+                    fill_value=None,
+                )
+                library[thisatom]['SPL'].append(myspl)
+
+            # for checking/ploting, make a 3-d array of cross-sections
+            #  using the new SPL interpolators
+            # (loop over a bunch of 2-d interps, rather than full 3-d interp)
+            sigmas = []
+            temp_grid, press_grid = np.meshgrid(temperatures, pressures)
+            for interp2d_xsec in library[thisatom]['SPL']:
+                sigmas.append(interp2d_xsec((temp_grid, press_grid)))
+            sigma = np.array(sigmas)
+            # print('sigma shape (2d)', sigma.shape)
+
+            # plot the cross-sections for this species as a function of T
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the temperature array
+            # there are 10 different default colors, so let's plot 10
+            Ntemps = 10
+            Tselect = np.round(
+                np.linspace(0, len(temperatures) - 1, Ntemps)
+            ).astype(int)
+            for itemp, temp in zip(Tselect, temperatures[Tselect]):
+                # choose one pressure value to plot bunch of temperatures
+                ipress = int(len(pressures) / 2)
+                Pplot = pressures[ipress]
+                plt.semilogy(
+                    wgrid,
+                    sigma[:, ipress, itemp],
+                    label=str(int(temp)) + ' K',
+                )
+            maxsigma = np.max(sigma)
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(
+                f'{thisatom} (atom)   P = {Pplot:1.1e} bar',
+                fontsize=fontsize + 4,
+            )
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_vsT_' + thisatom] = (
+                save_plot_tosv(thisfig)
+            )
+            if verbose:
+                plt.show()
+            plt.close(thisfig)
+
+            # plot the cross-sections for this species as a function of P
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the pressure array
+            # there are 10 different default colors, so let's plot 10
+            Npressures = 10
+            Pselect = np.round(
+                np.linspace(0, len(pressures) - 1, Npressures)
+            ).astype(int)
+            for ipress, press in zip(Pselect, pressures[Pselect]):
+                # choose one temperature value; plot a bunch of pressures
+                itemp = int(len(temperatures) / 2)
+                Tplot = temperatures[itemp]
+                plt.semilogy(
+                    wgrid,
+                    sigma[:, ipress, itemp],
+                    label=f'{press:1.1e} bar',
+                )
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(
+                f'{thisatom} (atom)   T = {int(Tplot):d} K',
+                fontsize=fontsize + 4,
+            )
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_vsP_' + thisatom] = (
+                save_plot_tosv(thisfig)
+            )
+            if verbose:
+                plt.show()
+            plt.close(thisfig)
+            pass
+
         out['data'][p]['XSECS'] = library
         out['data'][p]['QTGRID'] = qtgrid
         pass
@@ -922,7 +1127,7 @@ def jwstatmos(
                     for n, nl in priors.items():
                         nodes.append(pymc.Uniform(n, nl[0], nl[1]))
                         pass
-                    # UPDATE DICTIONNARY CONTEXT
+                    # UPDATE DICTIONARY CONTEXT
                     dctx = dctxupdt(
                         {
                             'runtime': rtp,
@@ -1049,15 +1254,15 @@ def atmos(
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if rtp.fitCtoO:
+        if not rtp.fitCtoO:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if rtp.fitNtoO:
+        if not rtp.fitNtoO:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if rtp.fitStoO:
+        if not rtp.fitStoO:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
@@ -1104,8 +1309,7 @@ def atmos(
         modfam = ['TEA', 'PHOTOCHEM']
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'PHOTOCHEM': rtp.fitmolecules,
         }
         if not rtp.fitNtoO:
@@ -1256,11 +1460,34 @@ def atmos(
                 nodes = []
                 nodeshape = []
                 with pymc.Model():
+                    dctx = dctxupdt()  # initialize context dict (None filled)
+                    dctx = dctxupdt(
+                        {
+                            'runtime': rtp,
+                            'cleanup': cleanup,
+                            'model': model,
+                            'planet': p,
+                            'rp0': rp0,
+                            'orbp': orbp,
+                            'tspectrum': tspectrum,
+                            'xsl': xsl,
+                            'spc': spc,
+                            'modparlbl': modparlbl,
+                            'hzlib': crbhzlib,
+                            'chemistry': chemistry,
+                            'mcmcdat': tspectrum[cleanup],
+                            'mcmcsig': tspecerr[cleanup],
+                            'atom_xsec': atom_xsec,
+                            'interp_tea': interp_tea,
+                        },
+                    )
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not rtp.fitCTP:
+                    # if not rtp.fitCTP:
+                    #  this is dumb, to avoid lint 'unused variable' dctx
+                    if not dctx['runtime'].fitCTP:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -1320,6 +1547,13 @@ def atmos(
                         modparlbl[model],
                     )
 
+                    dctx = dctxupdt(
+                        {
+                            'fixedParams': fixed_params,
+                            'nodeshape': nodeshape,
+                        }
+                    )
+
                     # fixes the possibly-used-before-assignment error
                     TensorModel = None
 
@@ -1334,96 +1568,36 @@ def atmos(
                         log.warning(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
-                    elif not rtp.fitCTP and not rtp.fitHaze:
-                        log.info('--< RUNNING MCMC - NO CLOUDS! >--')
-
-                        # before calling MCMC, save the fixed-parameter info in the context
-                        ctxtupdt(
-                            runtime=rtp,
-                            cleanup=cleanup,
-                            model=model,
-                            planet=p,
-                            rp0=rp0,
-                            orbp=orbp,
-                            tspectrum=tspectrum,
-                            xsl=xsl,
-                            spc=spc,
-                            modparlbl=modparlbl,
-                            hzlib=crbhzlib,
-                            chemistry=chemistry,
-                            fixed_params=fixed_params,
-                            mcmcdat=tspectrum[cleanup],
-                            mcmcsig=tspecerr[cleanup],
-                            nodeshape=nodeshape,
-                            forwardmodel=clearfmcerberus,
-                            atom_xsec=atom_xsec,
-                            interp_tea=interp_tea,
-                        )
+                    else:
+                        if not rtp.fitCTP and not rtp.fitHaze:
+                            log.info('--< RUNNING MCMC - NO CLOUDS! >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': clearfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloud-free spectrum'
+                        else:
+                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': cloudyfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloudy spectrum'
 
                         # --< MODEL >--
                         TensorModel = TensorShell()
+
+                        # print('nodes going into the tensor model', nodes)
+                        # print('nodes going into the tensor model', len(nodes))
 
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
                         _ = pymc.CustomDist(
-                            "likelihood for cloud-free spectrum",
+                            likeliName,
                             nodes,
                             observed=tspectrum[cleanup],
                             logp=LogLH,
                         )
-                        # save the logLikelihood values for each pymc step
-                        # pymc.Deterministic(
-                        #    "saved logLikelihood",
-                        #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                        # )
-                        # save the chi-squared values for each pymc step
-                        # (mulitply the logLikelihood by -2)
-                        pymc.Deterministic(
-                            "saved chi2",
-                            -2.0
-                            * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                        )
-                        # --------------
-                        pass
-                    else:
-                        log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
-
-                        # before calling MCMC, save the fixed-parameter info in the context
-                        ctxtupdt(
-                            runtime=rtp,
-                            cleanup=cleanup,
-                            model=model,
-                            planet=p,
-                            rp0=rp0,
-                            orbp=orbp,
-                            tspectrum=tspectrum,
-                            xsl=xsl,
-                            spc=spc,
-                            modparlbl=modparlbl,
-                            hzlib=crbhzlib,
-                            chemistry=chemistry,
-                            fixed_params=fixed_params,
-                            mcmcdat=tspectrum[cleanup],
-                            mcmcsig=tspecerr[cleanup],
-                            nodeshape=nodeshape,
-                            forwardmodel=cloudyfmcerberus,
-                            atom_xsec=atom_xsec,
-                            interp_tea=interp_tea,
-                        )
-
-                        # --< MODEL >--
-                        # print('nodes going into the tensor model', nodes)
-                        # print('nodes going into the tensor model', len(nodes))
-
-                        TensorModel = TensorShell()
-
-                        pymc.CustomDist(
-                            "likelihood for cloudy spectrum",
-                            nodes,
-                            observed=tspectrum[cleanup],
-                            logp=LogLH,
-                        )
-
                         # save the logLikelihood values for each pymc step
                         # pymc.Deterministic(
                         #    "saved logLikelihood",

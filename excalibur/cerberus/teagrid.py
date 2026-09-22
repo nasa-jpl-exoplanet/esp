@@ -37,7 +37,7 @@ def get_TEA_grid(modelName=None, verbose=False):
         # log.info('model name for TEA grid:', modelName)
         modelDir = INTERP_TEA_DIR + modelName + '/'
         if not os.path.isdir(modelDir):
-            log.error('TEA grid directory is missing!')
+            log.error('TEA grid directory is missing! %s', modelName)
             # print('TEA grid directory is missing!')
             modelDir = INTERP_TEA_DIR
 
@@ -85,8 +85,8 @@ def get_TEA_grid(modelName=None, verbose=False):
 
     # print('T', temperature)
     # print('P', pressure)
-    # print('XtoH range', XtoH)
-    # print('CtoO range', CtoO)
+    # print('XtoH', XtoH)
+    # print('CtoO', CtoO)
     # print('T range', temperature[0], temperature[-1])  # 300-3000
     # print('P range', pressure[0], pressure[-1])  #
     # print('XtoH range', XtoH[0], XtoH[-1])  # 0.1-100
@@ -99,19 +99,29 @@ def get_TEA_grid(modelName=None, verbose=False):
     # no wait, don't bother.  use the standard edge flags in the interpolator
     # interp_tea['Trange'] = (temperature[0], temperature[-1])
 
+    # NOTE: interpolation grid has to use log(P) not linear P
+    #  otherwise there will be visible scalloping in the mixratio-vs-P plot
+
     for molecule in species_name:
         grid_4d = np.load(modelDir + molecule + '.npy')
         # print('grid shape', grid_4d.shape, molecule)
         interp_tea[molecule] = RegularGridInterpolator(
-            (temperature, pressure, XtoH, CtoO),
+            (temperature, np.log10(pressure), XtoH, CtoO),
             grid_4d,
             bounds_error=False,
+            # fill_value=np.nan,
             fill_value=None,
             method='cubic',  # comment out during debugging (linear is faster)
         )
         progbar.update()
         pass
     progbar.close()
+
+    # temp fix for MgO/MGO issue.  can delete for future generated grids
+    if 'MgO' in interp_tea:
+        interp_tea['MGO'] = interp_tea['MgO']
+        interp_tea.pop('MgO')
+
     return interp_tea
 
 
@@ -153,9 +163,10 @@ def grid_generation(parameters, species, modelName=None, verbose=False):
     pressure_comb = pressure_grid.flatten()
 
     # species names for calling the cross sections
-    #  TIO is a special case; lower-case 'i' is capitalized in the XOMOL dir
+    #  TiO,MgO special cases; lower-case is capitalized in our dir structure
     species_name = [
-        'TIO' if el == 'TiO_g' else el.split('_')[0] for el in species
+        'MGO' if el == 'MgO_g' else 'TIO' if el == 'TiO_g' else el.split('_')[0]
+        for el in species
     ]
     # save the list of molecules
     filename = modelDir + 'grid_parameters/species.npy'

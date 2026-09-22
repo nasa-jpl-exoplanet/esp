@@ -63,7 +63,7 @@ def calcTEA(
             'CH4_g',
             'CO2_g',
             'CO_g',
-            'H2CO_g',  # not in the TEA interp grid
+            'H2CO_g',
             'H2O_g',
             'H2_ref',
             'H2S_g',
@@ -76,9 +76,17 @@ def calcTEA(
             'O2_ref',
             'O3_g',
             'OH_g',
-            'PH3_g',  # not in the TEA interp grid
+            'PH3_g',
             'SO2_g',
-            'TiO_g',
+            # 'TiO_g',
+            'Ne_ref',
+            # 'Fe_g',
+            # 'Mg_g',
+            # 'Si_g',
+            # 'FeS_g',
+            # 'FeO_g',
+            # 'SiO_g',
+            # 'MgO_g',
         ]
     input_species = species
 
@@ -461,8 +469,16 @@ def getmmw(mixratio, protosolar=True, fH2=None, fHe=None, verbose=False):
         'C3H8': 44.0,
         'CH3CHO': 44.0,
         'Ca': 40.0,
-        'K': 39.098,
-        'Na': 22.990,
+        'K': 39.10,
+        'Na': 22.99,
+        'Ne': 20.18,
+        'Fe': 55.85,
+        'FeO': 72.0,
+        'FeS': 88.0,
+        'Mg': 24.3,
+        'MGO': 40.0,
+        'Si': 28.09,
+        'SiO': 44.0,
     }
 
     # TEA abuncances include H and He; have to be separated to get metals

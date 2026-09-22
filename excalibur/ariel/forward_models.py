@@ -22,9 +22,11 @@ def make_cerberus_atmos(
     xslib,
     planet_letter,
     chemistry='TEC',
+    teagrid=None,
     mixratios=None,
     improvedBoundaryCondition=True,
     extendedBoundaryCondition=False,
+    verbose=False,
 ):
     '''
     Create a simulated spectrum using the code that's better than the other ones
@@ -82,6 +84,7 @@ def make_cerberus_atmos(
         hazethick=float(hazethick),
         hzlib=crbhzlib,
         chemistry=chemistry,
+        tea_data=teagrid,
         cheq=tceqdict,
         mixratio=mixratios,
         rp0=rp0,
@@ -99,6 +102,7 @@ def make_cerberus_atmos(
         break_down_by_molecule=True,
         improvedBoundaryCondition=improvedBoundaryCondition,
         extendedBoundaryCondition=extendedBoundaryCondition,
+        verbose=verbose,
     )
 
     return (

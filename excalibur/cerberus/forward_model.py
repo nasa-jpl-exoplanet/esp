@@ -2,8 +2,9 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name,no-member
-# pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements
+# pylint: disable=too-many-arguments,too-many-branches,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-statements,too-many-nested-blocks
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as cst
@@ -92,18 +93,41 @@ class crbFM:
             orbp = ctxt.orbp
         if hitemplist is None:
             hitemplist = ctxt.hitemplist
+            if hitemplist is None:
+                hitemplist = ctxt.runtime.hitemplist
+                # hitemplist = ctxt.runtime[
+                #    'cerberus_crbmodel_HITEMPmolecules'
+                # ].molecules
         if cialist is None:
             cialist = ctxt.cialist
+            if cialist is None:
+                cialist = ctxt.runtime.cialist
+                # cialist = ctxt.runtime[
+                #                    'cerberus_crbmodel_HITRANmolecules'
+                #                ].molecules
         if xmollist is None:
             xmollist = ctxt.xmollist
+            if xmollist is None:
+                xmollist = ctxt.runtime.xmollist
+                # xmollist = ctxt.runtime[
+                #    'cerberus_crbmodel_EXOMOLmolecules'
+                # ].molecules
         if atomlist is None:
             atomlist = ctxt.atomlist
+            if atomlist is None:
+                atomlist = ctxt.runtime.atomlist
         if nlevels is None:
             nlevels = ctxt.nlevels
+            if nlevels is None:
+                nlevels = ctxt.runtime.nlevels
         if Hsmax is None:
             Hsmax = ctxt.Hsmax
+            if Hsmax is None:
+                Hsmax = ctxt.runtime.Hsmax
         if solrad is None:
             solrad = ctxt.solrad
+            if solrad is None:
+                solrad = ctxt.runtime.solrad
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -169,13 +193,13 @@ class crbFM:
                 pass
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
-                if interp_tea is None:
+                if interp_tea is None and tea_data is not None:
                     log.info('using external TEA grid')
-                    # for use outside of the pipeline, give a dictionary
-                    # containing the interpolators for each molecule
+                    # option to pass in tea grid when used outside of the pipeline
+                    # also used for ariel-sim call, which doesn't use context
                     interp_tea = tea_data
                     pass
-                if not interp_tea:
+                if interp_tea is None:
                     log.info('using full=slow TEA calculation')
                     #  (this one gives a div-by-0 error)
                     # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -203,9 +227,9 @@ class crbFM:
                     grid_points = np.column_stack(
                         (
                             tpp,
-                            pressure,
-                            10 ** cheq['XtoH'] * np.ones(pressure.size),
-                            10 ** cheq['CtoO'] * np.ones(pressure.size),
+                            np.log10(pressure),
+                            cheq['XtoH'] * np.ones(pressure.size),
+                            cheq['CtoO'] * np.ones(pressure.size),
                         )
                     )
 
@@ -252,6 +276,12 @@ class crbFM:
                     #    totalmetals += 10.0 ** mixratio[molecule]
 
                     mmw, fH2, fHe = getmmw(mixratio)
+                    if verbose:
+                        print('mmw', np.median(mmw))
+                        for molecule, amounts in mixratio.items():
+                            print('mixing ratios', molecule, np.median(amounts))
+                            pass
+                        pass
                     pass
                 pass
             else:
@@ -626,8 +656,12 @@ def gettau(
         top_mmr = mmr[-1]
         if elem not in xsecs:
             # TEA species might not have cross-sections calculated
-            if elem in ['H2', 'He']:
+            if elem in ['H2', 'He', 'Ne']:
                 # ignore missing xsecs for molecules without strong features
+                pass
+            elif elem in ['Fe', 'Mg', 'Si', 'FeO', 'FeS', 'SiO']:
+                # we don't have cross-sections for these; strength unknown
+                # EXOMOL has SiO  https://exomol.com/data/molecules/SiO/
                 pass
             else:
                 if elem in atomlist:
@@ -648,11 +682,15 @@ def gettau(
                             wgrid,
                             interp_atom[elem],
                         )
+                    pass
                 else:
                     log.error(
-                        'MISSING CROSS-SECTION: add this molecule to runtime EXOMOL  %s',
+                        'MISSING CROSS-SECTION: add this molecule to xslib (via runtime EXOMOL)  %s',
                         elem,
                     )
+                    pass
+                pass
+            pass
         else:
             if elem in hitemplist or elem in xmollist:
                 # getxmolxs() is for EXOMOL format
@@ -661,6 +699,49 @@ def gettau(
 
                 # EXOMOL HILL ET AL. 2013 ----------------------------------
                 sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+
+                # special inclusion of the Hartley-band cross-section for ozone
+                if elem == 'O3':
+                    supplementaldir = os.path.join(
+                        excalibur.context['data_dir'], 'CERBERUS/SUPPLEMENT/'
+                    )
+                    filename = 'O3_VIS_UV.txt'
+                    with open(
+                        os.path.join(supplementaldir, filename),
+                        'r',
+                        encoding='utf-8',
+                    ) as f:
+                        filedata = f.readlines()
+                        f.close()
+                    ozoneUVdata = {'wavelength': [], 'xsec': []}
+                    for data in filedata:
+                        columns = data.replace('\n', '').split(' ')
+                        ozoneUVdata['wavelength'].append(float(columns[0]))
+                        ozoneUVdata['xsec'].append(float(columns[1]))
+                    # print('ozone data', ozoneUVdata)
+                    # convert nm to micron
+                    ozoneUVdata['wavelength'] = (
+                        np.array(ozoneUVdata['wavelength']) / 1000.0
+                    )
+                    # print('wavelength range for ozone opacity table',
+                    #      ozoneUVdata['wavelength'][0],
+                    #      ozoneUVdata['wavelength'][-1])
+                    # units for the cross-section?!
+                    ozoneUVdata['xsec'] = np.array(ozoneUVdata['xsec'])
+                    for inu, nu in enumerate(lsig):
+                        wave = 1.0e4 / nu
+                        iwave = np.where(ozoneUVdata['wavelength'] > wave)[0]
+                        # print('  iwave', wave, iwave)
+                        if len(iwave) > 0:
+                            # print('check', wave, iwave[0], len(ozoneUVdata['wavelength']))
+                            if (iwave[0] >= 0) and (
+                                iwave[0] < len(ozoneUVdata['wavelength'])
+                            ):
+                                sigma[inu] += ozoneUVdata['xsec'][iwave[0]]
+                        #    else:
+                        #        print('spectrum shorter than opacity table', wave)
+                        # else:
+                        #    print('spectrum longer than opacity table', wave)
             else:
                 log.warning(
                     'UNUSUAL: molecule %s has cross-sections, but it is not included in the spectrum',

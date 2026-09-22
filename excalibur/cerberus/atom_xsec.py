@@ -198,7 +198,10 @@ def single_line_sigma(w_grid, specie, line, Q, parameters):
     gamma = gamma + 1e0 / (4e0 * np.pi * (c_cgs)) * line['Rad']
 
     # line cutoff
-    wing_cutoff = 3e1
+    wing_cutoff = 3e1  # too small; Na comes up as non-broadened at 0.6um
+    wing_cutoff = 3e4  # covers most of the HWO range
+    wing_cutoff = 3e9  # let's just skip the cutoff for now; check for problems
+    # seems ok, but it does slow it down a lot
 
     # voigt profile
     idx = np.where(
