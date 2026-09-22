@@ -152,7 +152,6 @@ def targetlist():
     Kepler-16 :
     Kepler-1625 :
     Kepler-1651 :
-    Kepler-1658 :
     Kepler-167 :
     Kepler-17 :
     Kepler-18 :
