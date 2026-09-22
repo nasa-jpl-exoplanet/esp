@@ -140,7 +140,7 @@ def targetlist():
     Kepler-125 :
     Kepler-126 :
     Kepler-127 :
-    Kepler-13 :
+    Kepler-13 : KOI-13
     Kepler-1339 :
     Kepler-138 :
     Kepler-14 :
@@ -152,7 +152,6 @@ def targetlist():
     Kepler-16 :
     Kepler-1625 :
     Kepler-1651 :
-    Kepler-1658 :
     Kepler-167 :
     Kepler-17 :
     Kepler-18 :
