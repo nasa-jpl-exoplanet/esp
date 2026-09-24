@@ -3353,8 +3353,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 verbose=verbose,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fits-vs-truths not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
@@ -3370,8 +3374,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 saveDir=save_dir,
                 verbose=verbose,
             )
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fit-uncertainties not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
