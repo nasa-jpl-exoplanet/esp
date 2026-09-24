@@ -2694,8 +2694,9 @@ def results(
                     for _ in range(runtime_params.nrandomwalkers):
                         iwalker = int(nwalkersteps * np.random.rand())
 
-                        if fit_cloud_parameters:
+                        if fit_CTP:
                             ctp = ctptrace[iwalker]
+                        if fit_haze:
                             hazescale = hazescaletrace[iwalker]
                             hazeloc = hazeloctrace[iwalker]
                             hazethick = hazethicktrace[iwalker]
