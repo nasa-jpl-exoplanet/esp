@@ -321,6 +321,12 @@ class Analysis(dawgie.Analyzer):
                 runtime_params = crbcore.CerbAnalysisParams(
                     # tier=runtime['ariel_simspectrum_tier'].value(),
                     tier=2,
+                    onlyFitAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyFitAbove10MEarth'
+                    ],
+                    onlyPlotAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyPlotAbove10MEarth'
+                    ],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundMetallicity=runtime[
