@@ -1038,6 +1038,11 @@ def plot_walker_evolution(
                     ls='--',
                     zorder=5,
                 )
+                chi = (np.median(alltraces[iparam]) - truthvalue) / np.std(alltraces[iparam])
+                plt.title(
+                    f'Truth = {truthvalue:.2f} ; chi= {chi:.2f}',
+                    fontsize=12,
+                )
             elif truthparam == '[N/O]':
                 ax.plot([0, 2 * chainLength], [0, 0], c='k', ls='--', zorder=5)
 
