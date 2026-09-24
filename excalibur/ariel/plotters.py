@@ -106,8 +106,8 @@ def plot_spectrum(
     baseline = 666
     maxdepth = -666
     for imole, molecule in enumerate(molecules):
-        baseline = np.min(np.append(baseline, fluxDepth_by_molecule[molecule]))
-        maxdepth = np.max(np.append(maxdepth, fluxDepth_by_molecule[molecule]))
+        baseline = np.nanmin(np.append(baseline, fluxDepth_by_molecule[molecule]))
+        maxdepth = np.nanmax(np.append(maxdepth, fluxDepth_by_molecule[molecule]))
     negligible_molecules = ''
     negligible_molecules_more = ''
     Nnegligible = 0
@@ -148,28 +148,31 @@ def plot_spectrum(
                 label=molecule,
             )
         extra = (maxdepth - baseline) / 13
-        plt.ylim((baseline - extra, maxdepth + extra))
-        yrange = plt.ylim()
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
-            'negligible contribution:',
-            fontsize=8,
-        )
-        # there's formating problems when too many negligible molecules
-        # better to split it up over two lines
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
-            negligible_molecules,
-            fontsize=8,
-        )
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.23),
-            negligible_molecules_more,
-            fontsize=8,
-        )
+        if np.isnan(extra):
+            log.error('NaN in plot_spectrum: %s', target)
+        else:
+            plt.ylim((baseline - extra, maxdepth + extra))
+            yrange = plt.ylim()
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
+                'negligible contribution:',
+                fontsize=8,
+            )
+            # there's formating problems when too many negligible molecules
+            # better to split it up over two lines
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
+                negligible_molecules,
+                fontsize=8,
+            )
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.23),
+                negligible_molecules_more,
+                fontsize=8,
+            )
     if plottype == 'Ariel':
         plt.xlim(0.0, 8.0)
     else:
