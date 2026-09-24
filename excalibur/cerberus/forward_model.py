@@ -175,7 +175,9 @@ class crbFM:
                 log.error('!!! >--< Neither mixratio nor cheq are defined')
                 pass
             if chemistry.startswith('TEC'):
-                log.warning('using old TEC chemistry for forward model')
+                if verbose:
+                    print('using old TEC chemistry for forward model')
+                # log.warning('using old TEC chemistry for forward model')
                 mixratio, mixratioprofiles, fH2, fHe = crbce(
                     pressure,
                     tpp,
@@ -194,13 +196,17 @@ class crbFM:
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
                 if interp_tea is None and tea_data is not None:
-                    log.info('using external TEA grid')
+                    if verbose:
+                        print('using external TEA grid')
+                    # log.info('using external TEA grid')
                     # option to pass in tea grid when used outside of the pipeline
                     # also used for ariel-sim call, which doesn't use context
                     interp_tea = tea_data
                     pass
                 if interp_tea is None:
-                    log.info('using full=slow TEA calculation')
+                    if verbose:
+                        print('using full=slow TEA calculation')
+                    # log.info('using full=slow TEA calculation')
                     #  (this one gives a div-by-0 error)
                     # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                     #  this is the correct way to pass in to Luke's _make_tp_profile
@@ -216,10 +222,13 @@ class crbFM:
                         # S_O=?? * 10.0 ** cheq['StoO'],
                     )
                 else:
-                    log.info('using TEA interpolation grid')
-                    log.info('  checking cheq-XtoH %s', cheq['XtoH'])
-                    # print('using TEA interpolation grid')
-                    # print('  checking cheq-XtoH %s', cheq['XtoH'])
+                    if verbose:
+                        print('using TEA interpolation grid')
+                        print('  checking cheq-XtoH %s', cheq['XtoH'])
+                        print('  checking cheq-CtoO %s', cheq['CtoO'])
+                    # log.info('using TEA interpolation grid')
+                    # log.info('  checking cheq-XtoH %s', cheq['XtoH'])
+                    # log.info('  checking cheq-CtoO %s', cheq['CtoO'])
 
                     # species used for the equilibrium are :
                     # CH4, CO2, CO, H2O, H2, H2S, He, O3, O2, OH,
@@ -246,6 +255,8 @@ class crbFM:
                 for molecule, mixratioprofile in mixratioprofiles.items():
                     mixratio[molecule] = mixratioprofile
                     # mixratio[molecule] = np.median(mixratioprofile)
+                    # print('median mixratio',molecule,np.median(mixratioprofile),
+                    #      np.nanmedian(mixratioprofile))
                     pass
                 mmw, fH2, fHe = getmmw(mixratio)
 
