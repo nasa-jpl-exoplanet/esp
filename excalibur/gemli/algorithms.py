@@ -66,14 +66,15 @@ class MLfit(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: gemli.atmos'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(anc.task, self.__anc),
-            dawgie.ALG_REF(crb.task, self.__xsl),
-            dawgie.ALG_REF(crb.task, self.__atm),
-            dawgie.ALG_REF(trn.task, self.__spc),
-            dawgie.ALG_REF(ariel.task, self.__arielsim),
-        ] + self.__rt.refs_for_proceed()
+        return []
+        # return [
+        #    dawgie.ALG_REF(sys.task, self.__fin),
+        #    dawgie.ALG_REF(anc.task, self.__anc),
+        #    dawgie.ALG_REF(crb.task, self.__xsl),
+        #    dawgie.ALG_REF(crb.task, self.__atm),
+        #    dawgie.ALG_REF(trn.task, self.__spc),
+        #    dawgie.ALG_REF(ariel.task, self.__arielsim),
+        # ] + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: gemli.mlfit'''
