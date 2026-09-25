@@ -20,9 +20,6 @@ _numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
 _numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
 sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
 
-import numpy as np
-import matplotlib.pyplot as plt
-
 from altaipony.flarelc import FlareLightCurve
 from altaipony.fakeflares import flare_model_mendoza2022 as model
 from altaipony.utils import sigma_clip
