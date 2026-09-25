@@ -23,12 +23,17 @@ from urllib.parse import urlparse
 def check(args):
     fn = f'/tmp/{urlparse(args.url).netloc}.fsm.pkl'
     response = requests.get(
-        urljoin(args.url, 'app/pl/state'), timeout=90, verify=args.ca_path
+        urljoin(args.url, 'api/pipeline/state'), timeout=90, verify=args.ca_path
     )
     response.raise_for_status()
-    current = response.json()
+    full = response.json()
+    current = full['content']
     reset = False
-    if current['status'] != 'active' or current['name'] != 'running':
+    if full['status'] != 'success':
+        print(
+            f'Server fails to complete request api/pipeline/state because: {full["msg"]}'
+        )
+    elif current['status'] != 'active' or current['name'] != 'running':
         # set previous to current if there is not a previous on disk
         if os.path.isfile(fn):
             with open(fn, 'br') as file:

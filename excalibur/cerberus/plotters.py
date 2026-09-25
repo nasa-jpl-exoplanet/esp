@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # import excalibur
+from excalibur.cerberus.forward_model import TPprofile
 from excalibur.ariel.metallicity import massMetalRelation
 from excalibur.system.core import ssconstants
 from excalibur.util.plotters import save_plot_tosv
@@ -86,6 +87,7 @@ def plot_spectrumfit(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''plot the best fit to the data'''
 
@@ -411,7 +413,8 @@ def plot_spectrumfit(
         plt.legend()
 
     # figgy.tight_layout()
-    # plt.show()
+    if verbose:
+        plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
         plt.savefig(
@@ -461,9 +464,14 @@ def plot_corner(
         )
         # print('model param in corner plot',modelParams_bestFit)
 
+        Tparams_bestFit = []
         for param in allkeys:
             if param == 'T':
                 paramValues_bestFit.append(tpr)
+            elif param.startswith('Tparam'):
+                # print('tpr bestfit in corner', param, tpr[int(param[-2])])
+                paramValues_bestFit.append(tpr[int(param[-2])])
+                Tparams_bestFit.append(tpr[int(param[-2])])
             elif param == 'CTP':
                 paramValues_bestFit.append(ctp)
             elif param == 'HScale':
@@ -480,6 +488,10 @@ def plot_corner(
                 paramValues_bestFit.append(tceqdict['NtoO'])
             elif mixratio and param in mixratio:
                 paramValues_bestFit.append(mixratio[param])
+            elif param in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
+                paramValues_bestFit.append(666666)
+            elif param in ['chi2reduced', '$\\chi^2_{red}$']:
+                paramValues_bestFit.append(1)
             else:
                 log.warning('--< ERROR: param not in list: %s >--', param)
         # print('best fit values in corner plot',paramValues_bestFit)
@@ -488,12 +500,12 @@ def plot_corner(
     # print(' params inside of corner plotting',allkeys)
     # print('medians inside of corner plotting',mcmcMedian)
     # print('bestfit inside of corner plotting',paramValues_bestFit)
-    lo = np.nanpercentile(np.array(alltraces), 16, axis=1)
-    hi = np.nanpercentile(np.array(alltraces), 84, axis=1)
+    lo = np.nanpercentile(np.array(profiletraces), 16, axis=1)
+    hi = np.nanpercentile(np.array(profiletraces), 84, axis=1)
     # span = hi - lo
     # Careful!  These are not actually the prior ranges; they're the range of walker values
-    priorlo = np.nanmin(np.array(alltraces), axis=1)
-    priorhi = np.nanmax(np.array(alltraces), axis=1)
+    priorlo = np.nanmin(np.array(profiletraces), axis=1)
+    priorhi = np.nanmax(np.array(profiletraces), axis=1)
     # OK fixed now. prior ranges are saved as output from atmos and then passed in here
     for ikey, key in enumerate(allkeys):
         # print('param:',key)
@@ -505,8 +517,10 @@ def plot_corner(
 
         if key in prior_ranges.keys():
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
-        # else:
-        #    print('TROUBLE: param not found',prior_ranges.keys())
+        elif key.startswith('Tparam') and ('T' in prior_ranges):
+            priorlo[ikey], priorhi[ikey] = prior_ranges['T']
+        elif key not in ['$\\chi^2$', '$\\chi^2_{red}$', 'saved chi2']:
+            log.warning('--< TROUBLE: prior-range not found %s >--', key)
         # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
     # priorspan = priorhi - priorlo
     # priormid = (priorhi + priorlo) / 2.
@@ -527,18 +541,41 @@ def plot_corner(
     # print('lorange',lorange)
     truths = None
     if truth_params is not None:
+        # print('truth', truth_params)
         truths = []
         for thiskey in allkeys:
+            # print('going through truth keys', thiskey)
+            # print('check',thiskey,('Tparam' in thiskey),('Tparam' in truth_params))
             if thiskey == 'T':
                 truths.append(truth_params['Teq'])
+            elif ('Tparam' in thiskey) and ('Tparams' in truth_params):
+                if int(thiskey[-2]) < len(truth_params['Tparams']):
+                    truths.append(truth_params['Tparams'][int(thiskey[-2])])
+                else:
+                    truths.append(666666)
+                    log.warning(
+                        '--< PROBLEM: not enough Tparam truth values >--'
+                    )
             elif thiskey == '[X/H]':
                 # truths.append(np.log10(truth_params['metallicity']))
                 truths.append(truth_params['metallicity'])
             elif thiskey == '[C/O]':
                 # truths.append(np.log10(truth_params['C/O'] / 0.54951))
-                truths.append(truth_params['C/O'])
+                truths.append(truth_params['C/O'])  # 0 means solar itk
             elif thiskey == '[N/O]':
-                truths.append(0)
+                if 'N/O' in truth_params:
+                    truths.append(truth_params['N/O'])
+                else:
+                    truths.append(0)
+            elif thiskey == '[S/O]':
+                if 'S/O' in truth_params:
+                    truths.append(truth_params['S/O'])
+                else:
+                    truths.append(0)
+            elif thiskey in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
+                truths.append(666666)
+            elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
+                truths.append(1)
             elif thiskey in truth_params.keys():
                 truths.append(truth_params[thiskey])
             else:
@@ -594,7 +631,20 @@ def plot_corner(
         # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
         # figure.set_size_inches(16,16)  # this actually makes it smaller
 
+        # print('labels', allkeys)
+        # print('parambest', paramValues_bestFit)
+
         ndim = len(alltraces)
+        # print('ndim', ndim, len(paramValues_bestFit))
+
+        # (if it's a debug plot from atmos, bestFit is not defined yet)
+        # if ndim > len(paramValues_bestFit):
+        #    log.error(
+        #        '--< ERR: missing bestFit values in corner %s %s >--',
+        #        ndim,
+        #        len(paramValues_bestFit),
+        #    )
+        #    ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
         # use larger font size for the axis labels
         for i in range(ndim):
@@ -613,14 +663,31 @@ def plot_corner(
                     # ax.axvline(mcmcMedian[xi], color=fitcolor)
                     # ax.axhline(mcmcMedian[yi], color=fitcolor)
                     # ax.plot(mcmcMedian[xi], mcmcMedian[yi], marker='s', c=fitcolor)
-                    ax.axvline(paramValues_bestFit[xi], color=fitcolor)
-                    ax.axhline(paramValues_bestFit[yi], color=fitcolor)
-                    ax.plot(
-                        paramValues_bestFit[xi],
-                        paramValues_bestFit[yi],
-                        marker='s',
-                        c=fitcolor,
-                    )
+                    if xi < len(paramValues_bestFit):
+                        ax.axvline(paramValues_bestFit[xi], color=fitcolor)
+                    else:
+                        log.error(
+                            '--< ERR: not enough bestfit values xi %s %s >--',
+                            len(paramValues_bestFit),
+                            ndim,
+                        )
+                    if yi < len(paramValues_bestFit):
+                        ax.axhline(paramValues_bestFit[yi], color=fitcolor)
+                    else:
+                        log.error(
+                            '--< ERR: not enough bestfit values yi %s %s >--',
+                            len(paramValues_bestFit),
+                            ndim,
+                        )
+                    if yi < len(paramValues_bestFit) or xi < len(
+                        paramValues_bestFit
+                    ):
+                        ax.plot(
+                            paramValues_bestFit[xi],
+                            paramValues_bestFit[yi],
+                            marker='s',
+                            c=fitcolor,
+                        )
             for i in range(ndim):
                 ax = axes[i, i]
                 # draw light-colored vertical lines in each hisogram for the prior
@@ -641,6 +708,65 @@ def plot_corner(
                 ax.axvline(
                     paramValues_bestFit[i], color=fitcolor, lw=2, zorder=12
                 )
+        # show various T-P profiles in the upper right (empty) part of the corner
+        if 'Tparam[0]' in allkeys:
+            axother = figure.add_subplot(2, 3, 3)
+
+            traces = np.vstack(np.array(profiletraces))
+
+            pressures = 10.0 ** np.linspace(
+                1, 1 - 20.0 * np.log10(np.exp(1)), 100
+            )
+
+            # select a random batch of Tparams coming out of the retrieval
+            nwalkersteps = traces.shape[1]
+            # print('# of walker steps', nwalkersteps)
+            Nrandom = 100
+            np.random.seed(123)
+            for i in range(Nrandom):
+                iwalker = int(nwalkersteps * np.random.rand())
+                numTparams = np.sum(
+                    [key.startswith('Tparam') for key in allkeys]
+                )
+                # print('number of Tparams', numTparams)
+                Tparams = []
+                for i in range(numTparams):
+                    Tparams.append(
+                        traces[allkeys.index('Tparam[' + str(i) + ']'), iwalker]
+                    )
+                Tparams = np.array(Tparams)
+                Temps = TPprofile(Tparams, pressures)
+                axother.plot(Temps, pressures, 'k-', lw=0.5, zorder=1)
+
+            # best-fit T-P profile is in red
+            if Tparams_bestFit:
+                bestTemps = TPprofile(Tparams_bestFit, pressures)
+                axother.plot(
+                    bestTemps,
+                    pressures,
+                    c=fitcolor,
+                    lw=2,
+                    zorder=3,
+                    label='best fit',
+                )
+
+            # true T-P profile is in green
+            if 'Tparams' in truth_params:
+                trueTemps = TPprofile(truth_params['Tparams'], pressures)
+                axother.plot(
+                    trueTemps,
+                    pressures,
+                    c=truthcolor,
+                    lw=2,
+                    zorder=3,
+                    label='truth',
+                )
+
+            axother.set_ylim(pressures[0], pressures[-1])
+            axother.set_xlabel('Temperature (K)', fontsize=14)
+            axother.set_ylabel('Pressure (bar)', fontsize=14)
+            axother.semilogy()
+            axother.legend(fontsize=14)
 
     if savetodisk:
         plt.savefig(
@@ -676,6 +802,7 @@ def plot_vs_prior(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''compare the fit results against the original prior information'''
 
@@ -709,99 +836,108 @@ def plot_vs_prior(
     figure = plt.figure(figsize=(12, 6))
     Nparam = len(mcmcMedian)
     for iparam in range(Nparam):
-        ax = figure.add_subplot(
-            2, int((len(mcmcMedian) + 1.0) / 2.0), iparam + 1
-        )
-        ax.scatter(
-            priormid[iparam],
-            priorspan[iparam] * 0.34,
-            facecolor='None',
-            edgecolor='black',
-            s=30,
-            zorder=3,
-        )
-        ax.scatter(
-            priormidProfiled[iparam],
-            priorspanProfiled[iparam] * 0.34,
-            facecolor='black',
-            edgecolor='black',
-            s=30,
-            zorder=3,
-        )
-        ax.scatter(
-            mcmcMedian[iparam],
-            span[iparam] / 2.0,
-            facecolor='None',
-            edgecolor='firebrick',
-            s=50,
-            zorder=4,
-        )
-        ax.scatter(
-            mcmcMedianProfiled[iparam],
-            spanProfiled[iparam] / 2.0,
-            facecolor='purple',
-            edgecolor='firebrick',
-            s=50,
-            zorder=4,
-        )
-        ax.plot(
-            [priorlo[iparam], priormid[iparam], priorhi[iparam]],
-            [0, priorspan[iparam] * 0.34, 0],
-            c='k',
-            ls='--',
-            lw=0.5,
-            zorder=2,
-        )
-        # ax.plot([priorloProfiled[iparam],priormidProfiled[iparam],priorhiProfiled[iparam]],
-        #        [0,priorspanProfiled[iparam]*0.34,0],
-        #        c='purple',ls=':',lw=1.5,zorder=2)
-
-        # highlight the background of successful fits (x2 better precision)
-        if span[iparam] / 2.0 < priorspan[iparam] * 0.34 / 2:
-            # print(' this one has reduced uncertainty',allkeys[iparam])
-            ax.set_facecolor('lightyellow')
-
-        # add a dashed line for the true value
-        if truth_params is not None:
-            keyMatch = {'T': 'Teq', '[X/H]': 'metallicity', '[C/O]': 'C/O'}
-            if allkeys[iparam] in keyMatch:
-                truthparam = keyMatch[allkeys[iparam]]
-            else:
-                truthparam = allkeys[iparam]
-            if truthparam in truth_params:
-                truthvalue = float(truth_params[truthparam])
-                ax.plot(
-                    [truthvalue, truthvalue],
-                    [0, priorspan[iparam]],
-                    c='k',
-                    ls='--',
-                    zorder=5,
-                )
-            elif truthparam == '[N/O]':
-                ax.plot(
-                    [0, 0], [0, priorspan[iparam]], c='k', ls='--', zorder=5
-                )
-
-        # show if there is some profiling for this parameter
-        profiledParams = [limit[0] for limit in appliedLimits]
-        profiledValues = [limit[1] for limit in appliedLimits]
-        if allkeys[iparam] in profiledParams:
-            # print('profiling limit!',allkeys[iparam])
-            iprof = profiledParams.index(allkeys[iparam])
-            # print('  profiled value',profiledValues[iprof],iprof)
-            ax.plot(
-                [profiledValues[iprof], profiledValues[iprof]],
-                [0, priorspan[iparam]],
-                c='purple',
-                ls=':',
-                lw=2,
+        if allkeys[iparam] in [
+            'saved logLikelihood',
+            'saved chi2',
+            '$\\chi^2$',
+            'chi2reduced',
+            '$\\chi^2_{red}$',
+        ]:
+            pass
+        else:
+            ax = figure.add_subplot(
+                2, int((len(mcmcMedian) + 1.0) / 2.0), iparam + 1
+            )
+            ax.scatter(
+                priormid[iparam],
+                priorspan[iparam] * 0.34,
+                facecolor='None',
+                edgecolor='black',
+                s=30,
+                zorder=3,
+            )
+            ax.scatter(
+                priormidProfiled[iparam],
+                priorspanProfiled[iparam] * 0.34,
+                facecolor='black',
+                edgecolor='black',
+                s=30,
+                zorder=3,
+            )
+            ax.scatter(
+                mcmcMedian[iparam],
+                span[iparam] / 2.0,
+                facecolor='None',
+                edgecolor='firebrick',
+                s=50,
                 zorder=4,
             )
+            ax.scatter(
+                mcmcMedianProfiled[iparam],
+                spanProfiled[iparam] / 2.0,
+                facecolor='purple',
+                edgecolor='firebrick',
+                s=50,
+                zorder=4,
+            )
+            ax.plot(
+                [priorlo[iparam], priormid[iparam], priorhi[iparam]],
+                [0, priorspan[iparam] * 0.34, 0],
+                c='k',
+                ls='--',
+                lw=0.5,
+                zorder=2,
+            )
+            # ax.plot([priorloProfiled[iparam],priormidProfiled[iparam],priorhiProfiled[iparam]],
+            #        [0,priorspanProfiled[iparam]*0.34,0],
+            #        c='purple',ls=':',lw=1.5,zorder=2)
 
-        ax.set_xlim(priorlo[iparam], priorhi[iparam])
-        ax.set_ylim(0, priorspan[iparam] * 0.4)
-        ax.set_xlabel(allkeys[iparam], fontsize=14)
-        ax.set_ylabel('uncertainty', fontsize=14)
+            # highlight the background of successful fits (x2 better precision)
+            if span[iparam] / 2.0 < priorspan[iparam] * 0.34 / 2:
+                # print(' this one has reduced uncertainty',allkeys[iparam])
+                ax.set_facecolor('lightyellow')
+
+            # add a dashed line for the true value
+            if truth_params is not None:
+                keyMatch = {'T': 'Teq', '[X/H]': 'metallicity', '[C/O]': 'C/O'}
+                if allkeys[iparam] in keyMatch:
+                    truthparam = keyMatch[allkeys[iparam]]
+                else:
+                    truthparam = allkeys[iparam]
+                if truthparam in truth_params:
+                    truthvalue = float(truth_params[truthparam])
+                    ax.plot(
+                        [truthvalue, truthvalue],
+                        [0, priorspan[iparam]],
+                        c='k',
+                        ls='--',
+                        zorder=5,
+                    )
+                elif truthparam == '[N/O]':
+                    ax.plot(
+                        [0, 0], [0, priorspan[iparam]], c='k', ls='--', zorder=5
+                    )
+
+            # show if there is some profiling for this parameter
+            profiledParams = [limit[0] for limit in appliedLimits]
+            profiledValues = [limit[1] for limit in appliedLimits]
+            if allkeys[iparam] in profiledParams:
+                # print('profiling limit!',allkeys[iparam])
+                iprof = profiledParams.index(allkeys[iparam])
+                # print('  profiled value',profiledValues[iprof],iprof)
+                ax.plot(
+                    [profiledValues[iprof], profiledValues[iprof]],
+                    [0, priorspan[iparam]],
+                    c='purple',
+                    ls=':',
+                    lw=2,
+                    zorder=4,
+                )
+
+            ax.set_xlim(priorlo[iparam], priorhi[iparam])
+            ax.set_ylim(0, priorspan[iparam] * 0.4)
+            ax.set_xlabel(allkeys[iparam], fontsize=14)
+            ax.set_ylabel('uncertainty', fontsize=14)
     figure.tight_layout()
     if savetodisk:
         plt.savefig(
@@ -816,6 +952,9 @@ def plot_vs_prior(
             + p
             + '.png'
         )
+
+    if verbose:
+        plt.show()
 
     return save_plot_tosv(figure), figure
 
@@ -852,7 +991,7 @@ def plot_walker_evolution(
         if key in prior_ranges.keys():
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
             priorloProfiled[ikey], priorhiProfiled[ikey] = prior_ranges[key]
-        # print(' new prior range:',priorlo[ikey],priorhi[ikey]
+        # print(' new prior range:',priorlo[ikey],priorhi[ikey])
 
     figure = plt.figure(figsize=(12, 6))
     linecolors = [
@@ -867,6 +1006,7 @@ def plot_walker_evolution(
     ]
     chainLength = int(len(alltraces[0]) / Nchains)
     # chainLengthProfiled = int(len(profiledtraces[0]) / Nchains)
+    # print('Nparam,Nchains', Nparam, Nchains)
     for iparam in range(Nparam):
         ax = figure.add_subplot(2, int((Nparam + 1.0) / 2.0), iparam + 1)
         for ic in range(Nchains):
@@ -979,11 +1119,16 @@ def plot_fits_vs_truths(
 ):
     '''
     Compare the retrieved values against the original inputs
+    Also show a histogram of (fit-truth)/uncertainty
     Also (optionally) show a histogram of the uncertainty values
     '''
 
     # for ppt, stack the two panels on top of each other
     switch_to_vert_stack = False
+
+    # compare histogram against a bell curve (Gaussian statistics)
+    gaussianDist = np.random.normal(size=10000)
+    gaussianDist = np.concatenate((gaussianDist, -gaussianDist))
 
     paramlist = []
     for param in ['T', '[X/H]', '[C/O]', '[N/O]']:
@@ -1000,11 +1145,11 @@ def plot_fits_vs_truths(
     for param in paramlist:
 
         if switch_to_vert_stack:
-            figure = plt.figure(figsize=(5, 9))
-            ax = figure.add_subplot(2, 1, 1)
+            figure = plt.figure(figsize=(5, 16))
+            ax = figure.add_subplot(3, 1, 1)
         else:
-            figure = plt.figure(figsize=(11, 5))
-            ax = figure.add_subplot(1, 2, 1)
+            figure = plt.figure(figsize=(16, 5))
+            ax = figure.add_subplot(1, 3, 1)
 
         for truth, fit, error in zip(
             truth_values[param], fit_values[param], fit_errors[param]
@@ -1145,15 +1290,47 @@ def plot_fits_vs_truths(
 
         # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
         if switch_to_vert_stack:
-            ax2 = figure.add_subplot(2, 1, 2)
+            ax2 = figure.add_subplot(3, 1, 3)
         else:
-            ax2 = figure.add_subplot(1, 2, 2)
+            ax2 = figure.add_subplot(1, 3, 3)
         if param == 'T':
             errors = np.array(fit_errors[param]) / np.array(fit_values[param])
             ax2.set_xlabel(param + ' fractional uncertainty', fontsize=14)
         else:
             errors = np.array(fit_errors[param])
             ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+        # the histogram range has to go past the data range or you get a vertical line on the right
+        lower = errors.min() / 2.0
+        upper = errors.max() * 2.0
+        # print('uncertainty range (logged)',param,lower,upper)
+        plt.hist(
+            errors,
+            range=(lower, upper),
+            bins=1000,
+            cumulative=True,
+            density=True,
+            histtype='step',
+            color='black',
+            zorder=1,
+            label='',
+        )
+        plt.title('cumulative histogram of ' + str(len(errors)) + ' planets')
+        ax2.semilogx()
+        ax2.set_xlim(lower, upper)
+        ax2.set_ylim(0, 1)
+        ax2.set_ylabel('fraction of planets', fontsize=14)
+
+        # UNCERTAINTY HISTOGRAMS IN THIRD PANEL
+        if switch_to_vert_stack:
+            ax3 = figure.add_subplot(3, 1, 3)
+        else:
+            ax3 = figure.add_subplot(1, 3, 3)
+        if param == 'T':
+            errors = np.array(fit_errors[param]) / np.array(fit_values[param])
+            ax3.set_xlabel(param + ' fractional uncertainty', fontsize=14)
+        else:
+            errors = np.array(fit_errors[param])
+            ax3.set_xlabel(param + ' uncertainty', fontsize=14)
         if len(errors) > 0:
             # the histogram range has to go past the data range or you get a vertical line on the right
             lower = errors.min() / 1.5
@@ -1173,10 +1350,10 @@ def plot_fits_vs_truths(
             plt.title(
                 'cumulative histogram of ' + str(len(errors)) + ' planets'
             )
-            ax2.semilogx()
-            ax2.set_xlim(lower, upper)
-        ax2.set_ylim(0, 1)
-        ax2.set_ylabel('fraction of planets', fontsize=14)
+            ax3.semilogx()
+            ax3.set_xlim(lower, upper)
+        ax3.set_ylim(0, 1)
+        ax3.set_ylabel('fraction of planets', fontsize=14)
 
         figure.tight_layout()
 
@@ -1382,15 +1559,14 @@ def plot_mass_vs_metals(
     fit_errors,
     prior_ranges,
     filt,
+    onlyFitAbove10MEarth,
+    onlyPlotAbove10MEarth,
     saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
     verbose=False,
 ):
     '''how well do we retrieve the input mass-metallicity relation?'''
-
-    onlyFitAbove10MEarth = True
-    onlyPlotAbove10MEarth = True
 
     MEarth = 5.972e27 / 1.898e30
 

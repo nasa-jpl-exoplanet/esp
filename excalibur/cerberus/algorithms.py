@@ -93,16 +93,15 @@ class XSLib(dawgie.Algorithm):
 
             runtime = self.__rt.sv_as_dict()['status']
             runtime_params = crbcore.CerbXSlibParams(
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
             )
 
             # for Ariel targets, option to only do the actually Tier-2 targets
@@ -113,14 +112,12 @@ class XSLib(dawgie.Algorithm):
                 and runtime['cerberus_arielsample_tier'].value() == 2
             ):
                 alltargetlists = get_target_lists()
-                targetlist = alltargetlists['ariel_Nov2024_2years']
+                targetlist = alltargetlists['ariel_stars_tier2']
                 if target not in targetlist:
                     targetlistcheck = False
 
                 if targetlistcheck:
-                    planetlist = alltargetlists[
-                        'ariel_Nov2024_2years_withPlanetletters'
-                    ]
+                    planetlist = alltargetlists['ariel_planets_tier2']
                     for planet in planetlist:
                         if planet.startswith(target + ' '):
                             only_these_planets.append(planet[-1])
@@ -129,7 +126,7 @@ class XSLib(dawgie.Algorithm):
             if vspc and targetlistcheck:
                 log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
                 update = self._xslib(
-                    sv, runtime_params, only_these_planets, fltrs.index(fltr)
+                    sv, runtime_params, only_these_planets, fltr
                 )
             else:
                 if targetlistcheck:
@@ -151,15 +148,25 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, runtime_params, only_these_planets, index):
+    def _xslib(self, spc, runtime_params, only_these_planets, fltr):
         '''Core code call'''
-        cs = crbcore.myxsecs(
-            spc,
-            runtime_params,
-            self.__out[index],
-            only_these_planets=only_these_planets,
-            verbose=False,
-        )
+        if 'JWST' in fltr:
+            cs = crbcore.jwstwxs(
+                spc,
+                runtime_params,
+                self.__out[fltrs.index(fltr)],
+                verbose=False,
+            )
+            pass
+        else:
+            cs = crbcore.myxsecs(
+                spc,
+                runtime_params,
+                self.__out[fltrs.index(fltr)],
+                only_these_planets=only_these_planets,
+                verbose=False,
+            )
+            pass
         return cs
 
     @staticmethod
@@ -216,27 +223,39 @@ class Atmos(dawgie.Algorithm):
             sfin = 'Missing system params!'
 
         runtime = self.__rt.sv_as_dict()['status']
+
+        # GMR: There is a mapping here that we may wanna clean?
+        # The intent is to pass runtime as a cerberus argument.
+        # My bad it should have been like this from the start.
+        # Maybe it is because some parameters only affect cerberus and not transit
+        # The core code should handle it.
+        # Keeping it for HST comp
         runtime_params = crbcore.CerbAtmosParams(
             MCMC_chain_length=runtime['cerberus_steps'].value(),
             MCMC_chains=runtime['cerberus_chains'].value(),
             MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-            fitCloudParameters=runtime['cerberus_atmos_fitCloudParameters'],
+            fitCTP=runtime['cerberus_atmos_fitCTP'],
+            fitHaze=runtime['cerberus_atmos_fitHaze'],
             cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
             fitT=runtime['cerberus_atmos_fitT'],
             fitCtoO=runtime['cerberus_atmos_fitCtoO'],
             fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+            fitStoO=runtime['cerberus_atmos_fitStoO'],
             fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
-            knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+            hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
             cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
             xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+            atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
             nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
             solrad=runtime['cerberus_crbmodel_solrad'].value(),
             Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-            lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-            lshifting=runtime['cerberus_crbmodel_lshifting'],
             isothermal=runtime['cerberus_crbmodel_isothermal'],
             boundTeq=runtime['cerberus_atmos_bounds_Teq'],
             boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+            boundMetallicity=runtime['cerberus_atmos_bounds_metallicity'],
+            boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+            boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+            boundStoO=runtime['cerberus_atmos_bounds_StoO'],
             boundCTP=runtime['cerberus_atmos_bounds_CTP'],
             boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
             boundHScale=runtime['cerberus_atmos_bounds_HScale'],
@@ -244,35 +263,39 @@ class Atmos(dawgie.Algorithm):
         )
 
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         # for fltr in ['Ariel-sim']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
 
             update = False
+            # XSLIB CHECK
             if fltr in self.__xsl.sv_as_dict():
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 if sxsl:
                     sxsl = fltr + ' missing XSL'
             else:
                 vxsl, sxsl = (False, fltr + ' missing XSL')
-
+                pass
+            # INPUT SPECTRUM CHECK
             if fltr == 'Ariel-sim':
                 sv = self.__arielsim.sv_as_dict()['parameters']
                 vspc, sspc = checksv(sv)
                 sspc = 'Ariel-sim spectrum not found'
+                pass
             elif fltr in self.__spc.sv_as_dict().keys():
                 sv = self.__spc.sv_as_dict()[fltr]
                 if 'data' in sv and 'target' not in sv['data']:
                     sv['data']['target'] = 'HST spectrum needs target name'
+                    pass
                 vspc, sspc = checksv(sv)
+                pass
             else:
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
+                pass
 
-            # for Ariel targets, option to only do the actually Tier-2 targets
+            # for Ariel targets, option to only do the Tier-2 targets
             targetlistcheck = True
             only_these_planets = []
             if (
@@ -280,18 +303,15 @@ class Atmos(dawgie.Algorithm):
                 and runtime['cerberus_arielsample_tier'].value() == 2
             ):
                 alltargetlists = get_target_lists()
-                targetlist = alltargetlists['ariel_Nov2024_2years']
+                targetlist = alltargetlists['ariel_stars_tier2']
                 if target not in targetlist:
                     targetlistcheck = False
 
                 if targetlistcheck:
-                    planetlist = alltargetlists[
-                        'ariel_Nov2024_2years_withPlanetletters'
-                    ]
+                    planetlist = alltargetlists['ariel_planets_tier2']
                     for planet in planetlist:
                         if planet.startswith(target + ' '):
                             only_these_planets.append(planet[-1])
-                # print('only these planets', only_these_planets)
 
             if vfin and vxsl and vspc and targetlistcheck:
                 log.info('--< CERBERUS ATMOS: %s  %s >--', fltr, target)
@@ -302,17 +322,22 @@ class Atmos(dawgie.Algorithm):
                     sv,
                     runtime_params,
                     only_these_planets,
-                    fltrs.index(fltr),
                     fltr,
                 )
+                pass
             else:
                 if targetlistcheck:
                     errstr = [m for m in [sfin, sspc, sxsl] if m is not None]
+                    pass
                 else:
                     errstr = ['not in the Ariel target list']
+                    pass
                 self._failure(errstr[0], target)
+                pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
+                pass
+            pass
         self.__out = svupdate
         if self.__out:
             _ = excalibur.lagger()
@@ -324,33 +349,38 @@ class Atmos(dawgie.Algorithm):
             )
         return
 
-    def _atmos(
-        self, fin, xsl, spc, runtime_params, only_these_planets, index, fltr
-    ):
-        '''Core code call'''
-
-        mcmc_chains = runtime_params.MCMC_chains
-        mcmc_chain_length = runtime_params.MCMC_chain_length
-        # print('MCMC_chain_length', mcmc_chain_length)
-        # mcmc_chain_length = 1000
-        # mcmc_chain_length = 10
-        # print('MCMC_chain_length', mcmc_chain_length)
+    def _atmos(self, fin, xsl, spc, rtp, only_these_planets, fltr):
+        '''
+        Core code call
+        '''
         log.info(
-            ' calling atmos from cerb-alg-atmos  chain len=%d',
-            mcmc_chain_length,
+            '--< CERBERUS ATMOS: Chain length %d >--',
+            rtp.MCMC_chain_length,
         )
-        am = crbcore.atmos(
-            fin,
-            xsl,
-            spc,
-            runtime_params,
-            self.__out[index],
-            fltr,
-            only_these_planets=only_these_planets,
-            Nchains=mcmc_chains,
-            chainlen=mcmc_chain_length,
-            verbose=False,
-        )  # singlemod='TEC' after chainlen
+        if 'JWST' in fltr:
+            am = crbcore.jwstatmos(
+                self.__fin.sv_as_dict()['parameters'],
+                xsl,
+                spc,
+                self.__rt.sv_as_dict()['status'],
+                self.__out[fltrs.index(fltr)],
+                verbose=False,
+            )
+            pass
+        else:
+            am = crbcore.atmos(
+                fin,
+                xsl,
+                spc,
+                rtp,
+                self.__out[fltrs.index(fltr)],
+                fltr,
+                only_these_planets=only_these_planets,
+                Nchains=rtp.MCMC_chains,
+                chainlen=rtp.MCMC_chain_length,
+                verbose=False,
+            )
+            pass
         return am
 
     @staticmethod
@@ -416,17 +446,16 @@ class Results(dawgie.Algorithm):
                     'cerberus_results_nrandomwalkers'
                 ].value(),
                 randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
+                hitemplist=runtime[
                     'cerberus_crbmodel_HITEMPmolecules'
                 ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                 nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                 Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                 solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
                 isothermal=runtime['cerberus_crbmodel_isothermal'],
             )
 
@@ -456,14 +485,12 @@ class Results(dawgie.Algorithm):
                     and runtime['cerberus_arielsample_tier'].value() == 2
                 ):
                     alltargetlists = get_target_lists()
-                    targetlist = alltargetlists['ariel_Nov2024_2years']
+                    targetlist = alltargetlists['ariel_stars_tier2']
                     if target not in targetlist:
                         targetlistcheck = False
 
                     if targetlistcheck:
-                        planetlist = alltargetlists[
-                            'ariel_Nov2024_2years_withPlanetletters'
-                        ]
+                        planetlist = alltargetlists['ariel_planets_tier2']
                         for planet in planetlist:
                             if planet.startswith(target + ' '):
                                 only_these_planets.append(planet[-1])
@@ -625,8 +652,20 @@ class Analysis(dawgie.Analyzer):
                 runtime_params = crbcore.CerbAnalysisParams(
                     # tier=runtime['ariel_simspectrum_tier'].value(),
                     tier=2,
+                    onlyFitAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyFitAbove10MEarth'
+                    ],
+                    onlyPlotAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyPlotAbove10MEarth'
+                    ],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundMetallicity=runtime[
+                        'cerberus_atmos_bounds_metallicity'
+                    ],
+                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                     boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],

@@ -119,7 +119,7 @@ class SimSpectrum(dawgie.Algorithm):
                     CtoOdispersion=runtime[
                         'ariel_simspectrum_CtoOdispersion'
                     ].value(),
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -131,8 +131,6 @@ class SimSpectrum(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                 )
                 update = self._sim_spectrum(
@@ -219,7 +217,7 @@ class XSLib(dawgie.Algorithm):
 
                 runtime = self.__rt.sv_as_dict()['status']
                 runtime_params = crbcore.CerbXSlibParams(
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -231,8 +229,6 @@ class XSLib(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                 )
 
                 update = self._xslib(sv, runtime_params, fltrs.index(fltr))
@@ -302,7 +298,13 @@ class Atmos(dawgie.Algorithm):
                 rtime.task,
                 self.__rt,
                 self.__rt.sv_as_dict()['status'],
-                'cerberus_atmos_fitCloudParameters',
+                'cerberus_atmos_fitCTP',
+            ),
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'cerberus_atmos_fitHaze',
             ),
             dawgie.V_REF(
                 rtime.task,
@@ -321,6 +323,12 @@ class Atmos(dawgie.Algorithm):
                 self.__rt,
                 self.__rt.sv_as_dict()['status'],
                 'cerberus_atmos_fitNtoO',
+            ),
+            dawgie.V_REF(
+                rtime.task,
+                self.__rt,
+                self.__rt.sv_as_dict()['status'],
+                'cerberus_atmos_fitStoO',
             ),
         ] + self.__rt.refs_for_proceed()
 
@@ -367,17 +375,17 @@ class Atmos(dawgie.Algorithm):
                     # MCMC_chain_length=33,
                     MCMC_chains=runtime['cerberus_chains'].value(),
                     MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-                    fitCloudParameters=runtime[
-                        'cerberus_atmos_fitCloudParameters'
-                    ],
+                    fitCTP=runtime['cerberus_atmos_fitCTP'],
+                    fitHaze=runtime['cerberus_atmos_fitHaze'],
                     cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
                     fitT=runtime['cerberus_atmos_fitT'],
                     fitCtoO=runtime['cerberus_atmos_fitCtoO'],
                     fitNtoO=runtime['cerberus_atmos_fitNtoO'],
+                    fitStoO=runtime['cerberus_atmos_fitStoO'],
                     fitmolecules=runtime[
                         'cerberus_crbmodel_fitmolecules'
                     ].molecules,
-                    knownspecies=runtime[
+                    hitemplist=runtime[
                         'cerberus_crbmodel_HITEMPmolecules'
                     ].molecules,
                     cialist=runtime[
@@ -389,11 +397,15 @@ class Atmos(dawgie.Algorithm):
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                    lshifting=runtime['cerberus_crbmodel_lshifting'],
                     isothermal=runtime['cerberus_crbmodel_isothermal'],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                    boundMetallicity=runtime[
+                        'cerberus_atmos_bounds_metallicity'
+                    ],
+                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                     boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                     boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                     boundHScale=runtime['cerberus_atmos_bounds_HScale'],
@@ -529,7 +541,7 @@ class Results(dawgie.Algorithm):
                         randomseed=runtime[
                             'cerberus_results_randomseed'
                         ].value(),
-                        knownspecies=runtime[
+                        hitemplist=runtime[
                             'cerberus_crbmodel_HITEMPmolecules'
                         ].molecules,
                         cialist=runtime[
@@ -538,14 +550,13 @@ class Results(dawgie.Algorithm):
                         xmollist=runtime[
                             'cerberus_crbmodel_EXOMOLmolecules'
                         ].molecules,
+                        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
                         solrad=runtime['cerberus_crbmodel_solrad'].value(),
                         cornerBins=runtime[
                             'cerberus_plotters_cornerBins'
                         ].value(),
-                        lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                        lshifting=runtime['cerberus_crbmodel_lshifting'],
                         isothermal=runtime['cerberus_crbmodel_isothermal'],
                     )
 
@@ -664,6 +675,10 @@ class Analysis(dawgie.Analyzer):
                 #    tier=runtime['ariel_simspectrum_tier'].value(),
                 #    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                 #    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
+                #    boundMetallicity=runtime['cerberus_atmos_bounds_metallicity'],
+                #    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
+                #    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
+                #    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
                 #    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
                 #    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
                 #    boundHScale=runtime['cerberus_atmos_bounds_HScale'],

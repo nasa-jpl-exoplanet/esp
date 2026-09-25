@@ -2,7 +2,8 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals
+# pylint: disable=broad-exception-caught
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-lines,too-many-return-statements,too-many-nested-blocks
 
 # -- IMPORTS -- ------------------------------------------------------
 import copy
@@ -19,6 +20,11 @@ _numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
 _numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
 sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
 
+=======
+import numpy as np
+import matplotlib.pyplot as plt
+
+>>>>>>> origin/main
 from altaipony.flarelc import FlareLightCurve
 from altaipony.fakeflares import flare_model_mendoza2022 as model
 from altaipony.utils import sigma_clip
@@ -153,8 +159,7 @@ def _align_lc_to_cadences(lc, cadenceno):
     in_bounds = match_idx < len(sorted_cadenceno)
     valid = np.zeros_like(in_bounds)
     valid[in_bounds] = (
-        sorted_cadenceno[match_idx[in_bounds]]
-        == target_cadenceno[in_bounds]
+        sorted_cadenceno[match_idx[in_bounds]] == target_cadenceno[in_bounds]
     )
     if not np.all(valid):
         missing = target_cadenceno[~valid]
@@ -165,9 +170,7 @@ def _align_lc_to_cadences(lc, cadenceno):
         if valid_positions.size:
             first_valid = valid_positions[0]
             last_valid = valid_positions[-1]
-            edge_only_missing = np.all(
-                valid[first_valid : last_valid + 1]
-            )
+            edge_only_missing = np.all(valid[first_valid : last_valid + 1])
         if not edge_only_missing:
             raise ValueError(
                 'Could not realign detrended light curve to all original '
@@ -213,14 +216,15 @@ def _detrend_savgol_aligned(
 
     reverse_counts = np.zeros_like(lcn.flux, dtype='int')
     for k in range(1, len(lcn.flux)):
-        reverse_counts[-k] = mask[-k] * (
-            reverse_counts[-(k - 1)] + mask[-k]
-        )
+        reverse_counts[-k] = mask[-k] * (reverse_counts[-(k - 1)] + mask[-k])
 
-    istart_i = np.where(
-        (reverse_counts[1:] >= 1)
-        & (reverse_counts[:-1] - reverse_counts[1:] < 0)
-    )[0] + 1
+    istart_i = (
+        np.where(
+            (reverse_counts[1:] >= 1)
+            & (reverse_counts[:-1] - reverse_counts[1:] < 0)
+        )[0]
+        + 1
+    )
     istop_i = istart_i + reverse_counts[istart_i] - 1
     candidates = list(zip(istart_i, istop_i))
 
@@ -642,12 +646,15 @@ def _write_visit_summary_files(
         visit_lines.extend(['', f'Error: {visit_result["error"]}'])
     elif visit_result.get('flares'):
         for flare_index, flare in enumerate(visit_result['flares']):
-            visit_lines.extend([''] + _flare_summary_lines(
-                flare_index,
-                flare,
-                fltr,
-                c_bol=c_bol,
-            ))
+            visit_lines.extend(
+                ['']
+                + _flare_summary_lines(
+                    flare_index,
+                    flare,
+                    fltr,
+                    c_bol=c_bol,
+                )
+            )
             flare_summary_path = os.path.join(
                 visit_dir,
                 f'flare_{flare_index:02d}_summary.txt',
@@ -695,7 +702,9 @@ def _write_planet_summary_file(
     visit_results,
     c_bol=None,
 ):
-    planet_dir = _ensure_directory(os.path.join(results_dir, _sanitize_label(planet)))
+    planet_dir = _ensure_directory(
+        os.path.join(results_dir, _sanitize_label(planet))
+    )
     flare_count = sum(visit.get('n_flares', 0) for visit in visit_results)
     error_count = sum(1 for visit in visit_results if visit.get('error'))
     lines = [
@@ -724,18 +733,24 @@ def _write_planet_summary_file(
             lines.append('No flares detected in this visit.')
             continue
         for flare_index, flare in enumerate(visit_result['flares']):
-            lines.extend([''] + _prefix_lines(
-                _flare_summary_lines(flare_index, flare, fltr, c_bol=c_bol),
-                '  ',
-            ))
+            lines.extend(
+                ['']
+                + _prefix_lines(
+                    _flare_summary_lines(flare_index, flare, fltr, c_bol=c_bol),
+                    '  ',
+                )
+            )
 
     _write_text_file(os.path.join(planet_dir, 'grand_summary.txt'), lines)
 
 
-def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR):
+def _compute_observation_segments(
+    time_values, gap_factor=OBSERVATION_GAP_FACTOR
+):
     times = _as_numpy(time_values).astype(float)
     times = times[np.isfinite(times)]
-    if not len(times):
+    # if not times:
+    if len(times) == 0:
         return [], [], {}
 
     times = np.unique(np.sort(times))
@@ -773,7 +788,9 @@ def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR
     seg_stops = np.concatenate((split_indices + 1, [len(times)]))
 
     segments = []
-    for seg_index, (start_idx, stop_idx) in enumerate(zip(seg_starts, seg_stops)):
+    for seg_index, (start_idx, stop_idx) in enumerate(
+        zip(seg_starts, seg_stops)
+    ):
         seg_times = times[start_idx:stop_idx]
         seg_diffs = np.diff(seg_times)
         seg_positive_diffs = seg_diffs[seg_diffs > 0]
@@ -809,7 +826,9 @@ def _compute_observation_segments(time_values, gap_factor=OBSERVATION_GAP_FACTOR
                 'gap_index': gap_index,
                 'gap_start_raw': float(times[split_idx]),
                 'gap_end_raw': float(times[split_idx + 1]),
-                'gap_duration_days': float(times[split_idx + 1] - times[split_idx]),
+                'gap_duration_days': float(
+                    times[split_idx + 1] - times[split_idx]
+                ),
             }
         )
 
@@ -1123,14 +1142,13 @@ def _export_results_bundle(
 
     frequency_products = _build_frequency_products(observation_rows, flare_rows)
     group_lookup = {
-        row['flare_id']: row for row in frequency_products['annotated_flare_rows']
+        row['flare_id']: row
+        for row in frequency_products['annotated_flare_rows']
     }
     for flare_row in flare_rows:
         group_row = group_lookup.get(flare_row['flare_id'], {})
         flare_row['overlap_group_id'] = group_row.get('overlap_group_id', '')
-        flare_row['overlap_group_size'] = group_row.get(
-            'overlap_group_size', 1
-        )
+        flare_row['overlap_group_size'] = group_row.get('overlap_group_size', 1)
 
     run_summary_lines = [
         f'Target: {target_name}',

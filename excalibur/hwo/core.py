@@ -7,16 +7,15 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import logging
-
+import numpy as np
 from collections import namedtuple
 
-# import excalibur
 import excalibur.system.core as syscore
-import excalibur.util.cerberus as crbutil
 
 from excalibur.hwo.hwo_instrument_model import load_hwo_instrument
 
 from excalibur.cerberus.core import myxsecs
+from excalibur.ariel.core import calc_mmw_Hs
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.ariel.clouds import fixedCloudParameters, randomCloudParameters
 from excalibur.ariel.metallicity import (
@@ -30,9 +29,7 @@ from excalibur.ariel.plotters import (
     plot_depthprobed,
     plot_vertical_profiles,
 )
-
-import numpy as np
-import scipy.constants as cst
+from excalibur.cerberus.teagrid import get_TEA_grid
 
 log = logging.getLogger(__name__)
 
@@ -49,14 +46,13 @@ HWOparams = namedtuple(
         'CtoOdaSilva',
         'CtoOaverage',
         'CtoOdispersion',
-        'knownspecies',
+        'hitemplist',
         'cialist',
         'xmollist',
+        'atomlist',
         'nlevels',
         'solrad',
         'Hsmax',
-        'lbroadening',
-        'lshifting',
         'isothermal',
     ],
 )
@@ -64,61 +60,6 @@ HWOparams = namedtuple(
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE HWO SPECTRA ------------------------------------------
-def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
-    '''
-    calculate the mean molecular weight and scale height
-    '''
-
-    # INCLUDE C/O RATIO HERE????  ASDF
-
-    if useTEA:
-        # log.error('TEA removed for now')
-        tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
-        mixratioprofiles = crbutil.calcTEA(
-            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
-        )
-        # have to take the average! (same as done in crbce)
-        mixratio = {}
-        for molecule in mixratioprofiles:
-            mixratio[molecule] = np.log10(
-                np.mean(10.0 ** mixratioprofiles[molecule])
-            )
-
-        mmw, fH2, fHe = crbutil.getmmw(mixratio)
-
-        # (uncomment to compare TEC vs TEA)
-        # print('TEA:', mixratio, fH2, fHe)
-        # print('TEA: water profile', mixratioprofiles['H2O'])
-        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
-        #    pressureArray, temperature, X2Hr=X2Hr
-        # )
-        # print('TEC:', mixratio, fH2, fHe)
-        # print('TEC: water profile', mixratioprofiles['H2O'])
-
-    else:
-        # mixratio, mixratioprofiles, fH2, fHe = crbutil.crbce(
-        mixratio, _, fH2, fHe = crbutil.crbce(
-            pressureArray, temperature, X2Hr=X2Hr
-        )
-        mmw, fH2, fHe = crbutil.getmmw(
-            mixratio,
-            protosolar=False,
-            fH2=fH2,
-            fHe=fHe,
-        )
-    # print('mmw      (inside)', mmw, fH2, fHe)
-
-    # print('mixratio (inside)', mixratio, fH2, fHe)
-    # X2Hr=cheq['XtoH'])
-    # assume solar C/O and N/O for now
-    # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
-
-    mmw_kg = mmw * cst.m_p  # [kg]
-    Hs = (
-        cst.Boltzmann * temperature / mmw_kg / 1e-2 / (10.0 ** float(logg))
-    )  # [m]
-
-    return mmw, Hs
 
 
 def simulate_spectra(
@@ -162,13 +103,15 @@ def simulate_spectra(
         # 'cerberuslowmmwNoclouds',
     ]
 
-    if testTarget:
-        atmosModels = [
-            # 'cerberus',
-            'cerberusTEA',
-            # 'cerberusNoclouds',
-            # 'cerberusTEANoclouds',
-        ]
+    # load TEA equilibrium chemistry interpolation grid
+    modelName = (
+        'Pgrid_'
+        + str(runtime_params.nlevels)
+        + 'levels'
+        + str(runtime_params.Hsmax)
+        + 'scaleHeights'
+    )
+    interp_tea = get_TEA_grid(modelName)
 
     solarCtoO = 0.54951
 
@@ -205,7 +148,7 @@ def simulate_spectra(
             # use HD 209458 SNR as a default for test cases
             targetplanet = 'HD 209458 b'
 
-        hwo_instrument = load_hwo_instrument(targetplanet)
+        hwo_instrument = load_hwo_instrument(targetplanet, system_params)
 
         if hwo_instrument:
             # asdf : LATER : add in uncertainty scatter to these model parameters
@@ -218,6 +161,9 @@ def simulate_spectra(
                 'sma': system_params[planet_letter]['sma'],
                 'Teq': system_params[planet_letter]['teq'],
             }
+
+            # for a T-P profile (non-isothermal atmosphere) insert code here
+            model_params['Tparams'] = None
 
             # Calculate the atmosphere scale height
             #  cerberus wants it, to normalize the spectrum
@@ -348,7 +294,7 @@ def simulate_spectra(
                         model_params['N/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
-                _, Hs = calc_mmw_Hs(
+                _, _, Hs = calc_mmw_Hs(
                     pressure,
                     eqtemp,
                     model_params['logg'],
@@ -433,15 +379,15 @@ def simulate_spectra(
                             print('CALCulating cross-sections START')
                         _ = myxsecs(tempspc, runtime_params, xslib)
                         # import pickle
+                        # hwosavename = 'hwoxslibsave1.pkl'
                         # if 0:
                         #    _ = myxsecs(tempspc, runtime_params, xslib)
-                        #    file = open('hwoxslibsave.pkl', 'bw')
+                        #    file = open(hwosavename, 'bw')
                         #    pickle.dump(xslib, file)
                         #    file.close()
                         # else:
-                        #    with open('hwoxslibsave.pkl', 'br') as file:
+                        #    with open(hwosavename, 'br') as file:
                         #        xslib = pickle.load(file)
-
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -471,6 +417,8 @@ def simulate_spectra(
                         xslib,
                         planet_letter,
                         chemistry=chemistry,
+                        teagrid=interp_tea,
+                        verbose=verbose,
                     )
                     # pressures should be the same thing as pressure
                     if np.any(pressures != pressure):
@@ -646,6 +594,7 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
+                temps = system_params[planet_letter]['teq'] * len(pressure)
                 out['data'][planet_letter][atmosModel][
                     'plot_vertical_profiles'
                 ] = plot_vertical_profiles(
@@ -653,6 +602,7 @@ def simulate_spectra(
                     planet_letter,
                     moleculeProfiles,
                     pressure,
+                    temperature=temps,
                     verbose=verbose,
                 )
 

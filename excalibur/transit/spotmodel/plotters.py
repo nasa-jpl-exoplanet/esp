@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import pyplot
-from matplotlib.cm import get_cmap, ScalarMappable
+
+# old location for get_cmap (cm) is deprecated; removed for python >=3.12
+# from matplotlib.cm import get_cmap, ScalarMappable
+from matplotlib.cm import ScalarMappable
+from matplotlib.pyplot import get_cmap
 from matplotlib.colors import Normalize
 
 from excalibur.util.plotters import save_plot_tosv

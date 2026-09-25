@@ -10,10 +10,7 @@ except:
 data = b''
 with open ('$rdir/requirements.txt', 'br') as f: data += f.read()
 with open ('$rdir/.docker/compose.yaml', 'br') as f: data += f.read()
-with open ('$rdir/.docker/Dockerfile.base', 'br') as f: data += f.read()
-with open ('$rdir/.docker/Dockerfile.server', 'br') as f: data += f.read()
-with open ('$rdir/.docker/Dockerfile.tools', 'br') as f: data += f.read()
-with open ('$rdir/.docker/Dockerfile.worker', 'br') as f: data += f.read()
+with open ('$rdir/.docker/Dockerfile', 'br') as f: data += f.read()
 k = hashlib.blake2b (data, digest_size=8)
 print (k.hexdigest())
 EOF

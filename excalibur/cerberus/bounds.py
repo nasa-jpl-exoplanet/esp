@@ -1,7 +1,8 @@
 '''cerberus bounds ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,too-many-positional-arguments
+# pylint: disable=invalid-name
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements,too-many-branches
 
 # -- IMPORTS --------------------------------------------------------
 import numpy as np
@@ -28,11 +29,11 @@ def set_prior_bound(eqtemp, runtime_params):
     #
     if runtime_params.boundTeq.lo != 0.75 or runtime_params.boundTeq.hi != 1.5:
         log.info('--< Non-standard prior range for Teq >--')
-    if (
-        runtime_params.boundAbundances.lo != -6
-        or runtime_params.boundAbundances.hi != 6
-    ):
-        log.info('--< Non-standard prior range for abundances >--')
+    # if (
+    #    runtime_params.boundAbundances.lo != -6
+    #    or runtime_params.boundAbundances.hi != 6
+    # ):
+    #    log.info('--< Non-standard prior range for abundances >--')
     if runtime_params.boundCTP.lo != -6 or runtime_params.boundCTP.hi != 1:
         log.info('--< Non-standard prior range for CTP >--')
     if runtime_params.boundHLoc.lo != -6 or runtime_params.boundHLoc.hi != 1:
@@ -58,6 +59,22 @@ def set_prior_bound(eqtemp, runtime_params):
         runtime_params.boundAbundances.lo,
         runtime_params.boundAbundances.hi,
     )
+    prior_ranges['MetallicityRange'] = (
+        runtime_params.boundMetallicity.lo,
+        runtime_params.boundMetallicity.hi,
+    )
+    prior_ranges['CtoORange'] = (
+        runtime_params.boundCtoO.lo,
+        runtime_params.boundCtoO.hi,
+    )
+    prior_ranges['NtoORange'] = (
+        runtime_params.boundNtoO.lo,
+        runtime_params.boundNtoO.hi,
+    )
+    prior_ranges['StoORange'] = (
+        runtime_params.boundStoO.lo,
+        runtime_params.boundStoO.hi,
+    )
     prior_ranges['CTP'] = (
         runtime_params.boundCTP.lo,
         runtime_params.boundCTP.hi,
@@ -78,7 +95,11 @@ def set_prior_bound(eqtemp, runtime_params):
     if prior_ranges['dexRange'] == (0, 1):
         log.warning('--< PROBLEM WITH PRIOR BOUNDS >--')
         prior_ranges['T'] = (0.75 * eqtemp, 1.5 * eqtemp)
-        prior_ranges['dexRange'] = (-6, 6)  # use this for [X/H],[C/O],[N/O]
+        prior_ranges['dexRange'] = (-6, 6)
+        prior_ranges['MetallicityRange'] = (-6, 6)
+        prior_ranges['CtoORange'] = (-6, 6)
+        prior_ranges['NtoORange'] = (-6, 6)
+        prior_ranges['StoORange'] = (-6, 6)
         prior_ranges['CTP'] = (-6, 1)
         prior_ranges['HScale'] = (-6, 6)
         prior_ranges['HLoc'] = (-6, 1)
@@ -166,7 +187,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
     '''
 
     applied_limits = []
-    proftrace = np.ones(len(alltraces[0]), dtype=int)
+    profile_mask = np.ones(len(alltraces[0]), dtype=int)
     if target in limits:
         for limit in limits[target]:
             if limit[0] in allkeys:
@@ -177,7 +198,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                 applied_limits.append(limit)
 
                 if limit[2] == '>':
-                    proftrace[
+                    profile_mask[
                         np.where(alltraces[allkeys.index(limit[0])] <= limit[1])
                     ] = 0
                     if (
@@ -194,7 +215,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
                             limit,
                         )
                 else:
-                    proftrace[
+                    profile_mask[
                         np.where(alltraces[allkeys.index(limit[0])] >= limit[1])
                     ] = 0
                     if (
@@ -211,11 +232,11 @@ def apply_profiling(target, limits, alltraces, allkeys):
                             limit,
                         )
 
-    return proftrace, applied_limits
+    return profile_mask, applied_limits
 
 
 def add_priors(
-    nodes, nodeshape, prior_range_table, runtime_params, ext, model, modparlbls
+    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
 ):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
@@ -223,13 +244,14 @@ def add_priors(
 
     prior_ranges = {}
 
-    if runtime_params.fitCloudParameters or 'sim' not in ext:
+    if runtime_params.fitCTP:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
         )
         nodeshape.append(1)
 
+    if runtime_params.fitHaze:
         prior_ranges['HScale'] = prior_range_table['HScale']
         nodes.append(
             pymc.Uniform(
@@ -256,29 +278,56 @@ def add_priors(
 
     if runtime_params.fitT:
         prior_ranges['T'] = prior_range_table['T']
-        nodes.append(
-            pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
-        )
-        nodeshape.append(1)
+        if runtime_params.isothermal:
+            # print('OK normal isothermal T')
+            nodes.append(
+                pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
+            )
+            nodeshape.append(1)
+        else:
+            # print('NEW non-isothermal T')
+            num_T_params = 6  # ERROR put this inside runtime ERROR
+            nodes.extend(
+                pymc.Uniform(
+                    'Tparam',
+                    lower=prior_range_table['T'][0],
+                    upper=prior_range_table['T'][1],
+                    shape=num_T_params,
+                )
+            )
+            nodeshape.append(num_T_params)
 
+    loranges = []
+    hiranges = []
     for param in modparlbls:
         if param == 'XtoH':
-            prior_ranges['[X/H]'] = prior_range_table['dexRange']
+            prior_ranges['[X/H]'] = prior_range_table['MetallicityRange']
+            loranges.append(prior_range_table['MetallicityRange'][0])
+            hiranges.append(prior_range_table['MetallicityRange'][1])
         elif param == 'CtoO':
-            prior_ranges['[C/O]'] = prior_range_table['dexRange']
+            prior_ranges['[C/O]'] = prior_range_table['CtoORange']
+            loranges.append(prior_range_table['CtoORange'][0])
+            hiranges.append(prior_range_table['CtoORange'][1])
         elif param == 'NtoO':
-            prior_ranges['[N/O]'] = prior_range_table['dexRange']
+            prior_ranges['[N/O]'] = prior_range_table['NtoORange']
+            loranges.append(prior_range_table['NtoORange'][0])
+            hiranges.append(prior_range_table['NtoORange'][1])
+        elif param == 'StoO':
+            prior_ranges['[S/O]'] = prior_range_table['StoORange']
+            loranges.append(prior_range_table['StoORange'][0])
+            hiranges.append(prior_range_table['StoORange'][1])
         else:
             prior_ranges[param] = prior_range_table['dexRange']
+            loranges.append(prior_range_table['dexRange'][0])
+            hiranges.append(prior_range_table['dexRange'][1])
 
     num_abundance_params = len(modparlbls)
     if num_abundance_params == 1:
         nodes.append(
-            # pymc.Uniform(modparlbls[0],
             pymc.Uniform(
                 model,
-                prior_range_table['dexRange'][0],
-                prior_range_table['dexRange'][1],
+                loranges[0],
+                hiranges[0],
             )
         )
         nodeshape.append(1)
@@ -286,8 +335,8 @@ def add_priors(
         nodes.extend(
             pymc.Uniform(
                 model,
-                lower=prior_range_table['dexRange'][0],
-                upper=prior_range_table['dexRange'][1],
+                lower=np.array(loranges),
+                upper=np.array(hiranges),
                 shape=num_abundance_params,
             )
         )
