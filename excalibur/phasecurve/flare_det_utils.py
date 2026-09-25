@@ -521,7 +521,7 @@ def fit_flare_model(
         return out
 
     class faketensor(pg.Op):
-        def make_node(self, flatargs) -> pg.Apply:
+        def make_node(self, *flatargs) -> pg.Apply:
             inputs = [pt.as_tensor(a) for a in flatargs]
             outputs = [pt.vector()]
             return pg.Apply(self, inputs, outputs)

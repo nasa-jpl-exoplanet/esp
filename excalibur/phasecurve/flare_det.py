@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,too-many-locals,too-many-branches,too-many-return-statements
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,too-many-locals,too-many-branches,too-many-return-statements,too-many-lines
 
 # -- IMPORTS -- ------------------------------------------------------
 import copy
@@ -908,7 +908,7 @@ def _compute_observation_segments(
         return [], [], {}
 
     times = np.unique(np.sort(times))
-    if len(times) == 1:
+    if times and len(times) == 1:
         summary = {
             'n_points': 1,
             'raw_start': float(times[0]),

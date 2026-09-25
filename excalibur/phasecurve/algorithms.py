@@ -2,7 +2,7 @@
 
 # Heritage code shame:
 # pylint: disable=duplicate-code
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,too-many-locals
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
