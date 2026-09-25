@@ -50,6 +50,5 @@ docker compose \
        exec \
           -e DISPLAY=${DISPLAY} \
           -e RUNID=${RUNID:-17} \
-          -e PHASECURVE_SUBTASK="${PHASECURVE_SUBTASK:-}" \
           -e TARGET_NAME="${2}" \
           pipeline python3 -m excalibur.${1}

@@ -25,14 +25,6 @@ if __name__ == "__main__":
     dawgie.db.close()
     dawgie.security.finalize()
     pass
-else:
-    NAME = os.environ.get('PHASECURVE_SUBTASK')
-    if NAME in (None, '', 'all', 'None'):
-        NAME = None
-    SUBTASKS = excalibur.phasecurve.bot.Actor('phasecurve', 4, rid, tn)
-    SUBTASKS.do(NAME)
 
 dawgie.db.close()
 dawgie.security.finalize()
-=======
->>>>>>> origin/main
