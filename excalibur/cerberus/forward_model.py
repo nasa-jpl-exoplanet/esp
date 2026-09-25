@@ -384,6 +384,8 @@ class crbFM:
             improvedBoundaryCondition=improvedBoundaryCondition,
             extendedBoundaryCondition=extendedBoundaryCondition,
         )
+        # for mole in tau_by_molecule.keys():
+        #    print('tau check', mole, np.median(tau_by_molecule[mole]))
         if not break_down_by_molecule:
             tau_by_molecule = {}
             pass
@@ -768,7 +770,16 @@ def gettau(
                 pass
             sigma = sigma * 1e-4  # m^2/mol
 
+            # breaking out opacity doesn't help with NaN overflow problem
+            # opacity = mmr * sigma
+            # tau_by_molecule[elem] = (rho * opacity).T
             tau_by_molecule[elem] = (rho * mmr * sigma).T
+
+            # for a few targets there is some NaN trouble for trace species
+            # these NaN's should be zero
+            badtau = np.where(np.isnan(tau_by_molecule[elem]))
+            tau_by_molecule[elem][badtau] = 0
+
             tau = tau + tau_by_molecule[elem]
 
             top_sigma = sigma[:, -1]

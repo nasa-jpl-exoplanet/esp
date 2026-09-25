@@ -1038,7 +1038,9 @@ def plot_walker_evolution(
                     ls='--',
                     zorder=5,
                 )
-                chi = (np.median(alltraces[iparam]) - truthvalue) / np.std(alltraces[iparam])
+                chi = (np.median(alltraces[iparam]) - truthvalue) / np.std(
+                    alltraces[iparam]
+                )
                 plt.title(
                     f'Truth = {truthvalue:.2f} ; chi= {chi:.2f}',
                     fontsize=12,
