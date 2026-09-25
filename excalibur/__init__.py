@@ -18,11 +18,6 @@ The algorithm engine has N goals:
 import collections
 import os
 
-# Worker processes generate plots for artifacts, not interactive display.
-# Defaulting to a headless backend avoids Tk/Tcl thread-affinity crashes
-# such as "Tcl_AsyncDelete: async handler deleted by the wrong thread".
-os.environ.setdefault('MPLBACKEND', 'Agg')
-
 import dawgie
 
 # import numpy
