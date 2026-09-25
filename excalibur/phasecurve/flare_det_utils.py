@@ -85,7 +85,8 @@ def get_transits(
     for planet, visits in whitelight.items():
         # Iterate through visits in each planet
         for idx, thisvisit in enumerate(visits):
-            print(f"Processing planet {planet} visit {idx}...")
+            visit_label = int(thisvisit.get('visit_index', idx))
+            print(f"Processing planet {planet} visit {visit_label}...")
 
             z_dict = {}
             sft_dict = {}
@@ -160,7 +161,7 @@ def get_transits(
             for p, transit_list in transits.items():
                 for start, stop in transit_list:
                     t_start, t_stop = time[start], time[stop]
-                    all_transits[planet][idx].append((t_start, t_stop))
+                    all_transits[planet][visit_label].append((t_start, t_stop))
 
             # if verify:
             #    # plot light curve smoothed with 5-min bins
@@ -362,9 +363,6 @@ def fit_flare_model(
         out = myfavRT(params)  # model
         return out
 
-    # def myfavRT(
-    #     arg={'tpeak': np.float128, 'fwhm': np.float128, 'ampl': np.float128}
-    # ):  # RT = relative transfer
     def myfavRT(arg):  # RT = relative transfer
         """
         A continuous flare template whose shape is defined by the convolution of a Gaussian and double exponential
