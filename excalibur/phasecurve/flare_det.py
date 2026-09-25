@@ -20,11 +20,9 @@ _numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
 _numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
 sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
 
-=======
 import numpy as np
 import matplotlib.pyplot as plt
 
->>>>>>> origin/main
 from altaipony.flarelc import FlareLightCurve
 from altaipony.fakeflares import flare_model_mendoza2022 as model
 from altaipony.utils import sigma_clip
@@ -304,8 +302,8 @@ def _detrend_savgol_aligned(
         aligned_lcrsf['time'] = original_time
     og_flux_values = _as_numpy(og_flux)
     og_flux_err_values = _as_numpy(og_flux_err)
-    aligned_lcrsf.detrended_flux = (
-        _as_numpy(aligned_lcrsf.flux) * np.nanmedian(og_flux_values)
+    aligned_lcrsf.detrended_flux = _as_numpy(aligned_lcrsf.flux) * np.nanmedian(
+        og_flux_values
     )
     aligned_lcrsf.detrended_flux_err = og_flux_err_values
 
@@ -1480,9 +1478,11 @@ def detect_flares(
                         results[planet].append(completed_visit_result)
                         out_visit_result = copy.deepcopy(completed_visit_result)
                         if not example_plots_attached:
-                            example_plots_attached = _attach_example_visit_plots(
-                                out_visit_result,
-                                visit_output_dir,
+                            example_plots_attached = (
+                                _attach_example_visit_plots(
+                                    out_visit_result,
+                                    visit_output_dir,
+                                )
                             )
                         out['data'][planet].append(out_visit_result)
                         resumed_visit_count += 1
@@ -1494,9 +1494,7 @@ def detect_flares(
                             )
                         continue
 
-                visit_output_dir = _ensure_directory(
-                    visit_output_dir
-                )
+                visit_output_dir = _ensure_directory(visit_output_dir)
 
             fig = None
             fig2 = None
@@ -1616,9 +1614,7 @@ def detect_flares(
                     thres_ax.set_title(
                         f'Flare {index} in {target_name} {planet} visit {visit_label}'
                     )
-                    thres_ax.set_xlabel(
-                        f'Time - {thisvisit["time"][0]} [days]'
-                    )
+                    thres_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                     thres_ax.set_ylabel('Raw Relative Flux')
                     thres_ax.set_xlim(start_buf, stop_buf)
                     thres_ax.set_ylim(min(bf) - buf, max(bf) + buf)
@@ -1740,10 +1736,7 @@ def detect_flares(
                         'ED_err_days': error,
                     }
 
-                    if (
-                        quiescent_luminosity is not None
-                        and c_bol is not None
-                    ):
+                    if quiescent_luminosity is not None and c_bol is not None:
                         e_band_joules = ed_seconds * quiescent_luminosity
                         e_band_ergs = e_band_joules * 1.0e7
                         e_bol_ergs = e_band_ergs * c_bol
@@ -1761,9 +1754,7 @@ def detect_flares(
                                 '  Peak flare luminosity in band: '
                                 f'{peak_flare_luminosity:.2e} W'
                             )
-                            print(
-                                f'  E_band ({fltr}): {e_band_ergs:.2e} ergs'
-                            )
+                            print(f'  E_band ({fltr}): {e_band_ergs:.2e} ergs')
                             print(
                                 f'  E_bol (C_bol={c_bol:.1f}): '
                                 f'{e_bol_ergs:.2e} ergs'
@@ -1771,9 +1762,7 @@ def detect_flares(
                         caption_lines.append(
                             f'Peak flare L: {peak_flare_luminosity:.2e} W'
                         )
-                        caption_lines.append(
-                            f'E_band: {e_band_ergs:.2e} ergs'
-                        )
+                        caption_lines.append(f'E_band: {e_band_ergs:.2e} ergs')
                         caption_lines.append(
                             f'E_bol: {e_bol_ergs:.2e} ergs '
                             f'(C_bol={c_bol:.1f})'
@@ -1965,9 +1954,7 @@ def detect_flares(
             'flare_frequency_per_hour': (
                 frequency_products['flare_frequency_per_hour']
             ),
-            'unique_flare_intervals': len(
-                frequency_products['flare_groups']
-            ),
+            'unique_flare_intervals': len(frequency_products['flare_groups']),
             'detected_flare_rows': len(flare_rows),
         }
         results['summary'] = copy.deepcopy(out['data']['frequency_summary'])

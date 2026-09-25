@@ -1,8 +1,6 @@
 '''phasecurve __main__ ds'''
 
 # -- IMPORTS -- ------------------------------------------------------
-import os
-
 import dawgie
 import dawgie.db
 import dawgie.security
