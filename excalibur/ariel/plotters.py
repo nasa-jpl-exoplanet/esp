@@ -106,8 +106,12 @@ def plot_spectrum(
     baseline = 666
     maxdepth = -666
     for imole, molecule in enumerate(molecules):
-        baseline = np.nanmin(np.append(baseline, fluxDepth_by_molecule[molecule]))
-        maxdepth = np.nanmax(np.append(maxdepth, fluxDepth_by_molecule[molecule]))
+        baseline = np.nanmin(
+            np.append(baseline, fluxDepth_by_molecule[molecule])
+        )
+        maxdepth = np.nanmax(
+            np.append(maxdepth, fluxDepth_by_molecule[molecule])
+        )
     negligible_molecules = ''
     negligible_molecules_more = ''
     Nnegligible = 0
