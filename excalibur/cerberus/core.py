@@ -3337,6 +3337,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
         # plot analysis of the results.  save as png and as state vector for states/view
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
+        fit_t_plot = False
+        fit_metalplot = False
         fit_co_plot = False
         fit_no_plot = False
         if 'sim' in filt:
@@ -3412,8 +3414,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         out['data']['values'] = dict(fit_values)
         out['data']['errors'] = dict(fit_errors)
         out['data']['plot_mass_v_metals'] = mass_metals_plot
-        out['data']['plot_fitT'] = fit_t_plot
-        out['data']['plot_fitMetal'] = fit_metalplot
+        if fit_t_plot:
+            out['data']['plot_fitT'] = fit_t_plot
+        if fit_metalplot:
+            out['data']['plot_fitMetal'] = fit_metalplot
         if fit_co_plot:
             out['data']['plot_fitCO'] = fit_co_plot
         if fit_no_plot:
