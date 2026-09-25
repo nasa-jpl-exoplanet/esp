@@ -17,8 +17,9 @@ from excalibur.util.plotters import (
     save_plot_myfit,
     plot_residual_fft,
 )
-from excalibur.phasecurve.plotters import plot_phasecurve
 from excalibur.phasecurve.flare_det import detect_flares
+
+# from excalibur.phasecurve.plotters import plot_phasecurve
 
 from collections import namedtuple
 
@@ -432,7 +433,6 @@ def flaredetection(
     resume_completed=True,
     force_rerun=False,
     show_plots=False,
-    rid=9999,
     stellar_params=None,
     verbose=False,
 ):
