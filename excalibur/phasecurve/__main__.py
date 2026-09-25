@@ -23,6 +23,3 @@ if __name__ == "__main__":
     dawgie.db.close()
     dawgie.security.finalize()
     pass
-
-dawgie.db.close()
-dawgie.security.finalize()
