@@ -16,10 +16,6 @@ import numpy as np
 import numpy.linalg as np_linalg
 import matplotlib.pyplot as plt
 
-_numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
-_numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
-sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
-
 from altaipony.flarelc import FlareLightCurve
 from altaipony.fakeflares import flare_model_mendoza2022 as model
 from altaipony.utils import sigma_clip
@@ -40,6 +36,10 @@ from excalibur.phasecurve.flare_det_utils import (
 import logging
 
 log = logging.getLogger(__name__)
+
+_numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
+_numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
+sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
 
 PC_TO_M = 3.08567758149e16
 C_LIGHT = 2.99792458e8
