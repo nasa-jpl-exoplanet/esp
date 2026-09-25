@@ -275,9 +275,7 @@ class pcflaredetection(dawgie.Algorithm):
                 )
                 pass
             else:
-                errstr = [
-                    m for m in [sphasecurve, sfin] if m is not None
-                ]
+                errstr = [m for m in [sphasecurve, sfin] if m is not None]
                 if not errstr:
                     errstr = [f'No flare input available from {source_name}']
                 self._failure(errstr[0])

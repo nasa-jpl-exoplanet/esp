@@ -165,6 +165,7 @@ def _ensure_visit_dicts(visits):
         nested_visits.append(normalized_visit)
     return nested_visits or visits
 
+
 # def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
 #     # set higher threshold for all transit windows
 #     N1_arr = np.full_like(bt, N1, dtype=int)
