@@ -16,13 +16,12 @@ The algorithm engine has N goals:
 # -- IMPORTS -- ------------------------------------------------------
 # import builtins
 import collections
-import os
-
 import dawgie
 
 # import numpy
 # import scipy.stats
 
+import os
 import numpy as np
 
 from time import sleep
