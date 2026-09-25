@@ -12,17 +12,17 @@ import dawgie.context
 import logging
 
 import excalibur
-import excalibur.system as sys
+# import excalibur.system as sys  # uncomment imports after reverting previous()
+# import excalibur.ancillary as anc
+# import excalibur.transit as trn
+# from excalibur import ariel
+# import excalibur.cerberus as crb
 import excalibur.system.algorithms as sysalg
-import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
-import excalibur.transit as trn
 import excalibur.transit.algorithms as trnalg
-from excalibur import ariel
 import excalibur.ariel.algorithms as arielalg
-import excalibur.cerberus as crb
 import excalibur.cerberus.algorithms as crbalg
 import excalibur.cerberus.core as crbcore
 import excalibur.gemli.core as gemlicore
