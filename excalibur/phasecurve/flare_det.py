@@ -904,11 +904,11 @@ def _compute_observation_segments(
 ):
     times = _as_numpy(time_values).astype(float)
     times = times[np.isfinite(times)]
-    if not len(times):
+    if len(times) == 0:
         return [], [], {}
 
     times = np.unique(np.sort(times))
-    if times and len(times) == 1:
+    if len(times) == 1:
         summary = {
             'n_points': 1,
             'raw_start': float(times[0]),
