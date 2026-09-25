@@ -372,6 +372,16 @@ def plot_overallsample_fits_vs_truths(
             # CHI (fit-truth)/error HISTOGRAMS IN SECOND PANEL
             ax2 = figure.add_subplot(1, 3, 2)
 
+            # uh oh, there are occasional NaNs in the systematic errors
+            # replace with some typical value
+            badErrors = np.where(np.isnan(fit_errorssys[param]))
+            if len(badErrors[0]) > 0:
+                # print('OHNO a NaN!', param, badErrors)
+                goodErrors = np.where(np.isfinite(fit_errorssys[param]))
+                avError = np.mean(fit_errorssys[param][goodErrors])
+                # print('  averr',avError)
+                fit_errorssys[param][badErrors] = avError
+
             # chi_instrumental = (fit_values[param] - truth_values[param]
             #                    ) / fit_errors[param]
             # chi_systematic = (fit_values[param] - truth_values[param]

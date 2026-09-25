@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.ancillary.bot
+import excalibur.ancillary
 
 # ------------- ------------------------------------------------------
 
@@ -15,11 +15,11 @@ if __name__ == "__main__":
     rid, tn = main_start()
     if tn in ['', '__all__']:
         NAME = 'population'
-        subtasks = excalibur.ancillary.bot.Agent('ancillary', 4, rid)
+        subtasks = excalibur.ancillary.analysis('ancillary', 4, rid)
         pass
     else:
         NAME = 'estimate'
-        subtasks = excalibur.ancillary.bot.Actor('ancillary', 4, rid, tn)
+        subtasks = excalibur.ancillary.task('ancillary', 4, rid, tn)
         pass
     subtasks.do(NAME)
     dawgie.db.close()

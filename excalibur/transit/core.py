@@ -48,6 +48,7 @@ from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
 from scipy.signal import savgol_filter
 from scipy.stats import gaussian_kde
+from scipy.interpolate import RectBivariateSpline
 
 import numpy as np
 
@@ -73,15 +74,33 @@ from ldtk.ldmodel import LinearModel, QuadraticModel, NonlinearModel
 import os
 
 stllib = os.path.join(excalibur.context['data_dir'], 'MPS-ATLAS')
+LETHE_dir = os.path.join(excalibur.context['data_dir'], 'LETHE')
 
 log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-TransitPymcParams = namedtuple(
-    'transit_pymc_params_from_runtime',
+TransitWhitelightParams = namedtuple(
+    'transit_whitelight_params_from_runtime',
     [
+        'imo',
+        'threshold',
+        'lethe',
         'sliceSampler',
+        'chainlen',
+    ],
+)
+
+TransitSpectrumParams = namedtuple(
+    'transit_spectrum_params_from_runtime',
+    [
+        'imo',
+        'threshold',
+        'reject',
+        'ntm',
+        'lethe',
+        'sliceSampler',
+        'chainlen',
     ],
 )
 
@@ -96,6 +115,7 @@ ctxtglobals = [
     'g2',
     'g3',
     'g4',
+    'lclds',
     'ootoindex',
     'ootorbits',
     'orbits',
@@ -116,6 +136,8 @@ ctxtglobals = [
     'mcmcsig',
     'nodeshape',
     'spec',
+    'LETHE',
+    'ref_IM',
 ]
 
 CONTEXT = namedtuple('CONTEXT', ctxtglobals)
@@ -130,40 +152,7 @@ ctxt = CONTEXT(
     g2=None,
     g3=None,
     g4=None,
-    ootoindex=None,
-    ootorbits=None,
-    orbits=None,
-    period=None,
-    selectfit=None,
-    smaors=None,
-    time=None,
-    tmjd=None,
-    ttv=None,
-    valid=None,
-    visits=None,
-    aos=None,
-    avi=None,
-    ginc=None,
-    gttv=None,
-    fixedpars={},
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    spec=None,
-)
-
-
-def ctxtupdt(
-    alt=None,
-    ald=None,
-    allz=None,
-    orbp=None,
-    commonoim=None,
-    ecc=None,
-    g1=None,
-    g2=None,
-    g3=None,
-    g4=None,
+    lclds=None,
     ootoindex=None,
     ootorbits=None,
     orbits=None,
@@ -184,6 +173,45 @@ def ctxtupdt(
     mcmcsig=None,
     nodeshape=None,
     spec=None,
+    LETHE=None,
+    ref_IM=None,
+)
+
+
+def ctxtupdt(
+    alt=None,
+    ald=None,
+    allz=None,
+    orbp=None,
+    commonoim=None,
+    ecc=None,
+    g1=None,
+    g2=None,
+    g3=None,
+    g4=None,
+    lclds=None,
+    ootoindex=None,
+    ootorbits=None,
+    orbits=None,
+    period=None,
+    selectfit=None,
+    smaors=None,
+    time=None,
+    tmjd=None,
+    ttv=None,
+    valid=None,
+    visits=None,
+    aos=None,
+    avi=None,
+    ginc=None,
+    gttv=None,
+    fixedpars=None,
+    mcmcdat=None,
+    mcmcsig=None,
+    nodeshape=None,
+    spec=None,
+    LETHE=None,
+    ref_IM=None,
 ):
     '''
     G. ROUDIER: Update global context for pymc deterministics
@@ -199,6 +227,7 @@ def ctxtupdt(
         g2=g2,
         g3=g3,
         g4=g4,
+        lclds=lclds,
         ootoindex=ootoindex,
         ootorbits=ootorbits,
         orbits=orbits,
@@ -219,6 +248,8 @@ def ctxtupdt(
         mcmcsig=mcmcsig,
         nodeshape=nodeshape,
         spec=spec,
+        LETHE=LETHE,
+        ref_IM=ref_IM,
     )
     return
 
@@ -240,14 +271,14 @@ def LogLikelihood(inputs):
             pass
         newindex += ns
         pass
-    if not ctxt.orbits:  # JWST
-        newnodes = []
+    # JWST FLAT NODES
+    if not ctxt.orbits:
         newnodes = inputs
         pass
-    if ctxt.spec:
+    if ctxt.spec:  # SPECTRUM
         ForwardModel = lcmodel(*newnodes)
         pass
-    else:
+    else:  # WHITELIGHT
         ForwardModel = orbital(*newnodes)
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
@@ -296,6 +327,31 @@ class TensorShell(tnsrgraph.Op):
         return
 
     pass
+
+
+def truanderie(params, x, data=None, weights=None):
+    '''
+    GMR: Do not use
+    '''
+    _ = x  # CI
+    imlist = ['IM0', 'IM1', 'IM2', 'IM3']
+    model = tldlc(
+        abs(ctxt.allz),
+        float(params['rprs'].value),
+        g1=ctxt.lclds[0],
+        g2=ctxt.lclds[1],
+        g3=ctxt.lclds[2],
+        g4=ctxt.lclds[3],
+        g5=ctxt.lclds[4],
+        g6=ctxt.lclds[5],
+        g7=ctxt.lclds[6],
+        g8=ctxt.lclds[7],
+    ) * orbitalim(ctxt.time, [params[n].value for n in imlist])
+    if data is None:
+        return model
+    if weights is None:
+        return data - model
+    return (data - model) / weights
 
 
 # ----------------- --------------------------------------------------
@@ -361,6 +417,24 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
     ]
 
     for p in events:
+        # Selection of the transit within a visit
+        # A time is selected if it is far up to 2 times
+        # the transit duration from the time of mid-transit
+        tmjd = priors[p]['t0']
+        if tmjd > 2400000.5:
+            tmjd -= 2400000.5
+            pass
+        timeredo = tme['data'][p]['time']
+        t_min = np.min(timeredo)
+        t_max = np.max(timeredo)
+        k_min = int(np.ceil((t_min - tmjd) / priors[p]['period']))
+        k_max = int(np.floor((t_max - tmjd) / priors[p]['period']))
+        transit_times = tmjd + np.arange(k_min, k_max + 1) * priors[p]['period']
+        diffs = np.abs(timeredo[:, np.newaxis] - transit_times[np.newaxis, :])
+        select_transit = np.any(
+            diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
+        )
+
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
@@ -370,6 +444,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             tme['data'][p]['visits'] = tme['data'][p]['visits'][:test]
             pass
         visp = tme['data'][p]['visits']
+        visp_transit = tme['data'][p]['transit']
         rp = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
         # TEMPLATES
         allwavet = {}
@@ -380,56 +455,70 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             allwavet[thisdet] = {}
             allvisits[thisdet] = {}
             seldet = np.array([d in [thisdet] for d in cal['data']['DET']])
-            for thisvis in np.unique(visp):
+            for thisvis in visp_transit:
                 strvis = str(int(thisvis))
                 selvis = visp == thisvis
-                zdetvis = tme['data'][p]['z'][seldet & selvis]
-                neg = np.min(zdetvis) < 0
-                pos = np.max(zdetvis) > 0
-                intransit = np.sum(abs(zdetvis) < 1.0) > 3
-                if neg and pos and intransit:
-                    orderme = np.argsort(
-                        tme['data'][p]['time'][seldet & selvis]
-                    )
-                    dt = np.diff(
-                        tme['data'][p]['time'][seldet & selvis][orderme]
-                    )
-                    # Multi observations per visit
-                    thr = np.max(np.unique(dt))
-                    if thr > 1e1 * np.median(dt):
-                        if np.all(
-                            zdetvis[orderme][: list(dt).index(thr) + 1] < 0
-                        ):
-                            nanme = (
-                                np.arange(orderme.size)
-                                < list(dt).index(thr) + 1
-                            )
-                            pass
-                        else:
-                            nanme = (
-                                np.arange(orderme.size)
-                                > list(dt).index(thr) + 1
-                            )
-                            pass
-                        znan = zdetvis[orderme]
-                        znan[nanme] = np.nan
-                        zdetvis[orderme] = znan
+                zdetvis = tme['data'][p]['z'][select_transit & seldet & selvis]
+                if len(zdetvis):
+                    neg = np.min(zdetvis) < 0
+                    pos = np.max(zdetvis) > 0
+                    intransit = np.sum(abs(zdetvis) < 1.0) > 3
+                    if neg and pos and intransit:
+                        orderme = np.argsort(
+                            tme['data'][p]['time'][
+                                select_transit & seldet & selvis
+                            ]
+                        )
+                        dt = np.diff(
+                            tme['data'][p]['time'][
+                                select_transit & seldet & selvis
+                            ][orderme]
+                        )
+                        # Multi observations per visit
+                        indexes = [
+                            i
+                            for i, val in enumerate(dt)
+                            if val > 1e1 * np.median(dt)
+                        ]
+                        if len(indexes):
+                            for _, index in enumerate(indexes):
+                                if np.all(zdetvis[orderme][: index + 1] < 0):
+                                    nanme = np.arange(orderme.size) < index + 1
+                                    pass
+                                elif np.all(zdetvis[orderme][index + 1 :] > 0):
+                                    nanme = np.arange(orderme.size) > index
+                                    pass
+                                else:
+                                    nanme = np.array([False] * len(zdetvis))
+                                    pass
+                                znan = zdetvis[orderme]
+                                znan[nanme] = np.nan
+                                zdetvis[orderme] = znan
+                                pass
+                        oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
+                        wavet, template = scube(
+                            spectra[select_transit & seldet & selvis][oot],
+                            wave[select_transit & seldet & selvis][oot],
+                            name=thisdet + ' [' + strvis + ']',
+                            verbose=verbose,
+                        )
+                        alltemplates[thisdet][strvis] = np.array(template)
+                        allwavet[thisdet][strvis] = np.array(wavet)
+                        allvisits[thisdet][strvis] = np.isfinite(zdetvis)
                         pass
-                    oot = np.abs(zdetvis) > (1e0 + 2e0 * rp)
-                    wavet, template = scube(
-                        spectra[seldet & selvis][oot],
-                        wave[seldet & selvis][oot],
-                        name=thisdet + ' [' + strvis + ']',
-                        verbose=verbose,
+                    pass
+                elif verbose:
+                    print(
+                        "tknot or transit duration mismatch for "
+                        + thisdet
+                        + ", "
+                        + thisvis
                     )
-                    alltemplates[thisdet][strvis] = np.array(template)
-                    allwavet[thisdet][strvis] = np.array(wavet)
-                    allvisits[thisdet][strvis] = np.isfinite(zdetvis)
                     pass
                 pass
             if verbose:
                 plt.figure(figsize=(12, 9))
-                for thisvis in allvisits[thisdet]:
+                for thisvis in allvisits.get(thisdet, []):
                     plt.plot(
                         allwavet[thisdet][thisvis],
                         alltemplates[thisdet][thisvis],
@@ -467,13 +556,17 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 name = thisdet + ' [' + thisvis + ']'
                 selvis = visp == int(thisvis)
                 valid = allvisits[thisdet][thisvis]
-                divideme = np.nan * wave[seldet & selvis][valid][0]
+                divideme = (
+                    np.nan * wave[select_transit & seldet & selvis][valid][0]
+                )
                 progbar = nerdclub.Progressbar(
                     argsdict, '>-- NORM ' + name, divideme
                 )
                 for idiv, _ in enumerate(divideme):
                     # GMR: Assumes subpixel pointing stability during the whole transit
-                    thiswave = wave[seldet & selvis][valid][0][idiv]
+                    thiswave = wave[select_transit & seldet & selvis][valid][0][
+                        idiv
+                    ]
                     if np.isfinite(thiswave):
                         thisdiff = np.abs(allwavet[thisdet][thisvis] - thiswave)
                         itemp = list(thisdiff).index(np.nanmin(thisdiff))
@@ -483,17 +576,20 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     pass
                 progbar.close()
                 allnorms[thisdet][thisvis] = (
-                    np.array(spectra[seldet & selvis][valid]) / divideme
+                    np.array(spectra[select_transit & seldet & selvis][valid])
+                    / divideme
                 )
-                allnwaves[thisdet][thisvis] = wave[seldet & selvis][valid]
-                allz[thisdet][thisvis] = tme['data'][p]['z'][seldet & selvis][
-                    valid
-                ]
+                allnwaves[thisdet][thisvis] = wave[
+                    select_transit & seldet & selvis
+                ][valid]
+                allz[thisdet][thisvis] = tme['data'][p]['z'][
+                    select_transit & seldet & selvis
+                ][valid]
                 allt[thisdet][thisvis] = tme['data'][p]['time'][
-                    seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
-                    seldet & selvis
+                    select_transit & seldet & selvis
                 ][valid]
                 if verbose:
                     plt.figure(figsize=(12, 9))
@@ -534,7 +630,6 @@ def norm(cal, tme, fin, ext, out, selftype, verbose=False):
     spectra = cal['data']['SPECTRUM']
     wave = cal['data']['WAVE']
     time = np.array(cal['data']['TIME'])
-    # Sophia 24/3/26 trying to run transit.norm.run for specific target getting error, removing to see what happens
     disp = np.array(cal['data']['DISPERSION'])
     scanlen = np.array(cal['data']['SCANLENGTH'])
     vrange = cal['data']['VRANGE']
@@ -2001,7 +2096,17 @@ def hstwhitelight(
     return True
 
 
-def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
+def jwstwl(
+    nrm,
+    fin,
+    rtp,
+    out,
+    # imo=4,
+    # thr=95,
+    # chainlen=int(1e6),
+    verbose=False,
+    debug=False,
+):
     '''
     GMR:JWST Whitelight
     [I]:nrm:[DICT]:transit.normalization SV as dict
@@ -2009,17 +2114,46 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
     [I]:rtp:[DICT]:runtime.autofill SV as dict
     [I/O]:out:[SV]:WhitelightSV() see states.py
           out['STATUS']:[LIST]:appending True for each planet/instrument added
-          out['data'][p][det]:[DICT]:output/planet/detector
-          out['data'][p][det]['prewhite']:[LIST] Whitelight before fit
-          out['data'][p][det]['prewhite_err']:[LIST] prewhite errors
-          out['data'][p][det]['prewhite_sep']:[LIST] prewhite separation
-          out['data'][p][det]['valid']:[LIST] valid channels per spectrum
-          out['data'][p][det]['whiteld']:[LIST] white LD coefficients
-          out['data'][p][det]['mcpost']:[PYMC] post stats
-    [OPT]:thr:[INT]:percentile threshold for valid data in norm spectrum
-                    i.e one of [100, 99, 95, 68, 50]
+          out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
+          out['data'][p][det][vis]['prewhite']:[LIST] Whitelight before fit
+          out['data'][p][det][vis]['prewhite_err']:[LIST] prewhite errors
+          out['data'][p][det][vis]['prewhite_sep']:[LIST] prewhite separation
+          out['data'][p][det][vis]['valid']:[LIST] valid channels per spectrum
+          out['data'][p][det][vis]['whiteld']:[LIST] white LD coefficients
+          out['data'][p][det][vis]['mcpost']:[PYMC] post stats
+          out['data'][p][det][vis]['mctrace']:[DICT] MCMC trace
+          out['data'][p][det][vis]['lcmodel']:[ARRAY] Light curve best model
+          out['data'][p][det][vis]['flatwht']:[ARRAY] White light curve
+          out['data'][p][det][vis]['inmodel']:[ARRAY] Instrument Model
+          out['data'][p][det][vis]['ref_IM']:[ARRAY] Instrument Model time reference
+    [OPT]:imo:[INT]:Instrument Model polynomial order
+    [OPT]:thr:[INT]:percentile for valid data in [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
     '''
+
+    LETHE = None
+    if rtp.lethe:
+        # Interpolators for LETHE
+        z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+        rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+        grid_names = [
+            '/grid_G/0.25.npy',
+            '/grid_G/0.5.npy',
+            '/grid_G/0.75.npy',
+            '/grid_G/1.0.npy',
+            '/grid_F/0.5.npy',
+            '/grid_F/1.0.npy',
+            '/grid_F/1.5.npy',
+            '/grid_F/2.0.npy',
+        ]
+
+        LETHE = []
+        for name in grid_names:
+            grid = np.load(LETHE_dir + name)
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+            LETHE.append(interpolator)
+        # ctxtupdt(LETHE=LETHE)
+
     planetloop = [
         thisp
         for thisp in map(chr, range(97, 123))
@@ -2065,14 +2199,14 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                                 ps / np.sqrt(np.sum(v))
                                 for ps, v in zip(pltstdl, vldlist)
                             ]
-                            validl.append(vldlist[prc.index(thr)])
-                            stdl.append(pltstdl[prc.index(thr)])
-                            wht.append(pltavrl[prc.index(thr)])
-                            whterr.append(errlist[prc.index(thr)])
+                            validl.append(vldlist[prc.index(rtp.threshold)])
+                            stdl.append(pltstdl[prc.index(rtp.threshold)])
+                            wht.append(pltavrl[prc.index(rtp.threshold)])
+                            whterr.append(errlist[prc.index(rtp.threshold)])
                             pass
                         else:
                             s = np.abs(1e0 - nsp) <= np.nanpercentile(
-                                np.abs(1e0 - nsp), thr
+                                np.abs(1e0 - nsp), rtp.threshold
                             )
                             validl.append(select & s)
                             stdl.append(np.nanstd(nsp[select & s]))
@@ -2084,7 +2218,7 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         whtsep.append(sep)
                         pass
                     pass
-                if verbose:
+                if debug:
                     plt.figure(figsize=(12, 9))
                     plt.title(
                         pln + ': ' + det + ' [' + vis + ']',
@@ -2094,19 +2228,23 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass
-                out['data'][pln][det]['prewhite'] = wht
-                out['data'][pln][det]['prewhite_err'] = whterr
-                out['data'][pln][det]['prewhite_time'] = whttim
-                out['data'][pln][det]['prewhite_sep'] = whtsep
-                out['data'][pln][det]['valid'] = validl
-                g1, g2, g3, g4 = ldtl(
+                out['data'][pln][det][vis]['prewhite'] = wht
+                out['data'][pln][det][vis]['prewhite_err'] = whterr
+                out['data'][pln][det][vis]['prewhite_time'] = whttim
+                out['data'][pln][det][vis]['prewhite_sep'] = whtsep
+                out['data'][pln][det][vis]['valid'] = validl
+                ldcoefs = ldtl(
                     priors['T*'],
                     priors['FEH*'],
                     priors['LOGG*'],
                     [np.nanmin(nrm['data'][pln]['wave'][det][vis])],
                     [np.nanmax(nrm['data'][pln]['wave'][det][vis])],
                 )
-                out['data'][pln][det]['whiteld'] = [g1[0], g2[0], g3[0], g4[0]]
+                lclds = [c[0] for c in ldcoefs]
+                out['data'][pln][det]['whiteld'] = lclds
+                # Reset the value at None for each different light-curve
+                # before the IM fitting
+                ctxtupdt(ref_IM=None)
                 # PRIORS
                 rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
                 tmjd = priors[pln]['t0']
@@ -2117,7 +2255,6 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                 if priors[pln]['inc'] == 90.0:
                     fixedpars['inc'] = priors[pln]['inc']
                     pass
-                imorder = 2
                 nodes = []
                 nodeshape = []
                 prior_ranges = {}
@@ -2166,26 +2303,44 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         nodeshape.append(1)
                         pass
                     # INSTRUMENT MODEL - ALWAYS LAST
-                    for coef in np.arange(imorder):
+                    # PRE-FIT
+                    params = lm.Parameters()
+                    for coef in np.arange(rtp.imo):
+                        params.add('c' + str(int(coef)), value=1.0)
+                        pass
+                    selectfit = np.abs(np.array(whtsep)) > (1.0 + 2.0 * rpors)
+
+                    lmout = lm.minimize(
+                        cheatim,
+                        params,
+                        args=(
+                            np.array(whttim)[selectfit],
+                            np.array(wht)[selectfit],
+                        ),
+                    )
+                    allcenim = [lmout.params[k].value for k in lmout.params]
+                    allstdim = [lmout.params[k].stderr for k in lmout.params]
+                    for ic, coef in enumerate(np.arange(rtp.imo)):
+                        thslbl = 'IM' + str(int(coef))
                         pymcim = pymc.Uniform(
-                            'IM' + str(int(coef)),
-                            lower=-1.0,
-                            upper=1.0,
+                            thslbl,
+                            lower=allcenim[ic] - 10.0 * allstdim[ic],
+                            upper=allcenim[ic] + 10.0 * allstdim[ic],
                         )
-                        prior_ranges['IM' + str(int(coef))] = [-1.0, 1.0]
-                        prior_center['IM' + str(int(coef))] = 0
+                        prior_ranges[thslbl] = [
+                            allcenim[ic] - 10.0 * allstdim[ic],
+                            allcenim[ic] + 10.0 * allstdim[ic],
+                        ]
+                        prior_center[thslbl] = allcenim[ic]
                         nodes.append(pymcim)
                         pymcim = None
                         pass
-                    nodeshape.append(imorder)
+                    nodeshape.append(rtp.imo)
                     # CONTEXT
                     ctxtupdt(
                         orbp=priors[pln],
                         ecc=priors[pln]['ecc'],
-                        g1=g1,
-                        g2=g2,
-                        g3=g3,
-                        g4=g4,
+                        lclds=lclds,
                         period=priors[pln]['period'],
                         smaors=priors[pln]['sma']
                         / priors['R*']
@@ -2199,6 +2354,8 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         mcmcsig=whterr,
                         nodeshape=nodeshape,
                         selectfit=np.array([True] * len(wht)),
+                        LETHE=LETHE,
+                        ref_IM=np.nanmean(np.array(whttim)[selectfit]),
                     )
                     # FIXED ORBITAL SOLUTION
                     TensorModel = TensorShell()
@@ -2218,22 +2375,65 @@ def jwstwl(nrm, fin, rtp, out, thr=95, chainlen=int(1e6), verbose=False):
                         logp=LogLH,
                     )
                     _ = rtp.sliceSampler
+                    # Force Metropolis since Slice is kaput
                     log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
                     trace = pymc.sample(
-                        chainlen,
+                        rtp.chainlen,
                         cores=4,
-                        tune=int(chainlen / 2),
+                        tune=int(rtp.chainlen / 2),
                         compute_convergence_checks=False,
                         step=sampler,
                         progressbar=verbose,
                     )
-                    mcpost = pymc.stats.summary(trace)
                     pass
+                mctrace = {}
+                for k in [n.name for n in nodes]:
+                    mctrace[k] = np.array(trace['posterior'][k]).flatten()
+                    pass
+                instmodel = np.array(
+                    orbitalim(
+                        whttim,
+                        [
+                            np.median(di[-1])
+                            for di in mctrace.items()
+                            if di[0].startswith('IM')
+                        ],
+                    )
+                )
+                bestlc = (
+                    np.array(
+                        orbital(*[np.median(di[-1]) for di in mctrace.items()])
+                    )
+                    / instmodel
+                )
+                flatwht = np.array(wht) / instmodel
+                if verbose:
+                    _ = simplecorner(mctrace, fullrange=True, verbose=verbose)
+
+                    plt.figure(figsize=(12, 9))
+                    plt.title(
+                        pln + ': ' + det + ' [' + vis + ']',
+                        fontsize=20,
+                    )
+                    plt.errorbar(
+                        whttim, flatwht, yerr=whterr, fmt='o', alpha=0.5
+                    )
+                    plt.plot(
+                        np.array(whttim)[np.argsort(whttim)],
+                        bestlc[np.argsort(whttim)],
+                        lw=3,
+                    )
+                    plt.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                out['data'][pln][det][vis]['mctrace'] = mctrace
+                out['data'][pln][det][vis]['lcmodel'] = bestlc
+                out['data'][pln][det][vis]['flatwht'] = flatwht
+                out['data'][pln][det][vis]['inmodel'] = instmodel
+                out['data'][pln][det][vis]['ref_IM'] = ctxt.ref_IM
                 pass
-            out['data'][pln]['mcpost'] = mcpost
-            out['data'][pln]['mctrace'] = trace
             out['STATUS'].append(True)
             pass
         pass
@@ -2296,22 +2496,33 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         pass
 
     # LIMB DARKENING MODEL
-    def ldotl(mu, u1, u2, u3, u4, pws=None):
+    def ldotl(mu, claret, cexts=None, pws=None):
         '''
         S. Grusnis
+        mu: cos(theta)
+        claret: 4 NL Claret coefficients associated to pws
         Generalisation of nonlinearld to arbitrary powers
         pws = [0.5, 1., 1.5, 2.] 4NL Claret et al., 2000
         https://articles.adsabs.harvard.edu/pdf/2000A%26A...363.1081C
-        pws = [0.5, 1., 0.1, 2.] GMR
-        pws = [0.5, 1, 0.01, 2.] Grusnis
+        cexts = [0., 0., 0., 0.] Additionnal coefficients for extended law
+        Extended = 4NL + sum_i(uexts[i] * mu**(2*pws[i]) * ln(mu))
         '''
         if pws is None:
-            pws = [0.5, 1.0, 0.1, 2.0]
-        xtn1 = u1 * (1e0 - mu ** pws[0])
-        xtn2 = u2 * (1e0 - mu ** pws[1])
-        xtn3 = u3 * (1e0 - mu ** pws[2])
-        xtn4 = u4 * (1e0 - mu ** pws[3])
-        model = 1e0 - xtn1 - xtn2 - xtn3 - xtn4
+            pws = [0.5, 1.0, 1.5, 2.0]
+            pass
+        if cexts is None:
+            cexts = [0.0, 0.0, 0.0, 0.0]
+            pass
+        mmu = np.array([mu]).T
+        zeroout = np.array(mu) <= 0
+        mmu[mmu <= 0] = np.nan
+        mclaret = np.array(claret)
+        mcexts = np.array(cexts)
+        mpws = np.array(pws)
+        cmodel = mclaret * (1e0 - mmu**mpws)
+        gmodel = mcexts * mmu ** (2.0 * mpws) * np.log(mmu)
+        model = 1e0 - np.nansum(cmodel + gmodel, axis=1)
+        model[zeroout] = 0.0
         return model
 
     # LMFIT MODEL
@@ -2324,7 +2535,9 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         p2 = params['p2'].value
         p3 = params['p3'].value
         p4 = params['p4'].value
-        model = ldotl(x, gamma1, gamma2, gamma3, gamma4, pws=[p1, p2, p3, p4])
+        model = ldotl(
+            x, [gamma1, gamma2, gamma3, gamma4], cexts=[p1, p2, p3, p4]
+        )
         if data is None:
             return model
         if weights is None:
@@ -2359,67 +2572,44 @@ def ldtl(T, M, G, mumin, mumax, set_type="set1"):
         select = (wln >= mu_min) & (wln <= mu_max)
         spec = np.mean(spectra[select], axis=0)
         test = spec / np.max(spec)
-        allpws = [
-            [0.5, 1.0, 1.5, 2.0],  # 4NL
-            [0.5, 1.0, 0.1, 2.0],  # GMR
-            [0.5, 1.0, 0.2, 2.0],  # Grusnis
-            [0.5, 1.0, 0.3, 2.0],  # Grusnis
-            [0.5, 1.0, 0.01, 2.0],  # Grusnis
-        ]
         allouts = []
-        for tp in allpws:
-            params = None
-            params = lm.Parameters()
-            params.add('p1', value=tp[0], vary=False)
-            params.add('p2', value=tp[1], vary=False)
-            params.add('p3', value=tp[2], vary=False)
-            params.add('p4', value=tp[3], vary=False)
-            params.add('gamma1', value=2.5e-1)
-            params.add('gamma2', value=2.5e-1)
-            params.add('gamma3', value=2.5e-1)
-            params.add('gamma4', expr='1. - gamma1 - gamma2 - gamma3')
-            allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
-            pass
+        params = None
+        params = lm.Parameters()
+        params.add('p1', value=0.0)
+        params.add('p2', value=0.0)
+        params.add('p3', value=0.0)
+        params.add('p4', value=0.0)
+        params.add('gamma1', value=2.5e-1)
+        params.add('gamma2', value=2.5e-1)
+        params.add('gamma3', value=2.5e-1)
+        params.add('gamma4', value=2.5e-1)
+        allouts.append(lm.minimize(ldotlldx, params, args=(mu, test)))
         allres = []
         alllds = []
         for to in allouts:
-            tps = [
-                to.params['p1'].value,
-                to.params['p2'].value,
-                to.params['p3'].value,
-                to.params['p4'].value,
-            ]
             alllds.append(
                 [
                     to.params['gamma1'].value,
                     to.params['gamma2'].value,
                     to.params['gamma3'].value,
                     to.params['gamma4'].value,
+                    to.params['p1'].value,
+                    to.params['p2'].value,
+                    to.params['p3'].value,
+                    to.params['p4'].value,
                 ]
             )
             allres.append(
-                np.sum(spec - np.max(spec) * ldotl(mu, *alllds[-1], pws=tps))
+                np.sum(
+                    spec
+                    - np.max(spec)
+                    * ldotl(mu, alllds[-1][:4], cexts=alllds[-1][4:])
+                )
             )
             pass
-        best = min(
-            ("4NL", abs(allres[0])),
-            ("GMR", abs(allres[1])),
-            ("SG0.2", abs(allres[2])),
-            ("SG0.3", abs(allres[3])),
-            ("SG0.01", abs(allres[4])),
-            key=lambda x: x[1],
-        )
-        val = {
-            "4NL": alllds[0],
-            "GMR": alllds[1],
-            "SG0.2": alllds[2],
-            "SG0.3": alllds[3],
-            "SG0.01": alllds[4],
-        }
-        allfav.append(val[best[0]])
+        allfav.append(alllds[0])
         pass
     allfav = np.array(allfav).T
-    # GMR: We wanna save which model was selected somewhere
     return allfav
 
 
@@ -2936,70 +3126,256 @@ def whitelight(
 
 # ----------------------- --------------------------------------------
 # -- TRANSIT LIMB DARKENED LIGHT CURVE -- ----------------------------
-def tldlc(z, rprs, g1=0, g2=0, g3=0, g4=0, nint=int(8**2)):
+def tldlc(
+    z,
+    rprs,
+    g1=0.0,
+    g2=0.0,
+    g3=0.0,
+    g4=0.0,
+    g5=0.0,
+    g6=0.0,
+    g7=0.0,
+    g8=0.0,
+    # method="LETHE",
+    # interpolator=None,
+    nint=int(8**2),
+):
     '''
     G. ROUDIER: Light curve model
+    We do not wanna break former calls but it has to be changed at some point
+    g1...g8 in a single vector
     z: Separation in [R*]
     rprs: Planetary radius in [R*]
     g1...g4: Limb darkening coefficients
+    g5...g8: Sophia Grusnis extented model
+    C. BERNARDIN: LETHE Light Curve Model
+    method: LETHE, occulted flux calculated through interpolation
+            Numerical integration otherwise
+    interpolator: List of 8 interpolators for LETHE method if the one
+                  from ctxt is None
     nint: Integral into discrete sum number of bins
     '''
-    ldlc = np.zeros(z.size)
-    xin = z.copy() - rprs
-    xin[xin < 0e0] = 0e0
-    xout = z.copy() + rprs
-    xout[xout > 1e0] = 1e0
-    select = xin > 1e0
-    if True in select:
-        ldlc[select] = 1e0
-        pass
-    inldlc = []
-    xint = np.linspace(1e0, 0e0, nint)
-    znot = z.copy()[~select]
-    xinnot = np.arccos(xin[~select])
-    xoutnot = np.arccos(xout[~select])
-    xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
-    xrs = np.cos(xrs)
-    diffxrs = np.diff(xrs, axis=0)
-    extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
-    extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
-    extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
-    extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
-    occulted = vecoccs(znot, extxrs, rprs)
-    diffocc = np.diff(occulted, axis=0)
-    si = vecistar(xrs, g1, g2, g3, g4)
-    drop = np.sum(diffocc * si, axis=0)
-    inldlc = 1.0 - drop
-    ldlc[~select] = np.array(inldlc)
+    # if method == "LETHE":
+    if sys.modules[__name__].ctxt.LETHE is not None:
+        interpolators_list = sys.modules[__name__].ctxt.LETHE
+        # if interpolators_list is None:
+        #    interpolators_list = interpolator
+        occulted = occultation(
+            z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, interpolators_list
+        )
+        ldlc = 1.0 - occulted
+    else:
+        ldlc = np.zeros(z.size)
+        xin = z.copy() - rprs
+        xin[xin < 0e0] = 0e0
+        xout = z.copy() + rprs
+        xout[xout > 1e0] = 1e0
+        select = xin > 1e0
+        if True in select:
+            ldlc[select] = 1e0
+            pass
+        inldlc = []
+        xint = np.linspace(1e0, 0e0, nint)
+        znot = z.copy()[~select]
+        xinnot = np.arccos(xin[~select])
+        xoutnot = np.arccos(xout[~select])
+        xrs = np.array([xint]).T * (xinnot - xoutnot) + xoutnot
+        xrs = np.cos(xrs)
+        diffxrs = np.diff(xrs, axis=0)
+        extxrs = np.zeros((xrs.shape[0] + 1, xrs.shape[1]))
+        extxrs[1:-1, :] = xrs[1:, :] - diffxrs / 2.0
+        extxrs[0, :] = xrs[0, :] - diffxrs[0] / 2.0
+        extxrs[-1, :] = xrs[-1, :] + diffxrs[-1] / 2.0
+        occulted = vecoccs(znot, extxrs, rprs)
+        diffocc = np.diff(occulted, axis=0)
+        si = vecistar(xrs, g1, g2, g3, g4, g5, g6, g7, g8)
+        drop = np.sum(diffocc * si, axis=0)
+        inldlc = 1.0 - drop
+        ldlc[~select] = np.array(inldlc)
+
     return ldlc
 
 
 # --------------------------------------- ----------------------------
+# -- STELLAR OCCULTATION LAW -- --------------------------------------
+def occultation(
+    z,
+    rprs,
+    g1,
+    g2,
+    g3,
+    g4,
+    g5,
+    g6,
+    g7,
+    g8,
+    interpolators_list,
+    a1=0.5,
+    a2=1.0,
+    a3=1.5,
+    a4=2.0,
+    a5=1.0,
+    a6=2.0,
+    a7=3.0,
+    a8=4.0,
+):
+
+    outld = np.zeros(z.shape)
+
+    if interpolators_list is not None:
+        select = z < 1.0 + rprs
+
+        # Interpolators
+        f_G_0_25 = interpolators_list[0]
+        f_G_0_50 = interpolators_list[1]
+        f_G_0_75 = interpolators_list[2]
+        f_G_1_00 = interpolators_list[3]
+        f_F_0_50 = interpolators_list[4]
+        f_F_1_00 = interpolators_list[5]
+        f_F_1_50 = interpolators_list[6]
+        f_F_2_00 = interpolators_list[7]
+
+        # contribution computation
+        s1 = g1 * f_G_0_25(z[select], rprs, grid=False)
+        s2 = g2 * f_G_0_50(z[select], rprs, grid=False)
+        s3 = g3 * f_G_0_75(z[select], rprs, grid=False)
+        s4 = g4 * f_G_1_00(z[select], rprs, grid=False)
+        s5 = -g5 * f_F_0_50(z[select], rprs, grid=False)
+        s6 = -g6 * f_F_1_00(z[select], rprs, grid=False)
+        s7 = -g7 * f_F_1_50(z[select], rprs, grid=False)
+        s8 = -g8 * f_F_2_00(z[select], rprs, grid=False)
+
+        # normalization computation
+        ldnorm = (
+            (
+                -a1 * g1 / 2e0 / (2e0 + a1)
+                - a2 * g2 / 2e0 / (2e0 + a2)
+                - a3 * g3 / 2e0 / (2e0 + a3)
+                - a4 * g4 / 2e0 / (2e0 + a4)
+                + g5 / (a5 + 2e0) ** 2
+                + g6 / (a6 + 2e0) ** 2
+                + g7 / (a7 + 2e0) ** 2
+                + g8 / (a8 + 2e0) ** 2
+                + 5e-1
+            )
+            * 2e0
+            * np.pi
+        )
+
+        # surface crossing between star and planet
+        surface = circle_intersection_area(1.0, rprs, z[select])
+
+        # total occulted flux
+        outld[select] = (
+            surface * (1e0 - (g1 + g2 + g3 + g4))
+            + s1
+            + s2
+            + s3
+            + s4
+            + s5
+            + s6
+            + s7
+            + s8
+        ) / ldnorm
+
+    return outld
+
+
+# --------------------------------------- ----------------------------
+# -- CIRCLE INTERSECTION AREA -- -------------------------------------
+def circle_intersection_area(r1, r2, d):
+    """
+    r1 : radius of circle 1
+    r2 : radius of circle 2
+    d :  distance between centers
+    Intersection area of 2 circles of radius r1 and r2
+    separated a distance between centers of d.
+    """
+
+    S = np.zeros(d.shape)
+
+    # total intersection
+    select_2 = d <= abs(r1 - r2)
+    S[select_2] = np.pi * min(r1, r2) ** 2
+
+    # partial intersection
+    term1 = r1**2 * np.acos(
+        (d[~select_2] ** 2 + r1**2 - r2**2) / (2 * d[~select_2] * r1)
+    )
+    term2 = r2**2 * np.acos(
+        (d[~select_2] ** 2 + r2**2 - r1**2) / (2 * d[~select_2] * r2)
+    )
+    term3 = 0.5 * np.sqrt(
+        (-d[~select_2] + r1 + r2)
+        * (d[~select_2] + r1 - r2)
+        * (d[~select_2] - r1 + r2)
+        * (d[~select_2] + r1 + r2)
+    )
+    S[~select_2] = term1 + term2 - term3
+
+    return S
+
+
+# --------------------------------------- ----------------------------
 # -- STELLAR EXTINCTION LAW -- ---------------------------------------
-def vecistar(xrs, g1, g2, g3, g4, a1=0.5, a2=1.0, a3=0.01, a4=2.0):
+def vecistar(
+    xrs,
+    g1,
+    g2,
+    g3,
+    g4,
+    g5,
+    g6,
+    g7,
+    g8,
+    a1=0.5,
+    a2=1.0,
+    a3=1.5,
+    a4=2.0,
+    a5=1.0,
+    a6=2.0,
+    a7=3.0,
+    a8=4.0,
+):
     '''
     G. ROUDIER: Stellar surface extinction model
-    C. BERNARDIN: Normalization of the LD law
     '''
     ldnorm = (
         (
-            -a1 * g1 / 2e0 / (4e0 + a1)
-            - a2 * g2 / 2e0 / (4e0 + a2)
-            - a3 * g2 / 2e0 / (4e0 + a3)
-            - a4 * g2 / 2e0 / (4e0 + a4)
+            -a1 * g1 / 2e0 / (2e0 + a1)
+            - a2 * g2 / 2e0 / (2e0 + a2)
+            - a3 * g3 / 2e0 / (2e0 + a3)
+            - a4 * g4 / 2e0 / (2e0 + a4)
+            + g5 / (a5 + 2e0) ** 2
+            + g6 / (a6 + 2e0) ** 2
+            + g7 / (a7 + 2e0) ** 2
+            + g8 / (a8 + 2e0) ** 2
             + 5e-1
         )
         * 2e0
         * np.pi
     )
+
     select = xrs < 1e0
     mu = np.zeros(xrs.shape)
-    mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 4e0)
+    mu[select] = xrs[select]
+    mu[select] = (1e0 - xrs[select] ** 2) ** (1e0 / 2e0)
     s1 = g1 * (1e0 - mu**a1)
     s2 = g2 * (1e0 - mu**a2)
     s3 = g3 * (1e0 - mu**a3)
     s4 = g4 * (1e0 - mu**a4)
-    outld = (1e0 - (s1 + s2 + s3 + s4)) / ldnorm
+
+    s5 = np.zeros(xrs.shape)
+    s6 = np.zeros(xrs.shape)
+    s7 = np.zeros(xrs.shape)
+    s8 = np.zeros(xrs.shape)
+    s5[select] = g5 * mu[select] ** a5 * np.log(mu[select])
+    s6[select] = g6 * mu[select] ** a6 * np.log(mu[select])
+    s7[select] = g7 * mu[select] ** a7 * np.log(mu[select])
+    s8[select] = g8 * mu[select] ** a8 * np.log(mu[select])
+
+    outld = (1e0 - (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8)) / ldnorm
     return outld
 
 
@@ -3386,8 +3762,383 @@ def spectrumversion():
     N. Huber-Feely: 1.2.1 Add saving of trace to SV
     K. PEARSON: 1.2.2 JWST NIRISS
     R ESTRELA: 1.3.0 Merged Spectra Capability
+    GMR: 1.4.0 Added jwstspectrum()
     '''
-    return dawgie.VERSION(1, 3, 2)
+    return dawgie.VERSION(1, 4, 0)
+
+
+def jwstspectrum(
+    out,
+    nrm,
+    fin,
+    wht,
+    rtp,
+    # chl=int(4e4),
+    # rjc=95,
+    # thr=5,
+    # ntm=10,
+    # imo=4,
+    verbose=False,
+    debug=False,
+    donotuse=False,
+    bserr=None,
+    bntst=1,
+):
+    '''
+    GMR: JWST Spectral Light Curve Fit
+    [I/O]:out:[transit.states.SpectrumSV()]
+          out['data'][p]:[DICT]:output/planet
+    [I]:nrm:[transit.states.NormSV()]:transit.core.norm_jwst.__doc__
+    [I]:fin:[system.states.PriorsSV()]
+    [I]:wht:[transit.states.WhiteLightSV()]:transit.core.jwstwl.__doc__
+    [OPT]:rtp:[runtime.states.StatusSV()]
+    [OPT]:chl:[INT]:MCMC chain length
+    [OPT]:rjc:[FLOAT]:percentile used for outlier rejection
+    [OPT]:thr:[FLOAT]:outlier rejection threshold in sigmas
+    [OPT]:ntm:[INT]:minimum number of in transit data points
+    [OPT]:imo:[INT]:Instrument Model polynomial order
+    [OPT]:verbose:[BOOL]:plots
+    [OPT]:debug:[BOOL]:channel plots
+    '''
+
+    # TRUANDERIE
+    if bserr is None:
+        bserr = 1e-3
+    LETHE = None
+    if rtp.lethe:
+        # LETHE
+        z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
+        rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
+        grid_names = [
+            '/grid_G/0.25.npy',
+            '/grid_G/0.5.npy',
+            '/grid_G/0.75.npy',
+            '/grid_G/1.0.npy',
+            '/grid_F/0.5.npy',
+            '/grid_F/1.0.npy',
+            '/grid_F/1.5.npy',
+            '/grid_F/2.0.npy',
+        ]
+
+        LETHE = []
+        for name in grid_names:
+            grid = np.load(LETHE_dir + name)
+            interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
+            LETHE.append(interpolator)
+            pass
+        pass
+
+    spr = fin['priors'].copy()
+    ssc = syscore.ssconstants()
+    for pln in nrm['data']:
+        log.info('>--< Planet %s >', pln)
+        out['data'][pln] = {}
+        for det in nrm['data'][pln]['nspec']:
+            log.info('>----< %s >', det)
+            out['data'][pln][det] = {}
+            for vis in nrm['data'][pln]['nspec'][det]:
+                log.info('>------< Visit %s >', vis)
+                out['data'][pln][det][vis] = {}
+                trd = np.argsort(nrm['data'][pln]['time'][det][vis])
+                zndata = nrm['data'][pln]['nspec'][det][vis].copy() - 1e0
+                noise = np.nanstd(
+                    zndata[
+                        np.abs(zndata)
+                        < np.nanpercentile(abs(zndata), rtp.reject)
+                    ]
+                )
+                whttrc = wht['data'][pln][det][vis]['mctrace']
+                rpors = np.nanmedian(whttrc['rprs'])
+                # OUTLIERS REJECTION
+                zndata[abs(zndata) > rtp.threshold * noise] = np.nan
+                zndata = 1e0 + zndata[trd].T
+                if debug:
+                    tsp = '-'
+                    fig = plt.figure(figsize=(12, 9))
+                    _ = fig.add_subplot(111)
+                    plt.title(pln + tsp + det + tsp + vis, fontsize=20)
+                    im = plt.imshow(
+                        zndata,
+                        vmin=1e0 - rpors**2 - rtp.threshold * noise,
+                        vmax=1e0 + rtp.threshold * noise,
+                        aspect='auto',
+                    )
+                    plt.tick_params(axis='both', labelsize=18)
+                    cbar = fig.colorbar(im)
+                    cbar.ax.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                ndsc = 0
+                spc = []
+                spcerr = []
+                wvl = []
+                trc = []
+                dta = []
+                bmd = []
+                tst = nrm['data'][pln]['time'][det][vis][trd]
+                zst = nrm['data'][pln]['z'][det][vis][trd]
+                allwvl = np.median(nrm['data'][pln]['wave'][det][vis], axis=0)
+                dltwvl = np.nanmedian(np.diff(allwvl))
+                # REBIN TEST
+                if bntst > 1:
+                    newzndata = []
+                    newallwvl = []
+                    bnndx = 0
+                    bnnmx = len(zndata)
+                    while bnndx < bnnmx:
+                        bnndxlmt = min(bnndx + bntst, bnnmx)
+                        if not np.all(
+                            ~np.isfinite(
+                                np.mean(zndata[bnndx:bnndxlmt], axis=0)
+                            )
+                        ):
+                            newzndata.append(
+                                np.nanmean(zndata[bnndx:bnndxlmt], axis=0)
+                            )
+                            newallwvl.append(np.mean(allwvl[bnndx:bnndxlmt]))
+                            pass
+                        bnndx += bntst
+                        pass
+                    newdltwvl = np.nanmedian(np.diff(newallwvl))
+                    if not np.isfinite(newdltwvl):
+                        newdltwvl = np.max(dltwvl) - np.min(dltwvl)
+                    allwvl = np.array(newallwvl)
+                    dltwvl = newdltwvl
+                    zndata = np.array(newzndata)
+                    pass
+
+                argsdict = {
+                    'progbar': verbose,
+                    'progsizemax': 35,
+                    'lbllen': 20,
+                    'proginprompt': True,
+                }
+                progbar = nerdclub.Progressbar(
+                    argsdict, det + ' ' + vis, zndata
+                )
+                for chn, slc in enumerate(zndata):
+                    slc[np.abs(1e0 - slc) > rtp.threshold * noise] = np.nan
+                    # ERROR ESTIMATED ON DATA
+                    sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
+                    transiting = (
+                        np.sum(np.isfinite(slc[np.abs(zst) < 1])) > rtp.ntm
+                    )
+                    if (
+                        np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
+                    ) and transiting:
+                        if not verbose:
+                            log.info('>--------< %s / %s >', chn, len(zndata))
+                        if debug:
+                            plt.figure(figsize=(12, 9))
+                            plt.title(pln + tsp + det + tsp + vis, fontsize=20)
+                            plt.plot(tst, slc, 'o')
+                            plt.tick_params(axis='both', labelsize=18)
+                            plt.show()
+                            pass
+                        # GRUSNIS LD
+                        ldcoefs = ldtl(
+                            spr['T*'],
+                            spr['FEH*'],
+                            spr['LOGG*'],
+                            [allwvl[chn] - dltwvl / 2.0],
+                            [allwvl[chn] + dltwvl / 2.0],
+                        )
+                        lclds = [c[0] for c in ldcoefs]
+                        # FIXED PARAMS
+                        fxp = {}
+                        fxp['tknot'] = np.nanmedian(whttrc['tknot'])
+                        if 'inc' in whttrc:
+                            ginc = np.nanmedian(whttrc['inc'])
+                            pass
+                        else:
+                            ginc = spr[pln]['inc']
+                            pass
+                        fxp['inc'] = ginc
+                        nodes = []
+                        nodeshape = []
+                        prior_ranges = {}
+                        prior_center = {}
+                        # PRIORS
+                        with pymc.Model():
+                            pymcrprs = pymc.Uniform(
+                                'rprs', lower=rpors / 2e0, upper=rpors * 2e0
+                            )
+                            prior_ranges['rprs'] = [rpors / 2e0, 2e0 * rpors]
+                            prior_center['rprs'] = rpors
+                            nodes.append(pymcrprs)
+                            nodeshape.append(1)
+                            # INSTRUMENT MODEL - ALWAYS LAST
+                            allcenim = [
+                                np.nanmedian(whttrc[t])
+                                for t in whttrc
+                                if t.startswith('IM')
+                            ]
+                            allstdim = [
+                                np.nanstd(whttrc[t])
+                                for t in whttrc
+                                if t.startswith('IM')
+                            ]
+                            for ic, coef in enumerate(np.arange(rtp.imo)):
+                                thslbl = 'IM' + str(int(coef))
+                                pymcim = pymc.Normal(
+                                    thslbl,
+                                    mu=allcenim[ic],
+                                    tau=1e0 / (allstdim[ic] ** 2),
+                                )
+                                prior_ranges[thslbl] = [
+                                    allcenim[ic] - 3.0 * allstdim[ic],
+                                    allcenim[ic] + 3.0 * allstdim[ic],
+                                ]
+                                prior_center[thslbl] = allcenim[ic]
+                                nodes.append(pymcim)
+                                pymcim = None
+                                pass
+                            nodeshape.append(rtp.imo)
+                            # CONTEXT
+                            ssz, _ = tm.time2z(
+                                tst[np.isfinite(slc)],
+                                fxp['inc'],
+                                fxp['tknot'],
+                                spr[pln]['sma'] / spr['R*'] / ssc['Rsun/AU'],
+                                spr[pln]['period'],
+                                spr[pln]['ecc'],
+                            )
+                            ctxtupdt(
+                                time=tst[np.isfinite(slc)],
+                                mcmcdat=slc[np.isfinite(slc)],
+                                mcmcsig=slc[np.isfinite(slc)] * 0 + sns,
+                                nodeshape=nodeshape,
+                                allz=ssz,
+                                lclds=lclds,
+                                spec=True,
+                                LETHE=LETHE,
+                                ref_IM=wht['data'][pln][det][vis]['ref_IM'],
+                            )
+                            # PYMC SHELL
+                            TensorModel = TensorShell()
+
+                            def LogLH(_, nodes):
+                                '''
+                                GMR: Fill in model tensor shell
+                                '''
+                                return TensorModel(nodes)
+
+                            _ = pymc.CustomDist(
+                                "likelihood",
+                                nodes,
+                                observed=ctxt.mcmcdat,
+                                logp=LogLH,
+                            )
+                            # DA LINT
+                            _ = rtp
+                            sampler = pymc.Metropolis()
+                            if not verbose:
+                                log.info('>-- SPECTRUM SAMPLER: Metropolis')
+                                log.info(
+                                    '>-- MCMC nodes: %s',
+                                    str(prior_center.keys()),
+                                )
+                                pass
+                            if donotuse:
+                                params = None
+                                params = lm.Parameters()
+                                for n in nodes:
+                                    params.add(
+                                        n.name,
+                                        value=prior_center[n.name],
+                                        min=prior_ranges[n.name][0],
+                                        max=prior_ranges[n.name][1],
+                                    )
+                                    pass
+                                lmout = lm.minimize(
+                                    truanderie,
+                                    params,
+                                    args=(ctxt.time, ctxt.mcmcdat),
+                                    method='cg',
+                                )
+                                mctrace = {}
+                                for n in nodes:
+                                    mctrace[n.name] = np.random.normal(
+                                        loc=lmout.params[n.name].value,
+                                        scale=bserr,
+                                        size=10000,
+                                    )
+                                    pass
+                                pass
+                            else:
+                                trace = pymc.sample(
+                                    rtp.chainlen,
+                                    cores=4,
+                                    tune=int(rtp.chainlen / 2),
+                                    compute_convergence_checks=False,
+                                    step=sampler,
+                                    progressbar=debug,
+                                )
+                                mctrace = {}
+                                for k in [n.name for n in nodes]:
+                                    mctrace[k] = np.array(
+                                        trace['posterior'][k]
+                                    ).flatten()
+                                    pass
+                                pass
+                            pass
+                        bestlc = np.array(
+                            lcmodel(
+                                *[np.median(di[-1]) for di in mctrace.items()]
+                            )
+                        )
+                        if debug:
+                            _ = simplecorner(
+                                mctrace, fullrange=True, verbose=verbose
+                            )
+
+                            plt.figure(figsize=(12, 9))
+                            plt.title(
+                                pln + ': ' + det + ' [' + vis + ']',
+                                fontsize=20,
+                            )
+                            plt.errorbar(
+                                ctxt.time,
+                                ctxt.mcmcdat,
+                                yerr=noise,
+                                fmt='o',
+                                alpha=0.5,
+                            )
+                            plt.plot(ctxt.time, bestlc, lw=3)
+                            plt.tick_params(labelsize=18)
+                            plt.show()
+                            pass
+                        wvl.append(allwvl[chn])
+                        # trc.append(mctrace)
+                        spc.append(np.nanmedian(mctrace['rprs']))
+                        spcerr.append(np.nanstd(mctrace['rprs']))
+                        dta.append(ctxt.mcmcdat)
+                        bmd.append(bestlc)
+                        pass
+                    else:
+                        ndsc += 1
+                        pass
+                    progbar.update()
+                    pass
+                progbar.close()
+                out['data'][pln][det][vis]['ES'] = np.array(spc)
+                out['data'][pln][det][vis]['ESerr'] = np.array(spcerr)
+                out['data'][pln][det][vis]['MCTRACE'] = trc
+                out['data'][pln][det][vis]['WB'] = np.array(wvl)
+                out['data'][pln][det][vis]['WBlow'] = (
+                    np.array(wvl) - dltwvl / 2.0
+                )
+                out['data'][pln][det][vis]['WBup'] = (
+                    np.array(wvl) + dltwvl / 2.0
+                )
+                out['data'][pln][det][vis]['LCFIT'] = bmd
+                out['data'][pln][det][vis]['LCDATA'] = dta
+                out['data'][pln][det][vis]['IGNORED'] = ndsc
+                out['STATUS'].append(True)
+                pass
+            pass
+        pass
+    return True
 
 
 def spectrum(
@@ -3681,8 +4432,6 @@ def spectrum(
                     visits=visits,
                     mcmcdat=data[valid],
                     mcmcsig=dnoise[valid],
-                    # mcmcsig=1e0
-                    # / np.sqrt(np.nanmedian(tauwbdata[valid])),  # GMR: FIXME
                     nodeshape=nodeshape,
                     spec=True,
                 )
@@ -3703,10 +4452,10 @@ def spectrum(
                 )
                 # SAMPLING
                 if runtime_params.sliceSampler:
-                    log.info('>-- SPECTRUM SAMPLER: Slice --<')
+                    log.info('>-- SPECTRUM SAMPLER: Slice')
                     sampler = pymc.Slice()
                 else:
-                    log.info('>-- SPECTRUM SAMPLER: Metropolis --<')
+                    log.info('>-- SPECTRUM SAMPLER: Metropolis')
                     sampler = pymc.Metropolis()
 
                 trace = pymc.sample(
@@ -3995,7 +4744,7 @@ def orbital(*whiteparams):
             pass
         pass
     else:
-        # JWST
+        # >-- JWST
         if 'inc' in ctxt.fixedpars:
             t2zinc = ctxt.fixedpars['inc']
             pass
@@ -4019,11 +4768,16 @@ def orbital(*whiteparams):
         out = tldlc(
             abs(omz),
             float(lcnodes[0]),
-            g1=ctxt.g1[0],
-            g2=ctxt.g2[0],
-            g3=ctxt.g3[0],
-            g4=ctxt.g4[0],
+            g1=ctxt.lclds[0],
+            g2=ctxt.lclds[1],
+            g3=ctxt.lclds[2],
+            g4=ctxt.lclds[3],
+            g5=ctxt.lclds[4],
+            g6=ctxt.lclds[5],
+            g7=ctxt.lclds[6],
+            g8=ctxt.lclds[7],
         ) * orbitalim(ctxt.time, imnodes)
+        # JWST >--
         pass
 
     out = [o for o, s in zip(out, ctxt.selectfit) if s]
@@ -4039,38 +4793,70 @@ def orbitalim(ts, imnodes):
     '''
     coeffs = [float(c) for c in imnodes]
     p = np.poly1d(coeffs)
-    out = p(ts - np.nanmean(ts))
+    if ctxt.ref_IM is not None:
+        out = p(ts - ctxt.ref_IM)
+    else:
+        out = p(ts - np.nanmean(ts))
     return out
+
+
+def cheatim(params, x, data=None, weights=None):
+    '''
+    GMR: LMFit function for JWST IM
+    '''
+    allc = [params[k].value for k in params]
+    model = orbitalim(x, allc)
+    if data is None:
+        return model
+    if weights is None:
+        return data - model
+    return (data - model) / weights
 
 
 def lcmodel(*specparams):
     '''
     G. ROUDIER: Spectral light curve model
     '''
-    r, avs, aos, aoi = specparams
-    allimout = []
-
-    for iv in range(len(ctxt.visits)):
-        imout = timlc(
-            ctxt.time[iv],
-            ctxt.orbits[iv],
-            vslope=avs[iv],
-            vitcp=1e0,
-            oslope=aos[iv],
-            oitcp=aoi[iv],
+    if ctxt.orbits:  # HST
+        r, avs, aos, aoi = specparams
+        allimout = []
+        for iv in range(len(ctxt.visits)):
+            imout = timlc(
+                ctxt.time[iv],
+                ctxt.orbits[iv],
+                vslope=avs[iv],
+                vitcp=1e0,
+                oslope=aos[iv],
+                oitcp=aoi[iv],
+            )
+            allimout.extend(imout)
+            pass
+        out = tldlc(
+            np.abs(ctxt.allz),
+            r,
+            g1=float(ctxt.g1[0]),
+            g2=float(ctxt.g2[0]),
+            g3=float(ctxt.g3[0]),
+            g4=float(ctxt.g4[0]),
         )
-        allimout.extend(imout)
-        pass
+        out = out * np.array(allimout)
+        return out[ctxt.valid]
+    # JWST
+    imnodes = specparams[-ctxt.nodeshape[-1] :]
+    lcnodes = specparams[: -ctxt.nodeshape[-1]]
     out = tldlc(
-        np.abs(ctxt.allz),
-        r,
-        g1=float(ctxt.g1[0]),
-        g2=float(ctxt.g2[0]),
-        g3=float(ctxt.g3[0]),
-        g4=float(ctxt.g4[0]),
-    )
-    out = out * np.array(allimout)
-    return out[ctxt.valid]
+        abs(ctxt.allz),
+        float(lcnodes[0]),
+        g1=ctxt.lclds[0],
+        g2=ctxt.lclds[1],
+        g3=ctxt.lclds[2],
+        g4=ctxt.lclds[3],
+        g5=ctxt.lclds[4],
+        g6=ctxt.lclds[5],
+        g7=ctxt.lclds[6],
+        g8=ctxt.lclds[7],
+    ) * orbitalim(ctxt.time, imnodes)
+    return out
 
 
 # ----------------------------------- --------------------------------

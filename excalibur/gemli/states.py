@@ -42,14 +42,14 @@ class MLfitSv(ExcaliburSV):
                             plotlabel = 'cerberus corner plot'
                         else:
                             plotlabel = 'unknown plottype plot'
-                        if savedresult.endswith('PHOTOCHEM'):
-                            plotlabel = plotlabel + ' : DISEQ MODEL'
-                        else:
-                            plotlabel = plotlabel + ' : TEQ MODEL'
+                        plotlabel = plotlabel + ' : '
+                        # if savedresult.endswith('PHOTOCHEM'):
+                        #    plotlabel = plotlabel + ' : DISEQ MODEL for '
+                        # else:
+                        #    plotlabel = plotlabel + ' : TEQ MODEL for '
                         textlabel = (
                             '--------- '
                             + plotlabel
-                            + ' for '
                             + target
                             + ' '
                             + planet_letter

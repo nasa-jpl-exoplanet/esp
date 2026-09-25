@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 class Performance(dawgie.Analyzer):
     '''Convert the internal metric data to highlight performance elements'''
 
+    DAWGIE_SCHEDULE = [dawgie.schedule(None, None, boot=True)]
+
     def __init__(self):
         '''init the performance process'''
         self._version_ = dawgie.VERSION(1, 0, 0)

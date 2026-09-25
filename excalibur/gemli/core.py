@@ -107,7 +107,7 @@ def mlfit(
 
     for p in sysfin['priors']['planets']:
 
-        # TEC,TEA params - X/H, C/O, N/O
+        # TEC,TEA params - X/H, C/O, N/O, S/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
@@ -127,7 +127,8 @@ def mlfit(
         else:
             out['data'][p] = {}
 
-            # print('START MLFit for planet:', p)
+            if verbose:
+                print('START MLFit for planet:', p)
 
             ML_param_names = [
                 'Teq',
@@ -177,10 +178,16 @@ def mlfit(
                 ]
             )
 
-            arielModel = 'cerberus'
+            # arielModel = 'cerberus'
             # CAREFUL!  need to use a cloud-free model for self-consistency!!!
             arielModel = 'cerberusNoclouds'
             # arielModel = 'cerberusTEANoClouds'
+            # use the gemli-specific model (has the same five molecules)
+            if 'cerberusGemliNoclouds' in arielsim['data'][p]:
+                arielModel = 'cerberusGemliNoclouds'
+
+            # print('ariel sim models available:', arielsim['data'][p].keys())
+            # print('ariel model used for gemli fitting:', arielModel)
 
             # MORE CAREFUL! cerberus.atmos is currently the cloudy model
             # decide here whether to use the cerb.atmos atm or arielsim spc
@@ -387,16 +394,15 @@ def mlfit(
                 cheq=None,
                 rp0=Rp,
                 xsecs=cerbxsl[p]['XSECS'],
-                qtgrid=cerbxsl[p]['QTGRID'],
                 wgrid=transitdata['wavelength'],
                 orbp=sysfin['priors'],
                 hzlib=crbhzlib,
+                chemistry='TEC',
                 planet=p,
-                knownspecies=runtime_params.knownspecies,
+                hitemplist=runtime_params.hitemplist,
                 cialist=runtime_params.cialist,
                 xmollist=runtime_params.xmollist,
-                lbroadening=runtime_params.lbroadening,
-                lshifting=runtime_params.lshifting,
+                atomlist=runtime_params.atomlist,
                 nlevels=runtime_params.nlevels,
                 Hsmax=runtime_params.Hsmax,
                 solrad=runtime_params.solrad,
@@ -443,9 +449,10 @@ def mlfit(
             model_params = cerbatmos[p]['TRUTH_MODELPARAMS']
             # print('model_params', model_params)
             if 'TEA' in arielModel:
-                tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
+                # tempCoeffs = [0, model_params['Teq'], 0, 1, 0, -1, 1, 0, -1, 1]
                 mixratioprofiles = crbutil.calcTEA(
-                    tempCoeffs,
+                    np.array([model_params['Teq']] * len(pressure)),
+                    # tempCoeffs,
                     pressure,
                     metallicity=10.0 ** model_params['metallicity'],
                     C_O=0.55 * 10.0 ** model_params['C/O'],
@@ -465,6 +472,17 @@ def mlfit(
                     X2Hr=model_params['metallicity'],
                     C2Or=model_params['C/O'],
                 )
+            if 'Gemli' in arielModel or 'Water' in arielModel:
+                truth_params['CO2'] = truth_params['N2']
+                # to match gemli molecules, drop N2
+                truth_params.pop('N2')
+                if 'Water' in arielModel:
+                    molecules = list(truth_params.keys())
+                    for molecule in molecules:
+                        if molecule != 'H2O':
+                            truth_params.pop(molecule)
+            # print('truth_params', truth_params)
+
             # include Teq and Rp truths in with the mixing ratios
             truth_params['Teq'] = model_params['Teq']
             truth_params['Rp'] = model_params['Rp']
@@ -479,6 +497,7 @@ def mlfit(
             ] = ML_uncertainties_instrument
             out['data'][p]['ML_spectrum_bestfit'] = ML_best_fit
             out['data'][p]['truth_params'] = truth_params
+            # print('TRUTH!', truth_params)
 
             # plot the best-fit-by-ML model vs the data / truth
             out['data'][p]['plot_MLspectrum'], _ = plot_ML_spectrumfit(
@@ -520,13 +539,17 @@ def mlfit(
                 for key in cerbatmos[p][model_name]['MCTRACE']:
                     # print('going through keys in MCTRACE',key)
                     all_traces.append(cerbatmos[p][model_name]['MCTRACE'][key])
-                    if model_name == 'TEC':
+                    if key == 'saved chi2':
+                        all_keys.append('$\\chi^2$')
+                    elif model_name == 'TEC':
                         if key in ('TEC[0]', 'TEC'):
                             all_keys.append('[X/H]')
                         elif key == 'TEC[1]':
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'TEA':
@@ -536,6 +559,8 @@ def mlfit(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'PHOTOCHEM':
@@ -562,8 +587,9 @@ def mlfit(
                     prior_ranges = {}
 
                 fit_cloud_parameters = 'CTP' in all_keys
-                fit_n_to_o = '[N/O]' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
+                fit_n_to_o = '[N/O]' in all_keys
+                fit_s_to_o = '[S/O]' in all_keys
                 fit_t = 'T' in all_keys
 
                 # save the relevant info
@@ -675,6 +701,24 @@ def mlfit(
                         else:
                             # default is Solar
                             tceqdict['NtoO'] = 0.0
+
+                    if fit_s_to_o:
+                        if fit_n_to_o:
+                            tceqdict['StoO'] = float(mdp[3])
+                        else:
+                            tceqdict['StoO'] = float(mdp[2])
+                    else:
+                        if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
+                            'StoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
+                        ):
+                            # print('truth params',cerbatmos[p]['TRUTH_MODELPARAMS'])
+                            tceqdict['StoO'] = cerbatmos[p][
+                                'TRUTH_MODELPARAMS'
+                            ]['StoO']
+                        else:
+                            # default is Solar
+                            tceqdict['StoO'] = 0.0
+
                 elif model_name == 'PHOTOCHEM':
                     if len(mdp) != 5:
                         log.warning(
@@ -715,16 +759,15 @@ def mlfit(
                     cheq=tceqdict,
                     rp0=rp0,
                     xsecs=cerbxsl[p]['XSECS'],
-                    qtgrid=cerbxsl[p]['QTGRID'],
                     wgrid=transitdata['wavelength'],
                     orbp=sysfin['priors'],
                     hzlib=crbhzlib,
+                    chemistry='TEC',
                     planet=p,
-                    knownspecies=runtime_params.knownspecies,
+                    hitemplist=runtime_params.hitemplist,
                     cialist=runtime_params.cialist,
                     xmollist=runtime_params.xmollist,
-                    lbroadening=runtime_params.lbroadening,
-                    lshifting=runtime_params.lshifting,
+                    atomlist=runtime_params.atomlist,
                     nlevels=runtime_params.nlevels,
                     Hsmax=runtime_params.Hsmax,
                     solrad=runtime_params.solrad,
@@ -774,7 +817,7 @@ def mlfit(
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
-                    # if runtime_params.fitCloudParameters:
+                    # if runtime_params.fitCTP:
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', hazeloc)
@@ -804,6 +847,21 @@ def mlfit(
                             else:
                                 # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                 tceqdict['NtoO'] = 0.0
+                        if fit_s_to_o:
+                            if fit_n_to_o:
+                                tceqdict['NtoO'] = float(mdp[3])
+                            else:
+                                tceqdict['NtoO'] = float(mdp[2])
+                        else:
+                            if ('TRUTH_MODELPARAMS' in cerbatmos[p]) and (
+                                'StoO' in cerbatmos[p]['TRUTH_MODELPARAMS']
+                            ):
+                                tceqdict['StoO'] = cerbatmos[p][
+                                    'TRUTH_MODELPARAMS'
+                                ]['StoO']
+                            else:
+                                # log.info('--< StoO is missing from TRUTH_MODELPARAMS >--')
+                                tceqdict['StoO'] = 0.0
 
                     elif model_name == 'PHOTOCHEM':
                         tceqdict = None
@@ -823,17 +881,16 @@ def mlfit(
                         mixratio=mixratio,
                         rp0=rp0,
                         xsecs=cerbxsl[p]['XSECS'],
-                        qtgrid=cerbxsl[p]['QTGRID'],
                         wgrid=transitdata['wavelength'],
                         orbp=sysfin['priors'],
                         hzlib=crbhzlib,
+                        chemistry='TEC',
                         cheq=tceqdict,
                         planet=p,
-                        knownspecies=runtime_params.knownspecies,
+                        hitemplist=runtime_params.hitemplist,
                         cialist=runtime_params.cialist,
                         xmollist=runtime_params.xmollist,
-                        lbroadening=runtime_params.lbroadening,
-                        lshifting=runtime_params.lshifting,
+                        atomlist=runtime_params.atomlist,
                         nlevels=runtime_params.nlevels,
                         Hsmax=runtime_params.Hsmax,
                         solrad=runtime_params.solrad,

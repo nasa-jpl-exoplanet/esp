@@ -8,11 +8,11 @@
 
 import dawgie
 import logging
+import corner
 
 import excalibur
 from excalibur.transit.core import (
     composite_spectrum,
-    jwst_lightcurve,
     bin_spectrum,
 )
 from excalibur.util.plotters import (
@@ -202,7 +202,8 @@ class WhiteLightSV(ExcaliburSV):
                                 label='model',
                             )
                             # model phases only go from -0.5 to 0.5 (not good for eclipse)
-                            # plot the model line a second time, but shifting the phases over by 1
+                            # plot the model line a second time,
+                            # but shifting the phases over by 1
                             ax1.plot(
                                 modelphase[np.argsort(modelphase)] + 1,
                                 modellc[np.argsort(modelphase)],
@@ -282,15 +283,106 @@ class WhiteLightSV(ExcaliburSV):
                         visitor.add_image(
                             '...', ' ', self['data'][p][i]['plot_pixelmap']
                         )
-
+                        pass
+                    pass
+                pass
+            # >-- Sophia GRUSNIS: JWST
             elif 'JWST' in self.name():
-                # for each planet
-                for p in self['data'].keys():
-                    # for each event
-                    for i in range(len(self['data'][p])):
-                        # light curve fit
-                        fig = jwst_lightcurve(self['data'][p][i])
-                        save_plot_toscreen(fig, visitor)
+                for pln in self['data']:
+                    for dtc in self['data'][pln]:
+                        for vst in [
+                            t
+                            for t in self['data'][pln][dtc]
+                            if t in str(np.arange(100))
+                        ]:
+                            dat = self['data'][pln][dtc][vst]
+                            tms = np.array(dat['prewhite_time'])
+                            trd = np.argsort(tms)
+                            select = abs(np.array(dat['prewhite_sep'])[trd]) < 2
+                            fig = plt.figure(figsize=(12, 9))
+                            gs = fig.add_gridspec(2, hspace=0)
+                            axs = gs.subplots(sharex=True, sharey=False)
+                            axs[0].set_title(
+                                ' '.join([pln, dtc, vst]), fontsize=20
+                            )
+                            axs[0].errorbar(
+                                tms[trd][select],
+                                np.array(dat['prewhite'])[trd][select],
+                                yerr=np.array(dat['prewhite_err'])[trd][select],
+                                marker='o',
+                                color='gray',
+                                alpha=0.2,
+                            )
+                            axs[0].plot(
+                                tms[trd][select],
+                                np.array(dat['flatwht'])[trd][select],
+                                'o',
+                                color='blue',
+                                alpha=0.5,
+                            )
+                            axs[0].plot(
+                                tms[trd][select],
+                                np.array(dat['lcmodel'])[trd][select],
+                                'r--',
+                            )
+                            axs[0].set_xlabel('Time [JD]', fontsize=20)
+                            axs[0].set_ylabel('Flux [$F_*$]', fontsize=20)
+                            axs[0].tick_params(axis='both', labelsize=18)
+
+                            axs[1].plot(
+                                tms[trd][select],
+                                np.array(dat['flatwht'])[trd][select]
+                                - np.array(dat['lcmodel'])[trd][select],
+                                'bo',
+                                alpha=0.5,
+                            )
+                            axs[1].plot(
+                                tms[trd][select], tms[trd][select] * 0, '--'
+                            )
+                            axs[1].fill_between(
+                                tms[trd][select],
+                                -np.array(dat['prewhite_err'])[trd][select],
+                                np.array(dat['prewhite_err'])[trd][select],
+                                color='gray',
+                                alpha=0.2,
+                            )
+                            axs[1].fill_between(
+                                tms[trd][select],
+                                -2.0
+                                * np.array(dat['prewhite_err'])[trd][select],
+                                2.0
+                                * np.array(dat['prewhite_err'])[trd][select],
+                                color='gray',
+                                alpha=0.2,
+                            )
+                            axs[1].tick_params(axis='both', labelsize=18)
+                            save_plot_toscreen(fig, visitor)
+                            fig = None
+                            mclbl = list(dat['mctrace'])
+                            mcarr = np.array(
+                                [dat['mctrace'][k] for k in dat['mctrace']]
+                            )
+                            fig = corner.corner(
+                                mcarr.T,
+                                quantiles=[0.16, 0.5, 0.84],
+                                levels=(
+                                    0.393,
+                                    0.675,
+                                ),
+                                labels=mclbl,
+                                label_kwargs={"fontsize": 20},
+                            )
+                            save_plot_toscreen(fig, visitor)
+                            fig = None
+                            pass
+                        pass
+                    pass
+                pass
+            # JWST >--
+            pass
+        pass
+
+    pass
 
 
 class SpectrumSV(ExcaliburSV):
@@ -316,7 +408,9 @@ class SpectrumSV(ExcaliburSV):
                         save_plot_toscreen(fig, visitor)
                     except KeyError:
                         pass
-            else:
+                    pass
+                pass
+            elif 'HST' in self.name():
                 for p in self['data'].keys():
                     visitor.add_declaration('PLANET: ' + p)
                     if 'Teq' in self['data'][p]:
@@ -517,6 +611,81 @@ class SpectrumSV(ExcaliburSV):
                         ax[1].set_xscale('log', base=2)
                         ax[1].legend()
                         save_plot_toscreen(myfig, visitor)
+                        pass
+                    pass
+                pass
+            # --< JWST
+            elif 'JWST' in self.name():
+                for pln in self['data']:
+                    dtc = list(self['data'][pln])
+                    for vst in [
+                        t
+                        for t in self['data'][pln][dtc[0]]
+                        if t in [str(int(i)) for i in np.arange(100)]
+                    ]:
+                        wave = [self['data'][pln][d][vst]['WB'] for d in dtc]
+                        spec = [self['data'][pln][d][vst]['ES'] for d in dtc]
+                        err = [self['data'][pln][d][vst]['ESerr'] for d in dtc]
+                        res = []
+                        for d in dtc:  # GMR: Ugly but necessary see issue #343
+                            addme = []
+                            for lc, ld in zip(
+                                self['data'][pln][d][vst]['LCFIT'],
+                                self['data'][pln][d][vst]['LCDATA'],
+                            ):
+                                addme.append(np.mean(np.abs(lc - ld)))
+                                pass
+                            res.append(np.array(addme))
+                            pass
+                        cleanup = [
+                            r
+                            < (
+                                np.percentile(r, 50)
+                                + 3.0
+                                * np.std(r[r < np.percentile(r, 50 + 68 / 2)])
+                            )
+                            for r in res
+                        ]
+                        fig = plt.figure(figsize=(12, 9))
+                        gs = fig.add_gridspec(
+                            2, hspace=0, height_ratios=[24 / 3, 4 / 3]
+                        )
+                        axs = gs.subplots(sharex=True, sharey=False)
+                        axs[0].set_title(' '.join([pln, vst]), fontsize=20)
+                        for ndx, _ in enumerate(dtc):
+                            axs[0].errorbar(
+                                wave[ndx][cleanup[ndx]],
+                                spec[ndx][cleanup[ndx]] ** 2,
+                                yerr=err[ndx][cleanup[ndx]] ** 2
+                                + 2.0
+                                * err[ndx][cleanup[ndx]]
+                                * spec[ndx][cleanup[ndx]],
+                                marker='o',
+                                alpha=0.5,
+                            )
+                            axs[1].plot(wave[ndx], res[ndx], 'g^', alpha=0.5)
+                            axs[1].plot(
+                                wave[ndx][~cleanup[ndx]],
+                                res[ndx][~cleanup[ndx]],
+                                'rx',
+                                ms=10,
+                            )
+                            pass
+                        axs[0].set_ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
+                        axs[0].tick_params(axis='both', labelsize=18)
+                        axs[1].tick_params(axis='both', labelsize=18)
+                        axs[1].set_ylabel(r'$\Delta_{LC}$', fontsize=20)
+                        axs[1].set_xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                        save_plot_toscreen(fig, visitor)
+                        fig = None
+                        pass
+                    pass
+                pass
+            # JWST >--
+            pass
+        pass
+
+    pass
 
 
 class StarspotSV(ExcaliburSV):

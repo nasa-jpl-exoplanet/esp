@@ -36,8 +36,8 @@ ARIEL
 
 DATA
 - collect (sort data according to filters)
-- calibration (extraction, wavelength solution, noise assessment)
 - timing (transit, eclipse, full phase curve detection)
+- calibration (extraction, wavelength solution, noise assessment)
 
 TRANSIT
 - normalization (scaling of stellar spectrum to Out Of Transit relative quantities)

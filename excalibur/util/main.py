@@ -4,6 +4,7 @@
 import os
 import dawgie
 import dawgie.db
+import dawgie.pl.scan
 import dawgie.security
 import dawgie.util
 
@@ -30,6 +31,8 @@ def main_start():
         myself=dawgie.context.ssl_pem_myself,
         system=dawgie.context.ssl_pem_file,
     )
+    dawgie.pl.scan.for_factories(
+        dawgie.context.ae_base_path, dawgie.context.ae_base_package
+    )
     dawgie.db.reopen()
-
     return rid, tn

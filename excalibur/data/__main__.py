@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.data.bot
+import excalibur.data
 
 # ------------- ------------------------------------------------------
 if __name__ == "__main__":
@@ -16,10 +16,10 @@ if __name__ == "__main__":
     if tn in ['', '__all__']:
         pass
     else:
-        NAME = ['calibration', 'collect', 'timing', None][
+        NAME = ['collect', 'timing', 'calibration', None][
             -1
         ]  # -1 to run them all
-        subtasks = excalibur.data.bot.Actor('data', 4, rid, tn)
+        subtasks = excalibur.data.task('data', 4, rid, tn)
         subtasks.do(NAME)
         dawgie.db.close()
         dawgie.security.finalize()
