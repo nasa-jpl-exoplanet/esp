@@ -20,7 +20,6 @@ if __name__ == "__main__":
         SUBTASKS = excalibur.phasecurve.task('phasecurve', 4, rid, tn)
         SUBTASKS.do(NAME)
         pass
-
     dawgie.db.close()
     dawgie.security.finalize()
     pass
