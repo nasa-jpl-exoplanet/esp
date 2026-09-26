@@ -2,16 +2,22 @@
 
 # Heritage code shame:
 # pylint: disable=invalid-name
-# pylint: disable=broad-exception-caught
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-lines,too-many-return-statements,too-many-nested-blocks
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,too-many-locals,too-many-branches,too-many-return-statements,too-many-lines
 
 # -- IMPORTS -- ------------------------------------------------------
 import copy
 import csv
 import json
 import os
+import sys
+import types
 import numpy as np
+import numpy.linalg as np_linalg
 import matplotlib.pyplot as plt
+
+_numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
+_numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
+sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
 
 from altaipony.flarelc import FlareLightCurve
 from altaipony.fakeflares import flare_model_mendoza2022 as model
@@ -47,6 +53,10 @@ OBSERVATION_GAP_FACTOR = 10.0
 VISIT_COMPLETION_FILENAME = 'visit_status.json'
 
 
+def _is_mapping_like(value):
+    return all(hasattr(value, attr) for attr in ('keys', 'get', 'items'))
+
+
 def calculate_quiescent_luminosity(
     flux_density_mjy,
     distance_pc,
@@ -70,10 +80,167 @@ def _coerce_target_name(target, whitelight):
     return whitelight.get('target', 'UNKNOWN_TARGET')
 
 
-def _normalize_whitelight(whitelight):
+def _planet_keys_from_priors(priors):
+    planet_keys = []
+    for key, value in priors.items():
+        if not _is_mapping_like(value):
+            continue
+        if {'period', 't0', 'inc', 'ecc', 'rp', 'sma'}.issubset(value.keys()):
+            planet_keys.append(key)
+    return planet_keys
+
+
+def _normalize_whitelight(whitelight, priors=None):
     if 'data' in whitelight:
-        return whitelight['data']
-    return whitelight
+        whitelight = whitelight['data']
+
+    if _looks_like_jwst_normalization_planet(whitelight):
+        planet_keys = _planet_keys_from_priors(priors or {})
+        if len(planet_keys) == 1:
+            return {
+                planet_keys[0]: _adapt_jwst_normalization_planet(
+                    whitelight,
+                    priors=priors,
+                    planet=planet_keys[0],
+                )
+            }
+
+    return _adapt_jwst_normalization_input(whitelight, priors=priors)
+
+
+def _looks_like_jwst_normalization_planet(planet_data):
+    if not _is_mapping_like(planet_data):
+        return False
+    if not {'visits', 'nspec'}.issubset(planet_data.keys()):
+        return False
+    return ('time' in planet_data) or ('phase' in planet_data)
+
+
+def _coerce_visit_id(visit_value, default_idx):
+    try:
+        return int(visit_value)
+    except (TypeError, ValueError):
+        return int(default_idx)
+
+
+def _collapse_jwst_visit(visit_id, cadence_rows):
+    time_values = []
+    flux_values = []
+    err_values = []
+
+    for time_value, spectrum in cadence_rows:
+        spectrum = np.asarray(spectrum, dtype=float)
+        finite = np.isfinite(spectrum)
+        if not np.any(finite):
+            continue
+
+        flux_value = float(np.nanmean(spectrum[finite]))
+        if not np.isfinite(flux_value) or flux_value == 0.0:
+            continue
+
+        if np.count_nonzero(finite) > 1:
+            err_value = float(np.nanstd(spectrum[finite]))
+        else:
+            err_value = np.nan
+
+        time_value = float(np.asarray(time_value, dtype=float))
+        if not np.isfinite(time_value):
+            continue
+
+        time_values.append(time_value)
+        flux_values.append(flux_value)
+        err_values.append(err_value)
+
+    if not time_values:
+        return None
+
+    flux_array = np.asarray(flux_values, dtype=float)
+    err_array = np.asarray(err_values, dtype=float)
+    valid_err = np.isfinite(err_array) & (err_array > 0)
+    fallback_err = (
+        np.nanmedian(err_array[valid_err]) if np.any(valid_err) else 0.0
+    )
+    if not np.isfinite(fallback_err) or fallback_err <= 0:
+        fallback_err = np.nanstd(flux_array)
+    if not np.isfinite(fallback_err) or fallback_err <= 0:
+        fallback_err = 1e-6
+    err_array[~valid_err] = fallback_err
+
+    return {
+        'visit_index': int(visit_id),
+        'time': np.asarray(time_values, dtype=float),
+        'flux': flux_array,
+        'err': err_array,
+        'detrended': flux_array.copy(),
+    }
+
+
+def _jwst_cadence_times(planet_data, priors=None, planet=None):
+    times = planet_data.get('time')
+    if times is not None:
+        return times
+
+    phase = planet_data.get('phase')
+    if phase is None or priors is None or planet not in priors:
+        return []
+
+    planet_priors = priors[planet]
+    if 'period' not in planet_priors or 't0' not in planet_priors:
+        return []
+
+    return np.asarray(phase, dtype=float) * float(
+        planet_priors['period']
+    ) + float(planet_priors['t0'])
+
+
+def _adapt_jwst_normalization_planet(planet_data, priors=None, planet=None):
+    if not _looks_like_jwst_normalization_planet(planet_data):
+        return planet_data
+
+    grouped_rows = {}
+    visits = planet_data.get('visits', [])
+    times = _jwst_cadence_times(
+        planet_data,
+        priors=priors,
+        planet=planet,
+    )
+    spectra = planet_data.get('nspec', [])
+    for idx, (visit_value, time_value, spectrum) in enumerate(
+        zip(visits, times, spectra)
+    ):
+        visit_id = _coerce_visit_id(visit_value, idx)
+        grouped_rows.setdefault(visit_id, []).append((time_value, spectrum))
+
+    adapted_visits = []
+    for visit_id, cadence_rows in grouped_rows.items():
+        visit_data = _collapse_jwst_visit(visit_id, cadence_rows)
+        if visit_data is not None:
+            adapted_visits.append(visit_data)
+    return adapted_visits
+
+
+def _adapt_jwst_normalization_input(whitelight, priors=None):
+    if not _is_mapping_like(whitelight):
+        return whitelight
+
+    if not any(
+        _looks_like_jwst_normalization_planet(planet_data)
+        for planet_data in whitelight.values()
+    ):
+        return whitelight
+
+    adapted = {}
+    for planet, planet_data in whitelight.items():
+        if not _looks_like_jwst_normalization_planet(planet_data):
+            continue
+
+        adapted[planet] = _adapt_jwst_normalization_planet(
+            planet_data,
+            priors=priors,
+            planet=planet,
+        )
+
+    return adapted
 
 
 def _normalize_priors(fin):
@@ -347,6 +514,13 @@ def _sanitize_label(label):
 def _ensure_directory(path):
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def _visit_index_label(thisvisit, default_idx):
+    try:
+        return int(thisvisit.get('visit_index', default_idx))
+    except (AttributeError, TypeError, ValueError):
+        return int(default_idx)
 
 
 def _write_text_file(path, lines):
@@ -730,7 +904,6 @@ def _compute_observation_segments(
 ):
     times = _as_numpy(time_values).astype(float)
     times = times[np.isfinite(times)]
-    # if not times:
     if len(times) == 0:
         return [], [], {}
 
@@ -1006,12 +1179,13 @@ def calculate_flare_frequency(whitelight, flare_results):
     observation_rows = []
     for planet, visits_list in whitelight_data.items():
         for visit_idx, thisvisit in enumerate(visits_list):
+            visit_label = _visit_index_label(thisvisit, visit_idx)
             segments, _, _ = _compute_observation_segments(thisvisit['time'])
             for segment in segments:
                 observation_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         'segment_index': segment['segment_index'],
                         'segment_start_raw': segment['start'],
                         'segment_end_raw': segment['end'],
@@ -1058,12 +1232,13 @@ def _export_results_bundle(
     visit_rows = []
     for planet, visits_list in whitelight_data.items():
         for visit_idx, thisvisit in enumerate(visits_list):
-            visit_result = result_lookup.get((planet, visit_idx), {})
+            visit_label = _visit_index_label(thisvisit, visit_idx)
+            visit_result = result_lookup.get((planet, visit_label), {})
             visit_dir = _ensure_directory(
                 os.path.join(
                     results_dir,
                     _sanitize_label(planet),
-                    f'visit_{visit_idx:02d}',
+                    f'visit_{visit_label:02d}',
                 )
             )
             visit_row, segments, gaps = _write_visit_summary_files(
@@ -1071,7 +1246,7 @@ def _export_results_bundle(
                 target_name=target_name,
                 fltr=fltr,
                 planet=planet,
-                visit_idx=visit_idx,
+                visit_idx=visit_label,
                 visit_result=visit_result,
                 time_values=thisvisit['time'],
                 c_bol=metadata.get('c_bol'),
@@ -1082,7 +1257,7 @@ def _export_results_bundle(
                 observation_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         'segment_index': segment['segment_index'],
                         'segment_start_raw': segment['start'],
                         'segment_end_raw': segment['end'],
@@ -1098,7 +1273,7 @@ def _export_results_bundle(
                 gap_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         **gap,
                     }
                 )
@@ -1340,10 +1515,10 @@ def detect_flares(
     verbose=False,
 ):
     '''
-    Detect and characterize flares in Spitzer phase-curve white-light data.
+    Detect and characterize flares in white-light visit data.
     '''
-    whitelight_data = _normalize_whitelight(whitelight)
     priors = _normalize_priors(fin)
+    whitelight_data = _normalize_whitelight(whitelight, priors=priors)
     target_name = _coerce_target_name(target, whitelight)
     if results_dir is not None:
         results_dir = _ensure_directory(results_dir)
@@ -1431,24 +1606,31 @@ def detect_flares(
     example_plots_attached = False
 
     for planet, visits_list in whitelight_data.items():
+        visits_list = _adapt_jwst_normalization_planet(visits_list)
+        whitelight_data[planet] = visits_list
         out['data'][planet] = []
         results[planet] = []
 
         for idx, thisvisit in enumerate(visits_list):
+            visit_label = _visit_index_label(thisvisit, idx)
             if verbose:
                 print('-----------------------------------------------------')
-                print(f'Planet {planet} visit {idx} in {target_name} ({fltr})')
+                print(
+                    f'Planet {planet} visit {visit_label} in {target_name} ({fltr})'
+                )
                 print('-----------------------------------------------------')
 
             visit_output_dir = None
             visit_artifacts = []
             if results_dir is not None:
-                visit_output_dir = _visit_output_dir(results_dir, planet, idx)
+                visit_output_dir = _visit_output_dir(
+                    results_dir, planet, visit_label
+                )
                 if resume_completed and not force_rerun:
                     completed_visit_result = _load_completed_visit_result(
                         visit_output_dir,
                         planet,
-                        idx,
+                        visit_label,
                     )
                     if completed_visit_result is not None:
                         results[planet].append(completed_visit_result)
@@ -1465,7 +1647,7 @@ def detect_flares(
                         if verbose:
                             print(
                                 'Skipping '
-                                f'{planet} visit {idx}: found completed visit '
+                                f'{planet} visit {visit_label}: found completed visit '
                                 f'marker in {visit_output_dir}'
                             )
                         continue
@@ -1497,7 +1679,7 @@ def detect_flares(
                 med = np.asarray(flcd.it_med)
 
                 visit_transits = np.asarray(
-                    transits.get(planet, {}).get(idx, []),
+                    transits.get(planet, {}).get(visit_label, []),
                     dtype=float,
                 )
                 if visit_transits.size:
@@ -1521,7 +1703,7 @@ def detect_flares(
                 for start, stop in zip(flares['tstart'], flares['tstop']):
                     fig2_ax.axvspan(start, stop, color='green', alpha=0.3)
                 fig2_ax.set_title(
-                    f'Light Curve for {target_name} {planet} visit {idx} ({fltr})'
+                    f'Light Curve for {target_name} {planet} visit {visit_label} ({fltr})'
                 )
                 fig2_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                 fig2_ax.set_ylabel('Relative Flux')
@@ -1549,7 +1731,7 @@ def detect_flares(
                 plt.close(fig2)
                 if verbose:
                     print(
-                        f'Detected {nflares} flare(s) for {planet} visit {idx}'
+                        f'Detected {nflares} flare(s) for {planet} visit {visit_label}'
                     )
 
                 for index, (start, stop) in enumerate(
@@ -1588,7 +1770,7 @@ def detect_flares(
                         label=f'Flare {index}',
                     )
                     thres_ax.set_title(
-                        f'Flare {index} in {target_name} {planet} visit {idx}'
+                        f'Flare {index} in {target_name} {planet} visit {visit_label}'
                     )
                     thres_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                     thres_ax.set_ylabel('Raw Relative Flux')
@@ -1659,7 +1841,7 @@ def detect_flares(
                             stop,
                             color='gray',
                             alpha=0.3,
-                            label=f'{planet}{idx}.{index}',
+                            label=f'{planet}{visit_label}.{index}',
                         )
                         aggregate_flare_count += 1
 
@@ -1796,7 +1978,7 @@ def detect_flares(
                     flare_output_results.append(flare_output_data)
 
                 visit_result = {
-                    'visit': idx,
+                    'visit': visit_label,
                     'n_flares': nflares,
                     'flares': flare_results,
                 }
@@ -1817,7 +1999,7 @@ def detect_flares(
                         target_name=target_name,
                         fltr=fltr,
                         planet=planet,
-                        visit_idx=idx,
+                        visit_idx=visit_label,
                         visit_result=visit_result,
                         time_values=thisvisit['time'],
                         c_bol=c_bol,
@@ -1847,7 +2029,7 @@ def detect_flares(
                     idx,
                 )
                 error_result = {
-                    'visit': idx,
+                    'visit': visit_label,
                     'n_flares': 0,
                     'flares': [],
                     'error': str(exc),
@@ -1856,7 +2038,7 @@ def detect_flares(
                 out['data'][planet].append(error_result)
                 if verbose:
                     print(
-                        f'Visit {planet} {idx} failed after partial processing: '
+                        f'Visit {planet} {visit_label} failed after partial processing: '
                         f'{exc}'
                     )
                     print()
