@@ -212,6 +212,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     atomlist = runtime_params.atomlist
 
     fontsize = 20
+    Nplots = 10  # number of temps/pressures to plot cross-sections for
+    temperatureColors = plt.colormaps['magma']
+    pressureColors = plt.colormaps['PuBuGn']
 
     cs = False
     planet_letters = []
@@ -334,9 +337,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
             for temp in haha[Tselect]:
@@ -344,6 +345,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
                     np.array(library[myexomol]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -444,12 +446,10 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
             haha = list(set(library[mycia]['T']))
             haha = np.sort(np.array(haha))
             # haha = haha[::-1]
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
             for temp in haha[Tselect]:
@@ -457,6 +457,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
                     np.array(library[mycia]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -464,7 +465,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(mycia + ' (EXOMOL)', fontsize=fontsize + 4)
+            plt.title(mycia + ' (CIA)', fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel(
                 'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]',
@@ -639,9 +640,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
             for temp in haha[Tselect]:
@@ -649,14 +648,15 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
                     np.array(library[ks]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
-            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
             maxsigma = np.max(library[ks]['I'])
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
             plt.tick_params(axis='both', labelsize=fontsize)
@@ -771,10 +771,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species as a function of T
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
             Tselect = np.round(
-                np.linspace(0, len(temperatures) - 1, Ntemps)
+                np.linspace(0, len(temperatures) - 1, Nplots)
             ).astype(int)
             for itemp, temp in zip(Tselect, temperatures[Tselect]):
                 # choose one pressure value to plot bunch of temperatures
@@ -783,6 +781,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
+                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
                     label=str(int(temp)) + ' K',
                 )
             maxsigma = np.max(sigma)
@@ -812,10 +811,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species as a function of P
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the pressure array
-            # there are 10 different default colors, so let's plot 10
-            Npressures = 10
             Pselect = np.round(
-                np.linspace(0, len(pressures) - 1, Npressures)
+                np.linspace(0, len(pressures) - 1, Nplots)
             ).astype(int)
             for ipress, press in zip(Pselect, pressures[Pselect]):
                 # choose one temperature value; plot a bunch of pressures
@@ -824,6 +821,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
+                    color=pressureColors(0.8 * (len(pressures) - ipress) / (len(pressures) - 1)),
                     label=f'{press:1.1e} bar',
                 )
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
