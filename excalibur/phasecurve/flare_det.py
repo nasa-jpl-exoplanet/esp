@@ -349,6 +349,13 @@ def _ensure_directory(path):
     return path
 
 
+def _visit_index_label(thisvisit, default_idx):
+    try:
+        return int(thisvisit.get('visit_index', default_idx))
+    except (AttributeError, TypeError, ValueError):
+        return int(default_idx)
+
+
 def _write_text_file(path, lines):
     text = lines if isinstance(lines, str) else '\n'.join(lines)
     if text and not text.endswith('\n'):
@@ -1006,12 +1013,13 @@ def calculate_flare_frequency(whitelight, flare_results):
     observation_rows = []
     for planet, visits_list in whitelight_data.items():
         for visit_idx, thisvisit in enumerate(visits_list):
+            visit_label = _visit_index_label(thisvisit, visit_idx)
             segments, _, _ = _compute_observation_segments(thisvisit['time'])
             for segment in segments:
                 observation_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         'segment_index': segment['segment_index'],
                         'segment_start_raw': segment['start'],
                         'segment_end_raw': segment['end'],
@@ -1058,12 +1066,13 @@ def _export_results_bundle(
     visit_rows = []
     for planet, visits_list in whitelight_data.items():
         for visit_idx, thisvisit in enumerate(visits_list):
-            visit_result = result_lookup.get((planet, visit_idx), {})
+            visit_label = _visit_index_label(thisvisit, visit_idx)
+            visit_result = result_lookup.get((planet, visit_label), {})
             visit_dir = _ensure_directory(
                 os.path.join(
                     results_dir,
                     _sanitize_label(planet),
-                    f'visit_{visit_idx:02d}',
+                    f'visit_{visit_label:02d}',
                 )
             )
             visit_row, segments, gaps = _write_visit_summary_files(
@@ -1071,7 +1080,7 @@ def _export_results_bundle(
                 target_name=target_name,
                 fltr=fltr,
                 planet=planet,
-                visit_idx=visit_idx,
+                visit_idx=visit_label,
                 visit_result=visit_result,
                 time_values=thisvisit['time'],
                 c_bol=metadata.get('c_bol'),
@@ -1082,7 +1091,7 @@ def _export_results_bundle(
                 observation_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         'segment_index': segment['segment_index'],
                         'segment_start_raw': segment['start'],
                         'segment_end_raw': segment['end'],
@@ -1098,7 +1107,7 @@ def _export_results_bundle(
                 gap_rows.append(
                     {
                         'planet': planet,
-                        'visit': visit_idx,
+                        'visit': visit_label,
                         **gap,
                     }
                 )
@@ -1435,20 +1444,25 @@ def detect_flares(
         results[planet] = []
 
         for idx, thisvisit in enumerate(visits_list):
+            visit_label = _visit_index_label(thisvisit, idx)
             if verbose:
                 print('-----------------------------------------------------')
-                print(f'Planet {planet} visit {idx} in {target_name} ({fltr})')
+                print(
+                    f'Planet {planet} visit {visit_label} in {target_name} ({fltr})'
+                )
                 print('-----------------------------------------------------')
 
             visit_output_dir = None
             visit_artifacts = []
             if results_dir is not None:
-                visit_output_dir = _visit_output_dir(results_dir, planet, idx)
+                visit_output_dir = _visit_output_dir(
+                    results_dir, planet, visit_label
+                )
                 if resume_completed and not force_rerun:
                     completed_visit_result = _load_completed_visit_result(
                         visit_output_dir,
                         planet,
-                        idx,
+                        visit_label,
                     )
                     if completed_visit_result is not None:
                         results[planet].append(completed_visit_result)
@@ -1465,7 +1479,7 @@ def detect_flares(
                         if verbose:
                             print(
                                 'Skipping '
-                                f'{planet} visit {idx}: found completed visit '
+                                f'{planet} visit {visit_label}: found completed visit '
                                 f'marker in {visit_output_dir}'
                             )
                         continue
@@ -1521,7 +1535,7 @@ def detect_flares(
                 for start, stop in zip(flares['tstart'], flares['tstop']):
                     fig2_ax.axvspan(start, stop, color='green', alpha=0.3)
                 fig2_ax.set_title(
-                    f'Light Curve for {target_name} {planet} visit {idx} ({fltr})'
+                    f'Light Curve for {target_name} {planet} visit {visit_label} ({fltr})'
                 )
                 fig2_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                 fig2_ax.set_ylabel('Relative Flux')
@@ -1549,7 +1563,7 @@ def detect_flares(
                 plt.close(fig2)
                 if verbose:
                     print(
-                        f'Detected {nflares} flare(s) for {planet} visit {idx}'
+                        f'Detected {nflares} flare(s) for {planet} visit {visit_label}'
                     )
 
                 for index, (start, stop) in enumerate(
@@ -1588,7 +1602,7 @@ def detect_flares(
                         label=f'Flare {index}',
                     )
                     thres_ax.set_title(
-                        f'Flare {index} in {target_name} {planet} visit {idx}'
+                        f'Flare {index} in {target_name} {planet} visit {visit_label}'
                     )
                     thres_ax.set_xlabel(f'Time - {thisvisit["time"][0]} [days]')
                     thres_ax.set_ylabel('Raw Relative Flux')
@@ -1659,7 +1673,7 @@ def detect_flares(
                             stop,
                             color='gray',
                             alpha=0.3,
-                            label=f'{planet}{idx}.{index}',
+                            label=f'{planet}{visit_label}.{index}',
                         )
                         aggregate_flare_count += 1
 
@@ -1796,7 +1810,7 @@ def detect_flares(
                     flare_output_results.append(flare_output_data)
 
                 visit_result = {
-                    'visit': idx,
+                    'visit': visit_label,
                     'n_flares': nflares,
                     'flares': flare_results,
                 }
@@ -1817,7 +1831,7 @@ def detect_flares(
                         target_name=target_name,
                         fltr=fltr,
                         planet=planet,
-                        visit_idx=idx,
+                        visit_idx=visit_label,
                         visit_result=visit_result,
                         time_values=thisvisit['time'],
                         c_bol=c_bol,
@@ -1847,7 +1861,7 @@ def detect_flares(
                     idx,
                 )
                 error_result = {
-                    'visit': idx,
+                    'visit': visit_label,
                     'n_flares': 0,
                     'flares': [],
                     'error': str(exc),
@@ -1856,7 +1870,7 @@ def detect_flares(
                 out['data'][planet].append(error_result)
                 if verbose:
                     print(
-                        f'Visit {planet} {idx} failed after partial processing: '
+                        f'Visit {planet} {visit_label} failed after partial processing: '
                         f'{exc}'
                     )
                     print()
