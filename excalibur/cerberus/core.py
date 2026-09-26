@@ -340,7 +340,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerature(haha[Tselect]):
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
@@ -452,7 +452,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerature(haha[Tselect]):
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[mycia]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
@@ -643,7 +643,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerature(haha[Tselect]):
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[ks]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
