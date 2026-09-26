@@ -349,6 +349,10 @@ class crbFM:
             / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
         )  # [m]
 
+        # some trouble with cold (<300 K) planets.  deal with NaNs
+        badHs = np.where(~np.isfinite(Hs))
+        Hs[badHs] = 0
+
         # when the Pressure grid is log-spaced, rdz is a constant
         #  drop dz[] and dzprime[] arrays and just use this constant instead
         dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
@@ -632,10 +636,6 @@ def gettau(
     )
     dlarray = dl - dl0
 
-    # print('dlarray shape', dlarray.shape)
-    # print('dlarray[0]', dlarray[0])
-    # print('dlarray[-1]', dlarray[-1])
-
     top_rho = rho[-1]
     # bottom_rho = rho[0]
     # rp0 is in units of meters.  z,dz also
@@ -776,8 +776,9 @@ def gettau(
             tau_by_molecule[elem] = (rho * mmr * sigma).T
 
             # for a few targets there is some NaN trouble for trace species
+            # e.g. TOI-715 with Teq~=235K
             # these NaN's should be zero
-            badtau = np.where(np.isnan(tau_by_molecule[elem]))
+            badtau = np.where(~np.isfinite(tau_by_molecule[elem]))
             tau_by_molecule[elem][badtau] = 0
 
             tau = tau + tau_by_molecule[elem]
@@ -787,6 +788,8 @@ def gettau(
             toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
             # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
             # print('toptau shape', toptau_by_molecule[elem].shape) #103
+            badtau = np.where(~np.isfinite(toptau_by_molecule[elem]))
+            toptau_by_molecule[elem][badtau] = 0
 
             if extendedBoundaryCondition:
                 # analytictau = analyticIntegral * rho * top_mmr * top_sigma
@@ -805,6 +808,9 @@ def gettau(
                     * sigma.T[49, :][np.newaxis, :]
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
+
+                badtau = np.where(~np.isfinite(analytictau_by_molecule[elem]))
+                analytictau_by_molecule[elem][badtau] = 0
             pass
         pass
 
@@ -844,8 +850,13 @@ def gettau(
         top_f1 = np.array(f1)[-1]
         top_f2 = np.array(f2)[-1]
         toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
+        badtau = np.where(~np.isfinite(toptau_by_molecule[cia]))
+        toptau_by_molecule[cia][badtau] = 0
 
         tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
+        badtau = np.where(~np.isfinite(tau_by_molecule[cia]))
+        tau_by_molecule[cia][badtau] = 0
+
         tau = tau + tau_by_molecule[cia]
         pass
 
@@ -857,8 +868,13 @@ def gettau(
 
     top_fH2 = np.array(fH2)[-1]
     toptau_by_molecule['rayleigh'] = top_fH2 * top_rho * sigma
+    badtau = np.where(~np.isfinite(toptau_by_molecule['rayleigh']))
+    toptau_by_molecule['rayleigh'][badtau] = 0
 
     tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
+    badtau = np.where(~np.isfinite(tau_by_molecule['rayleigh']))
+    tau_by_molecule['rayleigh'][badtau] = 0
+
     tau = tau + tau_by_molecule['rayleigh']
 
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
