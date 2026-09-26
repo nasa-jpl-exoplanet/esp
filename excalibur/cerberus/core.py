@@ -340,12 +340,12 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerature(haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
                     np.array(library[myexomol]['I'])[select],
-                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -452,12 +452,12 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerature(haha[Tselect]):
                 select = np.array(library[mycia]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
                     np.array(library[mycia]['I'])[select],
-                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -643,12 +643,12 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerature(haha[Tselect]):
                 select = np.array(library[ks]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
                     np.array(library[ks]['I'])[select],
-                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -781,7 +781,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
-                    color=temperatureColors(0.9 * itemp / (len(temperatures) - 1)),
+                    color=temperatureColors(
+                        0.9 * itemp / (len(temperatures) - 1)
+                    ),
                     label=str(int(temp)) + ' K',
                 )
             maxsigma = np.max(sigma)
@@ -821,7 +823,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
-                    color=pressureColors(0.8 * (len(pressures) - ipress) / (len(pressures) - 1)),
+                    color=pressureColors(
+                        0.8 * (len(pressures) - ipress) / (len(pressures) - 1)
+                    ),
                     label=f'{press:1.1e} bar',
                 )
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
