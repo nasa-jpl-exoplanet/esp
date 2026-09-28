@@ -12,17 +12,18 @@ import dawgie.context
 import logging
 
 import excalibur
-import excalibur.system as sys
+
+# import excalibur.system as sys  # uncomment imports after reverting previous()
+# import excalibur.ancillary as anc
+# import excalibur.transit as trn
+# from excalibur import ariel
+# import excalibur.cerberus as crb
 import excalibur.system.algorithms as sysalg
-import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
-import excalibur.transit as trn
 import excalibur.transit.algorithms as trnalg
-from excalibur import ariel
 import excalibur.ariel.algorithms as arielalg
-import excalibur.cerberus as crb
 import excalibur.cerberus.algorithms as crbalg
 import excalibur.cerberus.core as crbcore
 import excalibur.gemli.core as gemlicore
@@ -66,14 +67,15 @@ class MLfit(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: gemli.atmos'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(anc.task, self.__anc),
-            dawgie.ALG_REF(crb.task, self.__xsl),
-            dawgie.ALG_REF(crb.task, self.__atm),
-            dawgie.ALG_REF(trn.task, self.__spc),
-            dawgie.ALG_REF(ariel.task, self.__arielsim),
-        ] + self.__rt.refs_for_proceed()
+        return []
+        # return [
+        #    dawgie.ALG_REF(sys.task, self.__fin),
+        #    dawgie.ALG_REF(anc.task, self.__anc),
+        #    dawgie.ALG_REF(crb.task, self.__xsl),
+        #    dawgie.ALG_REF(crb.task, self.__atm),
+        #    dawgie.ALG_REF(trn.task, self.__spc),
+        #    dawgie.ALG_REF(ariel.task, self.__arielsim),
+        # ] + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: gemli.mlfit'''
@@ -321,6 +323,12 @@ class Analysis(dawgie.Analyzer):
                 runtime_params = crbcore.CerbAnalysisParams(
                     # tier=runtime['ariel_simspectrum_tier'].value(),
                     tier=2,
+                    onlyFitAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyFitAbove10MEarth'
+                    ],
+                    onlyPlotAbove10MEarth=runtime[
+                        'cerberus_plotters_onlyPlotAbove10MEarth'
+                    ],
                     boundTeq=runtime['cerberus_atmos_bounds_Teq'],
                     boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
                     boundMetallicity=runtime[
