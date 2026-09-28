@@ -212,6 +212,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
     atomlist = runtime_params.atomlist
 
     fontsize = 20
+    Nplots = 10  # number of temps/pressures to plot cross-sections for
+    temperatureColors = plt.colormaps['magma']
+    pressureColors = plt.colormaps['PuBuGn']
 
     cs = False
     planet_letters = []
@@ -334,16 +337,15 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
                     np.array(library[myexomol]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -444,19 +446,18 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
             haha = list(set(library[mycia]['T']))
             haha = np.sort(np.array(haha))
             # haha = haha[::-1]
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[mycia]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
                     np.array(library[mycia]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -464,7 +465,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
-            plt.title(mycia + ' (EXOMOL)', fontsize=fontsize + 4)
+            plt.title(mycia + ' (CIA)', fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel(
                 'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]',
@@ -639,24 +640,23 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Ntemps)).astype(
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for temp in haha[Tselect]:
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[ks]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
                     np.array(library[ks]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
                     label=str(int(temp)) + 'K',
                 )
                 pass
-            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
             maxsigma = np.max(library[ks]['I'])
             roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
             plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
             plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
             plt.tick_params(axis='both', labelsize=fontsize)
@@ -771,10 +771,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species as a function of T
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
-            # there are 10 different default colors, so let's plot 10
-            Ntemps = 10
             Tselect = np.round(
-                np.linspace(0, len(temperatures) - 1, Ntemps)
+                np.linspace(0, len(temperatures) - 1, Nplots)
             ).astype(int)
             for itemp, temp in zip(Tselect, temperatures[Tselect]):
                 # choose one pressure value to plot bunch of temperatures
@@ -783,6 +781,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
+                    color=temperatureColors(
+                        0.9 * itemp / (len(temperatures) - 1)
+                    ),
                     label=str(int(temp)) + ' K',
                 )
             maxsigma = np.max(sigma)
@@ -812,10 +813,8 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this species as a function of P
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the pressure array
-            # there are 10 different default colors, so let's plot 10
-            Npressures = 10
             Pselect = np.round(
-                np.linspace(0, len(pressures) - 1, Npressures)
+                np.linspace(0, len(pressures) - 1, Nplots)
             ).astype(int)
             for ipress, press in zip(Pselect, pressures[Pselect]):
                 # choose one temperature value; plot a bunch of pressures
@@ -824,6 +823,9 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 plt.semilogy(
                     wgrid,
                     sigma[:, ipress, itemp],
+                    color=pressureColors(
+                        0.8 * (len(pressures) - ipress) / (len(pressures) - 1)
+                    ),
                     label=f'{press:1.1e} bar',
                 )
             plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
@@ -2350,7 +2352,8 @@ def results(
                 else:
                     prior_ranges = {}
 
-                fit_cloud_parameters = 'CTP' in all_keys
+                fit_CTP = 'CTP' in all_keys
+                fit_haze = 'HScale' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
                 fit_n_to_o = '[N/O]' in all_keys
                 fit_s_to_o = '[S/O]' in all_keys
@@ -2426,22 +2429,27 @@ def results(
                     mdptrace_profiled.append(
                         atm[p][model_name]['MCTRACE'][key][keepers]
                     )
-                if fit_cloud_parameters:
+                if fit_CTP:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
-                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    hazescale = np.median(hazescaletrace)
-                    hazeloc = np.median(hazeloctrace)
-                    hazethick = np.median(hazethicktrace)
                     # print('fit results; CTP:', ctp)
-                    # print('fit results; HScale:', hazescale)
-                    # print('fit results; HLoc:', hazeloc)
-                    # print('fit results; HThick:', hazethick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
+                    ctp_profiled = np.median(ctptrace_profiled)
+                else:
+                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
+                    ctp_profiled = ctp
+                if fit_haze:
+                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
+                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
+                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    hazescale = np.median(hazescaletrace)
+                    hazeloc = np.median(hazeloctrace)
+                    hazethick = np.median(hazethicktrace)
+                    # print('fit results; HScale:', hazescale)
+                    # print('fit results; HLoc:', hazeloc)
+                    # print('fit results; HThick:', hazethick)
                     hazescaletrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HScale'
                     ][keepers]
@@ -2451,16 +2459,13 @@ def results(
                     hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
-                    ctp_profiled = np.median(ctptrace_profiled)
                     hazescale_profiled = np.median(hazescaletrace_profiled)
                     hazeloc_profiled = np.median(hazeloctrace_profiled)
                     hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
-                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
                     hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     hazeloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
                     hazethick = atm[p]['TRUTH_MODELPARAMS']['HThick']
-                    ctp_profiled = ctp
                     hazescale_profiled = hazescale
                     hazeloc_profiled = hazeloc
                     hazethick_profiled = hazethick
@@ -2691,8 +2696,9 @@ def results(
                     for _ in range(runtime_params.nrandomwalkers):
                         iwalker = int(nwalkersteps * np.random.rand())
 
-                        if fit_cloud_parameters:
+                        if fit_CTP:
                             ctp = ctptrace[iwalker]
+                        if fit_haze:
                             hazescale = hazescaletrace[iwalker]
                             hazeloc = hazeloctrace[iwalker]
                             hazethick = hazethicktrace[iwalker]
@@ -3333,6 +3339,8 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
         # plot analysis of the results.  save as png and as state vector for states/view
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
+        fit_t_plot = False
+        fit_metalplot = False
         fit_co_plot = False
         fit_no_plot = False
         if 'sim' in filt:
@@ -3349,8 +3357,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 verbose=verbose,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fits-vs-truths not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
@@ -3366,8 +3378,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 saveDir=save_dir,
                 verbose=verbose,
             )
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fit-uncertainties not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
@@ -3400,8 +3416,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         out['data']['values'] = dict(fit_values)
         out['data']['errors'] = dict(fit_errors)
         out['data']['plot_mass_v_metals'] = mass_metals_plot
-        out['data']['plot_fitT'] = fit_t_plot
-        out['data']['plot_fitMetal'] = fit_metalplot
+        if fit_t_plot:
+            out['data']['plot_fitT'] = fit_t_plot
+        if fit_metalplot:
+            out['data']['plot_fitMetal'] = fit_metalplot
         if fit_co_plot:
             out['data']['plot_fitCO'] = fit_co_plot
         if fit_no_plot:
