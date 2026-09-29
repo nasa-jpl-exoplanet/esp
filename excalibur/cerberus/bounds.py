@@ -27,16 +27,25 @@ def set_prior_bound(eqtemp, runtime):
     # print('          boundsTeq',runtime['cerberus_atmos_bounds_boundTeq'].hi)
     # print('          boundsTeq',runtime['cerberus_atmos_bounds_boundTeq'].lo)
     #
-    if runtime['cerberus_atmos_bounds_boundTeq'].lo != 0.75 or runtime['cerberus_atmos_bounds_boundTeq'].hi != 1.5:
+    if (
+        runtime['cerberus_atmos_bounds_boundTeq'].lo != 0.75
+        or runtime['cerberus_atmos_bounds_boundTeq'].hi != 1.5
+    ):
         log.info('--< Non-standard prior range for Teq >--')
     # if (
     #    runtime['cerberus_atmos_bounds_boundAbundances'].lo != -6
     #    or runtime['cerberus_atmos_bounds_boundAbundances'].hi != 6
     # ):
     #    log.info('--< Non-standard prior range for abundances >--')
-    if runtime['cerberus_atmos_bounds_boundCTP'].lo != -6 or runtime['cerberus_atmos_bounds_boundCTP'].hi != 1:
+    if (
+        runtime['cerberus_atmos_bounds_boundCTP'].lo != -6
+        or runtime['cerberus_atmos_bounds_boundCTP'].hi != 1
+    ):
         log.info('--< Non-standard prior range for CTP >--')
-    if runtime['cerberus_atmos_bounds_boundHLoc'].lo != -6 or runtime['cerberus_atmos_bounds_boundHLoc'].hi != 1:
+    if (
+        runtime['cerberus_atmos_bounds_boundHLoc'].lo != -6
+        or runtime['cerberus_atmos_bounds_boundHLoc'].hi != 1
+    ):
         log.info('--< Non-standard prior range for HLoc >--')
     if (
         runtime['cerberus_atmos_bounds_boundHScale'].lo != -6
@@ -235,9 +244,7 @@ def apply_profiling(target, limits, alltraces, allkeys):
     return profile_mask, applied_limits
 
 
-def add_priors(
-    nodes, nodeshape, prior_range_table, runtime, model, modparlbls
-):
+def add_priors(nodes, nodeshape, prior_range_table, runtime, model, modparlbls):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
     '''

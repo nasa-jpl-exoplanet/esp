@@ -2610,7 +2610,9 @@ def results(
 
                     nwalkersteps = len(np.array(mdptrace)[0, :])
                     # print('# of walker steps', nwalkersteps)
-                    for _ in range(runtime['cerberus_results_nrandomwalkers'].value()):
+                    for _ in range(
+                        runtime['cerberus_results_nrandomwalkers'].value()
+                    ):
                         iwalker = int(nwalkersteps * np.random.rand())
 
                         if fit_CTP:

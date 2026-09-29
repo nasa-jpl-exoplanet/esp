@@ -195,9 +195,7 @@ class XSLib(dawgie.Algorithm):
 
     def _xslib(self, spc, runtime, index):
         '''Core code call'''
-        cs = crbcore.myxsecs(
-            spc, runtime, self.__out[index], verbose=False
-        )
+        cs = crbcore.myxsecs(spc, runtime, self.__out[index], verbose=False)
         return cs
 
     @staticmethod

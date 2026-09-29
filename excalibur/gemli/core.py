@@ -399,7 +399,9 @@ def mlfit(
                 hzlib=crbhzlib,
                 chemistry='TEC',
                 planet=p,
-                hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                hitemplist=runtime[
+                    'cerberus_crbmodel_HITEMPmolecules'
+                ].molecules,
                 cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
                 xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
                 atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
@@ -437,13 +439,13 @@ def mlfit(
             # get the true mixing ratio values, for comparison
             pgrid = np.exp(
                 np.arange(
-                    np.log(runtime['cerberus_crbmodel_solrad'].value()) -
-                    runtime['cerberus_crbmodel_Hsmax'].value(),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    - runtime['cerberus_crbmodel_Hsmax'].value(),
                     np.log(runtime['cerberus_crbmodel_solrad'].value())
                     + runtime['cerberus_crbmodel_Hsmax'].value()
                     / runtime['cerberus_crbmodel_nlevels'].value(),
-                    runtime['cerberus_crbmodel_Hsmax'].value() /
-                    (runtime['cerberus_crbmodel_nlevels'].value() - 1),
+                    runtime['cerberus_crbmodel_Hsmax'].value()
+                    / (runtime['cerberus_crbmodel_nlevels'].value() - 1),
                 )
             )
             pressure = pgrid[::-1]
@@ -767,9 +769,15 @@ def mlfit(
                     hzlib=crbhzlib,
                     chemistry='TEC',
                     planet=p,
-                    hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
-                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                    hitemplist=runtime[
+                        'cerberus_crbmodel_HITEMPmolecules'
+                    ].molecules,
+                    cialist=runtime[
+                        'cerberus_crbmodel_HITRANmolecules'
+                    ].molecules,
+                    xmollist=runtime[
+                        'cerberus_crbmodel_EXOMOLmolecules'
+                    ].molecules,
                     atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                     nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                     Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
@@ -799,7 +807,8 @@ def mlfit(
                 for char in trgt + ' ' + p:
                     int_from_target = (
                         runtime['cerberus_results_randomseed'].value()
-                        * int_from_target + ord(char)
+                        * int_from_target
+                        + ord(char)
                     ) % 100000
                 np.random.seed(int_from_target)
 
@@ -809,7 +818,9 @@ def mlfit(
                 spectrumarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
-                for _ in range(runtime['cerberus_results_nrandomwalkers'].value()):
+                for _ in range(
+                    runtime['cerberus_results_nrandomwalkers'].value()
+                ):
                     iwalker = int(nwalkersteps * np.random.rand())
 
                     if fit_cloud_parameters:
@@ -891,9 +902,15 @@ def mlfit(
                         chemistry='TEC',
                         cheq=tceqdict,
                         planet=p,
-                        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
-                        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                        hitemplist=runtime[
+                            'cerberus_crbmodel_HITEMPmolecules'
+                        ].molecules,
+                        cialist=runtime[
+                            'cerberus_crbmodel_HITRANmolecules'
+                        ].molecules,
+                        xmollist=runtime[
+                            'cerberus_crbmodel_EXOMOLmolecules'
+                        ].molecules,
                         atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
                         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
                         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),

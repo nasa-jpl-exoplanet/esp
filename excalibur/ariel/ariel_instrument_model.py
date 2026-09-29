@@ -41,8 +41,8 @@ def calculate_ariel_instrument(
     number of observed transits is taken into account later
     '''
     tier = runtime['ariel_simspectrum_tier'].value()
-    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals']
-    chachan=runtime['ariel_simspectrum_chachanMassMetals']
+    thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
+    chachan = runtime['ariel_simspectrum_chachanMassMetals']
 
     planet_letter = target[-1]
 
@@ -177,8 +177,8 @@ def load_arielrad_results(target, runtime):
     '''
     tier = runtime['ariel_simspectrum_tier'].value()
     # arielRad_version = runtime['ariel_simspectrum_arielRad'].value()  # not yet implemented
-    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals']
-    chachan=runtime['ariel_simspectrum_chachanMassMetals']
+    thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
+    chachan = runtime['ariel_simspectrum_chachanMassMetals']
 
     ariel_instrument = None
 
@@ -251,7 +251,7 @@ def load_ariel_instrument(target, runtime):
     number of observed transits is taken into account later
     '''
     tier = runtime['ariel_simspectrum_tier'].value()
-    arielRad_version = runtime['ariel_simspectrum_arielRad'].value()  
+    arielRad_version = runtime['ariel_simspectrum_arielRad'].value()
     thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
     chachan = runtime['ariel_simspectrum_chachanMassMetals']
 

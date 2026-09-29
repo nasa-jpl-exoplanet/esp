@@ -114,9 +114,7 @@ class XSLib(dawgie.Algorithm):
 
             if vspc and targetlistcheck:
                 log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
-                update = self._xslib(
-                    sv, runtime, only_these_planets, fltr
-                )
+                update = self._xslib(sv, runtime, only_these_planets, fltr)
             else:
                 if targetlistcheck:
                     errstr = [m for m in [sspc] if m is not None]
@@ -584,7 +582,7 @@ class Analysis(dawgie.Analyzer):
 
                 # this might actually work now that it's not a tuple
                 # if runtime['ariel_simspectrum_tier'].value() == None:
-                #    runtime['ariel_simspectrum_tier'].value() = 2  
+                #    runtime['ariel_simspectrum_tier'].value() = 2
                 # print('runtime', runtime)
 
                 log.info('--< CERBERUS ANALYSIS: %s  >--', fltr)
