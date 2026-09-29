@@ -72,7 +72,7 @@ def features_from_one_spectrum(fluxDepth, Rs, Mp):
 def mlfit(
     trgt,
     filt,
-    runtime_params,
+    runtime,
     sysfin,
     ancillary,
     cerbxsl,
@@ -399,13 +399,13 @@ def mlfit(
                 hzlib=crbhzlib,
                 chemistry='TEC',
                 planet=p,
-                hitemplist=runtime_params.hitemplist,
-                cialist=runtime_params.cialist,
-                xmollist=runtime_params.xmollist,
-                atomlist=runtime_params.atomlist,
-                nlevels=runtime_params.nlevels,
-                Hsmax=runtime_params.Hsmax,
-                solrad=runtime_params.solrad,
+                hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                solrad=runtime['cerberus_crbmodel_solrad'].value(),
             )
             simulated_spectrum = fmc.spectrum
 
@@ -437,10 +437,13 @@ def mlfit(
             # get the true mixing ratio values, for comparison
             pgrid = np.exp(
                 np.arange(
-                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                    np.log(runtime_params.solrad)
-                    + runtime_params.Hsmax / runtime_params.nlevels,
-                    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value()) -
+                    runtime['cerberus_crbmodel_Hsmax'].value(),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    + runtime['cerberus_crbmodel_Hsmax'].value()
+                    / runtime['cerberus_crbmodel_nlevels'].value(),
+                    runtime['cerberus_crbmodel_Hsmax'].value() /
+                    (runtime['cerberus_crbmodel_nlevels'].value() - 1),
                 )
             )
             pressure = pgrid[::-1]
@@ -764,13 +767,13 @@ def mlfit(
                     hzlib=crbhzlib,
                     chemistry='TEC',
                     planet=p,
-                    hitemplist=runtime_params.hitemplist,
-                    cialist=runtime_params.cialist,
-                    xmollist=runtime_params.xmollist,
-                    atomlist=runtime_params.atomlist,
-                    nlevels=runtime_params.nlevels,
-                    Hsmax=runtime_params.Hsmax,
-                    solrad=runtime_params.solrad,
+                    hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                    cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                    xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                    atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
                 )
                 spectrum = fmc.spectrum
 
@@ -795,7 +798,8 @@ def mlfit(
                 )
                 for char in trgt + ' ' + p:
                     int_from_target = (
-                        runtime_params.randomseed * int_from_target + ord(char)
+                        runtime['cerberus_results_randomseed'].value()
+                        * int_from_target + ord(char)
                     ) % 100000
                 np.random.seed(int_from_target)
 
@@ -805,7 +809,7 @@ def mlfit(
                 spectrumarray = []
                 nwalkersteps = len(np.array(mdptrace)[0, :])
                 # print('# of walker steps', nwalkersteps)
-                for _ in range(runtime_params.nrandomwalkers):
+                for _ in range(runtime['cerberus_results_nrandomwalkers'].value()):
                     iwalker = int(nwalkersteps * np.random.rand())
 
                     if fit_cloud_parameters:
@@ -817,7 +821,7 @@ def mlfit(
                         tpr = tprtrace[iwalker]
                     mdp = np.array(mdptrace)[:, iwalker]
                     # print('shape mdp',mdp.shape)
-                    # if runtime_params.fitCTP:
+                    # if runtime['cerberus_atmos_fitCTP']:
                     #    print('fit results; CTP:', ctp)
                     #    print('fit results; HScale:', hazescale)
                     #    print('fit results; HLoc:', hazeloc)
@@ -887,13 +891,13 @@ def mlfit(
                         chemistry='TEC',
                         cheq=tceqdict,
                         planet=p,
-                        hitemplist=runtime_params.hitemplist,
-                        cialist=runtime_params.cialist,
-                        xmollist=runtime_params.xmollist,
-                        atomlist=runtime_params.atomlist,
-                        nlevels=runtime_params.nlevels,
-                        Hsmax=runtime_params.Hsmax,
-                        solrad=runtime_params.solrad,
+                        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+                        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+                        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+                        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+                        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+                        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+                        solrad=runtime['cerberus_crbmodel_solrad'].value(),
                     )
                     spectrumrand = fmcrand.spectrum
                     # add offset to match data (i.e. modify Rp)
@@ -977,7 +981,7 @@ def mlfit(
                     model_name,
                     trgt,
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=runtime['cerberus_plotters_cornerBins'].value(),
                     saveDir=save_dir,
                 )
             out['target'].append(trgt)
@@ -993,7 +997,7 @@ def mlfit(
 # ---------------------------------- ---------------------------------
 
 
-def analysis(aspects, filt, runtime_params, out, verbose=False):
+def analysis(aspects, filt, runtime, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -1021,7 +1025,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        if runtime_params.tier == 2:
+        if runtime['ariel_simspectrum_tier'].value() == 2:
             #  *** Tier-2 (~259 planets) ***
             analysistargetlists.append(
                 {
@@ -1033,7 +1037,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 'planetlistname': '2-year science time (Tier-2); Chachan mmw',
                 'planets': alltargetlists['ariel_planets_tier2'],
             }
-        elif runtime_params.tier == 1:
+        elif runtime['ariel_simspectrum_tier'].value() == 1:
             #  *** Tier-1 (~626 planets) ***
             analysistargetlists.append(
                 {
@@ -1048,7 +1052,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         else:
             log.error(
                 'ERROR: unknown tier level for mass-metal plot %s',
-                runtime_params.tier,
+                runtime['ariel_simspectrum_tier'].value(),
             )
     else:
         analysistargetlists.append(

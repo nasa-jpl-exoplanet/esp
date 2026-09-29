@@ -47,7 +47,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
-from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 from scipy.interpolate import RegularGridInterpolator
 
@@ -58,89 +57,6 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbXSlibParams = namedtuple(
-    'cerberus_xslib_params_from_runtime',
-    [
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-    ],
-)
-
-CerbAtmosParams = namedtuple(
-    'cerberus_atmos_params_from_runtime',
-    [
-        'MCMC_chains',
-        'MCMC_chain_length',
-        'MCMC_sliceSampler',
-        'cornerBins',
-        'fitCTP',
-        'fitHaze',
-        'fitT',
-        'fitCtoO',
-        'fitNtoO',
-        'fitStoO',
-        'fitmolecules',
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'isothermal',
-        'boundTeq',
-        'boundAbundances',
-        'boundMetallicity',
-        'boundCtoO',
-        'boundNtoO',
-        'boundStoO',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
-
-CerbResultsParams = namedtuple(
-    'cerberus_results_params_from_runtime',
-    [
-        'nrandomwalkers',
-        'randomseed',
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'Hsmax',
-        'solrad',
-        'cornerBins',
-        'isothermal',
-    ],
-)
-
-CerbAnalysisParams = namedtuple(
-    'cerberus_analysis_params_from_runtime',
-    [
-        'tier',
-        'onlyFitAbove10MEarth',
-        'onlyPlotAbove10MEarth',
-        'boundTeq',
-        'boundAbundances',
-        'boundMetallicity',
-        'boundCtoO',
-        'boundNtoO',
-        'boundStoO',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
 
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
@@ -201,15 +117,15 @@ def myxsecsversion():
     return dawgie.VERSION(1, 1, 3)
 
 
-def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
+def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    hitemplist = runtime_params.hitemplist
-    cialist = runtime_params.cialist
-    xmollist = runtime_params.xmollist
-    atomlist = runtime_params.atomlist
+    hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
+    cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
+    xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
+    atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
     fontsize = 20
     Nplots = 10  # number of temps/pressures to plot cross-sections for
@@ -1751,7 +1667,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    bins=rtp.cornerBins,
+                    bins=rtp['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
                 )
                 plot_walker_evolution(
@@ -2113,7 +2029,7 @@ def resultsversion():
 
 def calculateSpectrum(
     fit_params,
-    runtime_params,
+    runtime,
     p,
     rp0,
     fin,
@@ -2147,13 +2063,13 @@ def calculateSpectrum(
         hzlib=crbhzlib,
         chemistry=chemistry,
         planet=p,
-        hitemplist=runtime_params.hitemplist,
-        cialist=runtime_params.cialist,
-        xmollist=runtime_params.xmollist,
-        atomlist=runtime_params.atomlist,
-        nlevels=runtime_params.nlevels,
-        Hsmax=runtime_params.Hsmax,
-        solrad=runtime_params.solrad,
+        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+        solrad=runtime['cerberus_crbmodel_solrad'].value(),
     )
     spectrum = fmc.spectrum
 
@@ -2177,7 +2093,7 @@ def calculateSpectrum(
 def results(
     trgt,
     filt,
-    runtime_params,
+    runtime,
     fin,
     anc,
     xsl,
@@ -2572,7 +2488,7 @@ def results(
                 # print('param_values median',param_values_median)
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
@@ -2594,7 +2510,7 @@ def results(
                 # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                 patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
@@ -2663,7 +2579,7 @@ def results(
                     # print('')
                     patmos_bestfit, chi2best = calculateSpectrum(
                         param_values_bestfit,
-                        runtime_params,
+                        runtime,
                         p,
                         rp0,
                         fin,
@@ -2682,7 +2598,8 @@ def results(
                     )
                     for char in trgt + ' ' + p:
                         int_from_target = (
-                            runtime_params.randomseed * int_from_target
+                            runtime['cerberus_results_randomseed'].value()
+                            * int_from_target
                             + ord(char)
                         ) % 100000
                     np.random.seed(int_from_target)
@@ -2693,7 +2610,7 @@ def results(
 
                     nwalkersteps = len(np.array(mdptrace)[0, :])
                     # print('# of walker steps', nwalkersteps)
-                    for _ in range(runtime_params.nrandomwalkers):
+                    for _ in range(runtime['cerberus_results_nrandomwalkers'].value()):
                         iwalker = int(nwalkersteps * np.random.rand())
 
                         if fit_CTP:
@@ -2706,7 +2623,7 @@ def results(
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
-                        # if runtime_params.fitCTP:
+                        # if runtime['cerberus_atmos_fitCTP']:
                         #    print('fit results; CTP:', ctp)
                         #    print('fit results; HScale:', hazescale)
                         #    print('fit results; HLoc:', hazeloc)
@@ -2772,7 +2689,7 @@ def results(
                         ]
                         patmos_modelrand, chi2modelrand = calculateSpectrum(
                             param_values_rand,
-                            runtime_params,
+                            runtime,
                             p,
                             rp0,
                             fin,
@@ -2951,7 +2868,7 @@ def results(
                     model_name,
                     trgt,
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=runtime['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
                     # verbose=False,
                     saveDir=save_dir,
@@ -3004,7 +2921,7 @@ def results(
 
 
 # --------------------------------------------------------------------
-def analysis(aspects, filt, runtime_params, out, verbose=False):
+def analysis(aspects, filt, runtime, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -3033,7 +2950,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     # (ideally it is read in, but possibly not if there's mistake/old formatting)
     # the normal call doesn't work well here actually. and it creates nodes
     # darn.  have to just set something arbitrary
-    # _, prior_ranges = addPriors(priorRangeTable, runtime_params, model, modparlbl[model])
+    # _, prior_ranges = addPriors(priorRangeTable, runtime, model, modparlbl[model])
     prior_ranges = None
 
     # allow for analysis of multiple target lists
@@ -3042,7 +2959,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        if runtime_params.tier == 2:
+        if runtime['ariel_simspectrum_tier'].value() == 2:
             #  *** Tier-2 (259 planets) ***
             analysistargetlists.append(
                 {
@@ -3054,7 +2971,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 'planetlistname': '2-year science time (Tier-2); Chachan mmw',
                 'planets': alltargetlists['ariel_planets_tier2'],
             }
-        elif runtime_params.tier == 1:
+        elif runtime['ariel_simspectrum_tier'].value() == 1:
             #  *** Tier-1 (626 planets) ***
             analysistargetlists.append(
                 {
@@ -3069,7 +2986,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         else:
             log.error(
                 "ERROR: unknown tier level for mass-metal plot %s",
-                runtime_params.tier,
+                runtime['ariel_simspectrum_tier'].value(),
             )
     else:
         analysistargetlists.append(
@@ -3397,9 +3314,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
-            # runtime_params.onlyFitAbove10MEarth,
-            # runtime_params.onlyPlotAbove10MEarth,
-            # (runtime doesn't work yet for aspects?)
+            # runtime['cerberus_plotters_onlyFitAbove10MEarth'],
+            # runtime['cerberus_plotters_onlyPlotAbove10MEarth'],
+            # (runtime doesn't work yet for aspects)
             True,
             True,
             saveDir=save_dir,

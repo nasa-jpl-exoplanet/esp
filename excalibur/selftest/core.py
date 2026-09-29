@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 
 # --------------------------------------------------------------------
-# def analysis(aspects, filt, runtime_params, out, verbose=False):
+# def analysis(aspects, filt, runtime, out, verbose=False):
 def analysis(aspects, filt, chemistrymodel, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
@@ -72,8 +72,8 @@ def analysis(aspects, filt, chemistrymodel, out, verbose=False):
             targetlist.append(a)
     print('targetlist', targetlist)
 
-    # print('runtime', runtime_params)
-    # prior_ranges = set_prior_bound(eqtemp, runtime_params)
+    # print('runtime', runtime)
+    # prior_ranges = set_prior_bound(eqtemp, runtime)
     # print('using this prior range:', prior_ranges)
     # prior_ranges = None
 
