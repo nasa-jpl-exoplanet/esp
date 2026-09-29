@@ -31,6 +31,9 @@ from excalibur.transit.plotters import (
     postpriors,
     lightcurves,
 )
+from excalibur.transit.fmcontext import dctxupdt
+
+
 import copy
 import logging
 import random
@@ -80,179 +83,6 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-TransitWhitelightParams = namedtuple(
-    'transit_whitelight_params_from_runtime',
-    [
-        'imo',
-        'threshold',
-        'lethe',
-        'sliceSampler',
-        'chainlen',
-    ],
-)
-
-TransitSpectrumParams = namedtuple(
-    'transit_spectrum_params_from_runtime',
-    [
-        'imo',
-        'threshold',
-        'reject',
-        'ntm',
-        'lethe',
-        'sliceSampler',
-        'chainlen',
-    ],
-)
-
-ctxtglobals = [
-    'alt',
-    'ald',
-    'allz',
-    'orbp',
-    'commonoim',
-    'ecc',
-    'g1',
-    'g2',
-    'g3',
-    'g4',
-    'lclds',
-    'ootoindex',
-    'ootorbits',
-    'orbits',
-    'period',
-    'selectfit',
-    'smaors',
-    'time',
-    'tmjd',
-    'ttv',
-    'valid',
-    'visits',
-    'aos',
-    'avi',
-    'ginc',
-    'gttv',
-    'fixedpars',
-    'mcmcdat',
-    'mcmcsig',
-    'nodeshape',
-    'spec',
-    'LETHE',
-    'ref_IM',
-]
-
-CONTEXT = namedtuple('CONTEXT', ctxtglobals)
-ctxt = CONTEXT(
-    alt=None,
-    ald=None,
-    allz=None,
-    orbp=None,
-    commonoim=None,
-    ecc=None,
-    g1=None,
-    g2=None,
-    g3=None,
-    g4=None,
-    lclds=None,
-    ootoindex=None,
-    ootorbits=None,
-    orbits=None,
-    period=None,
-    selectfit=None,
-    smaors=None,
-    time=None,
-    tmjd=None,
-    ttv=None,
-    valid=None,
-    visits=None,
-    aos=None,
-    avi=None,
-    ginc=None,
-    gttv=None,
-    fixedpars=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    spec=None,
-    LETHE=None,
-    ref_IM=None,
-)
-
-
-def ctxtupdt(
-    alt=None,
-    ald=None,
-    allz=None,
-    orbp=None,
-    commonoim=None,
-    ecc=None,
-    g1=None,
-    g2=None,
-    g3=None,
-    g4=None,
-    lclds=None,
-    ootoindex=None,
-    ootorbits=None,
-    orbits=None,
-    period=None,
-    selectfit=None,
-    smaors=None,
-    time=None,
-    tmjd=None,
-    ttv=None,
-    valid=None,
-    visits=None,
-    aos=None,
-    avi=None,
-    ginc=None,
-    gttv=None,
-    fixedpars=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    spec=None,
-    LETHE=None,
-    ref_IM=None,
-):
-    '''
-    G. ROUDIER: Update global context for pymc deterministics
-    '''
-    sys.modules[__name__].ctxt = CONTEXT(
-        alt=alt,
-        ald=ald,
-        allz=allz,
-        orbp=orbp,
-        commonoim=commonoim,
-        ecc=ecc,
-        g1=g1,
-        g2=g2,
-        g3=g3,
-        g4=g4,
-        lclds=lclds,
-        ootoindex=ootoindex,
-        ootorbits=ootorbits,
-        orbits=orbits,
-        period=period,
-        selectfit=selectfit,
-        smaors=smaors,
-        time=time,
-        tmjd=tmjd,
-        ttv=ttv,
-        valid=valid,
-        visits=visits,
-        aos=aos,
-        avi=avi,
-        ginc=ginc,
-        gttv=gttv,
-        fixedpars=fixedpars,
-        mcmcdat=mcmcdat,
-        mcmcsig=mcmcsig,
-        nodeshape=nodeshape,
-        spec=spec,
-        LETHE=LETHE,
-        ref_IM=ref_IM,
-    )
-    return
-
 
 # GMR: Gregoire s legacy
 def LogLikelihood(inputs):
@@ -260,26 +90,29 @@ def LogLikelihood(inputs):
     GMR: User defined loglikelihood
     We stick to the proper definition of it
     '''
-    newnodes = []
-    newindex = 0
-    for ns in ctxt.nodeshape:
-        if ns > 1:
-            newnodes.append(inputs[newindex : newindex + ns])
-            pass
-        else:
-            newnodes.append(inputs[newindex])
-            pass
-        newindex += ns
-        pass
-    # JWST FLAT NODES
-    if not ctxt.orbits:
+
+    # FLAT NODES
+    if 'JWST' in ctxt.observatory:
         newnodes = inputs
         pass
-    if ctxt.spec:  # SPECTRUM
-        ForwardModel = lcmodel(*newnodes)
+    else:
+        newnodes = []
+        newindex = 0
+        for ns in ctxt.nodeshape:
+            if ns > 1:
+                newnodes.append(inputs[newindex : newindex + ns])
+                pass
+            else:
+                newnodes.append(inputs[newindex])
+                pass
+            newindex += ns
+            pass
         pass
-    else:  # WHITELIGHT
-        ForwardModel = orbital(*newnodes)
+    if 'whitelight' in ctxt.modelwrapper:
+        ForwardModel = orbital(*newnodes)  # WHITELIGHT
+        pass
+    else:
+        ForwardModel = lcmodel(*newnodes)  # SPECTRUM
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
     Norm = np.log(2e0 * np.pi * np.array(ctxt.mcmcsig))
@@ -2101,9 +1934,6 @@ def jwstwl(
     fin,
     rtp,
     out,
-    # imo=4,
-    # thr=95,
-    # chainlen=int(1e6),
     verbose=False,
     debug=False,
 ):
@@ -2132,7 +1962,8 @@ def jwstwl(
     '''
 
     LETHE = None
-    if rtp.lethe:
+    # GMR: Put that in rtp['light_curve_model'] someday
+    if rtp['transit_limbdarkening_lethe']:
         # Interpolators for LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
         rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
@@ -2152,8 +1983,8 @@ def jwstwl(
             grid = np.load(LETHE_dir + name)
             interpolator = RectBivariateSpline(z_grid, rprs_grid, grid)
             LETHE.append(interpolator)
-        # ctxtupdt(LETHE=LETHE)
-
+            pass
+        pass
     planetloop = [
         thisp
         for thisp in map(chr, range(97, 123))
@@ -2199,10 +2030,42 @@ def jwstwl(
                                 ps / np.sqrt(np.sum(v))
                                 for ps, v in zip(pltstdl, vldlist)
                             ]
-                            validl.append(vldlist[prc.index(rtp.threshold)])
-                            stdl.append(pltstdl[prc.index(rtp.threshold)])
-                            wht.append(pltavrl[prc.index(rtp.threshold)])
-                            whterr.append(errlist[prc.index(rtp.threshold)])
+                            validl.append(
+                                vldlist[
+                                    prc.index(
+                                        rtp[
+                                            'transit_whitelight_threshold'
+                                        ].value()
+                                    )
+                                ]
+                            )
+                            stdl.append(
+                                pltstdl[
+                                    prc.index(
+                                        rtp[
+                                            'transit_whitelight_threshold'
+                                        ].value()
+                                    )
+                                ]
+                            )
+                            wht.append(
+                                pltavrl[
+                                    prc.index(
+                                        rtp[
+                                            'transit_whitelight_threshold'
+                                        ].value()
+                                    )
+                                ]
+                            )
+                            whterr.append(
+                                errlist[
+                                    prc.index(
+                                        rtp[
+                                            'transit_whitelight_threshold'
+                                        ].value()
+                                    )
+                                ]
+                            )
                             pass
                         else:
                             s = np.abs(1e0 - nsp) <= np.nanpercentile(
@@ -2242,9 +2105,6 @@ def jwstwl(
                 )
                 lclds = [c[0] for c in ldcoefs]
                 out['data'][pln][det]['whiteld'] = lclds
-                # Reset the value at None for each different light-curve
-                # before the IM fitting
-                ctxtupdt(ref_IM=None)
                 # PRIORS
                 rpors = priors[pln]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
                 tmjd = priors[pln]['t0']
@@ -2302,14 +2162,43 @@ def jwstwl(
                         nodes.append(pymcinc)
                         nodeshape.append(1)
                         pass
+
                     # INSTRUMENT MODEL - ALWAYS LAST
-                    # PRE-FIT
+                    selectfit = np.abs(np.array(whtsep)) > (1.0 + 2.0 * rpors)
+                    nodeshape.append(int(rtp['transit_imo'].value()))
+
+                    # CONTEXT
+                    dctxt = dctxupdt()
+                    dctxt = dctxupdt(
+                        dct={
+                            'ecc': priors[pln]['ecc'],
+                            'lclds': lclds,
+                            'period': priors[pln]['period'],
+                            'smaors': priors[pln]['sma']
+                            / priors['R*']
+                            / ssc['Rsun/AU'],
+                            'time': nrm['data'][pln]['time'][det][vis],
+                            'tmjd': tmjd,
+                            'visits': nrm['data'][pln]['visits'][det],
+                            'ginc': priors[pln]['inc'],
+                            'fixedpars': fixedpars,
+                            'mcmcdat': wht,
+                            'mcmcsig': whterr,
+                            'modelwrapper': 'whitelight',
+                            'observatory': 'JWST',
+                            'nodeshape': nodeshape,
+                            'selectfit': np.array([True] * len(wht)),
+                            'LETHE': LETHE,
+                            'ref_IM': np.nanmean(np.array(whttim)[selectfit]),
+                        },
+                        freeze=True,
+                    )
+
+                    # IM PRIORS (AFTER CONTEXT)
                     params = lm.Parameters()
-                    for coef in np.arange(rtp.imo):
+                    for coef in np.arange(int(rtp['transit_imo'].value())):
                         params.add('c' + str(int(coef)), value=1.0)
                         pass
-                    selectfit = np.abs(np.array(whtsep)) > (1.0 + 2.0 * rpors)
-
                     lmout = lm.minimize(
                         cheatim,
                         params,
@@ -2320,7 +2209,9 @@ def jwstwl(
                     )
                     allcenim = [lmout.params[k].value for k in lmout.params]
                     allstdim = [lmout.params[k].stderr for k in lmout.params]
-                    for ic, coef in enumerate(np.arange(rtp.imo)):
+                    for ic, coef in enumerate(
+                        np.arange(int(rtp['transit_imo'].value()))
+                    ):
                         thslbl = 'IM' + str(int(coef))
                         pymcim = pymc.Uniform(
                             thslbl,
@@ -2335,28 +2226,7 @@ def jwstwl(
                         nodes.append(pymcim)
                         pymcim = None
                         pass
-                    nodeshape.append(rtp.imo)
-                    # CONTEXT
-                    ctxtupdt(
-                        orbp=priors[pln],
-                        ecc=priors[pln]['ecc'],
-                        lclds=lclds,
-                        period=priors[pln]['period'],
-                        smaors=priors[pln]['sma']
-                        / priors['R*']
-                        / ssc['Rsun/AU'],
-                        time=nrm['data'][pln]['time'][det][vis],
-                        tmjd=tmjd,
-                        visits=nrm['data'][pln]['visits'][det],
-                        ginc=priors[pln]['inc'],
-                        fixedpars=fixedpars,
-                        mcmcdat=wht,
-                        mcmcsig=whterr,
-                        nodeshape=nodeshape,
-                        selectfit=np.array([True] * len(wht)),
-                        LETHE=LETHE,
-                        ref_IM=np.nanmean(np.array(whttim)[selectfit]),
-                    )
+
                     # FIXED ORBITAL SOLUTION
                     TensorModel = TensorShell()
 
@@ -2374,15 +2244,17 @@ def jwstwl(
                         observed=wht,
                         logp=LogLH,
                     )
-                    _ = rtp.sliceSampler
-                    # Force Metropolis since Slice is kaput
                     log.info('>--< WHITELIGHT SAMPLER: Metropolis >--')
                     sampler = pymc.Metropolis()
                     log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
+                    chnlng = int(rtp['transit_whitelight_chainlen'].value())
+                    if debug:
+                        chnlng = int(1e2)
+                        pass
                     trace = pymc.sample(
-                        rtp.chainlen,
+                        chnlng,
                         cores=4,
-                        tune=int(rtp.chainlen / 2),
+                        tune=int(chnlng / 2),
                         compute_convergence_checks=False,
                         step=sampler,
                         progressbar=verbose,
@@ -4649,8 +4521,7 @@ def orbital(*whiteparams):
     G. ROUDIER: Orbital model
     '''
     jwstflag = False
-    if not ctxt.orbits:  # JWST
-        # GMR:JWST
+    if 'JWST' in ctxt.observatory:  # JWST
         imnodes = whiteparams[-ctxt.nodeshape[-1] :]
         lcnodes = whiteparams[: -ctxt.nodeshape[-1]]
         jwstflag = True

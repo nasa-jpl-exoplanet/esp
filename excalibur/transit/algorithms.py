@@ -201,16 +201,8 @@ class WhiteLight(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
-        runtime = self.__rt.sv_as_dict()['status']
-        runtime_params = trncore.TransitWhitelightParams(
-            imo=runtime['transit_imo'].value(),
-            threshold=runtime['transit_whitelight_threshold'].value(),
-            lethe=runtime['transit_limbdarkening_lethe'],
-            sliceSampler=runtime['transit_pymc_sliceSampler'],
-            chainlen=runtime['transit_whitelight_chainlen'].value(),
-        )
-
         svupdate = []
+        rnt = self.__rt.sv_as_dict()['status']
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
 
@@ -224,7 +216,6 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
@@ -258,7 +249,7 @@ class WhiteLight(dawgie.Algorithm):
                     update = self._hstwhitelight(
                         allnormdata,
                         fin,
-                        runtime_params,
+                        rnt,
                         self.__rt.sv_as_dict()['status'][
                             'spectrum_steps'
                         ].value(),
@@ -285,11 +276,12 @@ class WhiteLight(dawgie.Algorithm):
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
                 log.info('--< %s WHITELIGHT: %s >--', self._type.upper(), fltr)
+                # GMR: Cleaning up runtime
+                # Breaking everything else but JWST
                 update = self._whitelight(
                     nrm,
                     fin,
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    rnt,
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -323,12 +315,11 @@ class WhiteLight(dawgie.Algorithm):
             fltr,
             self._type,
             runtime_params,
-            chainlen=chain_length,
             verbose=False,
         )
         return wl
 
-    def _whitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _whitelight(self, nrm, fin, rnt, out, fltr):
         '''Core code call'''
 
         if 'Spitzer' in fltr:
@@ -339,11 +330,14 @@ class WhiteLight(dawgie.Algorithm):
             wl = trncore.jwstwl(
                 nrm,
                 fin,
-                runtime_params,
+                rnt,
                 out,
                 verbose=False,
+                debug=False,
             )
         else:
+            # GMR: We should check if Ariel sims go there it is gonna break them
+            # We pass the runtime SV now, not the on the fly made up thinggy
             wl = trncore.whitelight(
                 nrm,
                 fin,
@@ -351,8 +345,7 @@ class WhiteLight(dawgie.Algorithm):
                 fltr,
                 self._type,
                 self.__out[-1],
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
                 # parentprior=True,  # GMR: Not safe with new data
             )
