@@ -1148,7 +1148,11 @@ def atmos(
 
     # load TEA equilibrium chemistry interpolation grid
     modelName = (
-        'Pgrid_' + str(rtp.nlevels) + 'levels' + str(rtp.Hsmax) + 'scaleHeights'
+        'Pgrid_'
+        + str(rtp['cerberus_crbmodel_nlevels'].value())
+        + 'levels'
+        + str(rtp['cerberus_crbmodel_Hsmax'].value())
+        + 'scaleHeights'
     )
     interp_tea = get_TEA_grid(modelName)
     # OR.. leave it blank if you truly want the slow version
@@ -1172,15 +1176,15 @@ def atmos(
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if not rtp.fitCtoO:
+        if not rtp['cerberus_atmos_fitCtoO']:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if not rtp.fitNtoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if not rtp.fitStoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
@@ -1191,14 +1195,14 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if rtp.fitCTP or rtp.fitHaze:
+        if rtp['cerberus_atmos_fitCTP'] or rtp['cerberus_atmos_fitHaze']:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel += 'Noclouds'
 
-        if not rtp.isothermal:
+        if not rtp['cerberus_atmos_isothermal']:
             if 'cerberusNonisothermal' in spc['data']['models']:
                 # arielmodel = 'cerberusNonisothermal'
                 # arielmodel = 'cerberusTEANonisothermal'
@@ -1228,15 +1232,15 @@ def atmos(
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            'PHOTOCHEM': rtp.fitmolecules,
+            'PHOTOCHEM': rtp['cerberus_crbmodel_fitmolecules'].molecules,
         }
-        if not rtp.fitNtoO:
-            modparlbl['TEC'].remove('NtoO')
-            modparlbl['TEA'].remove('NtoO')
-        if not rtp.fitCtoO:
+        if not rtp['cerberus_atmos_fitCtoO']:
             modparlbl['TEC'].remove('CtoO')
             modparlbl['TEA'].remove('CtoO')
-        if not rtp.fitStoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
+            modparlbl['TEC'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
+        if not rtp['cerberus_atmos_fitStoO']:
             modparlbl['TEC'].remove('StoO')
             modparlbl['TEA'].remove('StoO')
 
@@ -1403,8 +1407,6 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    # if not rtp.fitCTP:
-                    #  this is dumb, to avoid lint 'unused variable' dctx
                     if not dctx['runtime'].fitCTP:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
@@ -1414,7 +1416,7 @@ def atmos(
                             # cloud deck is very deep - 1000 bars
                             fixed_params['CTP'] = 3.0
 
-                    if not rtp.fitHaze:
+                    if not rtp['cerberus_atmos_fitHaze']:
                         if 'HScale' in input_data['model_params']:
                             fixed_params['HScale'] = input_data['model_params'][
                                 'HScale'
@@ -1436,9 +1438,9 @@ def atmos(
 
                     # print('model params',input_data['model_params'])
 
-                    if not rtp.fitT:
+                    if not rtp['cerberus_atmos_fitT']:
                         fixed_params['T'] = eqtemp
-                    if not rtp.fitCtoO:
+                    if not rtp['cerberus_atmos_fitCtoO']:
                         # print('input_data keys', input_data.keys())
                         # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
@@ -1449,9 +1451,9 @@ def atmos(
                             ]
                         else:
                             fixed_params['CtoO'] = 0.0
-                    if not rtp.fitNtoO:
+                    if not rtp['cerberus_atmos_fitNtoO']:
                         fixed_params['NtoO'] = 0.0
-                    if not rtp.fitStoO:
+                    if not rtp['cerberus_atmos_fitStoO']:
                         fixed_params['StoO'] = 0.0
                     # print('fixedparams',fixed_params)
 
@@ -1487,7 +1489,10 @@ def atmos(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
                     else:
-                        if not rtp.fitCTP and not rtp.fitHaze:
+                        if (
+                            not rtp['cerberus_atmos_fitCTP']
+                            and not rtp['cerberus_atmos_fitHaze']
+                        ):
                             log.info('--< RUNNING MCMC - NO CLOUDS! >--')
                             dctx = dctxupdt(
                                 {'forwardmodel': clearfmcerberus},
@@ -1531,7 +1536,7 @@ def atmos(
                         # --------------
                         pass
 
-                    if rtp.MCMC_sliceSampler:
+                    if rtp['cerberus_atmos_sliceSampler']:
                         log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
