@@ -1202,7 +1202,7 @@ def atmos(
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel += 'Noclouds'
 
-        if not rtp['cerberus_atmos_isothermal']:
+        if not rtp['cerberus_crbmodel_isothermal']:
             if 'cerberusNonisothermal' in spc['data']['models']:
                 # arielmodel = 'cerberusNonisothermal'
                 # arielmodel = 'cerberusTEANonisothermal'
