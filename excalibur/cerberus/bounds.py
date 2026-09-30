@@ -19,86 +19,86 @@ def set_prior_bound(eqtemp, runtime):
     Set prior constraints on the spectrum-fitting parameters
     '''
 
-    # if runtime['cerberus_atmos_bounds_boundTeq'] is None:
+    # if runtime['cerberus_atmos_bounds_Teq'] is None:
     #    log.info('--< temp junk for pylint reasons >--')
     # print('IN BOUNDS runtime',runtime)
-    # print('          boundsTeq',runtime['cerberus_atmos_bounds_boundTeq'])
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'])
     # import pdb; pdb.set_trace()
-    # print('          boundsTeq',runtime['cerberus_atmos_bounds_boundTeq'].hi)
-    # print('          boundsTeq',runtime['cerberus_atmos_bounds_boundTeq'].lo)
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'].hi)
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'].lo)
     #
     if (
-        runtime['cerberus_atmos_bounds_boundTeq'].lo != 0.75
-        or runtime['cerberus_atmos_bounds_boundTeq'].hi != 1.5
+        runtime['cerberus_atmos_bounds_Teq'].lo != 0.75
+        or runtime['cerberus_atmos_bounds_Teq'].hi != 1.5
     ):
         log.info('--< Non-standard prior range for Teq >--')
     # if (
-    #    runtime['cerberus_atmos_bounds_boundAbundances'].lo != -6
-    #    or runtime['cerberus_atmos_bounds_boundAbundances'].hi != 6
+    #    runtime['cerberus_atmos_bounds_abundances'].lo != -6
+    #    or runtime['cerberus_atmos_bounds_abundances'].hi != 6
     # ):
     #    log.info('--< Non-standard prior range for abundances >--')
     if (
-        runtime['cerberus_atmos_bounds_boundCTP'].lo != -6
-        or runtime['cerberus_atmos_bounds_boundCTP'].hi != 1
+        runtime['cerberus_atmos_bounds_CTP'].lo != -6
+        or runtime['cerberus_atmos_bounds_CTP'].hi != 1
     ):
         log.info('--< Non-standard prior range for CTP >--')
     if (
-        runtime['cerberus_atmos_bounds_boundHLoc'].lo != -6
-        or runtime['cerberus_atmos_bounds_boundHLoc'].hi != 1
+        runtime['cerberus_atmos_bounds_HLoc'].lo != -6
+        or runtime['cerberus_atmos_bounds_HLoc'].hi != 1
     ):
         log.info('--< Non-standard prior range for HLoc >--')
     if (
-        runtime['cerberus_atmos_bounds_boundHScale'].lo != -6
-        or runtime['cerberus_atmos_bounds_boundHScale'].hi != 6
+        runtime['cerberus_atmos_bounds_HScale'].lo != -6
+        or runtime['cerberus_atmos_bounds_HScale'].hi != 6
     ):
         log.info('--< Non-standard prior range for HScale >--')
     if (
-        runtime['cerberus_atmos_bounds_boundHThick'].lo != 1
-        or runtime['cerberus_atmos_bounds_boundHThick'].hi != 20
+        runtime['cerberus_atmos_bounds_HThick'].lo != 1
+        or runtime['cerberus_atmos_bounds_HThick'].hi != 20
     ):
         log.info('--< Non-standard prior range for HThick >--')
 
     prior_ranges = {}
 
     prior_ranges['T'] = (
-        runtime['cerberus_atmos_bounds_boundTeq'].lo * eqtemp,
-        runtime['cerberus_atmos_bounds_boundTeq'].hi * eqtemp,
+        runtime['cerberus_atmos_bounds_Teq'].lo * eqtemp,
+        runtime['cerberus_atmos_bounds_Teq'].hi * eqtemp,
     )
     prior_ranges['dexRange'] = (
-        runtime['cerberus_atmos_bounds_boundAbundances'].lo,
-        runtime['cerberus_atmos_bounds_boundAbundances'].hi,
+        runtime['cerberus_atmos_bounds_abundances'].lo,
+        runtime['cerberus_atmos_bounds_abundances'].hi,
     )
     prior_ranges['MetallicityRange'] = (
-        runtime['cerberus_atmos_bounds_boundMetallicity'].lo,
-        runtime['cerberus_atmos_bounds_boundMetallicity'].hi,
+        runtime['cerberus_atmos_bounds_metallicity'].lo,
+        runtime['cerberus_atmos_bounds_metallicity'].hi,
     )
     prior_ranges['CtoORange'] = (
-        runtime['cerberus_atmos_bounds_boundCtoO'].lo,
-        runtime['cerberus_atmos_bounds_boundCtoO'].hi,
+        runtime['cerberus_atmos_bounds_CtoO'].lo,
+        runtime['cerberus_atmos_bounds_CtoO'].hi,
     )
     prior_ranges['NtoORange'] = (
-        runtime['cerberus_atmos_bounds_boundNtoO'].lo,
-        runtime['cerberus_atmos_bounds_boundNtoO'].hi,
+        runtime['cerberus_atmos_bounds_NtoO'].lo,
+        runtime['cerberus_atmos_bounds_NtoO'].hi,
     )
     prior_ranges['StoORange'] = (
-        runtime['cerberus_atmos_bounds_boundStoO'].lo,
-        runtime['cerberus_atmos_bounds_boundStoO'].hi,
+        runtime['cerberus_atmos_bounds_StoO'].lo,
+        runtime['cerberus_atmos_bounds_StoO'].hi,
     )
     prior_ranges['CTP'] = (
-        runtime['cerberus_atmos_bounds_boundCTP'].lo,
-        runtime['cerberus_atmos_bounds_boundCTP'].hi,
+        runtime['cerberus_atmos_bounds_CTP'].lo,
+        runtime['cerberus_atmos_bounds_CTP'].hi,
     )
     prior_ranges['HScale'] = (
-        runtime['cerberus_atmos_bounds_boundHScale'].lo,
-        runtime['cerberus_atmos_bounds_boundHScale'].hi,
+        runtime['cerberus_atmos_bounds_HScale'].lo,
+        runtime['cerberus_atmos_bounds_HScale'].hi,
     )
     prior_ranges['HLoc'] = (
-        runtime['cerberus_atmos_bounds_boundHLoc'].lo,
-        runtime['cerberus_atmos_bounds_boundHLoc'].hi,
+        runtime['cerberus_atmos_bounds_HLoc'].lo,
+        runtime['cerberus_atmos_bounds_HLoc'].hi,
     )
     prior_ranges['HThick'] = (
-        runtime['cerberus_atmos_bounds_boundHThick'].lo,
-        runtime['cerberus_atmos_bounds_boundHThick'].hi,
+        runtime['cerberus_atmos_bounds_HThick'].lo,
+        runtime['cerberus_atmos_bounds_HThick'].hi,
     )
 
     if prior_ranges['dexRange'] == (0, 1):
