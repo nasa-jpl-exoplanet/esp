@@ -1407,7 +1407,7 @@ def atmos(
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not dctx['runtime'].fitCTP:
+                    if not rtp['cerberus_atmos_fitCTP']:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
