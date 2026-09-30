@@ -7,8 +7,6 @@
 # -- IMPORTS -- ------------------------------------------------------
 import logging
 
-from collections import namedtuple
-
 # import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil

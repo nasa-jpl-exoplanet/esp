@@ -16,23 +16,9 @@ from collections import defaultdict
 
 from excalibur.selftest.plotters import plot_fits_vs_truth
 
-# from collections import namedtuple
 import logging
 
 log = logging.getLogger(__name__)
-
-# SelftestAnalysisParams = namedtuple(
-#    'cerberus_analysis_params_from_runtime',
-#    [
-#        'tier',
-#        'boundTeq',
-#        'boundAbundances',
-#        'boundCTP',
-#        'boundHLoc',
-#        'boundHScale',
-#        'boundHThick',
-#    ],
-# )
 
 
 # --------------------------------------------------------------------

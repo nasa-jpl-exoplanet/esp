@@ -304,7 +304,7 @@ class Atmos(dawgie.Algorithm):
         '''
         log.info(
             '--< CERBERUS ATMOS: Chain length %d >--',
-            chainlen=runtime['cerberus_steps'].value(),
+            runtime['cerberus_steps'].value(),
         )
         if 'JWST' in fltr:
             am = crbcore.jwstatmos(

@@ -13,7 +13,8 @@ import logging
 
 import excalibur
 
-# import excalibur.system as sys  # uncomment imports after reverting previous()
+# (uncomment these imports after reverting previous())
+# import excalibur.system as sys
 # import excalibur.ancillary as anc
 # import excalibur.transit as trn
 # from excalibur import ariel
@@ -25,7 +26,6 @@ import excalibur.runtime.binding as rtbind
 import excalibur.transit.algorithms as trnalg
 import excalibur.ariel.algorithms as arielalg
 import excalibur.cerberus.algorithms as crbalg
-import excalibur.cerberus.core as crbcore
 import excalibur.gemli.core as gemlicore
 import excalibur.gemli.states as gemlistates
 from excalibur.util.checksv import checksv

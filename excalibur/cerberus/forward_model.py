@@ -747,9 +747,7 @@ def gettau(
                         # print('  iwave', wave, iwave)
                         if len(iwave) > 0:
                             # print('check', wave, iwave[0], len(ozoneUVdata['wavelength']))
-                            if (iwave[0] >= 0) and (
-                                iwave[0] < len(ozoneUVdata['wavelength'])
-                            ):
+                            if 0 <= iwave[0] < len(ozoneUVdata['wavelength']):
                                 sigma[inu] += ozoneUVdata['xsec'][iwave[0]]
                         #    else:
                         #        print('spectrum shorter than opacity table', wave)
