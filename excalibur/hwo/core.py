@@ -584,7 +584,9 @@ def simulate_spectra(
                         verbose=verbose,
                     )
                 )
-                temps = system_params[planet_letter]['teq'] * len(pressure)
+                temps = np.array(
+                    [system_params[planet_letter]['teq']] * len(pressure)
+                )
                 out['data'][planet_letter][atmosModel][
                     'plot_vertical_profiles'
                 ] = plot_vertical_profiles(
