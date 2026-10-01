@@ -1386,6 +1386,7 @@ def hstwhitelight(
     runtime_params,
     chainlen=int(1e4),
     verbose=False,
+    debug=False,
 ):
     '''
     G. ROUDIER: Combined orbital parameters recovery
@@ -1700,26 +1701,31 @@ def hstwhitelight(
                 pass
             nodes.extend(alloitcp)
             nodeshape.append(shapevis)
-            # --------------
-            ctxtupdt(
-                orbp=priors[p],
-                ecc=ecc,
-                g1=g1,
-                g2=g2,
-                g3=g3,
-                g4=g4,
-                orbits=orbits,
-                period=period,
-                selectfit=selectfit,
-                smaors=smaors,
-                time=time,
-                tmjd=tmjd,
-                ttv=ttv,
-                visits=visits,
-                fixedpars=fixedpars,
-                mcmcdat=flatwhite[selectfit],
-                mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
-                nodeshape=nodeshape,
+            dctxt = dctxupdt()
+            dctxt = dctxupdt(
+                dct={
+                    'observatory': 'HST',
+                    'modelwrapper': 'whitelight',
+                    'orbp': priors[p],
+                    'ecc': ecc,
+                    'g1': g1,
+                    'g2': g2,
+                    'g3': g3,
+                    'g4': g4,
+                    'orbits': orbits,
+                    'period': period,
+                    'selectfit': selectfit,
+                    'smaors': smaors,
+                    'time': time,
+                    'tmjd': tmjd,
+                    'ttv': ttv,
+                    'visits': visits,
+                    'fixedpars': fixedpars,
+                    'mcmcdat': flatwhite[selectfit],
+                    'mcmcsig': 1e0 / np.sqrt(tauwhite),
+                    'nodeshape': nodeshape,
+                },
+                freeze=True,
             )
             # --< MODEL >--
             TensorModel = TensorShell()
@@ -1740,12 +1746,17 @@ def hstwhitelight(
             )
             # --------------
             # --< SAMPLING >--
-            if runtime_params.sliceSampler:
-                log.info('>-- HSTWHITELIGHT SAMPLER: Slice --<')
-                sampler = pymc.Slice()
+            if debug:
+                chainlen = int(1e2)
+                pass
             else:
-                log.info('>-- HSTWHITELIGHT SAMPLER: Metropolis --<')
-                sampler = pymc.Metropolis()
+                chainlen = int(
+                    runtime_params['transit_whitelight_chainlen'].value()
+                )
+                pass
+
+            log.info('>-- HSTWHITELIGHT SAMPLER: Metropolis --<')
+            sampler = pymc.Metropolis()
 
             log.info('>-- MCMC nodes: %s', str(prior_center.keys()))
 
@@ -4520,11 +4531,9 @@ def orbital(*whiteparams):
     '''
     G. ROUDIER: Orbital model
     '''
-    jwstflag = False
     if 'JWST' in ctxt.observatory:  # JWST
         imnodes = whiteparams[-ctxt.nodeshape[-1] :]
         lcnodes = whiteparams[: -ctxt.nodeshape[-1]]
-        jwstflag = True
         midtransits = None
         inclination = None
         avs = None
@@ -4578,7 +4587,7 @@ def orbital(*whiteparams):
         log.error('!!! No parameter passed in orbital() !!!')
         pass
     out = []
-    if not jwstflag:
+    if 'HST' in ctxt.observatory:
         for i, v in enumerate(ctxt.visits):
             omt = ctxt.time[i]
             if v in ctxt.ttv:
@@ -4614,8 +4623,7 @@ def orbital(*whiteparams):
             out.extend(lcout * imout)
             pass
         pass
-    else:
-        # >-- JWST
+    if 'JWST' in ctxt.observatory:
         if 'inc' in ctxt.fixedpars:
             t2zinc = ctxt.fixedpars['inc']
             pass
@@ -4648,7 +4656,6 @@ def orbital(*whiteparams):
             g7=ctxt.lclds[6],
             g8=ctxt.lclds[7],
         ) * orbitalim(ctxt.time, imnodes)
-        # JWST >--
         pass
 
     out = [o for o, s in zip(out, ctxt.selectfit) if s]

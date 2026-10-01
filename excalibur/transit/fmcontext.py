@@ -23,6 +23,13 @@ ndctx = {
     'time': None,  # time of samples
     'tmjd': None,  # mid transit time (to be cleaned up we have orbp)
     'visits': None,  # list of available visits
+    'orbp': None,  # HST
+    'g1': None,  # HST
+    'g2': None,  # HST
+    'g3': None,  # HST
+    'g4': None,  # HST
+    'orbits': None,  # HST
+    'ttv': None,  # HST
 }
 
 CONTEXT = namedtuple('CONTEXT', ndctx.keys())
