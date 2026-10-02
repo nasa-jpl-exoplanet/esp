@@ -77,23 +77,26 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
     svout['data'] = {}
     total = []
     for p in spc['data']:
-        thisspc['data'][p] = {}
-        svout['data'][p] = {}
-        detlist = list(spc['data'][p])
-        # ONLY WORKS FOR NRS CHANGE THAT LATER
-        for v in spc['data'][p][detlist[0]]:
-            xslout = {'data': {}, 'STATUS': []}
-            svout['data'][p][v] = xslout
-            wgrid = []
-            for d in detlist:
-                wgrid.extend(list(spc['data'][p][d][v]['WB']))
+        # filter out non-planetletter keywords, e.g. 'models','target'
+        if len(p) == 1:
+            thisspc['data'][p] = {}
+            svout['data'][p] = {}
+            detlist = list(spc['data'][p])
+            # ONLY WORKS FOR NRS CHANGE THAT LATER
+            for v in spc['data'][p][detlist[0]]:
+                xslout = {'data': {}, 'STATUS': []}
+                svout['data'][p][v] = xslout
+                wgrid = []
+                for d in detlist:
+                    wgrid.extend(list(spc['data'][p][d][v]['WB']))
+                    pass
+                thisspc['data'][p]['WB'] = np.array(wgrid)
+                cs = myxsecs(
+                    thisspc, rtp, xslout, only_these_planets=otp, verbose=verbose
+                )
+                svout['data'][p][v] = xslout['data'][p]
+                total.append(cs)
                 pass
-            thisspc['data'][p]['WB'] = np.array(wgrid)
-            cs = myxsecs(
-                thisspc, rtp, xslout, only_these_planets=otp, verbose=verbose
-            )
-            svout['data'][p][v] = xslout['data'][p]
-            total.append(cs)
             pass
         pass
     if svout['data'].keys():
