@@ -698,6 +698,7 @@ def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
         )  # [s]
         xfit = deltat * np.arange(len(dramps))
         # LINFIT
+        # GMR: SOME DATASETS ONLY HAVE 2 FRAMES
         fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
         raws['alldexp'][i] = fitresult[0][0].reshape(f0shape)
         raws['allerr'].append(np.sqrt(abs(fitresult[1][0, 0].reshape(f0shape))))

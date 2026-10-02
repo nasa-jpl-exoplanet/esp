@@ -91,53 +91,11 @@ class SimSpectrum(dawgie.Algorithm):
             ancvalid, errstring = checksv(ancil_dict)
             if sysvalid and ancvalid:
                 runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = arielcore.ArielParams(
-                    tier=runtime['ariel_simspectrum_tier'].value(),
-                    SNRfactor=runtime[
-                        'ariel_simspectrum_SNRadjustment'
-                    ].value(),
-                    randomSeed=runtime['ariel_simspectrum_randomseed'].value(),
-                    randomCloudProperties=runtime[
-                        'ariel_simspectrum_randomCloudProperties'
-                    ],
-                    thorngrenMassMetals=runtime[
-                        'ariel_simspectrum_thorngrenMassMetals'
-                    ],
-                    chachanMassMetals=runtime[
-                        'ariel_simspectrum_chachanMassMetals'
-                    ],
-                    includeMetallicityDispersion=runtime[
-                        'ariel_simspectrum_includeMetallicityDispersion'
-                    ],
-                    metallicityDispersion=runtime[
-                        'ariel_simspectrum_metallicityDispersion'
-                    ].value(),
-                    CtoOdaSilva=runtime['ariel_simspectrum_CtoOdaSilva'],
-                    CtoOaverage=runtime[
-                        'ariel_simspectrum_CtoOaverage'
-                    ].value(),
-                    CtoOdispersion=runtime[
-                        'ariel_simspectrum_CtoOdispersion'
-                    ].value(),
-                    hitemplist=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    isothermal=runtime['cerberus_crbmodel_isothermal'],
-                )
                 update = self._sim_spectrum(
                     target,
                     system_dict,
                     ancil_dict,
-                    runtime_params,
+                    runtime,
                     self.__out,
                 )
             else:
@@ -153,10 +111,10 @@ class SimSpectrum(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _sim_spectrum(target, system_dict, ancil_dict, runtime_params, out):
+    def _sim_spectrum(target, system_dict, ancil_dict, runtime, out):
         '''Core code call'''
         filled = arielcore.simulate_spectra(
-            target, system_dict, ancil_dict, runtime_params, out
+            target, system_dict, ancil_dict, runtime, out
         )
         return filled
 
@@ -216,22 +174,8 @@ class XSLib(dawgie.Algorithm):
                 log.info('--< SELFTEST XSLIB: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = crbcore.CerbXSlibParams(
-                    hitemplist=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                )
 
-                update = self._xslib(sv, runtime_params, fltrs.index(fltr))
+                update = self._xslib(sv, runtime, fltrs.index(fltr))
             else:
                 errstr = [m for m in [sspc] if m is not None]
                 self._failure(errstr[0])
@@ -249,11 +193,9 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, runtime_params, index):
+    def _xslib(self, spc, runtime, index):
         '''Core code call'''
-        cs = crbcore.myxsecs(
-            spc, runtime_params, self.__out[index], verbose=False
-        )
+        cs = crbcore.myxsecs(spc, runtime, self.__out[index], verbose=False)
         return cs
 
     @staticmethod
@@ -370,54 +312,12 @@ class Atmos(dawgie.Algorithm):
                 log.info('--< SELFTEST ATMOS: %s >--', fltr)
 
                 runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = crbcore.CerbAtmosParams(
-                    MCMC_chain_length=runtime['cerberus_steps'].value(),
-                    # MCMC_chain_length=33,
-                    MCMC_chains=runtime['cerberus_chains'].value(),
-                    MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-                    fitCTP=runtime['cerberus_atmos_fitCTP'],
-                    fitHaze=runtime['cerberus_atmos_fitHaze'],
-                    cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                    fitT=runtime['cerberus_atmos_fitT'],
-                    fitCtoO=runtime['cerberus_atmos_fitCtoO'],
-                    fitNtoO=runtime['cerberus_atmos_fitNtoO'],
-                    fitStoO=runtime['cerberus_atmos_fitStoO'],
-                    fitmolecules=runtime[
-                        'cerberus_crbmodel_fitmolecules'
-                    ].molecules,
-                    hitemplist=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    isothermal=runtime['cerberus_crbmodel_isothermal'],
-                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                    boundMetallicity=runtime[
-                        'cerberus_atmos_bounds_metallicity'
-                    ],
-                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
-                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
-                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
-                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                )
-                # print('runtime params in selftest.alg', runtime_params)
 
                 update = self._atmos(
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
                     sv,
-                    runtime_params,
+                    runtime,
                     fltrs.index(fltr),
                     fltr,
                 )
@@ -437,11 +337,11 @@ class Atmos(dawgie.Algorithm):
             )
         return
 
-    def _atmos(self, fin, xsl, spc, runtime_params, index, fltr):
+    def _atmos(self, fin, xsl, spc, runtime, index, fltr):
         '''Core code call'''
 
-        mcmc_chains = runtime_params.MCMC_chains
-        mcmc_chain_length = runtime_params.MCMC_chain_length
+        mcmc_chains = runtime['cerberus_chains'].value()
+        mcmc_chain_length = runtime['cerberus_steps'].value()
         # print('MCMC_chain_length', mcmc_chain_length)
         # mcmc_chain_length = 1000
         # mcmc_chain_length = 10
@@ -455,7 +355,7 @@ class Atmos(dawgie.Algorithm):
             fin,
             xsl,
             spc,
-            runtime_params,
+            runtime,
             self.__out[index],
             fltr,
             Nchains=mcmc_chains,
@@ -534,36 +434,11 @@ class Results(dawgie.Algorithm):
                     log.info('--< SELFTEST RESULTS: %s >--', fltr)
 
                     runtime = self.__rt.sv_as_dict()['status']
-                    runtime_params = crbcore.CerbResultsParams(
-                        nrandomwalkers=runtime[
-                            'cerberus_results_nrandomwalkers'
-                        ].value(),
-                        randomseed=runtime[
-                            'cerberus_results_randomseed'
-                        ].value(),
-                        hitemplist=runtime[
-                            'cerberus_crbmodel_HITEMPmolecules'
-                        ].molecules,
-                        cialist=runtime[
-                            'cerberus_crbmodel_HITRANmolecules'
-                        ].molecules,
-                        xmollist=runtime[
-                            'cerberus_crbmodel_EXOMOLmolecules'
-                        ].molecules,
-                        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
-                        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                        solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                        cornerBins=runtime[
-                            'cerberus_plotters_cornerBins'
-                        ].value(),
-                        isothermal=runtime['cerberus_crbmodel_isothermal'],
-                    )
 
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
-                        runtime_params,
+                        runtime,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -590,12 +465,12 @@ class Results(dawgie.Algorithm):
             )
         return
 
-    def _results(self, trgt, fltr, runtime_params, fin, ancil, xsl, atm, index):
+    def _results(self, trgt, fltr, runtime, fin, ancil, xsl, atm, index):
         '''Core code call'''
         resout = crbcore.results(
             trgt,
             fltr,
-            runtime_params,
+            runtime,
             fin,
             ancil,
             xsl,
@@ -671,23 +546,6 @@ class Analysis(dawgie.Analyzer):
                 # print('runtime new way',runtime)
                 # import pdb; pdb.set_trace()
 
-                # runtime_params = selftestcore.SelftestAnalysisParams(
-                #    tier=runtime['ariel_simspectrum_tier'].value(),
-                #    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                #    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                #    boundMetallicity=runtime['cerberus_atmos_bounds_metallicity'],
-                #    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
-                #    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
-                #    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
-                #    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                #    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                #    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                #    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                # )
-                # print()
-                # print('runtimeparams in selftest.alg',runtime_params)
-                # print()
-                # update = self._analysis(aspects, fltr, runtime_params, fltrs.index(fltr))
                 chemistrymodel = 'TEC'
                 update = self._analysis(
                     aspects, fltr, chemistrymodel, fltrs.index(fltr)
@@ -703,10 +561,10 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    # def _analysis(self, aspects, fltr, runtime_params, index):
+    # def _analysis(self, aspects, fltr, runtime, index):
     def _analysis(self, aspects, fltr, chemistrymodel, index):
         '''Core code call'''
-        # aspects, fltr, runtime_params, self.__out[index], verbose=False
+        # aspects, fltr, runtime, self.__out[index], verbose=False
         analysisout = selftestcore.analysis(
             aspects, fltr, chemistrymodel, self.__out[index], verbose=False
         )

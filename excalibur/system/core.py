@@ -34,19 +34,12 @@ from excalibur.system.autofill import (
 from excalibur.system.constants import ssconstants
 from excalibur.system.overwriter import fix_default_reference
 
-from collections import namedtuple
-
 log = logging.getLogger(__name__)
-
-SystemParams = namedtuple(
-    'system_params_from_runtime',
-    ['maximizeSelfConsistency', 'selectMostRecent'],
-)
 
 
 # ----------------- --------------------------------------------------
 # -- BUILD SYSTEM PRIORS -- ------------------------------------------
-def buildsp(autofill, runtime_params, out, verbose=False):
+def buildsp(autofill, runtime, out, verbose=False):
     '''
     G. ROUDIER: Surjection from target.autofill.parameters to dictionary output
     '''
@@ -470,8 +463,10 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                 lbl,
                 bestref,
                 bestpubIndices['star'],
-                maximizeSelfConsistency=runtime_params.maximizeSelfConsistency,
-                selectMostRecent=runtime_params.selectMostRecent,
+                maximizeSelfConsistency=runtime[
+                    'system_validate_maximizeSelfConsistency'
+                ],
+                selectMostRecent=runtime['system_validate_selectMostRecent'],
             )
             # test targets with '' fields fail on .copy(), with AttributeError
         except (KeyError, AttributeError):

@@ -47,7 +47,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
-from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 from scipy.interpolate import RegularGridInterpolator
 
@@ -58,89 +57,6 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbXSlibParams = namedtuple(
-    'cerberus_xslib_params_from_runtime',
-    [
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-    ],
-)
-
-CerbAtmosParams = namedtuple(
-    'cerberus_atmos_params_from_runtime',
-    [
-        'MCMC_chains',
-        'MCMC_chain_length',
-        'MCMC_sliceSampler',
-        'cornerBins',
-        'fitCTP',
-        'fitHaze',
-        'fitT',
-        'fitCtoO',
-        'fitNtoO',
-        'fitStoO',
-        'fitmolecules',
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'isothermal',
-        'boundTeq',
-        'boundAbundances',
-        'boundMetallicity',
-        'boundCtoO',
-        'boundNtoO',
-        'boundStoO',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
-
-CerbResultsParams = namedtuple(
-    'cerberus_results_params_from_runtime',
-    [
-        'nrandomwalkers',
-        'randomseed',
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'Hsmax',
-        'solrad',
-        'cornerBins',
-        'isothermal',
-    ],
-)
-
-CerbAnalysisParams = namedtuple(
-    'cerberus_analysis_params_from_runtime',
-    [
-        'tier',
-        'onlyFitAbove10MEarth',
-        'onlyPlotAbove10MEarth',
-        'boundTeq',
-        'boundAbundances',
-        'boundMetallicity',
-        'boundCtoO',
-        'boundNtoO',
-        'boundStoO',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
 
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
@@ -161,23 +77,30 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
     svout['data'] = {}
     total = []
     for p in spc['data']:
-        thisspc['data'][p] = {}
-        svout['data'][p] = {}
-        detlist = list(spc['data'][p])
-        # ONLY WORKS FOR NRS CHANGE THAT LATER
-        for v in spc['data'][p][detlist[0]]:
-            xslout = {'data': {}, 'STATUS': []}
-            svout['data'][p][v] = xslout
-            wgrid = []
-            for d in detlist:
-                wgrid.extend(list(spc['data'][p][d][v]['WB']))
+        # filter out non-planetletter keywords, e.g. 'models','target'
+        if len(p) == 1:
+            thisspc['data'][p] = {}
+            svout['data'][p] = {}
+            detlist = list(spc['data'][p])
+            # ONLY WORKS FOR NRS CHANGE THAT LATER
+            for v in spc['data'][p][detlist[0]]:
+                xslout = {'data': {}, 'STATUS': []}
+                svout['data'][p][v] = xslout
+                wgrid = []
+                for d in detlist:
+                    wgrid.extend(list(spc['data'][p][d][v]['WB']))
+                    pass
+                thisspc['data'][p]['WB'] = np.array(wgrid)
+                cs = myxsecs(
+                    thisspc,
+                    rtp,
+                    xslout,
+                    only_these_planets=otp,
+                    verbose=verbose,
+                )
+                svout['data'][p][v] = xslout['data'][p]
+                total.append(cs)
                 pass
-            thisspc['data'][p]['WB'] = np.array(wgrid)
-            cs = myxsecs(
-                thisspc, rtp, xslout, only_these_planets=otp, verbose=verbose
-            )
-            svout['data'][p][v] = xslout['data'][p]
-            total.append(cs)
             pass
         pass
     if svout['data'].keys():
@@ -201,15 +124,15 @@ def myxsecsversion():
     return dawgie.VERSION(1, 1, 3)
 
 
-def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
+def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    hitemplist = runtime_params.hitemplist
-    cialist = runtime_params.cialist
-    xmollist = runtime_params.xmollist
-    atomlist = runtime_params.atomlist
+    hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
+    cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
+    xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
+    atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
     fontsize = 20
     Nplots = 10  # number of temps/pressures to plot cross-sections for
@@ -230,9 +153,6 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     p,
                 )
             # make sure it has a spectrum (Kepler-37e bug)
-            # TROUBLE! crashes for JWST data
-            #   JWST has visit and detector subdivisions before WB
-            #   (Gael will fix this)
             if 'WB' not in spc['data'][p].keys():
                 if 'target' in spc['data']:
                     log.error(
@@ -340,7 +260,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
@@ -452,7 +372,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[mycia]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
@@ -643,7 +563,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[ks]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
@@ -1232,7 +1152,11 @@ def atmos(
 
     # load TEA equilibrium chemistry interpolation grid
     modelName = (
-        'Pgrid_' + str(rtp.nlevels) + 'levels' + str(rtp.Hsmax) + 'scaleHeights'
+        'Pgrid_'
+        + str(rtp['cerberus_crbmodel_nlevels'].value())
+        + 'levels'
+        + str(rtp['cerberus_crbmodel_Hsmax'].value())
+        + 'scaleHeights'
     )
     interp_tea = get_TEA_grid(modelName)
     # OR.. leave it blank if you truly want the slow version
@@ -1256,15 +1180,15 @@ def atmos(
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
         # option to fix C/O
-        if not rtp.fitCtoO:
+        if not rtp['cerberus_atmos_fitCtoO']:
             modparlbl['TEA'].remove('CtoO')
             modparlbl['TEC'].remove('CtoO')
         # option to fix N/O
-        if not rtp.fitNtoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
             modparlbl['TEA'].remove('NtoO')
             modparlbl['TEC'].remove('NtoO')
         # option to fix S/O
-        if not rtp.fitStoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
             modparlbl['TEA'].remove('StoO')
             modparlbl['TEC'].remove('StoO')
 
@@ -1275,14 +1199,14 @@ def atmos(
         arielmodel = 'cerberus'
         if 'TEA' in modfam:
             arielmodel += 'TEA'
-        if rtp.fitCTP or rtp.fitHaze:
+        if rtp['cerberus_atmos_fitCTP'] or rtp['cerberus_atmos_fitHaze']:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
             # arielmodel = 'cerberus'
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
             arielmodel += 'Noclouds'
 
-        if not rtp.isothermal:
+        if not rtp['cerberus_crbmodel_isothermal']:
             if 'cerberusNonisothermal' in spc['data']['models']:
                 # arielmodel = 'cerberusNonisothermal'
                 # arielmodel = 'cerberusTEANonisothermal'
@@ -1312,15 +1236,15 @@ def atmos(
         modparlbl = {
             'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
             'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
-            'PHOTOCHEM': rtp.fitmolecules,
+            'PHOTOCHEM': rtp['cerberus_crbmodel_fitmolecules'].molecules,
         }
-        if not rtp.fitNtoO:
-            modparlbl['TEC'].remove('NtoO')
-            modparlbl['TEA'].remove('NtoO')
-        if not rtp.fitCtoO:
+        if not rtp['cerberus_atmos_fitCtoO']:
             modparlbl['TEC'].remove('CtoO')
             modparlbl['TEA'].remove('CtoO')
-        if not rtp.fitStoO:
+        if not rtp['cerberus_atmos_fitNtoO']:
+            modparlbl['TEC'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
+        if not rtp['cerberus_atmos_fitStoO']:
             modparlbl['TEC'].remove('StoO')
             modparlbl['TEA'].remove('StoO')
 
@@ -1484,12 +1408,13 @@ def atmos(
                         },
                     )
 
+                    if dctx == 'nothing':
+                        print('dumb. trying avoid unused-variable error')
+
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    # if not rtp.fitCTP:
-                    #  this is dumb, to avoid lint 'unused variable' dctx
-                    if not dctx['runtime'].fitCTP:
+                    if not rtp['cerberus_atmos_fitCTP']:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -1498,7 +1423,7 @@ def atmos(
                             # cloud deck is very deep - 1000 bars
                             fixed_params['CTP'] = 3.0
 
-                    if not rtp.fitHaze:
+                    if not rtp['cerberus_atmos_fitHaze']:
                         if 'HScale' in input_data['model_params']:
                             fixed_params['HScale'] = input_data['model_params'][
                                 'HScale'
@@ -1520,9 +1445,9 @@ def atmos(
 
                     # print('model params',input_data['model_params'])
 
-                    if not rtp.fitT:
+                    if not rtp['cerberus_atmos_fitT']:
                         fixed_params['T'] = eqtemp
-                    if not rtp.fitCtoO:
+                    if not rtp['cerberus_atmos_fitCtoO']:
                         # print('input_data keys', input_data.keys())
                         # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
@@ -1533,9 +1458,9 @@ def atmos(
                             ]
                         else:
                             fixed_params['CtoO'] = 0.0
-                    if not rtp.fitNtoO:
+                    if not rtp['cerberus_atmos_fitNtoO']:
                         fixed_params['NtoO'] = 0.0
-                    if not rtp.fitStoO:
+                    if not rtp['cerberus_atmos_fitStoO']:
                         fixed_params['StoO'] = 0.0
                     # print('fixedparams',fixed_params)
 
@@ -1571,7 +1496,10 @@ def atmos(
                             '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
                     else:
-                        if not rtp.fitCTP and not rtp.fitHaze:
+                        if (
+                            not rtp['cerberus_atmos_fitCTP']
+                            and not rtp['cerberus_atmos_fitHaze']
+                        ):
                             log.info('--< RUNNING MCMC - NO CLOUDS! >--')
                             dctx = dctxupdt(
                                 {'forwardmodel': clearfmcerberus},
@@ -1615,7 +1543,7 @@ def atmos(
                         # --------------
                         pass
 
-                    if rtp.MCMC_sliceSampler:
+                    if rtp['cerberus_atmos_sliceSampler']:
                         log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
@@ -1751,7 +1679,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    bins=rtp.cornerBins,
+                    bins=rtp['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
                 )
                 plot_walker_evolution(
@@ -2113,7 +2041,7 @@ def resultsversion():
 
 def calculateSpectrum(
     fit_params,
-    runtime_params,
+    runtime,
     p,
     rp0,
     fin,
@@ -2147,13 +2075,13 @@ def calculateSpectrum(
         hzlib=crbhzlib,
         chemistry=chemistry,
         planet=p,
-        hitemplist=runtime_params.hitemplist,
-        cialist=runtime_params.cialist,
-        xmollist=runtime_params.xmollist,
-        atomlist=runtime_params.atomlist,
-        nlevels=runtime_params.nlevels,
-        Hsmax=runtime_params.Hsmax,
-        solrad=runtime_params.solrad,
+        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+        solrad=runtime['cerberus_crbmodel_solrad'].value(),
     )
     spectrum = fmc.spectrum
 
@@ -2177,7 +2105,7 @@ def calculateSpectrum(
 def results(
     trgt,
     filt,
-    runtime_params,
+    runtime,
     fin,
     anc,
     xsl,
@@ -2572,7 +2500,7 @@ def results(
                 # print('param_values median',param_values_median)
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
@@ -2594,7 +2522,7 @@ def results(
                 # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                 patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
@@ -2663,7 +2591,7 @@ def results(
                     # print('')
                     patmos_bestfit, chi2best = calculateSpectrum(
                         param_values_bestfit,
-                        runtime_params,
+                        runtime,
                         p,
                         rp0,
                         fin,
@@ -2682,7 +2610,8 @@ def results(
                     )
                     for char in trgt + ' ' + p:
                         int_from_target = (
-                            runtime_params.randomseed * int_from_target
+                            runtime['cerberus_results_randomseed'].value()
+                            * int_from_target
                             + ord(char)
                         ) % 100000
                     np.random.seed(int_from_target)
@@ -2693,7 +2622,9 @@ def results(
 
                     nwalkersteps = len(np.array(mdptrace)[0, :])
                     # print('# of walker steps', nwalkersteps)
-                    for _ in range(runtime_params.nrandomwalkers):
+                    for _ in range(
+                        runtime['cerberus_results_nrandomwalkers'].value()
+                    ):
                         iwalker = int(nwalkersteps * np.random.rand())
 
                         if fit_CTP:
@@ -2706,7 +2637,7 @@ def results(
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
-                        # if runtime_params.fitCTP:
+                        # if runtime['cerberus_atmos_fitCTP']:
                         #    print('fit results; CTP:', ctp)
                         #    print('fit results; HScale:', hazescale)
                         #    print('fit results; HLoc:', hazeloc)
@@ -2772,7 +2703,7 @@ def results(
                         ]
                         patmos_modelrand, chi2modelrand = calculateSpectrum(
                             param_values_rand,
-                            runtime_params,
+                            runtime,
                             p,
                             rp0,
                             fin,
@@ -2951,7 +2882,7 @@ def results(
                     model_name,
                     trgt,
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=runtime['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
                     # verbose=False,
                     saveDir=save_dir,
@@ -3004,7 +2935,7 @@ def results(
 
 
 # --------------------------------------------------------------------
-def analysis(aspects, filt, runtime_params, out, verbose=False):
+def analysis(aspects, filt, runtime, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -3033,7 +2964,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     # (ideally it is read in, but possibly not if there's mistake/old formatting)
     # the normal call doesn't work well here actually. and it creates nodes
     # darn.  have to just set something arbitrary
-    # _, prior_ranges = addPriors(priorRangeTable, runtime_params, model, modparlbl[model])
+    # _, prior_ranges = addPriors(priorRangeTable, runtime, model, modparlbl[model])
     prior_ranges = None
 
     # allow for analysis of multiple target lists
@@ -3042,7 +2973,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        if runtime_params.tier == 2:
+        if runtime['ariel_simspectrum_tier'].value() == 2:
             #  *** Tier-2 (259 planets) ***
             analysistargetlists.append(
                 {
@@ -3054,7 +2985,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 'planetlistname': '2-year science time (Tier-2); Chachan mmw',
                 'planets': alltargetlists['ariel_planets_tier2'],
             }
-        elif runtime_params.tier == 1:
+        elif runtime['ariel_simspectrum_tier'].value() == 1:
             #  *** Tier-1 (626 planets) ***
             analysistargetlists.append(
                 {
@@ -3069,7 +3000,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         else:
             log.error(
                 "ERROR: unknown tier level for mass-metal plot %s",
-                runtime_params.tier,
+                runtime['ariel_simspectrum_tier'].value(),
             )
     else:
         analysistargetlists.append(
@@ -3397,9 +3328,9 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
-            # runtime_params.onlyFitAbove10MEarth,
-            # runtime_params.onlyPlotAbove10MEarth,
-            # (runtime doesn't work yet for aspects?)
+            # runtime['cerberus_plotters_onlyFitAbove10MEarth'],
+            # runtime['cerberus_plotters_onlyPlotAbove10MEarth'],
+            # (runtime doesn't work yet for aspects)
             True,
             True,
             saveDir=save_dir,
