@@ -1079,8 +1079,6 @@ def jwstatmos(
                     )
                     TensorModel = TensorShell()
 
-                    if dctx == 'nothing':
-                        print('dumb. trying avoid unused-variable error')
 
                     def LogLH(_, nodes):
                         '''
@@ -1406,6 +1404,9 @@ def atmos(
                             'interp_tea': interp_tea,
                         },
                     )
+
+                    if dctx == 'nothing':
+                        print('dumb. trying avoid unused-variable error')
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
