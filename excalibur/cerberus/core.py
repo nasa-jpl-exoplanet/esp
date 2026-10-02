@@ -92,7 +92,11 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
                     pass
                 thisspc['data'][p]['WB'] = np.array(wgrid)
                 cs = myxsecs(
-                    thisspc, rtp, xslout, only_these_planets=otp, verbose=verbose
+                    thisspc,
+                    rtp,
+                    xslout,
+                    only_these_planets=otp,
+                    verbose=verbose,
                 )
                 svout['data'][p][v] = xslout['data'][p]
                 total.append(cs)
@@ -1078,7 +1082,6 @@ def jwstatmos(
                         freeze=True,
                     )
                     TensorModel = TensorShell()
-
 
                     def LogLH(_, nodes):
                         '''
