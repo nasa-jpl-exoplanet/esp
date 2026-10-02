@@ -4743,6 +4743,7 @@ def lcmodel(*specparams):
     '''
     G. ROUDIER: Spectral light curve model
     '''
+    out = None
     if 'HST' in ctxt.observatory:
         r, avs, aos, aoi = specparams
         allimout = []
@@ -4766,7 +4767,8 @@ def lcmodel(*specparams):
             g4=float(ctxt.g4[0]),
         )
         out = out * np.array(allimout)
-        return out[ctxt.valid]
+        out = out[ctxt.valid]
+        pass
     if 'JWST' in ctxt.observatory:
         imnodes = specparams[-ctxt.nodeshape[-1] :]
         lcnodes = specparams[: -ctxt.nodeshape[-1]]
@@ -4782,8 +4784,8 @@ def lcmodel(*specparams):
             g7=ctxt.lclds[6],
             g8=ctxt.lclds[7],
         ) * orbitalim(ctxt.time, imnodes)
-        return out
-    return
+        pass
+    return out
 
 
 # ----------------------------------- --------------------------------
