@@ -251,14 +251,14 @@ def add_priors(nodes, nodeshape, prior_range_table, runtime, model, modparlbls):
 
     prior_ranges = {}
 
-    if runtime['cerberus_atmos_bounds_fitCTP']:
+    if runtime['cerberus_atmos_fitCTP']:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
         )
         nodeshape.append(1)
 
-    if runtime['cerberus_atmos_bounds_fitHaze']:
+    if runtime['cerberus_atmos_fitHaze']:
         prior_ranges['HScale'] = prior_range_table['HScale']
         nodes.append(
             pymc.Uniform(
@@ -283,7 +283,7 @@ def add_priors(nodes, nodeshape, prior_range_table, runtime, model, modparlbls):
         )
         nodeshape.append(1)
 
-    if runtime['cerberus_atmos_bounds_fitT']:
+    if runtime['cerberus_atmos_fitT']:
         prior_ranges['T'] = prior_range_table['T']
         if runtime['cerberus_crbmodel_isothermal']:
             # print('OK normal isothermal T')
