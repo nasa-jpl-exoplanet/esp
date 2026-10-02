@@ -126,12 +126,12 @@ class crbFM:
             Hsmax = ctxt.Hsmax
             if Hsmax is None:
                 # Hsmax = ctxt.runtime.Hsmax
-                Hsmax = runtime['cerberus_crbmodel_Hsmax'].value()
+                Hsmax = ctxt.runtime['cerberus_crbmodel_Hsmax'].value()
         if solrad is None:
             solrad = ctxt.solrad
             if solrad is None:
                 # solrad = ctxt.runtime.solrad
-                solrad = (runtime['cerberus_crbmodel_solrad'].value(),)
+                solrad = ctxt.runtime['cerberus_crbmodel_solrad'].value()
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
