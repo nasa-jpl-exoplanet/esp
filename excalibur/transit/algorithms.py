@@ -250,9 +250,6 @@ class WhiteLight(dawgie.Algorithm):
                         allnormdata,
                         fin,
                         rnt,
-                        self.__rt.sv_as_dict()['status'][
-                            'spectrum_steps'
-                        ].value(),
                         self.__out[-1],
                         allfilters,
                     )

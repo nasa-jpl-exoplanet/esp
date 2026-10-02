@@ -67,8 +67,6 @@ except ImportError:
 
     pass
 
-from collections import namedtuple
-
 # LDTK
 # We should get rid of the imports + the parts of the code that are still calling this
 from ldtk import LDPSetCreator, BoxcarFilter
@@ -2302,7 +2300,7 @@ def jwstwl(
                 flatwht = np.array(wht) / instmodel
                 if verbose:
                     mclbl = list(mctrace)
-                    mcarr = np.array([mctrace[k] for k in mctrace])
+                    mcarr = np.array([v for _, v in mctrace.items()])
                     corner.corner(
                         mcarr.T,
                         quantiles=[0.16, 0.5, 0.84],
@@ -2809,27 +2807,33 @@ def whitelight(
                 nodeshape.append(shapevis)
                 pass
             # CONTEXT UPDATE
-            ctxtupdt(
-                orbp=priors[p],
-                ecc=ecc,
-                g1=g1,
-                g2=g2,
-                g3=g3,
-                g4=g4,
-                orbits=orbits,
-                period=period,
-                selectfit=selectfit,
-                smaors=smaors,
-                time=time,
-                tmjd=tmjd,
-                ttv=ttv,
-                visits=visits,
-                ginc=inc,
-                gttv=alltknot,
-                fixedpars=fixedpars,
-                mcmcdat=flatwhite[selectfit],
-                mcmcsig=1e0 / np.sqrt(tauwhite),  # GMR: FIXME
-                nodeshape=nodeshape,
+            dctxupdt()
+            dctxupdt(
+                dct={
+                    'observatory': 'HST',
+                    'modelwrapper': 'whitelight',
+                    'orbp': priors[p],
+                    'ecc': ecc,
+                    'g1': g1,
+                    'g2': g2,
+                    'g3': g3,
+                    'g4': g4,
+                    'orbits': orbits,
+                    'period': period,
+                    'selectfit': selectfit,
+                    'smaors': smaors,
+                    'time': time,
+                    'tmjd': tmjd,
+                    'ttv': ttv,
+                    'ginc': inc,
+                    'gttv': alltknot,
+                    'visits': visits,
+                    'fixedpars': fixedpars,
+                    'mcmcdat': flatwhite[selectfit],
+                    'mcmcsig': 1e0 / np.sqrt(tauwhite),
+                    'nodeshape': nodeshape,
+                },
+                freeze=True,
             )
             # FIXED ORBITAL SOLUTION
             TensorModel = TensorShell()
@@ -3781,7 +3785,6 @@ def jwstspectrum(
                 if bntst > 1:
                     newzndata = []
                     newallwvl = []
-                    newznderr = []
                     bnndx = 0
                     bnnmx = len(zndata)
                     while bnndx < bnnmx:
@@ -4006,7 +4009,7 @@ def jwstspectrum(
                         )
                         if debug:
                             mclbl = list(mctrace)
-                            mcarr = np.array([mctrace[k] for k in mctrace])
+                            mcarr = np.array([v for _, v in mctrace.items()])
                             corner.corner(
                                 mcarr.T,
                                 quantiles=[0.16, 0.5, 0.84],
@@ -4780,8 +4783,7 @@ def lcmodel(*specparams):
             g8=ctxt.lclds[7],
         ) * orbitalim(ctxt.time, imnodes)
         return out
-    else:
-        return None
+    return
 
 
 # ----------------------------------- --------------------------------

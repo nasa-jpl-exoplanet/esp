@@ -30,6 +30,7 @@ ndctx = {
     'g4': None,  # HST
     'orbits': None,  # HST
     'ttv': None,  # HST
+    'gttv': None,  # HST
     'valid': None,  # HST
 }
 
