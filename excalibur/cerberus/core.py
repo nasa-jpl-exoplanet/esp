@@ -146,9 +146,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     p,
                 )
             # make sure it has a spectrum (Kepler-37e bug)
-            # TROUBLE! crashes for JWST data
-            #   JWST has visit and detector subdivisions before WB
-            #   (Gael will fix this)
             if 'WB' not in spc['data'][p].keys():
                 if 'target' in spc['data']:
                     log.error(
@@ -256,7 +253,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
@@ -368,7 +365,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[mycia]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[mycia]['nu'])[select]),
@@ -559,7 +556,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
                 int
             )
-            for itemp, temp in enumerate(haha[Tselect]):
+            for itemp, temp in zip(Tselect, haha[Tselect]):
                 select = np.array(library[ks]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[ks]['nu'])[select]),
@@ -1078,6 +1075,9 @@ def jwstatmos(
                         freeze=True,
                     )
                     TensorModel = TensorShell()
+
+                    if dctx == 'nothing':
+                        print('dumb. trying avoid unused-variable error')
 
                     def LogLH(_, nodes):
                         '''
