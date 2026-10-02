@@ -415,24 +415,11 @@ class Spectrum(dawgie.Algorithm):
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             if vfin and vnrm and vwht:
                 log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
-
-                runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = trncore.TransitSpectrumParams(
-                    imo=runtime['transit_imo'],
-                    threshols=runtime['transit_spectrum_threshold'],
-                    reject=runtime['transit_spectrum_reject'],
-                    ntm=runtime['transit_spectrum_ntm'],
-                    lethe=runtime['transit_limbdarkening_lethe'],
-                    sliceSampler=runtime['transit_pymc_sliceSampler'],
-                    chainlen=runtime['transit_spectrum_chainlen'],
-                )
-
                 update = self._spectrum(
                     self.__fin.sv_as_dict()['parameters'],
                     self._nrm.sv_as_dict()[fltr],
                     self._wht.sv_as_dict()[fltr],
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    self.__rt.sv_as_dict()['status'],
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -468,7 +455,7 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, runtime_params, chain_length, out, fltr):
+    def _spectrum(self, fin, nrm, wht, rnt, out, fltr):
         '''Core code call'''
 
         if "Spitzer" in fltr:
@@ -479,11 +466,10 @@ class Spectrum(dawgie.Algorithm):
                 nrm,
                 fin,
                 wht,
-                runtime_params,
+                rnt,
                 verbose=False,
                 debug=False,
                 donotuse=False,
-                bserr=None,
                 bntst=10,
             )
             pass
@@ -495,8 +481,7 @@ class Spectrum(dawgie.Algorithm):
                 out,
                 fltr,
                 self._type,
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
             )
             pass

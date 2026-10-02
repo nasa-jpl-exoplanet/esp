@@ -5,6 +5,7 @@ import excalibur
 from collections import namedtuple
 
 ndctx = {
+    'allz': None,  # separation
     'ecc': None,  # eccentricity (to be cleaned up we have orbp)
     'fixedpars': None,  # parameters not fit in mcmc
     'ginc': None,  # inclination (to be cleaned up we have orbp)
@@ -12,13 +13,13 @@ ndctx = {
     'LETHE': None,  # LETHE interpolators
     'mcmcdat': None,  # data for MCMC
     'mcmcsig': None,  # errors on data for MCMC
+    'modelwrapper': None,  # whitelight / spectrum
     'nodeshape': None,  # list of dimensions of each added MCMC node
     'observatory': None,  # HST / JWST
     'orbp': None,  # orbital parameters
     'period': None,  # period (to be cleaned up we have orbp)
     'ref_IM': None,  # zero of x axis for IM formulation
     'selectfit': None,  # valid data point selection
-    'modelwrapper': None,  # whitelight / spectrum
     'smaors': None,  # semi major (to be cleaned up we have orbp)
     'time': None,  # time of samples
     'tmjd': None,  # mid transit time (to be cleaned up we have orbp)
@@ -30,6 +31,7 @@ ndctx = {
     'g4': None,  # HST
     'orbits': None,  # HST
     'ttv': None,  # HST
+    'valid': None,  # HST
 }
 
 CONTEXT = namedtuple('CONTEXT', ndctx.keys())

@@ -35,6 +35,7 @@ from excalibur.transit.fmcontext import dctxupdt
 
 
 import copy
+import corner
 import logging
 import random
 import lmfit as lm
@@ -109,10 +110,10 @@ def LogLikelihood(inputs):
             pass
         pass
     if 'whitelight' in ctxt.modelwrapper:
-        ForwardModel = orbital(*newnodes)  # WHITELIGHT
+        ForwardModel = orbital(*newnodes)
         pass
-    else:
-        ForwardModel = lcmodel(*newnodes)  # SPECTRUM
+    elif 'spectrum' in ctxt.modelwrapper:
+        ForwardModel = lcmodel(*newnodes)
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
     Norm = np.log(2e0 * np.pi * np.array(ctxt.mcmcsig))
@@ -1970,6 +1971,7 @@ def jwstwl(
     [OPT]:imo:[INT]:Instrument Model polynomial order
     [OPT]:thr:[INT]:percentile for valid data in [100, 99, 95, 68, 50]
     [OPT]:verbose:[BOOL]:messages and plots
+    [OPT]:debug:[BOOL]:highest verbosity and engineering chain length
     '''
 
     LETHE = None
@@ -2293,8 +2295,18 @@ def jwstwl(
                 )
                 flatwht = np.array(wht) / instmodel
                 if verbose:
-                    _ = simplecorner(mctrace, fullrange=True, verbose=verbose)
-
+                    mclbl = list(mctrace)
+                    mcarr = np.array([mctrace[k] for k in mctrace])
+                    corner.corner(
+                        mcarr.T,
+                        quantiles=[0.16, 0.5, 0.84],
+                        levels=(
+                            0.393,
+                            0.675,
+                        ),
+                        labels=mclbl,
+                        label_kwargs={"fontsize": 20},
+                    )
                     plt.figure(figsize=(12, 9))
                     plt.title(
                         pln + ': ' + det + ' [' + vis + ']',
@@ -2315,7 +2327,7 @@ def jwstwl(
                 out['data'][pln][det][vis]['lcmodel'] = bestlc
                 out['data'][pln][det][vis]['flatwht'] = flatwht
                 out['data'][pln][det][vis]['inmodel'] = instmodel
-                out['data'][pln][det][vis]['ref_IM'] = ctxt.ref_IM
+                out['data'][pln][det][vis]['ref_IM'] = dctxt['ref_IM']
                 pass
             out['STATUS'].append(True)
             pass
@@ -3020,9 +3032,7 @@ def tldlc(
     g6=0.0,
     g7=0.0,
     g8=0.0,
-    # method="LETHE",
-    # interpolator=None,
-    nint=int(8**2),
+    model="LETHE",
 ):
     '''
     G. ROUDIER: Light curve model
@@ -3039,16 +3049,18 @@ def tldlc(
                   from ctxt is None
     nint: Integral into discrete sum number of bins
     '''
-    # if method == "LETHE":
-    if sys.modules[__name__].ctxt.LETHE is not None:
+    # GMR: Make that a flexible light curve model that doesnt have to bath
+    # in all the nerdy excalibur nonsense for external people who just wanna use it
+    # as a package someday
+    if 'LETHE' in model:
         interpolators_list = sys.modules[__name__].ctxt.LETHE
-        # if interpolators_list is None:
-        #    interpolators_list = interpolator
         occulted = occultation(
             z, rprs, g1, g2, g3, g4, g5, g6, g7, g8, interpolators_list
         )
         ldlc = 1.0 - occulted
+        pass
     else:
+        nint = int(8**2)
         ldlc = np.zeros(z.size)
         xin = z.copy() - rprs
         xin[xin < 0e0] = 0e0
@@ -3656,39 +3668,28 @@ def jwstspectrum(
     fin,
     wht,
     rtp,
-    # chl=int(4e4),
-    # rjc=95,
-    # thr=5,
-    # ntm=10,
-    # imo=4,
     verbose=False,
     debug=False,
     donotuse=False,
-    bserr=None,
     bntst=1,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
     [I/O]:out:[transit.states.SpectrumSV()]
           out['data'][p]:[DICT]:output/planet
+          ... TBD
     [I]:nrm:[transit.states.NormSV()]:transit.core.norm_jwst.__doc__
     [I]:fin:[system.states.PriorsSV()]
     [I]:wht:[transit.states.WhiteLightSV()]:transit.core.jwstwl.__doc__
-    [OPT]:rtp:[runtime.states.StatusSV()]
-    [OPT]:chl:[INT]:MCMC chain length
-    [OPT]:rjc:[FLOAT]:percentile used for outlier rejection
-    [OPT]:thr:[FLOAT]:outlier rejection threshold in sigmas
-    [OPT]:ntm:[INT]:minimum number of in transit data points
-    [OPT]:imo:[INT]:Instrument Model polynomial order
+    [I]:rtp:[runtime.states.StatusSV()]
     [OPT]:verbose:[BOOL]:plots
-    [OPT]:debug:[BOOL]:channel plots
+    [OPT]:debug:[BOOL]:channel plots and engineering chain length
+    [OPT]:donotuse:[BOOL]:lmfit for light curves
+    [OPT]:bntst:[INT]:Number of channels per spectral bin
     '''
 
-    # TRUANDERIE
-    if bserr is None:
-        bserr = 1e-3
     LETHE = None
-    if rtp.lethe:
+    if rtp['transit_limbdarkening_lethe']:
         # LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
         rprs_grid = np.load(LETHE_dir + "/parameters/rprs_grid.npy")
@@ -3727,13 +3728,18 @@ def jwstspectrum(
                 noise = np.nanstd(
                     zndata[
                         np.abs(zndata)
-                        < np.nanpercentile(abs(zndata), rtp.reject)
+                        < np.nanpercentile(
+                            abs(zndata), rtp['transit_spectrum_reject'].value()
+                        )
                     ]
                 )
                 whttrc = wht['data'][pln][det][vis]['mctrace']
                 rpors = np.nanmedian(whttrc['rprs'])
                 # OUTLIERS REJECTION
-                zndata[abs(zndata) > rtp.threshold * noise] = np.nan
+                zndata[
+                    abs(zndata)
+                    > rtp['transit_spectrum_threshold'].value() * noise
+                ] = np.nan
                 zndata = 1e0 + zndata[trd].T
                 if debug:
                     tsp = '-'
@@ -3742,8 +3748,11 @@ def jwstspectrum(
                     plt.title(pln + tsp + det + tsp + vis, fontsize=20)
                     im = plt.imshow(
                         zndata,
-                        vmin=1e0 - rpors**2 - rtp.threshold * noise,
-                        vmax=1e0 + rtp.threshold * noise,
+                        vmin=1e0
+                        - rpors**2
+                        - rtp['transit_spectrum_threshold'].value() * noise,
+                        vmax=1e0
+                        + rtp['transit_spectrum_threshold'].value() * noise,
                         aspect='auto',
                     )
                     plt.tick_params(axis='both', labelsize=18)
@@ -3762,10 +3771,11 @@ def jwstspectrum(
                 zst = nrm['data'][pln]['z'][det][vis][trd]
                 allwvl = np.median(nrm['data'][pln]['wave'][det][vis], axis=0)
                 dltwvl = np.nanmedian(np.diff(allwvl))
-                # REBIN TEST
+                # REBIN
                 if bntst > 1:
                     newzndata = []
                     newallwvl = []
+                    newznderr = []
                     bnndx = 0
                     bnnmx = len(zndata)
                     while bnndx < bnnmx:
@@ -3789,7 +3799,9 @@ def jwstspectrum(
                     dltwvl = newdltwvl
                     zndata = np.array(newzndata)
                     pass
-
+                znderr = np.nanstd(
+                    zndata.T[abs(zst) > (1e0 + 2e0 * rpors)], axis=0
+                )
                 argsdict = {
                     'progbar': verbose,
                     'progsizemax': 35,
@@ -3800,11 +3812,14 @@ def jwstspectrum(
                     argsdict, det + ' ' + vis, zndata
                 )
                 for chn, slc in enumerate(zndata):
-                    slc[np.abs(1e0 - slc) > rtp.threshold * noise] = np.nan
+                    slc[
+                        np.abs(1e0 - slc)
+                        > rtp['transit_spectrum_threshold'].value() * noise
+                    ] = np.nan
                     # ERROR ESTIMATED ON DATA
-                    sns = np.nanstd(slc[abs(zst) > (1e0 + 2e0 * rpors)])
                     transiting = (
-                        np.sum(np.isfinite(slc[np.abs(zst) < 1])) > rtp.ntm
+                        np.sum(np.isfinite(slc[np.abs(zst) < 1]))
+                        > rtp['transit_spectrum_ntm'].value()
                     )
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
@@ -3861,7 +3876,9 @@ def jwstspectrum(
                                 for t in whttrc
                                 if t.startswith('IM')
                             ]
-                            for ic, coef in enumerate(np.arange(rtp.imo)):
+                            for ic, coef in enumerate(
+                                np.arange(int(rtp['transit_imo'].value()))
+                            ):
                                 thslbl = 'IM' + str(int(coef))
                                 pymcim = pymc.Normal(
                                     thslbl,
@@ -3876,7 +3893,7 @@ def jwstspectrum(
                                 nodes.append(pymcim)
                                 pymcim = None
                                 pass
-                            nodeshape.append(rtp.imo)
+                            nodeshape.append(int(rtp['transit_imo'].value()))
                             # CONTEXT
                             ssz, _ = tm.time2z(
                                 tst[np.isfinite(slc)],
@@ -3886,16 +3903,24 @@ def jwstspectrum(
                                 spr[pln]['period'],
                                 spr[pln]['ecc'],
                             )
-                            ctxtupdt(
-                                time=tst[np.isfinite(slc)],
-                                mcmcdat=slc[np.isfinite(slc)],
-                                mcmcsig=slc[np.isfinite(slc)] * 0 + sns,
-                                nodeshape=nodeshape,
-                                allz=ssz,
-                                lclds=lclds,
-                                spec=True,
-                                LETHE=LETHE,
-                                ref_IM=wht['data'][pln][det][vis]['ref_IM'],
+                            dctxt = dctxupdt()
+                            dctxt = dctxupdt(
+                                dct={
+                                    'observatory': 'JWST',
+                                    'modelwrapper': 'spectrum',
+                                    'time': tst[np.isfinite(slc)],
+                                    'mcmcdat': slc[np.isfinite(slc)],
+                                    'mcmcsig': slc[np.isfinite(slc)] * 0
+                                    + znderr[chn],
+                                    'nodeshape': nodeshape,
+                                    'allz': ssz,
+                                    'lclds': lclds,
+                                    'LETHE': LETHE,
+                                    'ref_IM': wht['data'][pln][det][vis][
+                                        'ref_IM'
+                                    ],
+                                },
+                                freeze=True,
                             )
                             # PYMC SHELL
                             TensorModel = TensorShell()
@@ -3912,8 +3937,6 @@ def jwstspectrum(
                                 observed=ctxt.mcmcdat,
                                 logp=LogLH,
                             )
-                            # DA LINT
-                            _ = rtp
                             sampler = pymc.Metropolis()
                             if not verbose:
                                 log.info('>-- SPECTRUM SAMPLER: Metropolis')
@@ -3943,16 +3966,21 @@ def jwstspectrum(
                                 for n in nodes:
                                     mctrace[n.name] = np.random.normal(
                                         loc=lmout.params[n.name].value,
-                                        scale=bserr,
+                                        scale=znderr[chn],
                                         size=10000,
                                     )
                                     pass
                                 pass
                             else:
+                                chainlen = int(
+                                    rtp['transit_spectrum_chainlen'].value()
+                                )
+                                if debug or verbose:
+                                    chainlen = int(1e3)
                                 trace = pymc.sample(
-                                    rtp.chainlen,
+                                    chainlen,
                                     cores=4,
-                                    tune=int(rtp.chainlen / 2),
+                                    tune=int(chainlen / 2),
                                     compute_convergence_checks=False,
                                     step=sampler,
                                     progressbar=debug,
@@ -3971,10 +3999,18 @@ def jwstspectrum(
                             )
                         )
                         if debug:
-                            _ = simplecorner(
-                                mctrace, fullrange=True, verbose=verbose
+                            mclbl = list(mctrace)
+                            mcarr = np.array([mctrace[k] for k in mctrace])
+                            corner.corner(
+                                mcarr.T,
+                                quantiles=[0.16, 0.5, 0.84],
+                                levels=(
+                                    0.393,
+                                    0.675,
+                                ),
+                                labels=mclbl,
+                                label_kwargs={"fontsize": 20},
                             )
-
                             plt.figure(figsize=(12, 9))
                             plt.title(
                                 pln + ': ' + det + ' [' + vis + ']',
@@ -3983,7 +4019,7 @@ def jwstspectrum(
                             plt.errorbar(
                                 ctxt.time,
                                 ctxt.mcmcdat,
-                                yerr=noise,
+                                yerr=ctxt.mcmcdat * 0 + znderr[chn],
                                 fmt='o',
                                 alpha=0.5,
                             )
@@ -3995,7 +4031,7 @@ def jwstspectrum(
                         # trc.append(mctrace)
                         spc.append(np.nanmedian(mctrace['rprs']))
                         spcerr.append(np.nanstd(mctrace['rprs']))
-                        dta.append(ctxt.mcmcdat)
+                        dta.append(dctxt['mcmcdat'])
                         bmd.append(bestlc)
                         pass
                     else:
@@ -4031,8 +4067,7 @@ def spectrum(
     out,
     ext,
     selftype,
-    runtime_params,
-    chainlen=int(1e4),
+    rnt,
     verbose=False,
     lcplot=False,
 ):
@@ -4203,6 +4238,7 @@ def spectrum(
                 g2=g2[0],
                 g3=g3[0],
                 g4=g4[0],
+                model='numint',
             )
             if lcplot:
                 plt.figure()
@@ -4301,22 +4337,27 @@ def spectrum(
                     pass
                 nodes.extend(alloitcp)
                 nodeshape.append(shapevis)
-                # UPDATE GLOBALS
-                ctxtupdt(
-                    allz=allz,
-                    g1=g1,
-                    g2=g2,
-                    g3=g3,
-                    g4=g4,
-                    orbits=orbits,
-                    smaors=smaors,
-                    time=time,
-                    valid=valid,
-                    visits=visits,
-                    mcmcdat=data[valid],
-                    mcmcsig=dnoise[valid],
-                    nodeshape=nodeshape,
-                    spec=True,
+                # INIT AND UPDATE GLOBALS
+                dctxt = dctxupdt()
+                dctxt = dctxupdt(
+                    dct={
+                        'observatory': 'HST',
+                        'modelwrapper': 'spectrum',
+                        'allz': allz,
+                        'g1': g1,
+                        'g2': g2,
+                        'g3': g3,
+                        'g4': g4,
+                        'orbits': orbits,
+                        'smaors': smaors,
+                        'time': time,
+                        'valid': valid,
+                        'visits': visits,
+                        'mcmcdat': data[valid],
+                        'mcmcsig': dnoise[valid],
+                        'nodeshape': nodeshape,
+                    },
+                    freeze=True,
                 )
                 # MODEL
                 TensorModel = TensorShell()
@@ -4334,19 +4375,17 @@ def spectrum(
                     logp=LogLH,
                 )
                 # SAMPLING
-                if runtime_params.sliceSampler:
-                    log.info('>-- SPECTRUM SAMPLER: Slice')
-                    sampler = pymc.Slice()
-                else:
-                    log.info('>-- SPECTRUM SAMPLER: Metropolis')
-                    sampler = pymc.Metropolis()
+                chainlen = int(rnt['transit_spectrum_chainlen'].value())
+                if verbose:
+                    chainlen = int(1e2)
 
+                log.info('>-- SPECTRUM SAMPLER: Metropolis')
                 trace = pymc.sample(
                     chainlen,
                     cores=4,
                     tune=int(chainlen / 2),
                     compute_convergence_checks=False,
-                    step=sampler,
+                    step=pymc.Metropolis(),
                     progressbar=verbose,
                 )
                 mcpost = pymc.stats.summary(trace)
@@ -4695,7 +4734,7 @@ def lcmodel(*specparams):
     '''
     G. ROUDIER: Spectral light curve model
     '''
-    if ctxt.orbits:  # HST
+    if 'HST' in ctxt.observatory:
         r, avs, aos, aoi = specparams
         allimout = []
         for iv in range(len(ctxt.visits)):
@@ -4719,22 +4758,24 @@ def lcmodel(*specparams):
         )
         out = out * np.array(allimout)
         return out[ctxt.valid]
-    # JWST
-    imnodes = specparams[-ctxt.nodeshape[-1] :]
-    lcnodes = specparams[: -ctxt.nodeshape[-1]]
-    out = tldlc(
-        abs(ctxt.allz),
-        float(lcnodes[0]),
-        g1=ctxt.lclds[0],
-        g2=ctxt.lclds[1],
-        g3=ctxt.lclds[2],
-        g4=ctxt.lclds[3],
-        g5=ctxt.lclds[4],
-        g6=ctxt.lclds[5],
-        g7=ctxt.lclds[6],
-        g8=ctxt.lclds[7],
-    ) * orbitalim(ctxt.time, imnodes)
-    return out
+    if 'JWST' in ctxt.observatory:
+        imnodes = specparams[-ctxt.nodeshape[-1] :]
+        lcnodes = specparams[: -ctxt.nodeshape[-1]]
+        out = tldlc(
+            abs(ctxt.allz),
+            float(lcnodes[0]),
+            g1=ctxt.lclds[0],
+            g2=ctxt.lclds[1],
+            g3=ctxt.lclds[2],
+            g4=ctxt.lclds[3],
+            g5=ctxt.lclds[4],
+            g6=ctxt.lclds[5],
+            g7=ctxt.lclds[6],
+            g8=ctxt.lclds[7],
+        ) * orbitalim(ctxt.time, imnodes)
+        return out
+    else:
+        return None
 
 
 # ----------------------------------- --------------------------------
