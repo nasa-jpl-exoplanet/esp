@@ -24,7 +24,6 @@ ndctx = {
     'time': None,  # time of samples
     'tmjd': None,  # mid transit time (to be cleaned up we have orbp)
     'visits': None,  # list of available visits
-    'orbp': None,  # HST
     'g1': None,  # HST
     'g2': None,  # HST
     'g3': None,  # HST
@@ -40,11 +39,11 @@ CONTEXT = namedtuple('CONTEXT', ndctx.keys())
 def dctxupdt(dct=None, freeze=False):
     '''
     GMR: Globals for pymc
-        dctxt = dctxupdt()  # INIT
+        dctxupdt()  # INIT
         ...
         if whatever: dctxt['key'] = value  # EXAMPLE CONDITIONAL UPDATE
         ...
-        dctxt = dctxupdt(dct=dctx, freeze=True)  # STORE AS IMMUTABLE IN ctxt
+        dctxupdt(dct=dctx, freeze=True)  # STORE AS IMMUTABLE IN ctxt
     '''
     if dct is None:  # INIT
         dctxt = ndctx
@@ -59,4 +58,4 @@ def dctxupdt(dct=None, freeze=False):
     if freeze:  # IMMUTABLES
         excalibur.transit.core.ctxt = CONTEXT(**dctxt)
         pass
-    return dctxt
+    return

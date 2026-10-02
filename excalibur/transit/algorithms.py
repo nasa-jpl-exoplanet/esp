@@ -305,7 +305,7 @@ class WhiteLight(dawgie.Algorithm):
             )
         return
 
-    def _hstwhitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _hstwhitelight(self, nrm, fin, runtime_params, out, fltr):
         '''Core code call for merged HST data'''
 
         wl = trncore.hstwhitelight(
@@ -336,8 +336,6 @@ class WhiteLight(dawgie.Algorithm):
                 debug=False,
             )
         else:
-            # GMR: We should check if Ariel sims go there it is gonna break them
-            # We pass the runtime SV now, not the on the fly made up thinggy
             wl = trncore.whitelight(
                 nrm,
                 fin,

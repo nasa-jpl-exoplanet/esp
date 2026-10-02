@@ -84,6 +84,9 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
+dctxt = None
+ctxt = None
+
 
 # GMR: Gregoire s legacy
 def LogLikelihood(inputs):
@@ -114,6 +117,9 @@ def LogLikelihood(inputs):
         pass
     elif 'spectrum' in ctxt.modelwrapper:
         ForwardModel = lcmodel(*newnodes)
+        pass
+    else:
+        ForwardModel = None
         pass
     # Norm = np.log(np.sqrt(2e0 * np.pi)) - np.log(ctxt.mcmcsig)
     Norm = np.log(2e0 * np.pi * np.array(ctxt.mcmcsig))
@@ -1702,8 +1708,8 @@ def hstwhitelight(
                 pass
             nodes.extend(alloitcp)
             nodeshape.append(shapevis)
-            dctxt = dctxupdt()
-            dctxt = dctxupdt(
+            dctxupdt()
+            dctxupdt(
                 dct={
                     'observatory': 'HST',
                     'modelwrapper': 'whitelight',
@@ -2181,8 +2187,8 @@ def jwstwl(
                     nodeshape.append(int(rtp['transit_imo'].value()))
 
                     # CONTEXT
-                    dctxt = dctxupdt()
-                    dctxt = dctxupdt(
+                    dctxupdt()
+                    dctxupdt(
                         dct={
                             'ecc': priors[pln]['ecc'],
                             'lclds': lclds,
@@ -3903,8 +3909,8 @@ def jwstspectrum(
                                 spr[pln]['period'],
                                 spr[pln]['ecc'],
                             )
-                            dctxt = dctxupdt()
-                            dctxt = dctxupdt(
+                            dctxupdt()
+                            dctxupdt(
                                 dct={
                                     'observatory': 'JWST',
                                     'modelwrapper': 'spectrum',
@@ -4338,8 +4344,8 @@ def spectrum(
                 nodes.extend(alloitcp)
                 nodeshape.append(shapevis)
                 # INIT AND UPDATE GLOBALS
-                dctxt = dctxupdt()
-                dctxt = dctxupdt(
+                dctxupdt()
+                dctxupdt(
                     dct={
                         'observatory': 'HST',
                         'modelwrapper': 'spectrum',
