@@ -94,40 +94,44 @@ class crbFM:
         if hitemplist is None:
             hitemplist = ctxt.hitemplist
             if hitemplist is None:
-                hitemplist = ctxt.runtime.hitemplist
-                # hitemplist = ctxt.runtime[
-                #    'cerberus_crbmodel_HITEMPmolecules'
-                # ].molecules
+                # hitemplist = ctxt.runtime.hitemplist
+                hitemplist = ctxt.runtime[
+                    'cerberus_crbmodel_HITEMPmolecules'
+                ].molecules
         if cialist is None:
             cialist = ctxt.cialist
             if cialist is None:
-                cialist = ctxt.runtime.cialist
-                # cialist = ctxt.runtime[
-                #                    'cerberus_crbmodel_HITRANmolecules'
-                #                ].molecules
+                # cialist = ctxt.runtime.cialist
+                cialist = ctxt.runtime[
+                    'cerberus_crbmodel_HITRANmolecules'
+                ].molecules
         if xmollist is None:
             xmollist = ctxt.xmollist
             if xmollist is None:
-                xmollist = ctxt.runtime.xmollist
-                # xmollist = ctxt.runtime[
-                #    'cerberus_crbmodel_EXOMOLmolecules'
-                # ].molecules
+                # xmollist = ctxt.runtime.xmollist
+                xmollist = ctxt.runtime[
+                    'cerberus_crbmodel_EXOMOLmolecules'
+                ].molecules
         if atomlist is None:
             atomlist = ctxt.atomlist
             if atomlist is None:
-                atomlist = ctxt.runtime.atomlist
+                # atomlist = ctxt.runtime.atomlist
+                atomlist = ctxt.runtime['cerberus_crbmodel_atoms'].molecules
         if nlevels is None:
             nlevels = ctxt.nlevels
             if nlevels is None:
-                nlevels = ctxt.runtime.nlevels
+                # nlevels = ctxt.runtime.nlevels
+                nlevels = ctxt.runtime['cerberus_crbmodel_nlevels'].value()
         if Hsmax is None:
             Hsmax = ctxt.Hsmax
             if Hsmax is None:
-                Hsmax = ctxt.runtime.Hsmax
+                # Hsmax = ctxt.runtime.Hsmax
+                Hsmax = runtime['cerberus_crbmodel_Hsmax'].value()
         if solrad is None:
             solrad = ctxt.solrad
             if solrad is None:
-                solrad = ctxt.runtime.solrad
+                # solrad = ctxt.runtime.solrad
+                solrad = (runtime['cerberus_crbmodel_solrad'].value(),)
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
