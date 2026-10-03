@@ -2086,7 +2086,7 @@ def jwstwl(
                             pass
                         else:
                             s = np.abs(1e0 - nsp) <= np.nanpercentile(
-                                np.abs(1e0 - nsp), rtp.threshold
+                                np.abs(1e0 - nsp), rtp['transit_whitelight_threshold']
                             )
                             validl.append(select & s)
                             stdl.append(np.nanstd(nsp[select & s]))
