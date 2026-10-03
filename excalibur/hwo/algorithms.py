@@ -76,53 +76,11 @@ class SimSpectrum(dawgie.Algorithm):
 
             if sysvalid and ancvalid:
                 runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = hwocore.HWOparams(
-                    SNRfactor=runtime[
-                        'ariel_simspectrum_SNRadjustment'
-                    ].value(),
-                    randomSeed=runtime['ariel_simspectrum_randomseed'].value(),
-                    randomCloudProperties=runtime[
-                        'ariel_simspectrum_randomCloudProperties'
-                    ],
-                    thorngrenMassMetals=runtime[
-                        'ariel_simspectrum_thorngrenMassMetals'
-                    ],
-                    chachanMassMetals=runtime[
-                        'ariel_simspectrum_chachanMassMetals'
-                    ],
-                    includeMetallicityDispersion=runtime[
-                        'ariel_simspectrum_includeMetallicityDispersion'
-                    ],
-                    metallicityDispersion=runtime[
-                        'ariel_simspectrum_metallicityDispersion'
-                    ].value(),
-                    CtoOdaSilva=runtime['ariel_simspectrum_CtoOdaSilva'],
-                    CtoOaverage=runtime[
-                        'ariel_simspectrum_CtoOaverage'
-                    ].value(),
-                    CtoOdispersion=runtime[
-                        'ariel_simspectrum_CtoOdispersion'
-                    ].value(),
-                    hitemplist=runtime[
-                        'cerberus_crbmodel_HITEMPmolecules'
-                    ].molecules,
-                    cialist=runtime[
-                        'cerberus_crbmodel_HITRANmolecules'
-                    ].molecules,
-                    xmollist=runtime[
-                        'cerberus_crbmodel_EXOMOLmolecules'
-                    ].molecules,
-                    atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
-                    nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                    solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                    Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                    isothermal=runtime['cerberus_crbmodel_isothermal'],
-                )
                 update = self._sim_spectrum(
                     target,
                     system_dict,
                     ancil_dict,
-                    runtime_params,
+                    runtime,
                     self.__out,
                 )
             else:
@@ -138,10 +96,10 @@ class SimSpectrum(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _sim_spectrum(target, system_dict, ancil_dict, runtime_params, out):
+    def _sim_spectrum(target, system_dict, ancil_dict, runtime, out):
         '''Core code call'''
         filled = hwocore.simulate_spectra(
-            target, system_dict, ancil_dict, runtime_params, out
+            target, system_dict, ancil_dict, runtime, out
         )
         return filled
 
