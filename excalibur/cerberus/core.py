@@ -104,8 +104,8 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
             pass
         pass
     if svout['data'].keys():
-        svout['STATUS'].extend(total)
-        pass
+        out['STATUS'].append(True)
+    pass
     # CB EST RUDE
     return ~np.any(~np.array(total))
 
