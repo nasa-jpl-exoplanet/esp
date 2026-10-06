@@ -91,7 +91,7 @@ def thisenv(repository_root, myenv, mainpipeline=True):
     return
 
 
-def LoadSV(nms, trg, rid, xcd, svroot=False):
+def load_sv(nms, trg, rid, xcd, svroot=False):
     '''
     GMR:Returns a database product (SV)
     [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
@@ -127,7 +127,7 @@ def LoadSV(nms, trg, rid, xcd, svroot=False):
     return out
 
 
-def PickleSV(args, svroot=False, clncrn=False, saveme=None):
+def pickle_sv(args, svroot=False, clncrn=False, saveme=None):
     '''
     GMR:Returns either a read pickle or loadSV output
     [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
@@ -157,7 +157,7 @@ def PickleSV(args, svroot=False, clncrn=False, saveme=None):
         pass
     else:
         logging.info('>-- FROM DATABASE %s', strname)
-        out = LoadSV(
+        out = load_sv(
             nms, trg, rid, os.path.join(esp, 'excalibur'), svroot=svroot
         )
         with open(mycornichon, 'wb') as f:  # nosec
