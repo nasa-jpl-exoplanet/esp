@@ -3,7 +3,6 @@ GMR: Tools for excalibur dev on mentor
 '''
 
 import os
-import sys
 import pickle  # nosec
 import dawgie
 import logging
@@ -26,12 +25,18 @@ class DuckDS:
             for k, v in sv.items():
                 if not isinstance(v, dawgie.Value):
                     log.critical(
-                        f'--< {self._alg.name()}["{sv.name()}"]["{k}"] does not extend dawgie.Value >--'
+                        '--< %s ["%s"]["%s"] does not extend dawgie.Value >--',
+                        self._alg.name(),
+                        sv.name(),
+                        k,
                     )
                     pass
                 pass
             pass
         pass
+
+    def quack(self):
+        return 'CI QUACK'
 
     pass
 
@@ -40,8 +45,8 @@ def envvar(filename: str):
     '''
     GMR:Based on Al's sv_loading.ipynb
     '''
-    with open(filename, 'rt') as file:
-        for line in file.readlines():
+    with open(filename, 'rt', encoding="utf-8") as f:
+        for line in f.readlines():
             key, value = (
                 line.replace('export ', '')
                 .replace('\\\n', '')
@@ -68,9 +73,9 @@ def thisenv(repository_root, myenv, mainpipeline=True):
     # sys.path.append(repository_root)
     # GMR: on the fly imports
     # ConnectionRefusedError: [Errno 111] Connection refused
-    import dawgie.db
-    import dawgie.context
-    import dawgie.security
+    import dawgie.db  # pylint: disable=redefined-outer-name,import-outside-toplevel
+    import dawgie.context  # pylint: disable=redefined-outer-name,import-outside-toplevel
+    import dawgie.security  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
     dawgie.security.initialize(
         path=os.path.expandvars(
@@ -86,7 +91,7 @@ def thisenv(repository_root, myenv, mainpipeline=True):
     return
 
 
-def loadSV(nms, trg, rid, xcd, SVroot=False):
+def LoadSV(nms, trg, rid, xcd, svroot=False):
     '''
     GMR:Returns a database product (SV)
     [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
@@ -98,8 +103,8 @@ def loadSV(nms, trg, rid, xcd, SVroot=False):
     strtask, stralgo, strsv = nms
     # GMR: on the fly imports
     # ConnectionRefusedError: [Errno 111] Connection refused
-    import dawgie.pl
-    import dawgie.pl.scan
+    import dawgie.pl  # pylint: disable=redefined-outer-name,import-outside-toplevel
+    import dawgie.pl.scan  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
     dawgie.context.ae_base_path = os.path.expandvars(xcd)
     dawgie.context.ae_base_package = 'excalibur'
@@ -115,20 +120,21 @@ def loadSV(nms, trg, rid, xcd, SVroot=False):
             dawgie.SV_REF(taskmod.task, alg, s)
         )
         pass
-    if SVroot:
+    if svroot:
         out = alg
     else:
         out = alg.sv_as_dict()[strsv]
     return out
 
 
-def pickleSV(trg, nms, rid, odr, esp, clncrn=False, saveme=None):
+def PickleSV(args, svroot=False, clncrn=False, saveme=None):
     '''
     GMR:Returns either a read pickle or loadSV output
     [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
     [I]:odr:[STR]:Output directory for saving pickles
     [OPT]:clncrn:[BOOL]:Cleans up pickles before reading/saving them
     '''
+    trg, nms, rid, odr, esp = args
     fullname = [trg, str(rid)]
     fullname.extend(nms)
     strname = '.'.join(fullname)
@@ -143,25 +149,23 @@ def pickleSV(trg, nms, rid, odr, esp, clncrn=False, saveme=None):
             pickle.dump(saveme, f, pickle.HIGHEST_PROTOCOL)
             pass
         return saveme
+    if os.path.isfile(mycornichon):
+        logging.info('>-- FROM CORNICHON %s', strname)
+        with open(mycornichon, 'rb') as f:  # nosec
+            out = pickle.load(f)  # nosec
+            pass
+        pass
     else:
-        if os.path.isfile(mycornichon):
-            logging.info('>-- FROM CORNICHON %s', strname)
-            with open(mycornichon, 'rb') as f:  # nosec
-                out = pickle.load(f)  # nosec
-                pass
+        logging.info('>-- FROM DATABASE %s', strname)
+        out = LoadSV(
+            nms, trg, rid, os.path.join(esp, 'excalibur'), svroot=svroot
+        )
+        with open(mycornichon, 'wb') as f:  # nosec
+            logging.info('>-- PICKLING %s', strname)
+            pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
             pass
-        else:
-            logging.info('>-- FROM DATABASE %s', strname)
-            out = loadSV(
-                nms, trg, rid, os.path.join(esp, 'excalibur'), SVroot=True
-            )
-            with open(mycornichon, 'wb') as f:  # nosec
-                logging.info('>-- PICKLING %s', strname)
-                pickle.dump(out, f, pickle.HIGHEST_PROTOCOL)
-                pass
-            pass
-        return out
-    pass
+        pass
+    return out
 
 
 def nospam():

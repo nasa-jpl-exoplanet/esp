@@ -74,7 +74,6 @@ def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
     '''
     cs = False
     thisspc = {'data': {}}
-    svout['data'] = {}
     total = []
     for p in spc['data']:
         # filter out non-planetletter keywords, e.g. 'models','target'
