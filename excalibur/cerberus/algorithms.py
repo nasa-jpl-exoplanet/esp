@@ -70,11 +70,8 @@ class XSLib(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         target = repr(self).split('.')[1]
-
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-        # for fltr in ['Ariel-sim']:
+
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
