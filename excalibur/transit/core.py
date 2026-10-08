@@ -272,7 +272,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         select_transit = np.any(
             diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
         )
-
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
@@ -438,6 +437,15 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                         plt.plot(w, s)
                         pass
                     plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                    plt.tick_params(labelsize=18)
+                    plt.show()
+
+                    viewdata = allnorms[thisdet][thisvis]
+                    fig = plt.figure(figsize=(12, 9))
+                    plt.imshow(viewdata.T, interpolation='none', aspect='auto')
+                    plt.clim(0.99, 1.01)
+                    cbar = plt.colorbar()
+                    cbar.ax.tick_params(labelsize=18)
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass

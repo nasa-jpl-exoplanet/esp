@@ -74,14 +74,11 @@ class Normalization(dawgie.Algorithm):
         '''Output State Vectors: transit.normalization'''
         return self.__out
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
 
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
-
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -98,6 +95,7 @@ class Normalization(dawgie.Algorithm):
                     self.__tme.sv_as_dict()[fltr],
                     self.__fin.sv_as_dict()['parameters'],
                     fltrs.index(fltr),
+                    verbose=verbose,
                 )
                 pass
             else:
@@ -119,7 +117,7 @@ class Normalization(dawgie.Algorithm):
             )
         return
 
-    def _norm(self, cal, tme, fin, index):
+    def _norm(self, cal, tme, fin, index, verbose=False):
         '''Core code call'''
         if 'Spitzer' in fltrs[index]:
             normed = trncore.norm_spitzer(
@@ -138,6 +136,7 @@ class Normalization(dawgie.Algorithm):
                 fltrs[index],
                 self.__out[index],
                 self._type,
+                verbose=verbose,
             )
             pass
         else:
@@ -148,7 +147,7 @@ class Normalization(dawgie.Algorithm):
                 fltrs[index],
                 self.__out[index],
                 self._type,
-                verbose=False,
+                verbose=verbose,
             )
             pass
         return normed
