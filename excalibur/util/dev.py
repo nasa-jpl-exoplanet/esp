@@ -94,18 +94,20 @@ def thisenv(repository_root, myenv, mainpipeline=True):
 def load_sv(nms, trg, rid, xcd, svroot=False):
     '''
     GMR:Returns a database product (SV)
+    GMR:A direct call to load_sv will trigger an error because a .excalibur
+        is wrongly added in the path somehow somewhere in dawgie.pl.scan
+        It does not happen when load_sv is being called by pickle_sv
     [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
     [I]:trg:[STR]:Host star name ('HAT-P-26')
     [I]:rid:[INT]:Excalibur database runID number (666)
     [I]:xcd:[STR]:Path to excalibur code ('${HOME}/esp/excalibur')
-    [OPT]:SVroot:[BOOL]:Returns SV root instead of SV[filter]
+    [OPT]:svroot:[BOOL]:Returns SV root instead of SV[filter]
     '''
     strtask, stralgo, strsv = nms
     # GMR: on the fly imports
     # ConnectionRefusedError: [Errno 111] Connection refused
     import dawgie.pl  # pylint: disable=redefined-outer-name,import-outside-toplevel
     import dawgie.pl.scan  # pylint: disable=redefined-outer-name,import-outside-toplevel
-
     dawgie.context.ae_base_path = os.path.expandvars(xcd)
     dawgie.context.ae_base_package = 'excalibur'
     dawgie.pl.scan.for_factories(
@@ -130,9 +132,15 @@ def load_sv(nms, trg, rid, xcd, svroot=False):
 def pickle_sv(args, svroot=False, clncrn=False, saveme=None):
     '''
     GMR:Returns either a read pickle or loadSV output
-    [I]:nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
-    [I]:odr:[STR]:Output directory for saving pickles
+    [I]:args:[LIST]
+        trg:[STR]:Host star name ('HAT-P-26')
+        nms:[LIST]:SV name (['transit', 'Spectrum', 'JWST-NIRSPEC-NRS-F290LP-G395H'])
+        rid:[INT]:Excalibur database runID number (666)
+        odr:[STR]:Output directory for saving pickles
+        esp:[STR]:ESP code root directory
+    [OPT]:svroot:[BOOL]:SV root instead of SV[filter]
     [OPT]:clncrn:[BOOL]:Cleans up pickles before reading/saving them
+    [OPT]:saveme:[BOOL]:Writing SV instead of reading it
     '''
     trg, nms, rid, odr, esp = args
     fullname = [trg, str(rid)]
@@ -178,3 +186,10 @@ def nospam():
     logging.getLogger("numexpr").setLevel(logging.WARNING)
     logging.getLogger("pytensor").setLevel(logging.CRITICAL)
     return
+
+def planetkeys(inl):
+    '''
+    GMR:Returns a list of planet letters if they exist in inl
+    [I]:inl:[LIST:[str]]
+    '''
+    return [p for p in map(chr, range(97, 123)) if p in inl]
