@@ -14,6 +14,7 @@ import dawgie.context
 
 import excalibur
 import excalibur.system.core as syscore
+import excalibur.data.coreview as datcvw
 import excalibur.util.time
 from excalibur.util import nerdclub
 
@@ -356,6 +357,11 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['data'][p]['ordt'] = ordt
                 out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
+
+                fig = datcvw.timing(out['data'][p], title=p)
+                out['data'][p]['view'] = fig
+                if verbose: plt.show()
+                else: plt.close()
                 pass
             # ---------- ---------------------------------------------
             # -- SPITZER -- ------------------------------------------
@@ -585,20 +591,17 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['STATUS'].append(True)
                 pass
             # --------- ----------------------------------------------
-            if verbose:
-                log.warning('>-- Planet: %s', p)
-                log.warning('--< Transit: %s', str(out['data'][p]['transit']))
-                log.warning('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-                log.warning(
-                    '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
-                )
-                pass
+            log.info('>-- Planet: %s', p)
+            log.info('--< Transit: %s', str(out['data'][p]['transit']))
+            log.info('--< Eclipse: %s', str(out['data'][p]['eclipse']))
+            log.info('--< Phase Curve: %s', str(out['data'][p]['phasecurve']))
             if (
                 out['data'][p]['transit']
                 or out['data'][p]['eclipse']
                 or out['data'][p]['phasecurve']
             ):
                 chunked = True
+                pass
             pass
         pass
     return chunked

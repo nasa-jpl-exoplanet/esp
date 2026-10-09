@@ -186,3 +186,10 @@ def nospam():
     logging.getLogger("numexpr").setLevel(logging.WARNING)
     logging.getLogger("pytensor").setLevel(logging.CRITICAL)
     return
+
+def planetkeys(inl):
+    '''
+    GMR:Returns a list of planet letters if they exist in inl
+    [I]:inl:[LIST:[str]]
+    '''
+    return [p for p in map(chr, range(97, 123)) if p in inl]
