@@ -617,6 +617,70 @@ def derive_RHOstar_from_M_and_R(starInfo):
 
 
 # -------------------------------------------------------------------
+def derive_Mstar_from_RHO_and_R(starInfo):
+    '''
+    If stellar density is blank, fill it in based on R* and M*
+    '''
+
+    # get Msun and Rsun definitions, for calculating stellar density from M*,R*
+    sscmks = syscons.ssconstants(cgs=True)
+
+    M_derived = []
+    M_lowerr_derived = []
+    M_uperr_derived = []
+    M_ref_derived = []
+
+    for R, Rerr1, Rerr2, M, Merr1, Merr2, RHO, RHOerr1, RHOerr2, Mref in zip(
+        starInfo['R*'],
+        starInfo['R*_lowerr'],
+        starInfo['R*_uperr'],
+        starInfo['M*'],
+        starInfo['M*_lowerr'],
+        starInfo['M*_uperr'],
+        starInfo['RHO*'],
+        starInfo['RHO*_lowerr'],
+        starInfo['RHO*_uperr'],
+        starInfo['M*_ref'],
+    ):
+
+        # check for blank stellar density
+        #  (but only update it if M* and R* are both defined)
+        if M == '' and R != '' and RHO != '':
+            newM = (
+                float(RHO)
+                / sscmks['Msun']
+                * (4.0 * np.pi / 3.0 * (float(R) * sscmks['Rsun']) ** 3)
+            )
+            M_derived.append(f'{newM:6.4f}')
+            M_ref_derived.append('derived from RHO*,R*')
+
+            # also fill in the uncertainty on M, based on RHO,R uncertainties
+            if Rerr1 == '' or RHOerr1 == '':
+                M_lowerr_derived.append('')
+            else:
+                newMfractionalError1 = -np.sqrt(
+                    (3.0 * float(Rerr1) / float(R)) ** 2
+                    + (float(RHOerr1) / float(RHO)) ** 2
+                )
+                M_lowerr_derived.append(f'{(newM * newMfractionalError1):6.4f}')
+            if Rerr2 == '' or RHOerr2 == '':
+                M_uperr_derived.append('')
+            else:
+                newMfractionalError2 = np.sqrt(
+                    (3.0 * float(Rerr2) / float(R)) ** 2
+                    + (float(RHOerr2) / float(RHO)) ** 2
+                )
+                M_uperr_derived.append(f'{(newM * newMfractionalError2):6.4f}')
+        else:
+            M_derived.append(M)
+            M_lowerr_derived.append(Merr1)
+            M_uperr_derived.append(Merr2)
+            M_ref_derived.append(Mref)
+
+    return M_derived, M_lowerr_derived, M_uperr_derived, M_ref_derived
+
+
+# -------------------------------------------------------------------
 def derive_SMA_from_P_and_Mstar(starInfo, planet_letter):
     '''
     If semi-major axis is blank, fill it in based on the orbital period and star mass

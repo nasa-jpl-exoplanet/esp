@@ -87,6 +87,7 @@ def plot_spectrumfit(
     p,
     saveDir='./',
     savetodisk=False,
+    verbose=False,
 ):
     '''plot the best fit to the data'''
 
@@ -412,7 +413,8 @@ def plot_spectrumfit(
         plt.legend()
 
     # figgy.tight_layout()
-    # plt.show()
+    if verbose:
+        plt.show()
     if savetodisk:
         # pdf is so much better, but xv gives error (stick with png for debugging)
         plt.savefig(
@@ -486,7 +488,7 @@ def plot_corner(
                 paramValues_bestFit.append(tceqdict['NtoO'])
             elif mixratio and param in mixratio:
                 paramValues_bestFit.append(mixratio[param])
-            elif param in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+            elif param in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
                 paramValues_bestFit.append(666666)
             elif param in ['chi2reduced', '$\\chi^2_{red}$']:
                 paramValues_bestFit.append(1)
@@ -517,7 +519,7 @@ def plot_corner(
             priorlo[ikey], priorhi[ikey] = prior_ranges[key]
         elif key.startswith('Tparam') and ('T' in prior_ranges):
             priorlo[ikey], priorhi[ikey] = prior_ranges['T']
-        elif key != '$\\chi^2_{red}$':
+        elif key not in ['$\\chi^2$', '$\\chi^2_{red}$', 'saved chi2']:
             log.warning('--< TROUBLE: prior-range not found %s >--', key)
         # print(' new prior range:',key,priorlo[ikey],priorhi[ikey])
     # priorspan = priorhi - priorlo
@@ -559,10 +561,18 @@ def plot_corner(
                 truths.append(truth_params['metallicity'])
             elif thiskey == '[C/O]':
                 # truths.append(np.log10(truth_params['C/O'] / 0.54951))
-                truths.append(truth_params['C/O'])
+                truths.append(truth_params['C/O'])  # 0 means solar itk
             elif thiskey == '[N/O]':
-                truths.append(0)
-            elif thiskey in ['saved logLikelihood', 'saved chi2s', '$\\chi^2$']:
+                if 'N/O' in truth_params:
+                    truths.append(truth_params['N/O'])
+                else:
+                    truths.append(0)
+            elif thiskey == '[S/O]':
+                if 'S/O' in truth_params:
+                    truths.append(truth_params['S/O'])
+                else:
+                    truths.append(0)
+            elif thiskey in ['saved logLikelihood', 'saved chi2', '$\\chi^2$']:
                 truths.append(666666)
             elif thiskey in ['chi2reduced', '$\\chi^2_{red}$']:
                 truths.append(1)
@@ -621,14 +631,20 @@ def plot_corner(
         # smaller size for corner plot might fit better, but this creates a bit of checkerboarding
         # figure.set_size_inches(16,16)  # this actually makes it smaller
 
+        # print('labels', allkeys)
+        # print('parambest', paramValues_bestFit)
+
         ndim = len(alltraces)
-        if ndim > len(paramValues_bestFit):
-            log.error(
-                '--< ERR: missing bestFit values in corner %s %s >--',
-                ndim,
-                len(paramValues_bestFit),
-            )
-            ndim = len(paramValues_bestFit)
+        # print('ndim', ndim, len(paramValues_bestFit))
+
+        # (if it's a debug plot from atmos, bestFit is not defined yet)
+        # if ndim > len(paramValues_bestFit):
+        #    log.error(
+        #        '--< ERR: missing bestFit values in corner %s %s >--',
+        #        ndim,
+        #        len(paramValues_bestFit),
+        #    )
+        #    ndim = len(paramValues_bestFit)
         axes = np.array(figure.axes).reshape((ndim, ndim))
         # use larger font size for the axis labels
         for i in range(ndim):
@@ -822,7 +838,7 @@ def plot_vs_prior(
     for iparam in range(Nparam):
         if allkeys[iparam] in [
             'saved logLikelihood',
-            'saved chi2s',
+            'saved chi2',
             '$\\chi^2$',
             'chi2reduced',
             '$\\chi^2_{red}$',
@@ -1022,6 +1038,13 @@ def plot_walker_evolution(
                     ls='--',
                     zorder=5,
                 )
+                chi = (np.median(alltraces[iparam]) - truthvalue) / np.std(
+                    alltraces[iparam]
+                )
+                plt.title(
+                    f'Truth = {truthvalue:.2f} ; chi= {chi:.2f}',
+                    fontsize=12,
+                )
             elif truthparam == '[N/O]':
                 ax.plot([0, 2 * chainLength], [0, 0], c='k', ls='--', zorder=5)
 
@@ -1103,11 +1126,16 @@ def plot_fits_vs_truths(
 ):
     '''
     Compare the retrieved values against the original inputs
+    Also show a histogram of (fit-truth)/uncertainty
     Also (optionally) show a histogram of the uncertainty values
     '''
 
     # for ppt, stack the two panels on top of each other
     switch_to_vert_stack = False
+
+    # compare histogram against a bell curve (Gaussian statistics)
+    gaussianDist = np.random.normal(size=10000)
+    gaussianDist = np.concatenate((gaussianDist, -gaussianDist))
 
     paramlist = []
     for param in ['T', '[X/H]', '[C/O]', '[N/O]']:
@@ -1124,11 +1152,11 @@ def plot_fits_vs_truths(
     for param in paramlist:
 
         if switch_to_vert_stack:
-            figure = plt.figure(figsize=(5, 9))
-            ax = figure.add_subplot(2, 1, 1)
+            figure = plt.figure(figsize=(5, 16))
+            ax = figure.add_subplot(3, 1, 1)
         else:
-            figure = plt.figure(figsize=(11, 5))
-            ax = figure.add_subplot(1, 2, 1)
+            figure = plt.figure(figsize=(16, 5))
+            ax = figure.add_subplot(1, 3, 1)
 
         for truth, fit, error in zip(
             truth_values[param], fit_values[param], fit_errors[param]
@@ -1269,15 +1297,47 @@ def plot_fits_vs_truths(
 
         # UNCERTAINTY HISTOGRAMS IN SECOND PANEL
         if switch_to_vert_stack:
-            ax2 = figure.add_subplot(2, 1, 2)
+            ax2 = figure.add_subplot(3, 1, 3)
         else:
-            ax2 = figure.add_subplot(1, 2, 2)
+            ax2 = figure.add_subplot(1, 3, 3)
         if param == 'T':
             errors = np.array(fit_errors[param]) / np.array(fit_values[param])
             ax2.set_xlabel(param + ' fractional uncertainty', fontsize=14)
         else:
             errors = np.array(fit_errors[param])
             ax2.set_xlabel(param + ' uncertainty', fontsize=14)
+        # the histogram range has to go past the data range or you get a vertical line on the right
+        lower = errors.min() / 2.0
+        upper = errors.max() * 2.0
+        # print('uncertainty range (logged)',param,lower,upper)
+        plt.hist(
+            errors,
+            range=(lower, upper),
+            bins=1000,
+            cumulative=True,
+            density=True,
+            histtype='step',
+            color='black',
+            zorder=1,
+            label='',
+        )
+        plt.title('cumulative histogram of ' + str(len(errors)) + ' planets')
+        ax2.semilogx()
+        ax2.set_xlim(lower, upper)
+        ax2.set_ylim(0, 1)
+        ax2.set_ylabel('fraction of planets', fontsize=14)
+
+        # UNCERTAINTY HISTOGRAMS IN THIRD PANEL
+        if switch_to_vert_stack:
+            ax3 = figure.add_subplot(3, 1, 3)
+        else:
+            ax3 = figure.add_subplot(1, 3, 3)
+        if param == 'T':
+            errors = np.array(fit_errors[param]) / np.array(fit_values[param])
+            ax3.set_xlabel(param + ' fractional uncertainty', fontsize=14)
+        else:
+            errors = np.array(fit_errors[param])
+            ax3.set_xlabel(param + ' uncertainty', fontsize=14)
         if len(errors) > 0:
             # the histogram range has to go past the data range or you get a vertical line on the right
             lower = errors.min() / 1.5
@@ -1297,10 +1357,10 @@ def plot_fits_vs_truths(
             plt.title(
                 'cumulative histogram of ' + str(len(errors)) + ' planets'
             )
-            ax2.semilogx()
-            ax2.set_xlim(lower, upper)
-        ax2.set_ylim(0, 1)
-        ax2.set_ylabel('fraction of planets', fontsize=14)
+            ax3.semilogx()
+            ax3.set_xlim(lower, upper)
+        ax3.set_ylim(0, 1)
+        ax3.set_ylabel('fraction of planets', fontsize=14)
 
         figure.tight_layout()
 
@@ -1506,15 +1566,14 @@ def plot_mass_vs_metals(
     fit_errors,
     prior_ranges,
     filt,
+    onlyFitAbove10MEarth,
+    onlyPlotAbove10MEarth,
     saveDir='./',
     plot_truths=False,  # for Ariel-sims, include truth as open circles?
     savetodisk=False,
     verbose=False,
 ):
     '''how well do we retrieve the input mass-metallicity relation?'''
-
-    onlyFitAbove10MEarth = True
-    onlyPlotAbove10MEarth = True
 
     MEarth = 5.972e27 / 1.898e30
 

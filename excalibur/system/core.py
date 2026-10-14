@@ -21,6 +21,7 @@ from excalibur.system.autofill import (
     fillUncertainty,
     fill_in_some_blank_omegas,
     derive_RHOstar_from_M_and_R,
+    derive_Mstar_from_RHO_and_R,
     derive_SMA_from_P_and_Mstar,
     derive_LOGGstar_from_R_and_M,
     derive_LOGGplanet_from_R_and_M,
@@ -33,19 +34,12 @@ from excalibur.system.autofill import (
 from excalibur.system.constants import ssconstants
 from excalibur.system.overwriter import fix_default_reference
 
-from collections import namedtuple
-
 log = logging.getLogger(__name__)
-
-SystemParams = namedtuple(
-    'system_params_from_runtime',
-    ['maximizeSelfConsistency', 'selectMostRecent'],
-)
 
 
 # ----------------- --------------------------------------------------
 # -- BUILD SYSTEM PRIORS -- ------------------------------------------
-def buildsp(autofill, runtime_params, out, verbose=False):
+def buildsp(autofill, runtime, out, verbose=False):
     '''
     G. ROUDIER: Surjection from target.autofill.parameters to dictionary output
     '''
@@ -183,6 +177,20 @@ def buildsp(autofill, runtime_params, out, verbose=False):
         autofill['starID'][target]['RHO*_lowerr'] = RHO_lowerr_derived
         autofill['starID'][target]['RHO*_uperr'] = RHO_uperr_derived
         autofill['starID'][target]['RHO*_ref'] = RHO_ref_derived
+
+    # use stellar density,radius to fill in blank stellar mass
+    M_derived, M_lowerr_derived, M_uperr_derived, M_ref_derived = (
+        derive_Mstar_from_RHO_and_R(autofill['starID'][target])
+    )
+    if autofill['starID'][target]['M*'] != M_derived:
+        # print('M before ',autofill['starID'][target]['M*'])
+        # print('M derived',M_derived)
+        # print('M_ref derived',M_ref_derived)
+        # print('M_ref before ',autofill['starID'][target]['M*_ref'])
+        autofill['starID'][target]['M*'] = M_derived
+        autofill['starID'][target]['M*_lowerr'] = M_lowerr_derived
+        autofill['starID'][target]['M*_uperr'] = M_uperr_derived
+        autofill['starID'][target]['M*_ref'] = M_ref_derived
 
     # use a/Rp to fill in semi-major axis
     #  (make sure this comes before sma is derived from period,M*)
@@ -455,8 +463,10 @@ def buildsp(autofill, runtime_params, out, verbose=False):
                 lbl,
                 bestref,
                 bestpubIndices['star'],
-                maximizeSelfConsistency=runtime_params.maximizeSelfConsistency,
-                selectMostRecent=runtime_params.selectMostRecent,
+                maximizeSelfConsistency=runtime[
+                    'system_validate_maximizeSelfConsistency'
+                ],
+                selectMostRecent=runtime['system_validate_selectMostRecent'],
             )
             # test targets with '' fields fail on .copy(), with AttributeError
         except (KeyError, AttributeError):
@@ -855,6 +865,7 @@ def forcepar(overwrite, out, verbose=False):
     # if something has been overwritten, save forcepar as true (shows at top of system.finalize)
     out['PP'].append(forced)
 
+    # check whether any parameters are still needed after overwrites
     for n in out['needed'].copy():
         if ':' not in n:
             try:
@@ -907,7 +918,13 @@ def forcepar(overwrite, out, verbose=False):
                     addback = False
             pass
         if addback:
+            # print('adding a planet back after overwrite!',p)
             out['priors']['planets'].append(p)
+            # also remove it from the ignore list
+            if p in out['ignore']:
+                out['ignore'].pop(out['ignore'].index(p))
+            else:
+                log.error('ERROR: unignoring an unignored planet %s', p)
     starneed = False
     for p in out['needed']:
         if ':' not in p:

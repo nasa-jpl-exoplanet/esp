@@ -201,12 +201,8 @@ class WhiteLight(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
-        runtime = self.__rt.sv_as_dict()['status']
-        runtime_params = trncore.TransitPymcParams(
-            sliceSampler=runtime['transit_pymc_sliceSampler'],
-        )
-
         svupdate = []
+        rnt = self.__rt.sv_as_dict()['status']
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
 
@@ -220,7 +216,6 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
@@ -254,10 +249,7 @@ class WhiteLight(dawgie.Algorithm):
                     update = self._hstwhitelight(
                         allnormdata,
                         fin,
-                        runtime_params,
-                        self.__rt.sv_as_dict()['status'][
-                            'spectrum_steps'
-                        ].value(),
+                        rnt,
                         self.__out[-1],
                         allfilters,
                     )
@@ -281,11 +273,12 @@ class WhiteLight(dawgie.Algorithm):
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
                 log.info('--< %s WHITELIGHT: %s >--', self._type.upper(), fltr)
+                # GMR: Cleaning up runtime
+                # Breaking everything else but JWST
                 update = self._whitelight(
                     nrm,
                     fin,
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    rnt,
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -309,7 +302,7 @@ class WhiteLight(dawgie.Algorithm):
             )
         return
 
-    def _hstwhitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _hstwhitelight(self, nrm, fin, runtime_params, out, fltr):
         '''Core code call for merged HST data'''
 
         wl = trncore.hstwhitelight(
@@ -319,12 +312,11 @@ class WhiteLight(dawgie.Algorithm):
             fltr,
             self._type,
             runtime_params,
-            chainlen=chain_length,
             verbose=False,
         )
         return wl
 
-    def _whitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _whitelight(self, nrm, fin, rnt, out, fltr):
         '''Core code call'''
 
         if 'Spitzer' in fltr:
@@ -335,10 +327,10 @@ class WhiteLight(dawgie.Algorithm):
             wl = trncore.jwstwl(
                 nrm,
                 fin,
-                runtime_params,
+                rnt,
                 out,
-                chainlen=chain_length,
                 verbose=False,
+                debug=False,
             )
         else:
             wl = trncore.whitelight(
@@ -348,8 +340,7 @@ class WhiteLight(dawgie.Algorithm):
                 fltr,
                 self._type,
                 self.__out[-1],
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
                 # parentprior=True,  # GMR: Not safe with new data
             )
@@ -419,18 +410,11 @@ class Spectrum(dawgie.Algorithm):
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             if vfin and vnrm and vwht:
                 log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
-
-                runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = trncore.TransitPymcParams(
-                    sliceSampler=runtime['transit_pymc_sliceSampler'],
-                )
-
                 update = self._spectrum(
                     self.__fin.sv_as_dict()['parameters'],
                     self._nrm.sv_as_dict()[fltr],
                     self._wht.sv_as_dict()[fltr],
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    self.__rt.sv_as_dict()['status'],
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -466,7 +450,7 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, runtime_params, chain_length, out, fltr):
+    def _spectrum(self, fin, nrm, wht, rnt, out, fltr):
         '''Core code call'''
 
         if "Spitzer" in fltr:
@@ -477,11 +461,10 @@ class Spectrum(dawgie.Algorithm):
                 nrm,
                 fin,
                 wht,
-                chl=int(4e3),
+                rnt,
                 verbose=False,
                 debug=False,
                 donotuse=False,
-                bserr=None,
                 bntst=10,
             )
             pass
@@ -493,8 +476,7 @@ class Spectrum(dawgie.Algorithm):
                 out,
                 fltr,
                 self._type,
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
             )
             pass

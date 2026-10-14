@@ -12,22 +12,14 @@ import excalibur.system.core as syscore
 from excalibur.target.targetlists import get_target_lists
 
 # from excalibur.cerberus.core import savesv
-from excalibur.cerberus.fmcontext import ctxtupdt
+from excalibur.cerberus.fmcontext import dctxupdt
 from excalibur.util.tensor import TensorShell
 from excalibur.cerberus.forward_model import (
     absorb,
     crbFM,
     clearfmcerberus,
     cloudyfmcerberus,
-    offcerberus,
-    offcerberus1,
-    offcerberus2,
-    offcerberus3,
-    offcerberus4,
-    offcerberus5,
-    offcerberus6,
-    offcerberus7,
-    offcerberus8,
+    crbnrs,
 )
 from excalibur.cerberus.plotters import (
     rebin_data,
@@ -39,12 +31,15 @@ from excalibur.cerberus.plotters import (
     plot_fit_uncertainties,
     plot_mass_vs_metals,
 )
+from excalibur.util.plotters import save_plot_tosv
 from excalibur.cerberus.bounds import (
     set_prior_bound,
     add_priors,
     get_profile_limits_hstg141,
     apply_profiling,
 )
+from excalibur.cerberus.atom_xsec import get_atom_xsec
+from excalibur.cerberus.teagrid import get_TEA_grid
 
 import logging
 import os
@@ -52,7 +47,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
-from collections import namedtuple
 from scipy.interpolate import interp1d as itp
 from scipy.interpolate import RegularGridInterpolator
 
@@ -63,94 +57,59 @@ log = logging.getLogger(__name__)
 pymclog = logging.getLogger('pymc')
 pymclog.setLevel(logging.ERROR)
 
-CerbXSlibParams = namedtuple(
-    'cerberus_xslib_params_from_runtime',
-    [
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-    ],
-)
-
-CerbAtmosParams = namedtuple(
-    'cerberus_atmos_params_from_runtime',
-    [
-        'MCMC_chains',
-        'MCMC_chain_length',
-        'MCMC_sliceSampler',
-        'cornerBins',
-        'fitCloudParameters',
-        'fitT',
-        'fitCtoO',
-        'fitNtoO',
-        'fitmolecules',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-        'boundTeq',
-        'boundAbundances',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
-
-CerbResultsParams = namedtuple(
-    'cerberus_results_params_from_runtime',
-    [
-        'nrandomwalkers',
-        'randomseed',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'Hsmax',
-        'solrad',
-        'cornerBins',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-    ],
-)
-
-CerbAnalysisParams = namedtuple(
-    'cerberus_analysis_params_from_runtime',
-    [
-        'tier',
-        'boundTeq',
-        'boundAbundances',
-        'boundCTP',
-        'boundHLoc',
-        'boundHScale',
-        'boundHThick',
-    ],
-)
 
 hitempdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITEMP')
 tipsdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/TIPS')
 ciadir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/HITRAN/CIA')
 exomoldir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/EXOMOL')
-ATOM_XSEC_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/'
-)
-INTERP_TEA_dir = os.path.join(
-    excalibur.context['data_dir'], 'CERBERUS/INTERP_TEA/'
-)
+atomdir = os.path.join(excalibur.context['data_dir'], 'CERBERUS/ATOM_XSEC/')
 
 
 # ----------------- --------------------------------------------------
+# -- JWST CROSS SECTION LIB WRAPPER -- -------------------------------
+def jwstwxs(spc, rtp, svout, otp=None, verbose=False):
+    '''
+    GMR + CB
+    Wrapper for JWST filters since visits are separated
+    '''
+    cs = False
+    thisspc = {'data': {}}
+    total = []
+    for p in spc['data']:
+        # filter out non-planetletter keywords, e.g. 'models','target'
+        if len(p) == 1:
+            thisspc['data'][p] = {}
+            svout['data'][p] = {}
+            detlist = list(spc['data'][p])
+            # ONLY WORKS FOR NRS CHANGE THAT LATER
+            for v in spc['data'][p][detlist[0]]:
+                xslout = {'data': {}, 'STATUS': []}
+                svout['data'][p][v] = xslout
+                wgrid = []
+                for d in detlist:
+                    wgrid.extend(list(spc['data'][p][d][v]['WB']))
+                    pass
+                thisspc['data'][p]['WB'] = np.array(wgrid)
+                cs = myxsecs(
+                    thisspc,
+                    rtp,
+                    xslout,
+                    only_these_planets=otp,
+                    verbose=verbose,
+                )
+                svout['data'][p][v] = xslout['data'][p]
+                total.append(cs)
+                pass
+            pass
+        pass
+    if svout['data'].keys():
+        svout['STATUS'].extend(total)
+        pass
+    # CB EST RUDE
+    return ~np.any(~np.array(total))
+
+
+# ------------------------------------ -------------------------------
 # -- X SECTIONS LIBRARY -- -------------------------------------------
 def myxsecsversion():
     '''
@@ -164,51 +123,52 @@ def myxsecsversion():
     return dawgie.VERSION(1, 1, 3)
 
 
-# GMR: Should be in the param list
-
-
-def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
+def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
-    # knownspecies = ['NO', 'OH', 'C2H2', 'N2', 'N2O', 'O3', 'O2']
-    # cialist = ['H2-H', 'H2-H2', 'H2-He', 'He-H']
-    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4']
-    # alternate list used by Luke:
-    # xmollist = ['TIO', 'H2O', 'H2CO', 'HCN', 'CO', 'CO2', 'NH3', 'CH4','C2H2', 'C2H6', 'C3H8', 'CH3CHO', 'SO2','H2S']
-    knownspecies = runtime_params.knownspecies
-    cialist = runtime_params.cialist
-    xmollist = runtime_params.xmollist
+    hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
+    cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
+    xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
+    atomlist = runtime['cerberus_crbmodel_atoms'].molecules
+
+    fontsize = 20
+    Nplots = 10  # number of temps/pressures to plot cross-sections for
+    temperatureColors = plt.colormaps['magma']
+    pressureColors = plt.colormaps['PuBuGn']
 
     cs = False
     planet_letters = []
     for p in spc['data'].keys():
-        if (
-            len(p) == 1
-        ):  # filter out non-planetletter keywords, e.g. 'models','target'
-            if (
-                'WB' in spc['data'][p].keys()
-            ):  # make sure it has a spectrum (Kepler-37e bug)
-                if not only_these_planets or p in only_these_planets:
-                    planet_letters.append(p)
-                else:
-                    log.info(
-                        '--< CERBERUS.XSLIB: skipping non-tier2 planet %s %s >--',
-                        spc['data']['target'],
-                        p,
-                    )
+        if len(p) == 1:
+            # filter out non-planetletter keywords, e.g. 'models','target'
+            if not only_these_planets or p in only_these_planets:
+                planet_letters.append(p)
             else:
                 log.info(
-                    '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
+                    '--< CERBERUS.XSLIB: skipping non-tier2 planet %s %s >--',
                     spc['data']['target'],
                     p,
                 )
+            # make sure it has a spectrum (Kepler-37e bug)
+            if 'WB' not in spc['data'][p].keys():
+                if 'target' in spc['data']:
+                    log.error(
+                        '--< CERBERUS.XSLIB: wavelength grid is missing for %s %s >--',
+                        spc['data']['target'],
+                        p,
+                    )
+                else:
+                    log.error(
+                        '--< CERBERUS.XSLIB: wavelength grid is missing >--'
+                    )
+                return False
     for p in planet_letters:
         out['data'][p] = {}
 
         wgrid = np.array(spc['data'][p]['WB'])
-        qtgrid = gettpf(knownspecies)
+        qtgrid = gettpf(hitemplist)
         library = {}
 
         nugrid = (1e4 / np.copy(wgrid))[::-1]
@@ -280,54 +240,55 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 myspl = itp(x, y, bounds_error=False, fill_value=0)
                 library[myexomol]['SPL'].append(myspl)
                 library[myexomol]['SPLNU'].append(iline)
-                if verbose:
+                if verbose and myexomol == 'too many plots here!':
                     plt.plot(x, y, 'o')
                     xp = np.arange(101) / 100.0 * (3000.0 - np.min(x)) + np.min(
                         x
                     )
                     plt.plot(xp, myspl(xp))
+                    plt.title(myexomol)
                     plt.show()
                     pass
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            haha = list(set(library[myexomol]['T']))
+            haha = np.sort(np.array(haha))
+            haha = haha[::-1]
+            # select a subsample of the temperature array
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
+                int
+            )
+            for itemp, temp in zip(Tselect, haha[Tselect]):
+                select = np.array(library[myexomol]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[myexomol]['nu'])[select]),
+                    np.array(library[myexomol]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            maxsigma = np.max(library[myexomol]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(myexomol + ' (EXOMOL)', fontsize=fontsize + 4)
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + myexomol] = save_plot_tosv(
+                thisfig
+            )
             if verbose:
-                fts = 20
-                plt.figure(figsize=(16, 12))
-                haha = list(set(library[myexomol]['T']))
-                haha = np.sort(np.array(haha))
-                haha = haha[::-1]
-                for temp in haha:
-                    select = np.array(library[myexomol]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[myexomol]['nu'])[select]),
-                        np.array(library[myexomol]['I'])[select],
-                        label=str(int(temp)) + 'K',
-                    )
-                    pass
-                plt.title(myexomol)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]', fontsize=fts + 4)
-                plt.ylabel(
-                    'Cross Section [$cm^{2}.molecule^{-1}$]', fontsize=fts + 4
-                )
-                plt.tick_params(axis='both', labelsize=fts)
-                plt.legend(
-                    bbox_to_anchor=(0.95, 0.0, 0.12, 1),
-                    loc=5,
-                    ncol=1,
-                    mode='expand',
-                    numpoints=1,
-                    borderaxespad=0.0,
-                    frameon=True,
-                )
-                # GMR: Put this in keyword saveplot
-                # plt.savefig(
-                #    excalibur.context['data_dir']
-                #    + '/bryden/'
-                #    + myexomol
-                #    + '_xslib.png',
-                #    dpi=200,
-                # )
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
         for mycia in cialist:
             # log.info('>-- %s', str(mycia))
@@ -391,7 +352,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     myspl = itp(x, y, bounds_error=False, fill_value=0)
                     library[mycia]['SPL'].append(myspl)
                     library[mycia]['SPLNU'].append(iline)
-                    if verbose:
+                    if verbose and mycia == 'too many plots here!':
                         plt.plot(x, y, 'o')
                         xp = np.arange(101) / 100.0 * (
                             np.max(x) - np.min(x)
@@ -401,21 +362,50 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the temperature array
+            haha = list(set(library[mycia]['T']))
+            haha = np.sort(np.array(haha))
+            # haha = haha[::-1]
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
+                int
+            )
+            for itemp, temp in zip(Tselect, haha[Tselect]):
+                select = np.array(library[mycia]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[mycia]['nu'])[select]),
+                    np.array(library[mycia]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            maxsigma = np.max(library[mycia]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(mycia + ' (CIA)', fontsize=fontsize + 4)
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel(
+                'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]',
+                fontsize=fontsize,
+            )
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + mycia] = save_plot_tosv(
+                thisfig
+            )
             if verbose:
-                for temp in set(library[mycia]['T']):
-                    select = np.array(library[mycia]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[mycia]['nu'])[select]),
-                        np.array(library[mycia]['I'])[select],
-                    )
-                    pass
-                plt.title(mycia)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]')
-                plt.ylabel('Line intensity $S(T)$ [$cm^{5}.molecule^{-2}$]')
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
-        for ks in knownspecies:
+        for ks in hitemplist:
             # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
@@ -496,7 +486,7 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
-            if verbose:
+            if verbose and ks == 'too many plots here!':
                 for i in set(library[ks]['I']):
                     select = np.array(library[ks]['I']) == i
                     plt.semilogy(
@@ -506,23 +496,11 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     )
                     pass
                 plt.title(ks)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]')
-                plt.ylabel('Line intensity $S_{296K}$ [$cm.molecule^{-1}$]')
+                plt.xlabel('Wavelength [$\\mu m$]')
+                plt.ylabel('Line intensity $S_{296K}$ [$cm/molecule$]')
                 plt.show()
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
-            mmr = 2.3  # Fortney 2015 for hot Jupiters
-            # solrad = 10.0
-            # hsmax = 20.0
-            # nlevels = 100.0
-            pgrid = np.arange(
-                np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                np.log(runtime_params.solrad)
-                + runtime_params.Hsmax / runtime_params.nlevels,
-                runtime_params.Hsmax / (runtime_params.nlevels - 1),
-            )
-            pgrid = np.exp(pgrid)
-            pressuregrid = pgrid[::-1]
             allxsections = []
             allwavenumbers = []
             alltemperatures = []
@@ -532,10 +510,6 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                     library[ks],
                     qtgrid[ks],
                     tstep,
-                    pressuregrid,
-                    mmr,
-                    runtime_params.lbroadening,
-                    runtime_params.lshifting,
                     wgrid,
                     debug=False,
                 )
@@ -579,38 +553,223 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
                 library[ks]['SPL'].append(myspl)
                 library[ks]['SPLNU'].append(iline)
                 pass
+            # plot the cross-sections for this species
+            thisfig = plt.figure(figsize=(10, 6))
+            haha = list(set(library[ks]['T']))
+            haha = np.sort(np.array(haha))
+            haha = haha[::-1]
+            # select a subsample of the temperature array
+            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
+                int
+            )
+            for itemp, temp in zip(Tselect, haha[Tselect]):
+                select = np.array(library[ks]['T']) == temp
+                plt.semilogy(
+                    1e4 / (np.array(library[ks]['nu'])[select]),
+                    np.array(library[ks]['I'])[select],
+                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
+                    label=str(int(temp)) + 'K',
+                )
+                pass
+            maxsigma = np.max(library[ks]['I'])
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(ks + ' (HITEMP)', fontsize=fontsize + 4)
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_' + ks] = save_plot_tosv(thisfig)
             if verbose:
-                fts = 20
-                plt.figure(figsize=(16, 12))
-                haha = list(set(library[ks]['T']))
-                haha = np.sort(np.array(haha))
-                haha = haha[::-1]
-                for temp in haha:
-                    select = np.array(library[ks]['T']) == temp
-                    plt.semilogy(
-                        1e4 / (np.array(library[ks]['nu'])[select]),
-                        np.array(library[ks]['I'])[select],
-                        label=str(int(temp)) + 'K',
-                    )
-                    pass
-                plt.title(ks)
-                plt.xlabel('Wavelength $\\lambda$[$\\mu m$]', fontsize=fts + 4)
-                plt.ylabel(
-                    'Cross Section [$cm^{2}.molecule^{-1}$]', fontsize=fts + 4
-                )
-                plt.tick_params(axis='both', labelsize=fts)
-                plt.legend(
-                    bbox_to_anchor=(0.95, 0.0, 0.12, 1),
-                    loc=5,
-                    ncol=1,
-                    mode='expand',
-                    numpoints=1,
-                    borderaxespad=0.0,
-                    frameon=True,
-                )
                 plt.show()
                 pass
+            plt.close(thisfig)
             pass
+        # ------- atomic species (e.g. Na) --------
+        # load in the pre-calculated grid of atomic cross sections
+        temperatures = np.load(atomdir + 'temp.npy')
+        pressures = np.load(atomdir + 'pressure.npy')
+        wavelengths = np.load(atomdir + 'wgrid.npy')
+        # print(
+        #    'atom-xsec grid size T,P,lambda',
+        #    len(temperatures),
+        #    len(pressures),
+        #    len(wavelengths),
+        # )
+        # print('atom-xsec grid range T',temperatures[0],temperatures[-1])
+        # print('atom-xsec grid range P',pressures[0],pressures[-1])
+        # print('atom-xsec grid range lambda',wavelengths[0],wavelengths[-1])
+
+        for thisatom in atomlist:
+            # log.info('>-- %s', str(thisatom))
+            xsec = np.load(atomdir + thisatom + '/grid_3d.npy')
+            # use this interpolator for validating interp2d_xsec below
+            # interp3d_xsec = RegularGridInterpolator(
+            #    (temperatures, pressures, wavelengths), xsec
+            # )
+
+            library[thisatom] = {
+                'I': [],
+                'T': [],
+                'P': [],
+                'nu': [],
+                'SPL': [],
+                'SPLNU': [],
+            }
+
+            # generic xsec grid has to be binned to coarser-resolution wgrid
+            xsec_matchingwgrid = (
+                np.ones((xsec.shape[0], xsec.shape[1], len(wgrid))) * 666
+            )
+
+            dwgrid = (wgrid[2:] - wgrid[:-2]) / 2.0
+            dwgrid = np.concat(
+                (np.array([dwgrid[0]]), dwgrid, np.array([dwgrid[-1]]))
+            )
+            for itemp in range(len(temperatures)):
+                for ipress in range(len(pressures)):
+                    for iwave, thiswave in enumerate(wgrid):
+                        # print(iwave,'   ',T,P)
+                        select = np.where(
+                            (wavelengths > thiswave - dwgrid[iwave] / 2)
+                            & (wavelengths < thiswave + dwgrid[iwave] / 2)
+                        )
+                        # print('select',select)
+                        # print('len',len(select[0]))
+                        if len(select[0]) == 0:
+                            log.error(
+                                'ERROR: pre-calculated wavelength grid isnt fine enough for atom: %s',
+                                thisatom,
+                            )
+                            xsec_matchingwgrid[itemp, ipress, iwave] = 0
+                        else:
+                            avsigma = np.average(xsec[itemp, ipress, select])
+                            xsec_matchingwgrid[itemp, ipress, iwave] = avsigma
+
+                            # don't bother saving this info. slows and uses space
+                            # library[thisatom]['I'].append(avsigma)
+                            # library[thisatom]['T'].append(temperatures[itemp])
+                            # library[thisatom]['P'].append(pressures[ipress])
+                            # library[thisatom]['nu'].append(1e4 / wgrid[iwave])
+            # for inu, nu in enumerate(set(library[thisatom]['nu'])):
+            #     select = np.array(library[thisatom]['nu']) == nu
+            #     Is = np.array(library[thisatom]['I'])[select]
+            #     Ts = np.array(library[thisatom]['T'])[select]
+            #     Ps = np.array(library[thisatom]['P'])[select]
+            #     sortme = np.argsort(Ts)
+            #     Is = Is[sortme]
+            #     Ts = Ts[sortme]
+            # myspl = itp(Ts, Is, bounds_error=False, fill_value=0)
+
+            for iwave in range(len(wgrid)):
+                myspl = RegularGridInterpolator(
+                    (temperatures, pressures),
+                    xsec_matchingwgrid[:, :, iwave],
+                    # careful with values going outside of bounds
+                    bounds_error=False,
+                    fill_value=None,
+                )
+                library[thisatom]['SPL'].append(myspl)
+
+            # for checking/ploting, make a 3-d array of cross-sections
+            #  using the new SPL interpolators
+            # (loop over a bunch of 2-d interps, rather than full 3-d interp)
+            sigmas = []
+            temp_grid, press_grid = np.meshgrid(temperatures, pressures)
+            for interp2d_xsec in library[thisatom]['SPL']:
+                sigmas.append(interp2d_xsec((temp_grid, press_grid)))
+            sigma = np.array(sigmas)
+            # print('sigma shape (2d)', sigma.shape)
+
+            # plot the cross-sections for this species as a function of T
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the temperature array
+            Tselect = np.round(
+                np.linspace(0, len(temperatures) - 1, Nplots)
+            ).astype(int)
+            for itemp, temp in zip(Tselect, temperatures[Tselect]):
+                # choose one pressure value to plot bunch of temperatures
+                ipress = int(len(pressures) / 2)
+                Pplot = pressures[ipress]
+                plt.semilogy(
+                    wgrid,
+                    sigma[:, ipress, itemp],
+                    color=temperatureColors(
+                        0.9 * itemp / (len(temperatures) - 1)
+                    ),
+                    label=str(int(temp)) + ' K',
+                )
+            maxsigma = np.max(sigma)
+            roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(
+                f'{thisatom} (atom)   P = {Pplot:1.1e} bar',
+                fontsize=fontsize + 4,
+            )
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_vsT_' + thisatom] = (
+                save_plot_tosv(thisfig)
+            )
+            if verbose:
+                plt.show()
+            plt.close(thisfig)
+
+            # plot the cross-sections for this species as a function of P
+            thisfig = plt.figure(figsize=(10, 6))
+            # select a subsample of the pressure array
+            Pselect = np.round(
+                np.linspace(0, len(pressures) - 1, Nplots)
+            ).astype(int)
+            for ipress, press in zip(Pselect, pressures[Pselect]):
+                # choose one temperature value; plot a bunch of pressures
+                itemp = int(len(temperatures) / 2)
+                Tplot = temperatures[itemp]
+                plt.semilogy(
+                    wgrid,
+                    sigma[:, ipress, itemp],
+                    color=pressureColors(
+                        0.8 * (len(pressures) - ipress) / (len(pressures) - 1)
+                    ),
+                    label=f'{press:1.1e} bar',
+                )
+            plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+            plt.xlim(np.min(wgrid), np.max(wgrid))
+            plt.title(
+                f'{thisatom} (atom)   T = {int(Tplot):d} K',
+                fontsize=fontsize + 4,
+            )
+            plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+            plt.tick_params(axis='both', labelsize=fontsize)
+            plt.legend(
+                numpoints=1,
+                borderaxespad=0.0,
+                frameon=True,
+            )
+            plt.tight_layout()
+            out['data'][p]['plot_crossSections_vsP_' + thisatom] = (
+                save_plot_tosv(thisfig)
+            )
+            if verbose:
+                plt.show()
+            plt.close(thisfig)
+            pass
+
         out['data'][p]['XSECS'] = library
         out['data'][p]['QTGRID'] = qtgrid
         pass
@@ -623,14 +782,14 @@ def myxsecs(spc, runtime_params, out, only_these_planets=None, verbose=False):
 
 # ------------------------ -------------------------------------------
 # -- TOTAL PARTITION FUNCTION -- -------------------------------------
-def gettpf(knownspecies, verbose=False):
+def gettpf(hitemplist, verbose=False):
     '''
     G. ROUDIER: Wrapper around HITRAN partition functions (Gamache et al. 2011)
     '''
     grid = {}
     tempgrid = list(np.arange(60.0, 3035.0, 25.0))
 
-    for ks in knownspecies:
+    for ks in hitemplist:
         grid[ks] = {'T': tempgrid, 'Q': [], 'SPL': []}
         with open(os.path.join(tipsdir, ks), 'r', encoding="utf-8") as fp:
             data = fp.readlines()
@@ -668,11 +827,309 @@ def atmosversion():
     return dawgie.VERSION(1, 3, 2)
 
 
+def jwstatmos(
+    fin,
+    xsl,
+    spc,
+    rtp,
+    out,
+    hazedir=os.path.join(excalibur.context['data_dir'], 'CERBERUS/HAZE'),
+    verbose=False,
+    debug=False,
+):
+    '''
+    GMR: JWST Atmos
+    Going for a rewrite instead of a wrapper
+    Atmos needs a cleanup
+    [I]:fin:[DICT]:system.finalize SV as dict
+    [I]:xsl:[DICT]:cerberus.xslib SV as dict
+    [I]:spc:[DICT]:transit.spectrum SV as dict
+    [I]:rtp:[DICT]:runtime.autofill SV as dict
+        rtp['cerberus_crbmodel_fitmolecules'].molecules:[LIST]:FREE model species
+        rtp['cerberus_atmos_fitCtoO']:[BOOL]:[C/O] Free parameter
+        rtp['cerberus_atmos_fitNtoO']:[BOOL]:[N/O] Free parameter
+        rtp['cerberus_atmos_fitStoO']:[BOOL]:[S/O] Free parameter
+        rtp['cerberus_atmos_bounds_Teq']:[HiLoValue]: Teq bounds
+        rtp['cerberus_atmos_bounds_metallicity']:[HiLoValue]: [X/H] bounds
+        rtp['cerberus_atmos_bounds_*toO']:[HiLoValue]: [*/O] bounds
+        rtp['cerberus_atmos_bounds_abundances']:[HiLoValue]: gas bounds
+        rtp['cerberus_crbmodel_HITEMPmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_HITRANmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_EXOMOLmolecules']:[MoleculeValue]: runtime.states.py
+        rtp['cerberus_crbmodel_nlevels']:[INT]: number of atm layers
+        rtp['cerberus_crbmodel_Hsmax']:[INT]: number of scale heights above solid radius
+        rtp['cerberus_crbmodel_solrad']:[FLOAT]: solid radius pressure level [log10(bar)]
+        rtp['cerberus_steps']:[INT]: PYMC chain length per core
+        rtp['cerberus_chains']:[INT]: PYMC number of cores
+    [I/O]:out:[SV]:AtmosSv() see states.py
+          out['STATUS']:[LIST]:appending True for each planet/instrument added
+          out['data']['SYSPAR']:[DICT]:copy of system parameters used (fin)
+          out['data'][p][det][vis]:[DICT]:output/planet/detector/visit
+          out['data'][p][det][vis]['JoeComment']:[TYPE]:JoeComment
+    [OPT]:hazedir:[STR]:path to Jupiter hazes density profiles
+    [OPT]:verbose:[BOOL]:messages and plots
+    '''
+    # SAVING SYSTEM PARAMETERS
+    out['data']['SYSPAR'] = fin['priors'].copy()
+    # CB TEA GRID
+    interp_tea = get_TEA_grid(verbose=verbose)
+    # INITS
+    atm = False
+    ssc = syscore.ssconstants(mks=True)
+    crbhzlib = {'PROFILE': []}
+    hazelib(crbhzlib, hazedir=hazedir, verbose=False)
+    plnkey = [p for p in map(chr, range(97, 123)) if p in spc['data']]
+    # MODELS
+    tealst = ['XtoH', 'CtoO', 'NtoO', 'StoO']
+    if not rtp['cerberus_atmos_fitCtoO']:
+        tealst.remove('CtoO')
+        pass
+    if not rtp['cerberus_atmos_fitNtoO']:
+        tealst.remove('NtoO')
+        pass
+    if not rtp['cerberus_atmos_fitStoO']:
+        tealst.remove('StoO')
+        pass
+    modparlbl = {
+        'TEA': tealst,
+        'FREE': rtp['cerberus_crbmodel_fitmolecules'].molecules,
+    }
+    if debug:
+        modparlbl.pop('TEA')
+        # modparlbl.pop('FREE')
+        pass
+    if verbose:
+        log.info('>--< MODELS')
+        for m, mp in modparlbl.items():
+            log.info('>--< %s: %s', m, mp)
+            pass
+        pass
+    for p in plnkey:
+        detlist = list(spc['data'][p])
+        vislist = list(spc['data'][p][detlist[0]])
+        out['data'][p] = {}
+        out['data'][p]['MODELS'] = modparlbl
+        for v in vislist:
+            spctrm = []
+            spcerr = []
+            wavmcr = []
+            cleanup = []
+            wthr = None
+            for d in detlist:
+                res = np.array(
+                    [
+                        np.mean(np.abs(m - d))
+                        for m, d in zip(
+                            spc['data'][p][d][v]['LCFIT'],
+                            spc['data'][p][d][v]['LCDATA'],
+                        )
+                    ]
+                )
+                spctrm.extend(np.array(spc['data'][p][d][v]['ES']))
+                spcerr.extend(np.array(spc['data'][p][d][v]['ESerr']))
+                wavmcr.extend(np.array(spc['data'][p][d][v]['WB']))
+                cleanup.extend(
+                    res
+                    < (
+                        np.percentile(res, 50)
+                        + 3.0
+                        * np.std(res[res < np.percentile(res, 50 + 68 / 2)])
+                    )
+                )
+                if '1' in d:
+                    if wthr is None:
+                        wthr = np.nanmax(spc['data'][p][d][v]['WB'])
+                        pass
+                    else:
+                        wthr += np.nanmax(spc['data'][p][d][v]['WB'])
+                    pass
+                if '2' in d:
+                    if wthr is None:
+                        wthr = np.nanmin(spc['data'][p][d][v]['WB'])
+                        pass
+                    else:
+                        wthr += np.nanmin(spc['data'][p][d][v]['WB'])
+                    pass
+                pass
+            wthr /= 2.0
+            if verbose:
+                plt.figure(figsize=(12, 9))
+                plt.errorbar(
+                    np.array(wavmcr)[np.array(cleanup)],
+                    (np.array(spctrm)[np.array(cleanup)]) ** 2,
+                    yerr=(
+                        (np.array(spcerr)[np.array(cleanup)]) ** 2
+                        + 2.0
+                        * np.array(spcerr)[np.array(cleanup)]
+                        * np.array(spctrm)[np.array(cleanup)]
+                    ),
+                    marker='o',
+                    linestyle='None',
+                    alpha=0.5,
+                )
+                plt.axvline(wthr, ls='-.')
+                plt.ylabel('($r_p$ / $R_*$)$^2$', fontsize=20)
+                plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                plt.tick_params(axis='both', labelsize=18)
+                plt.show()
+                pass
+            out['data'][p][v] = {}
+            out['data'][p][v]['SP'] = np.array(spctrm) ** 2
+            out['data'][p][v]['SPerr'] = np.array(spcerr) ** 2 + 2.0 * np.array(
+                spcerr
+            ) * np.array(spctrm)
+            out['data'][p][v]['WB'] = np.array(wavmcr)
+            out['data'][p][v]['VALID'] = np.array(cleanup)
+            rp0 = fin['priors'][p]['rp'] * ssc['Rjup']  # mk
+            fixed = {
+                'CTP': 3.0,
+                'HScale': -10.0,
+                'HLoc': 3.0,
+                'HThick': 0.0,
+                'T': float(fin['priors'][p]['teq']),
+            }
+            nodes = []
+            priors = {}
+            # CTP
+            if rtp['cerberus_atmos_fitCTP']:
+                priors['CTP'] = (
+                    rtp['cerberus_atmos_bounds_CTP'].lo,
+                    rtp['cerberus_atmos_bounds_CTP'].hi,
+                )
+                fixed.pop('CTP')
+                pass
+            # HAZES
+            # if rtp['cerberus_atmos_fitHaze']:
+            #     pass
+            # T
+            if rtp['cerberus_atmos_fitT']:
+                priors['T'] = (
+                    rtp['cerberus_atmos_bounds_Teq'].lo * fixed['T'],
+                    rtp['cerberus_atmos_bounds_Teq'].hi * fixed['T'],
+                )
+                fixed.pop('T')
+                pass
+            for m, mp in modparlbl.items():
+                with pymc.Model():
+                    dctx = dctxupdt()
+                    out['data'][p][v][m] = {}
+                    klist = [k for k in mp if k not in ['XtoH']]
+                    if m in ['TEA', 'TEC']:
+                        priors['XtoH'] = (
+                            rtp['cerberus_atmos_bounds_metallicity'].lo,
+                            rtp['cerberus_atmos_bounds_metallicity'].hi,
+                        )
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_' + k].lo,
+                                rtp['cerberus_atmos_bounds_' + k].hi,
+                            )
+                            pass
+                        pass
+                    if m in ['FREE']:
+                        for k in klist:
+                            priors[k] = (
+                                rtp['cerberus_atmos_bounds_abundances'].lo,
+                                rtp['cerberus_atmos_bounds_abundances'].hi,
+                            )
+                            pass
+                        pass
+                    fwdmdl = None
+                    if 'NRS' in detlist[0]:
+                        priors['NRS2-NRS1'] = (
+                            -100,
+                            100,
+                        )
+                        fwdmdl = crbnrs
+                        pass
+                    out['data'][p][v][m]['PRIORS'] = priors
+                    # NODES FROM PRIORS
+                    nodes = []
+                    for n, nl in priors.items():
+                        nodes.append(pymc.Uniform(n, nl[0], nl[1]))
+                        pass
+                    # UPDATE DICTIONARY CONTEXT
+                    dctx = dctxupdt(
+                        {
+                            'runtime': rtp,
+                            'cleanup': out['data'][p][v]['VALID'],
+                            'model': m,
+                            'planet': p,
+                            'rp0': rp0,
+                            'orbp': fin['priors'],
+                            'xsl': xsl['data'][p][v],
+                            'modparlbl': modparlbl,
+                            'hzlib': crbhzlib,
+                            'mcmcdat': out['data'][p][v]['SP'],
+                            'mcmcsig': out['data'][p][v]['SPerr'],
+                            'mcmcwav': out['data'][p][v]['WB'],
+                            'offsetthr': wthr,
+                            'priors': priors,
+                            'forwardmodel': fwdmdl,
+                            'interp_tea': interp_tea,
+                            'fixedParams': fixed,
+                            'hitemplist': rtp[
+                                'cerberus_crbmodel_HITEMPmolecules'
+                            ].molecules,
+                            'cialist': rtp[
+                                'cerberus_crbmodel_HITRANmolecules'
+                            ].molecules,
+                            'xmollist': rtp[
+                                'cerberus_crbmodel_EXOMOLmolecules'
+                            ].molecules,
+                        },
+                        freeze=True,
+                    )
+                    TensorModel = TensorShell()
+
+                    def LogLH(_, nodes):
+                        '''
+                        GMR: Fill in model tensor shell
+                        '''
+                        return TensorModel(nodes)
+
+                    _ = pymc.CustomDist(
+                        "Likelihood",
+                        nodes,
+                        observed=dctx['mcmcdat'][dctx['cleanup']],
+                        logp=LogLH,
+                    )
+
+                    _ = pymc.Deterministic(
+                        "Chi2",
+                        -2.0 * pytensr.sum(LogLH(dctx['mcmcdat'], nodes)),
+                    )
+                    log.info('>--< MCMC nodes: %s', str(priors.keys()))
+                    trace = pymc.sample(
+                        rtp['cerberus_steps'].value(),
+                        cores=rtp['cerberus_chains'].value(),
+                        tune=int(int(rtp['cerberus_steps'].value()) / 2),
+                        step=pymc.Metropolis(),
+                        compute_convergence_checks=False,
+                        progressbar=verbose,
+                    )
+                    # GMR: nodes were casted into arrays somewhere
+                    # change that someday
+                    mctrace = {}
+                    allkeys = list(priors)
+                    allkeys.append('Chi2')
+                    for k in allkeys:
+                        mctrace[k] = np.array(trace['posterior'][k]).flatten()
+                        pass
+                    out['data'][p][v][m]['TRACE'] = mctrace
+                    pass
+                pass
+            atm = atm or True
+            pass
+        pass
+    return atm
+
+
 def atmos(
     fin,
     xsl,
     spc,
-    runtime_params,
+    rtp,
     out,
     ext,
     only_these_planets=None,
@@ -686,54 +1143,23 @@ def atmos(
     G. ROUDIER: Cerberus retrieval
     '''
 
-    # atomic xsec loading
+    # load atomic cross-section interpolation grid
     atom_list = ['Ca', 'K', 'Na']
-    atom_xsec = {}
-    temp = np.load(ATOM_XSEC_dir + "temp.npy")
-    pressure = np.load(ATOM_XSEC_dir + "pressure.npy")
-    X_H2 = np.load(ATOM_XSEC_dir + "X_H2.npy")
-    wgrid = np.load(ATOM_XSEC_dir + "wgrid.npy")
-    for atom in atom_list:
-        xsec = np.load(ATOM_XSEC_dir + atom + "/grid_4d.npy")
-        interp_xsec = RegularGridInterpolator(
-            (temp, pressure, X_H2, wgrid), xsec
-        )
-        atom_xsec[atom] = interp_xsec
-    ctxtupdt(runtime=runtime_params, atom_xsec=atom_xsec)
+    # each species takes up ~8GB; drop for now, to avoid memory problems
+    atom_list = []
+    atom_xsec = get_atom_xsec(atom_list)
 
-    # TEA interpolation
-    species_name = [
-        'CH4',
-        'CO2',
-        'CO',
-        'H2O',
-        'H2',
-        'H2S',
-        'He',
-        'N2',
-        'NH3',
-        'O3',
-        'SO2',
-        'HCN',
-        'TIO',
-        'C2H2',
-        'N2O',
-        'NO',
-        'O2',
-        'OH',
-    ]
-    temp = np.load(INTERP_TEA_dir + "grid_parameters/temperature.npy")
-    pressure = np.load(INTERP_TEA_dir + "grid_parameters/pressure.npy")
-    XtoH = np.load(INTERP_TEA_dir + "grid_parameters/XtoH.npy")
-    CtoO = np.load(INTERP_TEA_dir + "grid_parameters/CtoO.npy")
-    interp_tea = {}
-    for molecule in species_name:
-        grid_4d = np.load(INTERP_TEA_dir + molecule + ".npy")
-        interp_mol = RegularGridInterpolator(
-            (temp, pressure, XtoH, CtoO), grid_4d, method='cubic'
-        )
-        interp_tea[molecule] = interp_mol
-    ctxtupdt(runtime=runtime_params, interp_tea=interp_tea)
+    # load TEA equilibrium chemistry interpolation grid
+    modelName = (
+        'Pgrid_'
+        + str(rtp['cerberus_crbmodel_nlevels'].value())
+        + 'levels'
+        + str(rtp['cerberus_crbmodel_Hsmax'].value())
+        + 'scaleHeights'
+    )
+    interp_tea = get_TEA_grid(modelName)
+    # OR.. leave it blank if you truly want the slow version
+    # interp_tea = {}
 
     okfit = False
     orbp = fin['priors'].copy()
@@ -745,31 +1171,41 @@ def atmos(
     if ext == 'Ariel-sim':
         # Ariel sims are currently only equilibrium models (TEC and TEA)
         # modfam = ['TEC', 'TEA']
-        modfam = ['TEC']
+        # modfam = ['TEC']
+        # no longer fit with TEC; use TEA (grid method)
+        modfam = ['TEA']
         modparlbl = {
-            'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            'TEA': ['XtoH', 'CtoO', 'NtoO'],
+            'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
         }
+        # option to fix C/O
+        if not rtp['cerberus_atmos_fitCtoO']:
+            modparlbl['TEA'].remove('CtoO')
+            modparlbl['TEC'].remove('CtoO')
+        # option to fix N/O
+        if not rtp['cerberus_atmos_fitNtoO']:
+            modparlbl['TEA'].remove('NtoO')
+            modparlbl['TEC'].remove('NtoO')
+        # option to fix S/O
+        if not rtp['cerberus_atmos_fitNtoO']:
+            modparlbl['TEA'].remove('StoO')
+            modparlbl['TEC'].remove('StoO')
 
         # ** select which Ariel model to fit **
         #   previously (with taurex) there were 8 options. now 4 options:
         # atmosmodels = ['cerberus', 'cerberusNoclouds',
         #                'cerberuslowmmw', 'cerberuslowmmwNoclouds']
-        if runtime_params.fitCloudParameters:
+        arielmodel = 'cerberus'
+        if 'TEA' in modfam:
+            arielmodel += 'TEA'
+        if rtp['cerberus_atmos_fitCTP'] or rtp['cerberus_atmos_fitHaze']:
             log.info('--< CERBERUS: using CLOUDY arielsim forward model >--')
-            arielmodel = 'cerberus'
+            # arielmodel = 'cerberus'
         else:
             log.info('--< CERBERUS: using CLOUDFREE ariel forward model >--')
-            arielmodel = 'cerberusNoclouds'
+            arielmodel += 'Noclouds'
 
-        # option to fix N/O
-        if not runtime_params.fitNtoO:
-            modparlbl = {'TEC': ['XtoH', 'CtoO'], 'TEA': ['XtoH', 'CtoO']}
-        # option to fix C/O
-        if not runtime_params.fitCtoO:
-            modparlbl = {'TEC': ['XtoH'], 'TEA': ['XtoH']}
-
-        if not runtime_params.isothermal:
+        if not rtp['cerberus_crbmodel_isothermal']:
             if 'cerberusNonisothermal' in spc['data']['models']:
                 # arielmodel = 'cerberusNonisothermal'
                 # arielmodel = 'cerberusTEANonisothermal'
@@ -787,22 +1223,29 @@ def atmos(
         # print('name of the forward model:',arielModel)
         # print('available models',spc['data']['models'])
         if arielmodel not in spc['data']['models']:
-            log.warning('--< BIG PROB: ariel model doesnt exist!!! >--')
+            log.error(
+                '--< BIG PROB: ariel model doesnt exist!!! %s >--', arielmodel
+            )
+            return False
     else:
         # modfam = ['TEC', 'TEA', 'PHOTOCHEM']
-        modfam = ['TEC', 'PHOTOCHEM']
+        # modfam = ['TEC', 'PHOTOCHEM']
+        # no longer fit with TEC; use TEA (grid method)
+        modfam = ['TEA', 'PHOTOCHEM']
         modparlbl = {
-            'TEC': ['XtoH', 'CtoO', 'NtoO'],
-            # 'TEA': ['XtoH', 'CtoO', 'NtoO'],
-            # 'PHOTOCHEM': ['HCN', 'CH4', 'C2H2', 'CO2', 'H2CO'],
-            'PHOTOCHEM': runtime_params.fitmolecules,
+            'TEC': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
+            'TEA': ['XtoH', 'CtoO', 'NtoO', 'StoO'],
+            'PHOTOCHEM': rtp['cerberus_crbmodel_fitmolecules'].molecules,
         }
-        if not runtime_params.fitNtoO:
-            modparlbl['TEC'].remove('NtoO')
-            # modparlbl['TEA'].remove('NtoO')
-        if not runtime_params.fitCtoO:
+        if not rtp['cerberus_atmos_fitCtoO']:
             modparlbl['TEC'].remove('CtoO')
-            # modparlbl['TEA'].remove('CtoO')
+            modparlbl['TEA'].remove('CtoO')
+        if not rtp['cerberus_atmos_fitNtoO']:
+            modparlbl['TEC'].remove('NtoO')
+            modparlbl['TEA'].remove('NtoO')
+        if not rtp['cerberus_atmos_fitStoO']:
+            modparlbl['TEC'].remove('StoO')
+            modparlbl['TEA'].remove('StoO')
 
     if (singlemod is not None) and (singlemod in modfam):
         modfam = [modfam[modfam.index(singlemod)]]
@@ -882,14 +1325,17 @@ def atmos(
             # print('eqtemp check',eqtemp1)
             # print('eqtemp check',eqtemp2)
             # print('eqtemp check',orbp[p]['teq'])
-            # print('eqtemp check',inputData['model_params']['Teq'])
+            # print('eqtemp check',input_data['model_params']['Teq'])
 
             # CAREFUL:
             #  equilibrium temperatures from the archive sometimes don't match this!
             #  e.g. GJ 3053=LHS 1140 b,c (the Archive has 379K,709K vs 216,403K here)
             #  that one is wrong it seems. Lillo-Box 2020 has strange extra factor
 
-            # print('model_params',inputData['model_params'])
+            # print('model_params',input_data['model_params'])
+            # print('planet priors', p, fin['priors']
+            # print('spc', p, spc['data'][p][arielmodel].keys())
+            # print('TRUE MIXRATIOs', p, spc['data'][p][arielmodel]['mixratio'])
 
             # bottom line:
             #  use the same Teq as in ariel-sim, otherwise truth/retrieved won't match
@@ -906,18 +1352,6 @@ def atmos(
 
             tspecerr = abs(tspc**2 - (tspc + terr) ** 2)
             tspectrum = tspc**2
-            if 'STIS-WFC3' in ext:
-                filters = np.array(input_data['Fltrs'])
-                cond_spec_g750 = filters == 'HST-STIS-CCD-G750L-STARE'
-                # MASKING G750 WAV > 0.80
-                twav_g750 = twav[cond_spec_g750]
-                tspec_g750 = tspectrum[cond_spec_g750]
-                tspecerr_g750 = tspecerr[cond_spec_g750]
-                mask = (twav_g750 > 0.80) & (twav_g750 < 0.95)
-                tspec_g750[mask] = np.nan
-                tspecerr_g750[mask] = np.nan
-                tspectrum[cond_spec_g750] = tspec_g750
-                tspecerr[cond_spec_g750] = tspecerr_g750
 
             #  Clean up
             if 'sim' not in ext:
@@ -936,8 +1370,14 @@ def atmos(
             for model in modfam:
                 out['data'][p][model] = {}
 
+                if bool('TEA' in model):
+                    chemistry = 'TEA'
+                else:
+                    chemistry = 'TEC'
+                # print('model, chemistry', model, chemistry)
+
                 # new method for setting priors (no change, but easier to view in bounds.py)
-                prior_range_table = set_prior_bound(eqtemp, runtime_params)
+                prior_range_table = set_prior_bound(eqtemp, rtp)
 
                 out['data'][p][model]['prior_ranges'] = {}
                 # keep track of the bounds put on each parameter
@@ -945,15 +1385,35 @@ def atmos(
                 nodes = []
                 nodeshape = []
                 with pymc.Model():
+                    dctx = dctxupdt()  # initialize context dict (None filled)
+                    dctx = dctxupdt(
+                        {
+                            'runtime': rtp,
+                            'cleanup': cleanup,
+                            'model': model,
+                            'planet': p,
+                            'rp0': rp0,
+                            'orbp': orbp,
+                            'tspectrum': tspectrum,
+                            'xsl': xsl,
+                            'spc': spc,
+                            'modparlbl': modparlbl,
+                            'hzlib': crbhzlib,
+                            'chemistry': chemistry,
+                            'mcmcdat': tspectrum[cleanup],
+                            'mcmcsig': tspecerr[cleanup],
+                            'atom_xsec': atom_xsec,
+                            'interp_tea': interp_tea,
+                        },
+                    )
+
+                    if dctx == 'nothing':
+                        print('dumb. trying avoid unused-variable error')
 
                     # set the fixed parameters (the ones that are not being fit this time)
                     fixed_params = {}
 
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
-                        # only consider cloud-free case for simulated data
-                        #  for Ariel, cloud params are fixed to model_params values
-                        #  if blank, set parameters to a cloud/haze-free case
-
+                    if not rtp['cerberus_atmos_fitCTP']:
                         if 'CTP' in input_data['model_params']:
                             fixed_params['CTP'] = input_data['model_params'][
                                 'CTP'
@@ -961,6 +1421,8 @@ def atmos(
                         else:
                             # cloud deck is very deep - 1000 bars
                             fixed_params['CTP'] = 3.0
+
+                    if not rtp['cerberus_atmos_fitHaze']:
                         if 'HScale' in input_data['model_params']:
                             fixed_params['HScale'] = input_data['model_params'][
                                 'HScale'
@@ -982,11 +1444,11 @@ def atmos(
 
                     # print('model params',input_data['model_params'])
 
-                    if not runtime_params.fitT:
+                    if not rtp['cerberus_atmos_fitT']:
                         fixed_params['T'] = eqtemp
-                    if not runtime_params.fitCtoO:
-                        print('inputdata keys', input_data.keys())
-                        print('modelparams', input_data['model_params'])
+                    if not rtp['cerberus_atmos_fitCtoO']:
+                        # print('input_data keys', input_data.keys())
+                        # print('modelparams', input_data['model_params'])
                         # if 'model_params' in input_data:
                         # model_params should always exist, but might be 'None'
                         if 'C/O' in input_data['model_params']:
@@ -995,236 +1457,27 @@ def atmos(
                             ]
                         else:
                             fixed_params['CtoO'] = 0.0
-                    if not runtime_params.fitNtoO:
+                    if not rtp['cerberus_atmos_fitNtoO']:
                         fixed_params['NtoO'] = 0.0
+                    if not rtp['cerberus_atmos_fitStoO']:
+                        fixed_params['StoO'] = 0.0
                     # print('fixedparams',fixed_params)
-
-                    # OFFSET BETWEEN STIS AND WFC3 filters
-                    if 'STIS-WFC3' in ext:
-                        cond_off0 = filters == 'HST-STIS-CCD-G430L-STARE'
-                        cond_off1 = filters == 'HST-STIS-CCD-G750L-STARE'
-                        cond_off2 = filters == 'HST-WFC3-IR-G102-SCAN'
-                        cond_off3 = filters == 'HST-WFC3-IR-G141-SCAN'
-                        valid0 = True in cond_off0
-                        valid1 = True in cond_off1
-                        valid2 = True in cond_off2
-                        valid3 = True in cond_off3
-                        if 'STIS' in filters[0]:
-                            if valid0:  # G430
-                                if (
-                                    valid1 and valid2 and valid3
-                                ):  # G430-G750-G102-G141
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off0]
-                                        )
-                                    )
-                                    off1_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    off2_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off2]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF1', -off1_value, off1_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF2', -off2_value, off2_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                elif valid1 and valid2 and not valid3:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off2])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off0]
-                                        )
-                                    )
-                                    off1_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off2])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF1', -off1_value, off1_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                elif valid1 and valid3 and not valid2:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off0]
-                                        )
-                                    )
-                                    off1_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF1', -off1_value, off1_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                elif valid2 and valid3 and not valid1:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off0]
-                                        )
-                                    )
-                                    off1_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off2]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF1', -off1_value, off1_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                elif valid3 and not valid1 and not valid2:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off0]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                            else:
-                                if valid1 and valid2 and valid3:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    off1_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off2]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF1', -off1_value, off1_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                if valid1 and valid3 and not valid2:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off3])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                if valid1 and valid2 and not valid3:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off2])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                                if valid1 and valid2 and not valid3:
-                                    off0_value = abs(
-                                        np.nanmedian(1e2 * tspectrum[cond_off2])
-                                        - np.nanmedian(
-                                            1e2 * tspectrum[cond_off1]
-                                        )
-                                    )
-                                    nodes.append(
-                                        pymc.Uniform(
-                                            'OFF0', -off0_value, off0_value
-                                        )
-                                    )
-                                    nodeshape.append(1)
-                        if 'WFC3' in filters[0]:
-                            if valid2 and valid3:
-                                off0_value = abs(
-                                    np.nanmedian(1e2 * tspectrum[cond_off3])
-                                    - np.nanmedian(1e2 * tspectrum[cond_off2])
-                                )
-                                nodes.append(
-                                    pymc.Uniform(
-                                        'OFF0', -off0_value, off0_value
-                                    )
-                                )
-                                nodeshape.append(1)
 
                     # use prior bounds to create pymc nodes (Uniform ranges)
                     nodes, nodeshape, prior_ranges = add_priors(
                         nodes,
                         nodeshape,
                         prior_range_table,
-                        runtime_params,
-                        ext,
+                        rtp,
                         model,
                         modparlbl[model],
+                    )
+
+                    dctx = dctxupdt(
+                        {
+                            'fixedParams': fixed_params,
+                            'nodeshape': nodeshape,
+                        }
                     )
 
                     # fixes the possibly-used-before-assignment error
@@ -1237,40 +1490,39 @@ def atmos(
                         return TensorModel(nodes)
 
                     # CERBERUS MCMC
-                    if not runtime_params.fitCloudParameters and 'sim' in ext:
-                        # print('TURNING OFF CLOUDS!')
-                        log.info('--< RUNNING MCMC - NO CLOUDS! >--')
-
-                        # before calling MCMC, save the fixed-parameter info in the context
-                        ctxtupdt(
-                            runtime=runtime_params,
-                            cleanup=cleanup,
-                            model=model,
-                            planet=p,
-                            rp0=rp0,
-                            orbp=orbp,
-                            tspectrum=tspectrum,
-                            xsl=xsl,
-                            spc=spc,
-                            modparlbl=modparlbl,
-                            hzlib=crbhzlib,
-                            fixed_params=fixed_params,
-                            mcmcdat=tspectrum[cleanup],
-                            mcmcsig=tspecerr[cleanup],
-                            nodeshape=nodeshape,
-                            forwardmodel=clearfmcerberus,
+                    if 'STIS-WFC3' in ext:
+                        log.warning(
+                            '--< STIS-WFC offset models removed! (Sept. 2026) >--'
                         )
+                    else:
+                        if (
+                            not rtp['cerberus_atmos_fitCTP']
+                            and not rtp['cerberus_atmos_fitHaze']
+                        ):
+                            log.info('--< RUNNING MCMC - NO CLOUDS! >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': clearfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloud-free spectrum'
+                        else:
+                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
+                            dctx = dctxupdt(
+                                {'forwardmodel': cloudyfmcerberus},
+                                freeze=True,
+                            )
+                            likeliName = 'likelihood for cloudy spectrum'
 
                         # --< MODEL >--
+                        TensorModel = TensorShell()
+
                         # print('nodes going into the tensor model', nodes)
                         # print('nodes going into the tensor model', len(nodes))
-
-                        TensorModel = TensorShell()
 
                         # GMR: CustomDist needs a list that has consistent dims,
                         # hence the use of flatnodes
                         _ = pymc.CustomDist(
-                            "likelihood for cloud-free spectrum",
+                            likeliName,
                             nodes,
                             observed=tspectrum[cleanup],
                             logp=LogLH,
@@ -1289,166 +1541,22 @@ def atmos(
                         )
                         # --------------
                         pass
-                    else:
-                        if 'STIS-WFC3' in ext:
-                            if 'STIS' in filters[0]:
-                                if valid0:  # G430
-                                    if (
-                                        valid1 and valid2 and valid3
-                                    ):  # G430-G750-G102-G141
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid1 and valid2 and not valid3:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus1(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid1 and valid3 and not valid2:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus2(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid2 and valid3 and not valid1:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus3(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid3 and not valid1 and not valid2:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus4(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                else:
-                                    if valid1 and valid2 and valid3:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus5(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid1 and valid3 and not valid2:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus6(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                                    elif valid1 and valid2 and not valid3:
-                                        _ = pymc.Normal(
-                                            'mcdata',
-                                            mu=offcerberus7(*nodes),
-                                            tau=1e0 / tspecerr[cleanup] ** 2,
-                                            observed=tspectrum[cleanup],
-                                        )
-                            if 'WFC3' in filters[0]:
-                                if valid2 and valid3:
-                                    _ = pymc.Normal(
-                                        'mcdata',
-                                        mu=offcerberus8(*nodes),
-                                        tau=1e0 / tspecerr[cleanup] ** 2,
-                                        observed=tspectrum[cleanup],
-                                    )
-                                elif not valid2:
-                                    _ = pymc.Normal(
-                                        'mcdata',
-                                        mu=cloudyfmcerberus(*nodes),
-                                        tau=1e0
-                                        / (
-                                            np.nanmedian(tspecerr[cleanup]) ** 2
-                                        ),
-                                        observed=tspectrum[cleanup],
-                                    )
-                                elif not valid3:
-                                    _ = pymc.Normal(
-                                        'mcdata',
-                                        mu=cloudyfmcerberus(*nodes),
-                                        tau=1e0
-                                        / (
-                                            np.nanmedian(tspecerr[cleanup]) ** 2
-                                        ),
-                                        observed=tspectrum[cleanup],
-                                    )
-                                    pass
-                                pass
-                        if 'STIS-WFC3' not in ext:
-                            log.info('--< STANDARD MCMC (WITH CLOUDS) >--')
 
-                            # before calling MCMC, save the fixed-parameter info in the context
-                            ctxtupdt(
-                                runtime=runtime_params,
-                                cleanup=cleanup,
-                                model=model,
-                                planet=p,
-                                rp0=rp0,
-                                orbp=orbp,
-                                tspectrum=tspectrum,
-                                xsl=xsl,
-                                spc=spc,
-                                modparlbl=modparlbl,
-                                hzlib=crbhzlib,
-                                fixed_params=fixed_params,
-                                mcmcdat=tspectrum[cleanup],
-                                mcmcsig=tspecerr[cleanup],
-                                nodeshape=nodeshape,
-                                forwardmodel=cloudyfmcerberus,
-                            )
-
-                            # --< MODEL >--
-                            # print('nodes going into the tensor model', nodes)
-                            # print('nodes going into the tensor model', len(nodes))
-
-                            TensorModel = TensorShell()
-
-                            pymc.CustomDist(
-                                "likelihood for cloudy spectrum",
-                                nodes,
-                                observed=tspectrum[cleanup],
-                                logp=LogLH,
-                            )
-
-                            # save the logLikelihood values for each pymc step
-                            # pymc.Deterministic(
-                            #    "saved logLikelihood",
-                            #    pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                            # )
-                            # save the chi-squared values for each pymc step
-                            # (mulitply the logLikelihood by -2)
-                            pymc.Deterministic(
-                                "saved chi2",
-                                -2.0
-                                * pytensr.sum(LogLH(tspectrum[cleanup], nodes)),
-                            )
-                            # --------------
-                        pass
-
-                    if runtime_params.MCMC_sliceSampler:
+                    if rtp['cerberus_atmos_sliceSampler']:
                         log.info('>-- SLICE SAMPLER: ON  --<')
                         sampler = pymc.Slice()
                     else:
                         log.info('>-- SLICE SAMPLER: OFF --<')
                         sampler = pymc.Metropolis()
 
-                    # log.info('>-- MCMC nodes: %s', str([n.name for n in nodes]))
                     log.info('>-- MCMC nodes: %s', str(prior_ranges.keys()))
-
-                    # asdf: careful here. #-chains and #-cores are same thing?
+                    # print('>-- MCMC nodes: %s', str(prior_ranges.keys()))
 
                     # --< SAMPLING >--
                     trace = pymc.sample(
                         chainlen,
                         cores=Nchains,
+                        chains=Nchains,
                         tune=int(int(chainlen) / 2),  # note: was /4 before
                         step=sampler,
                         compute_convergence_checks=True,
@@ -1456,40 +1564,26 @@ def atmos(
                     )
                     # ----------------
                     stats_summary = pymc.stats.summary(trace)
-                    # print('stats summary',stats_summary)
-                    # print('stats summary',stats_summary.keys())
-                    #  ['mean', 'sd', 'hdi_3%', 'hdi_97%', 'mcse_mean', 'mcse_sd',
-                    #   'ess_bulk', 'ess_tail', 'r_hat']
-
-                # N_TEC = len(trace.posterior.TEC_dim_0)
-                # print('# of TEC parameters',N_TEC)
-
+                    pass
                 saved_chi2s = trace.posterior['saved chi2'].values
-                # print('shape of loglikelihoods', saved_chi2s.shape)
                 # have to unravel these, to match the unraveled pymc traces
                 out['data'][p][model]['chi2'] = np.ravel(saved_chi2s, order='F')
                 degrees_of_freedom = len(tspectrum[cleanup]) - len(nodes)
-                # print('DOF', degrees_of_freedom,
-                #      len(tspectrum[cleanup]), len(nodes))
                 out['data'][p][model]['chi2reduced'] = np.ravel(
                     saved_chi2s / degrees_of_freedom, order='F'
                 )
 
                 mctrace = {}
                 for key in stats_summary['mean'].keys():
-                    # print('key', key)
                     tracekeys = key.split('[')
                     keyname = tracekeys[0]
-                    # print('tracekeys,keyname', tracekeys, keyname)
                     if len(tracekeys) > 1:
-                        # print('tracekeys', tracekeys)
                         param_index = int(tracekeys[1][:-1])
                         mctrace[key] = trace.posterior[keyname][
                             :, :, param_index
                         ]
                     else:
                         mctrace[key] = trace.posterior[key]
-                    # print('mctrace shape', key, mctrace[key].shape)
 
                     # convert Nchain x Nstep 2-D posteriors to a single chain
                     # mctrace[key] = np.ravel(mctrace[key])
@@ -1497,6 +1591,8 @@ def atmos(
                     # seems better when reversed ('F' reverses the indices)
                     mctrace[key] = np.ravel(mctrace[key], order='F')
                 out['data'][p][model]['MCTRACE'] = mctrace
+                out['data'][p][model]['Nchains'] = Nchains
+                out['data'][p][model]['chainlen'] = chainlen
 
                 out['data'][p][model]['prior_ranges'] = prior_ranges
             out['data'][p]['WAVELENGTH'] = np.array(input_data['WB'])
@@ -1508,22 +1604,20 @@ def atmos(
                     out['data'][p]['TRUTH_SPECTRUM'] = np.array(
                         input_data['true_spectrum']['fluxDepth']
                     )
-                    # wavelength should be the same as just above, but just in case load it here too
+                    # wavelength should be the same as just above
+                    # but just in case load it here too
                     out['data'][p]['TRUTH_WAVELENGTH'] = np.array(
                         input_data['true_spectrum']['wavelength_um']
                     )
                     out['data'][p]['TRUTH_MODELPARAMS'] = input_data[
                         'model_params'
                     ]
-                    # print('true modelparams in atmos:',inputData['model_params'])
 
             # during debugging (script run) show the results as a corner plot
             if verbose:
-                # print('tracekeys', tracekeys)
                 all_traces = []
                 all_keys = []
                 for key, thistrace in mctrace.items():
-                    # print('going through keys in MCTRACE', key)
                     all_traces.append(thistrace)
                     if key == 'saved chi2':
                         all_keys.append('$\\chi^2$')
@@ -1541,6 +1635,8 @@ def atmos(
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model == 'TEA':
@@ -1550,14 +1646,11 @@ def atmos(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model == 'PHOTOCHEM':
-                        # print(
-                        #    'UPDATE THIS to use runtime params!!!',
-                        #    runtime_params.fitmolecules,
-                        # )
-                        # print(' ACTUALLY. UPDATE ALL THREE!!')
                         if key == 'PHOTOCHEM[0]':
                             all_keys.append('HCN')
                         elif key == 'PHOTOCHEM[1]':
@@ -1572,7 +1665,6 @@ def atmos(
                             all_keys.append(key)
                     else:
                         all_keys.append(key)
-                # print('allKeys', all_keys)
 
                 param_values_median = None
                 plot_corner(
@@ -1586,7 +1678,7 @@ def atmos(
                     model,
                     spc['data']['target'],
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=rtp['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
                 )
                 plot_walker_evolution(
@@ -1948,12 +2040,13 @@ def resultsversion():
 
 def calculateSpectrum(
     fit_params,
-    runtime_params,
+    runtime,
     p,
     rp0,
     fin,
     xsl,
     transitdata,
+    chemistry='TEC',
 ):
     '''
     calculate a spectrum for the given set of fit-parameters
@@ -1976,19 +2069,18 @@ def calculateSpectrum(
         cheq=tceqdict,
         rp0=rp0,
         xsecs=xsl[p]['XSECS'],
-        qtgrid=xsl[p]['QTGRID'],
         wgrid=transitdata['wavelength'],
         orbp=fin['priors'],
         hzlib=crbhzlib,
+        chemistry=chemistry,
         planet=p,
-        knownspecies=runtime_params.knownspecies,
-        cialist=runtime_params.cialist,
-        xmollist=runtime_params.xmollist,
-        lbroadening=runtime_params.lbroadening,
-        lshifting=runtime_params.lshifting,
-        nlevels=runtime_params.nlevels,
-        Hsmax=runtime_params.Hsmax,
-        solrad=runtime_params.solrad,
+        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+        solrad=runtime['cerberus_crbmodel_solrad'].value(),
     )
     spectrum = fmc.spectrum
 
@@ -2012,7 +2104,7 @@ def calculateSpectrum(
 def results(
     trgt,
     filt,
-    runtime_params,
+    runtime,
     fin,
     anc,
     xsl,
@@ -2047,7 +2139,7 @@ def results(
     for p in fin['priors']['planets']:
         # print('post-analysis for planet:',p)
 
-        # TEC,TEA params - X/H, C/O, N/O
+        # TEC,TEA params - X/H, C/O, N/O, S/O
         # disEq params - HCN, CH4, C2H2, CO2, H2CO
 
         # check whether this planet was analyzed
@@ -2086,6 +2178,11 @@ def results(
                 if model_name in atm[p].keys():
                     models.append(model_name)
             for model_name in models:
+                if bool('TEA' in model_name):
+                    chemistry = 'TEA'
+                else:
+                    chemistry = 'TEC'
+
                 all_traces = []
                 all_keys = []
                 for key in atm[p][model_name]['MCTRACE']:
@@ -2116,6 +2213,8 @@ def results(
                             all_keys.append('[C/O]')
                         elif key == 'TEC[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEC[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'TEA':
@@ -2125,6 +2224,8 @@ def results(
                             all_keys.append('[C/O]')
                         elif key == 'TEA[2]':
                             all_keys.append('[N/O]')
+                        elif key == 'TEA[3]':
+                            all_keys.append('[S/O]')
                         else:
                             all_keys.append(key)
                     elif model_name == 'PHOTOCHEM':
@@ -2166,15 +2267,23 @@ def results(
                         )
                 profiled_traces = np.array(profiled_traces)
 
+                if 'Nchains' in atm[p][model_name]:
+                    Nchains = atm[p][model_name]['Nchains']
+                else:
+                    Nchains = None
+                print('Nchains (passed through from atmos)', Nchains)
+
                 # make note of the bounds placed on each parameter
                 if 'prior_ranges' in atm[p][model_name].keys():
                     prior_ranges = atm[p][model_name]['prior_ranges']
                 else:
                     prior_ranges = {}
 
-                fit_cloud_parameters = 'CTP' in all_keys
-                fit_n_to_o = '[N/O]' in all_keys
+                fit_CTP = 'CTP' in all_keys
+                fit_haze = 'HScale' in all_keys
                 fit_c_to_o = '[C/O]' in all_keys
+                fit_n_to_o = '[N/O]' in all_keys
+                fit_s_to_o = '[S/O]' in all_keys
                 fit_t = 'T' in all_keys
                 fit_TPprofile = 'Tparam[0]' in all_keys
 
@@ -2247,22 +2356,27 @@ def results(
                     mdptrace_profiled.append(
                         atm[p][model_name]['MCTRACE'][key][keepers]
                     )
-                if fit_cloud_parameters:
+                if fit_CTP:
                     ctptrace = atm[p][model_name]['MCTRACE']['CTP']
-                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
-                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
-                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
                     ctp = np.median(ctptrace)
-                    hazescale = np.median(hazescaletrace)
-                    hazeloc = np.median(hazeloctrace)
-                    hazethick = np.median(hazethicktrace)
                     # print('fit results; CTP:', ctp)
-                    # print('fit results; HScale:', hazescale)
-                    # print('fit results; HLoc:', hazeloc)
-                    # print('fit results; HThick:', hazethick)
                     ctptrace_profiled = atm[p][model_name]['MCTRACE']['CTP'][
                         keepers
                     ]
+                    ctp_profiled = np.median(ctptrace_profiled)
+                else:
+                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
+                    ctp_profiled = ctp
+                if fit_haze:
+                    hazescaletrace = atm[p][model_name]['MCTRACE']['HScale']
+                    hazeloctrace = atm[p][model_name]['MCTRACE']['HLoc']
+                    hazethicktrace = atm[p][model_name]['MCTRACE']['HThick']
+                    hazescale = np.median(hazescaletrace)
+                    hazeloc = np.median(hazeloctrace)
+                    hazethick = np.median(hazethicktrace)
+                    # print('fit results; HScale:', hazescale)
+                    # print('fit results; HLoc:', hazeloc)
+                    # print('fit results; HThick:', hazethick)
                     hazescaletrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HScale'
                     ][keepers]
@@ -2272,16 +2386,13 @@ def results(
                     hazethicktrace_profiled = atm[p][model_name]['MCTRACE'][
                         'HThick'
                     ][keepers]
-                    ctp_profiled = np.median(ctptrace_profiled)
                     hazescale_profiled = np.median(hazescaletrace_profiled)
                     hazeloc_profiled = np.median(hazeloctrace_profiled)
                     hazethick_profiled = np.median(hazethicktrace_profiled)
                 else:
-                    ctp = atm[p]['TRUTH_MODELPARAMS']['CTP']
                     hazescale = atm[p]['TRUTH_MODELPARAMS']['HScale']
                     hazeloc = atm[p]['TRUTH_MODELPARAMS']['HLoc']
                     hazethick = atm[p]['TRUTH_MODELPARAMS']['HThick']
-                    ctp_profiled = ctp
                     hazescale_profiled = hazescale
                     hazeloc_profiled = hazeloc
                     hazethick_profiled = hazethick
@@ -2331,6 +2442,26 @@ def results(
                             # default is Solar
                             tceqdict['NtoO'] = 0.0
                         tceqdict_profiled['NtoO'] = tceqdict['NtoO']
+
+                    if fit_s_to_o:
+                        if fit_n_to_o:
+                            tceqdict['StoO'] = float(mdp[3])
+                            tceqdict_profiled['StoO'] = float(mdp_profiled[3])
+                        else:
+                            tceqdict['StoO'] = float(mdp[2])
+                            tceqdict_profiled['StoO'] = float(mdp_profiled[2])
+                    else:
+                        if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                            'StoO' in atm[p]['TRUTH_MODELPARAMS']
+                        ):
+                            # print('truth params',atm[p]['TRUTH_MODELPARAMS'])
+                            tceqdict['NtoO'] = atm[p]['TRUTH_MODELPARAMS'][
+                                'StoO'
+                            ]
+                        else:
+                            # default is Solar
+                            tceqdict['StoO'] = 0.0
+                        tceqdict_profiled['StoO'] = tceqdict['StoO']
                 elif model_name == 'PHOTOCHEM':
                     if len(mdp) != 5:
                         log.warning(
@@ -2368,12 +2499,13 @@ def results(
                 # print('param_values median',param_values_median)
                 patmos_model, chi2model = calculateSpectrum(
                     param_values_median,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
                     xsl,
                     transitdata,
+                    chemistry=chemistry,
                 )
 
                 param_values_profiled = [
@@ -2389,12 +2521,13 @@ def results(
                 # patmos_model_profiled, chi2modelProfiled = calculateSpectrum(
                 patmos_model_profiled, _ = calculateSpectrum(
                     param_values_profiled,
-                    runtime_params,
+                    runtime,
                     p,
                     rp0,
                     fin,
                     xsl,
                     transitdata,
+                    chemistry=chemistry,
                 )
                 # print('median params', tpr, tceqdict)
                 # print('chi2 from posterior medians', chi2model)
@@ -2443,6 +2576,8 @@ def results(
                             param_values_bestfit[5]['CtoO'] = trace[ibest]
                         elif key == '[N/O]':
                             param_values_bestfit[5]['NtoO'] = trace[ibest]
+                        elif key == '[S/O]':
+                            param_values_bestfit[5]['StoO'] = trace[ibest]
                         elif key == 'mixratio':
                             param_values_bestfit[5] = 666
                             log.error('not done yet. geoff to do')
@@ -2455,12 +2590,13 @@ def results(
                     # print('')
                     patmos_bestfit, chi2best = calculateSpectrum(
                         param_values_bestfit,
-                        runtime_params,
+                        runtime,
                         p,
                         rp0,
                         fin,
                         xsl,
                         transitdata,
+                        chemistry=chemistry,
                     )
 
                 else:
@@ -2473,7 +2609,8 @@ def results(
                     )
                     for char in trgt + ' ' + p:
                         int_from_target = (
-                            runtime_params.randomseed * int_from_target
+                            runtime['cerberus_results_randomseed'].value()
+                            * int_from_target
                             + ord(char)
                         ) % 100000
                     np.random.seed(int_from_target)
@@ -2484,11 +2621,14 @@ def results(
 
                     nwalkersteps = len(np.array(mdptrace)[0, :])
                     # print('# of walker steps', nwalkersteps)
-                    for _ in range(runtime_params.nrandomwalkers):
+                    for _ in range(
+                        runtime['cerberus_results_nrandomwalkers'].value()
+                    ):
                         iwalker = int(nwalkersteps * np.random.rand())
 
-                        if fit_cloud_parameters:
+                        if fit_CTP:
                             ctp = ctptrace[iwalker]
+                        if fit_haze:
                             hazescale = hazescaletrace[iwalker]
                             hazeloc = hazeloctrace[iwalker]
                             hazethick = hazethicktrace[iwalker]
@@ -2496,7 +2636,7 @@ def results(
                             tpr = tprtrace[iwalker]
                         mdp = np.array(mdptrace)[:, iwalker]
                         # print('shape mdp',mdp.shape)
-                        # if runtime_params.fitCloudParameters:
+                        # if runtime['cerberus_atmos_fitCTP']:
                         #    print('fit results; CTP:', ctp)
                         #    print('fit results; HScale:', hazescale)
                         #    print('fit results; HLoc:', hazeloc)
@@ -2526,6 +2666,21 @@ def results(
                                 else:
                                     # log.info('--< NtoO is missing from TRUTH_MODELPARAMS >--')
                                     tceqdict['NtoO'] = 0.0
+                            if fit_s_to_o:
+                                if fit_n_to_o:
+                                    tceqdict['StoO'] = float(mdp[3])
+                                else:
+                                    tceqdict['StoO'] = float(mdp[2])
+                            else:
+                                if ('TRUTH_MODELPARAMS' in atm[p]) and (
+                                    'StoO' in atm[p]['TRUTH_MODELPARAMS']
+                                ):
+                                    tceqdict['StoO'] = atm[p][
+                                        'TRUTH_MODELPARAMS'
+                                    ]['StoO']
+                                else:
+                                    # log.info('--< StoO is missing from TRUTH_MODELPARAMS >--')
+                                    tceqdict['StoO'] = 0.0
 
                         elif model_name == 'PHOTOCHEM':
                             tceqdict = None
@@ -2547,12 +2702,13 @@ def results(
                         ]
                         patmos_modelrand, chi2modelrand = calculateSpectrum(
                             param_values_rand,
-                            runtime_params,
+                            runtime,
                             p,
                             rp0,
                             fin,
                             xsl,
                             transitdata,
+                            chemistry=chemistry,
                         )
                         # check to see if this model is the best one
                         # print('chi2 from sample toward best', chi2modelrand)
@@ -2702,6 +2858,7 @@ def results(
                         trgt,
                         p,
                         saveDir=save_dir,
+                        verbose=False,
                     )
                 )
 
@@ -2724,10 +2881,12 @@ def results(
                     model_name,
                     trgt,
                     p,
-                    bins=runtime_params.cornerBins,
+                    bins=runtime['cerberus_plotters_cornerBins'].value(),
                     verbose=verbose,
+                    # verbose=False,
                     saveDir=save_dir,
                 )
+
                 # _______________WALKER-EVOLUTION PLOT________________
                 out['data'][p]['plot_walkerevol_' + model_name], _ = (
                     plot_walker_evolution(
@@ -2741,8 +2900,10 @@ def results(
                         model_name,
                         trgt,
                         p,
+                        Nchains=Nchains,
                         saveDir=save_dir,
-                        # verbose=verbose,
+                        verbose=verbose,
+                        # verbose=True,
                     )
                 )
 
@@ -2773,7 +2934,7 @@ def results(
 
 
 # --------------------------------------------------------------------
-def analysis(aspects, filt, runtime_params, out, verbose=False):
+def analysis(aspects, filt, runtime, out, verbose=False):
     '''
     Plot out the population analysis (retrieval vs truth, mass-metallicity, etc)
     aspects: cross-target information
@@ -2793,13 +2954,16 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
     svname = 'cerberus.atmos'
 
+    chemModel = 'TEC'
+    chemModel = 'TEA'
+
     alltargetlists = get_target_lists()
 
     # set prior_ranges to avoid possible used-before-assignment problem
     # (ideally it is read in, but possibly not if there's mistake/old formatting)
     # the normal call doesn't work well here actually. and it creates nodes
     # darn.  have to just set something arbitrary
-    # _, prior_ranges = addPriors(priorRangeTable, runtime_params, model, modparlbl[model])
+    # _, prior_ranges = addPriors(priorRangeTable, runtime, model, modparlbl[model])
     prior_ranges = None
 
     # allow for analysis of multiple target lists
@@ -2808,7 +2972,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
     analysisplanetlist = []
 
     if filt == 'Ariel-sim':
-        if runtime_params.tier == 2:
+        if runtime['ariel_simspectrum_tier'].value() == 2:
             #  *** Tier-2 (259 planets) ***
             analysistargetlists.append(
                 {
@@ -2820,7 +2984,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 'planetlistname': '2-year science time (Tier-2); Chachan mmw',
                 'planets': alltargetlists['ariel_planets_tier2'],
             }
-        elif runtime_params.tier == 1:
+        elif runtime['ariel_simspectrum_tier'].value() == 1:
             #  *** Tier-1 (626 planets) ***
             analysistargetlists.append(
                 {
@@ -2835,7 +2999,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         else:
             log.error(
                 "ERROR: unknown tier level for mass-metal plot %s",
-                runtime_params.tier,
+                runtime['ariel_simspectrum_tier'].value(),
             )
     else:
         analysistargetlists.append(
@@ -2920,19 +3084,20 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                             pass
 
                         elif (
-                            'TEC'
+                            chemModel
                             not in atmos_fit['data'][planet_letter][
                                 'MODELPARNAMES'
                             ]
                         ):
-                            log.warning(
-                                '--< CERBERUS ANALYSIS: BIG PROBLEM theres no TEC model! %s %s >--',
+                            log.error(
+                                '--< CERBERUS ANALYSIS: model is missing! %s %s %s >--',
+                                chemModel,
                                 filt,
                                 trgt,
                             )
                         elif (
                             'prior_ranges'
-                            not in atmos_fit['data'][planet_letter]['TEC']
+                            not in atmos_fit['data'][planet_letter][chemModel]
                         ):
                             log.warning(
                                 '--< CERBERUS ANALYSIS: SKIP (no prior info) - %s %s >--',
@@ -2956,26 +3121,28 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
 
                             # (prior range should be the same for all the targets)
                             prior_ranges = atmos_fit['data'][planet_letter][
-                                'TEC'
+                                chemModel
                             ]['prior_ranges']
 
                             all_traces = []
                             all_keys = []
-                            for key in atmos_fit['data'][planet_letter]['TEC'][
-                                'MCTRACE'
-                            ]:
+                            for key in atmos_fit['data'][planet_letter][
+                                chemModel
+                            ]['MCTRACE']:
                                 all_traces.append(
-                                    atmos_fit['data'][planet_letter]['TEC'][
+                                    atmos_fit['data'][planet_letter][chemModel][
                                         'MCTRACE'
                                     ][key]
                                 )
 
-                                if key in ('TEC[0]', 'TEC'):
+                                if key in (chemModel + '[0]', chemModel):
                                     all_keys.append('[X/H]')
-                                elif key == 'TEC[1]':
+                                elif key == chemModel + '[1]':
                                     all_keys.append('[C/O]')
-                                elif key == 'TEC[2]':
+                                elif key == chemModel + '[2]':
                                     all_keys.append('[N/O]')
+                                elif key == chemModel + '[3]':
+                                    all_keys.append('[S/O]')
                                 else:
                                     all_keys.append(key)
 
@@ -3017,8 +3184,15 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                 truth_params = []
 
                             for trueparam, fitparam in zip(
-                                ['Teq', 'metallicity', 'C/O', 'N/O', 'Mp'],
-                                ['T', '[X/H]', '[C/O]', '[N/O]', 'Mp'],
+                                [
+                                    'Teq',
+                                    'metallicity',
+                                    'C/O',
+                                    'N/O',
+                                    'S/O',
+                                    'Mp',
+                                ],
+                                ['T', '[X/H]', '[C/O]', '[N/O]', '[S/O]', 'Mp'],
                             ):
                                 if trueparam in truth_params:
                                     true_value = float(
@@ -3034,7 +3208,7 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                     # elif trueparam=='N/O':
                                     #     true_value = true_value
                                     if (
-                                        fitparam == '[N/O]'
+                                        fitparam in ['[N/O]', '[S/O]']
                                         and true_value == 666
                                     ):
                                         truth_values[fitparam].append(0)
@@ -3088,13 +3262,15 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                                             'planet_params'
                                         ]['mass']
                                     )
-                                elif trueparam == 'N/O':
+                                elif trueparam in ['N/O', 'S/O']:
                                     truth_values[fitparam].append(0)
                                 else:
                                     truth_values[fitparam].append(666)
 
         # plot analysis of the results.  save as png and as state vector for states/view
         save_dir = os.path.join(excalibur.context['data_dir'], 'bryden/')
+        fit_t_plot = False
+        fit_metalplot = False
         fit_co_plot = False
         fit_no_plot = False
         if 'sim' in filt:
@@ -3111,15 +3287,19 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 verbose=verbose,
             )
             # fitTplot, fitMetalplot, fitCOplot, fitNOplot = plotarray[0],plotarray[1],plotarray[2],plotarray[3]
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fits-vs-truths not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
                 fit_no_plot = plotarray[3]
         else:
             # for real data, make a histogram of the retrieved uncertainties
-            #  note that the length of plotarray depends on whether N/O and C/O are fit parameters
+            #  note that the length of plotarray depends on whether S/O,N/O,C/O are fit parameters
             plotarray = plot_fit_uncertainties(
                 fit_values,
                 fit_errors,
@@ -3128,8 +3308,12 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
                 saveDir=save_dir,
                 verbose=verbose,
             )
-            fit_t_plot = plotarray[0]
-            fit_metalplot = plotarray[1]
+            if len(plotarray) < 2:
+                log.error('plot-fit-uncertainties not returning proper plots!')
+            if len(plotarray) > 0:
+                fit_t_plot = plotarray[0]
+            if len(plotarray) > 1:
+                fit_metalplot = plotarray[1]
             if len(plotarray) > 2:
                 fit_co_plot = plotarray[2]
             if len(plotarray) > 3:
@@ -3143,6 +3327,11 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
             fit_errors2sided,
             prior_ranges,
             filt,
+            # runtime['cerberus_plotters_onlyFitAbove10MEarth'],
+            # runtime['cerberus_plotters_onlyPlotAbove10MEarth'],
+            # (runtime doesn't work yet for aspects)
+            True,
+            True,
             saveDir=save_dir,
             verbose=verbose,
         )
@@ -3157,8 +3346,10 @@ def analysis(aspects, filt, runtime_params, out, verbose=False):
         out['data']['values'] = dict(fit_values)
         out['data']['errors'] = dict(fit_errors)
         out['data']['plot_mass_v_metals'] = mass_metals_plot
-        out['data']['plot_fitT'] = fit_t_plot
-        out['data']['plot_fitMetal'] = fit_metalplot
+        if fit_t_plot:
+            out['data']['plot_fitT'] = fit_t_plot
+        if fit_metalplot:
+            out['data']['plot_fitMetal'] = fit_metalplot
         if fit_co_plot:
             out['data']['plot_fitCO'] = fit_co_plot
         if fit_no_plot:
@@ -3199,7 +3390,7 @@ def release(trgt, fin, out, verbose=False):
     rlsed = False
     plist = fin['priors']['planets']
     thispath = os.path.join(excalibur.context['data_dir'], 'CERBERUS')
-    print('thispath', thispath)
+    # print('thispath', thispath)
     for p in plist:
         intxtf = os.path.join(thispath, 'P.CERBERUS.atmos', trgt + p + '.txt')
         incorrpng = os.path.join(

@@ -125,6 +125,7 @@ def plot_corner(
 def simplecorner(mctrace, fullrange=False, verbose=False):
     '''
     GMR: Simple corner plot
+    GMR: Do not use. It is broken or I dont remember how to call it properly
     '''
     Medians = [float(np.median(mctrace[k])) for k in mctrace]
     # Lowerr = [float(np.percentile(mctrace[k], 50 - 95.4 / 2)) for k in mctrace]

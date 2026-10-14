@@ -16,15 +16,17 @@ from excalibur.cerberus.forward_model import crbFM
 
 # ----------------------------------------------------------------------------------------------
 def make_cerberus_atmos(
-    runtime_params,
+    runtime,
     wavelength_um,
     model_params,
     xslib,
     planet_letter,
     chemistry='TEC',
+    teagrid=None,
     mixratios=None,
     improvedBoundaryCondition=True,
     extendedBoundaryCondition=False,
+    verbose=False,
 ):
     '''
     Create a simulated spectrum using the code that's better than the other ones
@@ -54,6 +56,7 @@ def make_cerberus_atmos(
         tceqdict['XtoH'] = model_params['metallicity']
         tceqdict['CtoO'] = model_params['C/O']
         tceqdict['NtoO'] = 0
+        tceqdict['StoO'] = 0
         # print('cloudfree forward model input chem =', tceqdict)
 
     ssc = syscore.ssconstants(mks=True)
@@ -81,25 +84,25 @@ def make_cerberus_atmos(
         hazethick=float(hazethick),
         hzlib=crbhzlib,
         chemistry=chemistry,
+        tea_data=teagrid,
         cheq=tceqdict,
         mixratio=mixratios,
         rp0=rp0,
         xsecs=xslib['data'][planet_letter]['XSECS'],
-        qtgrid=xslib['data'][planet_letter]['QTGRID'],
         wgrid=wavelength_um,
         planet=planet_letter,
         orbp=model_params,
-        knownspecies=runtime_params.knownspecies,
-        cialist=runtime_params.cialist,
-        xmollist=runtime_params.xmollist,
-        lbroadening=runtime_params.lbroadening,
-        lshifting=runtime_params.lshifting,
-        nlevels=runtime_params.nlevels,
-        Hsmax=runtime_params.Hsmax,
-        solrad=runtime_params.solrad,
+        hitemplist=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
+        cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
+        xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
+        atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
+        nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
+        Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
+        solrad=runtime['cerberus_crbmodel_solrad'].value(),
         break_down_by_molecule=True,
         improvedBoundaryCondition=improvedBoundaryCondition,
         extendedBoundaryCondition=extendedBoundaryCondition,
+        verbose=verbose,
     )
 
     return (

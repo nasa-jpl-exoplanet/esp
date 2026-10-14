@@ -44,37 +44,46 @@ class TensorShell(tnsrgraph.Op):
     pass
 
 
-# GMR: Gregoire s legacy
 def LogLikelihood(inputs):
     '''
-    GMR: User defined loglikelihood
+    GMR: Gregoire Vassal legacy
+    User defined loglikelihood
     We stick to the proper definition of it
     '''
-    newnodes = []
-    newindex = 0
-    for ns in ctxt.nodeshape:
-        if ns > 1:
-            newnodes.append(inputs[newindex : newindex + ns])
+    if ctxt.nodeshape is not None:  # Flatten nodes
+        newnodes = []
+        newindex = 0
+        for ns in ctxt.nodeshape:
+            if ns > 1:
+                newnodes.append(inputs[newindex : newindex + ns])
+                pass
+            else:
+                newnodes.append(inputs[newindex])
+                pass
+            newindex += ns
             pass
-        else:
-            newnodes.append(inputs[newindex])
-            pass
-        newindex += ns
         pass
-    # ForwardModel = orbital(*newnodes)
-    # ForwardModel = clearfmcerberus(*newnodes)
-    # ForwardModel = cloudyfmcerberus(*newnodes)
-    ForwardModel = ctxt.forwardmodel(*newnodes)
+    else:
+        newnodes = inputs
+        pass
+    if ctxt.cleanup is not None:
+        cln = ctxt.cleanup
+        pass
+    else:
+        cln = np.array([True] * np.size(ctxt.mcmcdat))
+        pass
 
-    out = -(((ctxt.mcmcdat - ForwardModel) / ctxt.mcmcsig) ** 2) / 2e0
+    fmd = ctxt.forwardmodel(*newnodes)[cln]
+    fmd = fmd - np.nanmean(fmd)
+    dat = ctxt.mcmcdat[cln]
+    dat = dat - np.nanmean(dat)
+    out = -(((dat - fmd) / ctxt.mcmcsig[cln]) ** 2) / 2e0
 
     # this is a useful check; chi2_red should decrease toward ~1 (for simulated data)
     # print('  chi2_reduced for this model:', -2 * np.sum(out) / len(out))
-
     # normalize the log(Likelihood); as a constant, it shouldn't have any effect
     # actually let's not normalize it, since it should be no effect anyway
     # then we just have the output as chi^2, more or less; useful for cornerplot
     # Norm = np.log(2e0 * np.pi * ctxt.mcmcsig)
     # out -= Norm
-
     return out

@@ -74,17 +74,10 @@ class Validate(dawgie.Algorithm):
             autofill = self.__autofill.sv_as_dict()['parameters']
             runtime = self.__rt.sv_as_dict()['status']
 
-            runtime_params = syscore.SystemParams(
-                maximizeSelfConsistency=runtime[
-                    'system_validate_maximizeSelfConsistency'
-                ],
-                selectMostRecent=runtime['system_validate_selectMostRecent'],
-            )
-
             update = False
             valid, errstring = checksv(autofill)
             if valid:
-                update = self._validate(autofill, runtime_params, self.__out)
+                update = self._validate(autofill, runtime, self.__out)
             else:
                 self._failure(errstring)
 
@@ -99,9 +92,9 @@ class Validate(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _validate(autofill, runtime_params, out):
+    def _validate(autofill, runtime, out):
         '''Core code call'''
-        afilled = syscore.buildsp(autofill, runtime_params, out)
+        afilled = syscore.buildsp(autofill, runtime, out)
         return afilled
 
     @staticmethod
@@ -189,7 +182,7 @@ class Finalize(dawgie.Algorithm):
                     )
 
                 # log warnings moved to the very end (previously were before forcepar)
-                # 6/16/24 target name added to log, otherwise can't tell which one has the error
+                # target name added to log, otherwise can't tell which one has error
                 log.info(
                     '>-- FORCE PARAMETER: %s %s',
                     target,

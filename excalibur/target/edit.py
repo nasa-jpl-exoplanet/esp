@@ -30,12 +30,10 @@ def createversion():
 # ------------ -------------------------------------------------------
 # -- TARGET LIST -- --------------------------------------------------
 # FIRST COL HAS TO BE SOLVABLE BY
-# -- Obsolete https://archive.stsci.edu/hst/
 # https://mast.stsci.edu/portal/Mashup/Clients/Mast/Portal.html
 # SECOND COL [OPTIONAL] HAS TO BE 'Default Alias' RETURNED FROM
 # https://exoplanetarchive.ipac.caltech.edu/index.html
 # OR ALIAS KNOWN BY https://archive.stsci.edu/hst/
-# MINOR CHANGE
 def targetlist():
     '''
     55 Cnc :
@@ -142,6 +140,7 @@ def targetlist():
     Kepler-125 :
     Kepler-126 :
     Kepler-127 :
+    Kepler-13 : KOI-13
     Kepler-1339 :
     Kepler-138 :
     Kepler-14 :
@@ -439,7 +438,6 @@ def targetlist():
     KELT-4 A :
     KELT-6 :
     KELT-8 :
-    KOI-13 :
     KOI-94 :
     KPS-1 :
     Kepler-105 :
@@ -768,7 +766,6 @@ def targetlist():
     K2-99 :
     Kepler-1515 :
     Kepler-1517 :
-    Kepler-1658 :
     Kepler-411 :
     Kepler-91 :
     KOI-12 :
@@ -2039,6 +2036,44 @@ def targetlist():
     TOI-929 :
     TOI-938 :
     TOI-941 :
+    HAT-P-47 :
+    HD 278555 :
+    HD 50554 :
+    HD 60779 :
+    HD 715 :
+    KOI-13 :
+    KOI-319 :
+    Kepler-453 :
+    NGTS-39 :
+    TIC 150070085 :
+    TOI-1533 :
+    TOI-159 :
+    TOI-2040 :
+    TOI-2049 :
+    TOI-2114 :
+    TOI-2147 :
+    TOI-2578 :
+    TOI-3053 :
+    TOI-3278 :
+    TOI-3457 :
+    TOI-3664 :
+    TOI-4034 :
+    TOI-4311 :
+    TOI-4409 :
+    TOI-4427 :
+    TOI-4458 :
+    TOI-4492 :
+    TOI-5806 :
+    TOI-5811 B :
+    TOI-6019 :
+    TOI-603 :
+    TOI-6564 :
+    TOI-707 :
+    TOI-7169 :
+    TOI-7189 :
+    TOI-7393 :
+    TOI-7394 B :
+    TOI-791 :
     testJup :
     '''
 
