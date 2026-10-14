@@ -16,7 +16,7 @@ The algorithm engine has N goals:
 # -- IMPORTS -- ------------------------------------------------------
 # import builtins
 import collections
-import dawgie
+# import dawgie
 
 # import numpy
 # import scipy.stats
@@ -44,80 +44,80 @@ __version__ = '${ESP_GIT_REV}'
 Identity = collections.namedtuple('identity', ['serial'])
 
 
-class ValuesList(dawgie.Value, list):
-    '''ValuesList ds'''
-
-    def __init__(self, *args, **kwds):
-        '''__init__ ds'''
-        list.__init__(self, *args, **kwds)
-        self._version_ = dawgie.VERSION(1, 1, 0)
-        return
-
-    def features(self):
-        '''features ds'''
-        return []
-
-    pass
-
-
-class ValuesDict(dawgie.Value, dict):
-    '''ValuesDict ds'''
-
-    def __init__(self, *args, **kwds):
-        '''__init__ ds'''
-        dict.__init__(self, *args, **kwds)
-        self._version_ = dawgie.VERSION(1, 1, 0)
-        return
-
-    def features(self):
-        '''features ds'''
-        return []
-
-    pass
+# class ValuesList(dawgie.Value, list):
+#    '''ValuesList ds'''
+#
+#    def __init__(self, *args, **kwds):
+#        '''__init__ ds'''
+#        list.__init__(self, *args, **kwds)
+#        self._version_ = dawgie.VERSION(1, 1, 0)
+#        return
+#
+#    def features(self):
+#        '''features ds'''
+#        return []
+#
+#    pass
 
 
-class ValueScalar(dawgie.Value):
-    '''ValueScalar'''
+# class ValuesDict(dawgie.Value, dict):
+#    '''ValuesDict ds'''
+#
+#    def __init__(self, *args, **kwds):
+#        '''__init__ ds'''
+#        dict.__init__(self, *args, **kwds)
+#        self._version_ = dawgie.VERSION(1, 1, 0)
+#        return
 
-    def __init__(self, content=None):
-        '''__init__ ds'''
-        dawgie.Value.__init__(self)
-        self.__content = content
-        self._version_ = dawgie.VERSION(1, 1, 0)
-        return
-
-    def features(self):
-        '''features ds'''
-        return []
-
-    def new(self, value):
-        '''method to keep from explicitly needing dawgie'''
-        return ValueScalar(value if value is not None else self.__content)
-
-    def value(self):
-        '''value ds'''
-        return self.__content
-
-    pass
+#    def features(self):
+#        '''features ds'''
+#        return []
+#
+#    pass
 
 
-def lagger(wait=None, workers=288, verbose=False):
-    '''
-    GMR: Temporary staggering function to be called before an algo exec
-    Issue 101 https://github.com/nasa-jpl-exoplanet/esp/issues/101
-    wait: Forces value to a specific wait time in [s]
-    workers: number of workers
-    '''
-    if wait is not None:
-        out = wait
-        pass
-    else:
-        out = 0.1 * np.random.uniform(
-            low=0, high=workers
-        )  # pseudo steps of 100 ms
-        pass
-    if verbose:
-        print(f'Waiting {out} seconds')
-        pass
-    sleep(out)
-    return out
+# class ValueScalar(dawgie.Value):
+#     '''ValueScalar'''
+#
+#    def __init__(self, content=None):
+#        '''__init__ ds'''
+#        dawgie.Value.__init__(self)
+#        self.__content = content
+#        self._version_ = dawgie.VERSION(1, 1, 0)
+#        return
+
+#    def features(self):
+#        '''features ds'''
+#        return []
+
+#    def new(self, value):
+#        '''method to keep from explicitly needing dawgie'''
+#        return ValueScalar(value if value is not None else self.__content)
+
+#    def value(self):
+#        '''value ds'''
+#        return self.__content
+
+#    pass
+
+
+# def lagger(wait=None, workers=288, verbose=False):
+#    '''
+#    GMR: Temporary staggering function to be called before an algo exec
+#    Issue 101 https://github.com/nasa-jpl-exoplanet/esp/issues/101
+#    wait: Forces value to a specific wait time in [s]
+#    workers: number of workers
+#    '''
+#    if wait is not None:
+#        out = wait
+#        pass
+#    else:
+#        out = 0.1 * np.random.uniform(
+#            low=0, high=workers
+#        )  # pseudo steps of 100 ms
+#        pass
+#    if verbose:
+#        print(f'Waiting {out} seconds')
+#        pass
+#    sleep(out)
+#    return out

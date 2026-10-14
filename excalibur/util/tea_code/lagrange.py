@@ -45,8 +45,8 @@
 
 import os
 import numpy as np
-from sympy.core import Symbol
-from sympy import Matrix, solve_linear_system
+# from sympy.core import Symbol
+# from sympy import Matrix, solve_linear_system
 
 from excalibur.util.tea_code import format as form
 

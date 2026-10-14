@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import Symbol, solve
+# from sympy import Symbol, solve
 
 
 def balance(a, b, verb=0, loc_out=None):

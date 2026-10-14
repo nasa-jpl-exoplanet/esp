@@ -12,7 +12,7 @@ import io
 from scipy.stats import skew, kurtosis
 from numpy.fft import fft, fftfreq
 
-import dawgie
+# import dawgie
 
 
 # -- PLOTTING FUNCTIONS-- --------------------------------------------
@@ -162,31 +162,31 @@ def plot_residual_fft(
 
 
 # --------------------------------------------------------------------
-def rendertable(data, params, visitor: dawgie.Visitor) -> None:
-    '''
-    Helper function to render a table using data corresponding to
-    the passed parameters
-    '''
-    clabels = ['name', 'estimate', 'units', 'description', 'ref']
-    table = visitor.add_table(clabels=clabels, rows=len(params))
-    # display stellar estimates
-    for i, param in enumerate(params):
-        table.get_cell(i, 0).add_primitive(param)
-        table.get_cell(i, 1).add_primitive(data[param])
-        param_proc = [
-            ('_units', 'N/A'),
-            ('_descr', 'No Description'),
-            ('_ref', 'N/A'),
-        ]
-        for idx, (suffix, msg) in enumerate(param_proc):
-            if param + suffix in data:
-                table.get_cell(i, 2 + idx).add_primitive(data[param + suffix])
-                pass
-            else:
-                table.get_cell(i, 2 + idx).add_primitive(msg)
-            pass
-        pass
-    return
+# def rendertable(data, params, visitor: dawgie.Visitor) -> None:
+#    '''
+#    Helper function to render a table using data corresponding to
+#    the passed parameters
+#    '''
+#    clabels = ['name', 'estimate', 'units', 'description', 'ref']
+#    table = visitor.add_table(clabels=clabels, rows=len(params))
+#    # display stellar estimates
+#    for i, param in enumerate(params):
+#        table.get_cell(i, 0).add_primitive(param)
+#        table.get_cell(i, 1).add_primitive(data[param])
+#        param_proc = [
+#            ('_units', 'N/A'),
+#            ('_descr', 'No Description'),
+#            ('_ref', 'N/A'),
+#        ]
+#        for idx, (suffix, msg) in enumerate(param_proc):
+#            if param + suffix in data:
+#                table.get_cell(i, 2 + idx).add_primitive(data[param + suffix])
+#                pass
+#            else:
+#                table.get_cell(i, 2 + idx).add_primitive(msg)
+#            pass
+#        pass
+#    return
 
 
 # --------------------------------------------------------------------

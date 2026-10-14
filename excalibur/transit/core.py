@@ -10,8 +10,8 @@
 # abstract-method,arguments-differ,arguments-renamed
 
 # -- IMPORTS -- ------------------------------------------------------
-import dawgie
-import dawgie.context
+# import dawgie
+# import dawgie.context
 
 import excalibur
 import excalibur.data.core as datcore
@@ -35,18 +35,18 @@ from excalibur.transit.fmcontext import dctxupdt
 
 
 import copy
-import corner
+# import corner
 import logging
 import random
-import lmfit as lm
+# import lmfit as lm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
 #from ultranest import ReactiveNestedSampler  # GMR:? SPITZER?
 
-import pymc
-import pytensor.graph as tnsrgraph
-import pytensor.tensor as tnsr
+# import pymc
+# import pytensor.graph as tnsrgraph
+# import pytensor.tensor as tnsr
 
 from scipy.optimize import least_squares, brentq
 import scipy.constants as cst
@@ -137,34 +137,34 @@ def LogLikelihood(inputs):
     return out
 
 
-class TensorShell(tnsrgraph.Op):
-    '''
-    GMR: Tensor Shell for custom models
-    Do not touch the name of the methods
-    GB: R_op and grad definitions added to avoid abstract-method pylint error
-    '''
+# class TensorShell(tnsrgraph.Op):
+#    '''
+#    GMR: Tensor Shell for custom models
+#    Do not touch the name of the methods
+#    GB: R_op and grad definitions added to avoid abstract-method pylint error
+#    '''
 
-    def make_node(self, *nodes) -> tnsrgraph.Apply:
-        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
-        outputs = [tnsr.vector()]
-        return tnsrgraph.Apply(self, inputs, outputs)
+#    def make_node(self, *nodes) -> tnsrgraph.Apply:
+#        inputs = [tnsr.as_tensor(n) for n in nodes[0]]
+#        outputs = [tnsr.vector()]
+#        return tnsrgraph.Apply(self, inputs, outputs)
 
-    def R_op(self, *_args, **_keywords):
-        raise NotImplementedError('not expecting this method to be used')
+#    def R_op(self, *_args, **_keywords):
+#        raise NotImplementedError('not expecting this method to be used')
 
-    def grad(self, *_args, **_keywords):
-        raise NotImplementedError('not expecting this method to be used')
+#    def grad(self, *_args, **_keywords):
+#        raise NotImplementedError('not expecting this method to be used')
 
-    def perform(
-        self,
-        node: tnsrgraph.Apply,
-        inputs: list[np.ndarray],
-        output_storage: list[list[None]],
-    ) -> None:
-        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
-        return
+#    def perform(
+#        self,
+#        node: tnsrgraph.Apply,
+#        inputs: list[np.ndarray],
+#        output_storage: list[list[None]],
+#    ) -> None:
+#        output_storage[0][0] = np.asarray(LogLikelihood(inputs))
+#        return
 
-    pass
+#    pass
 
 
 def truanderie(params, x, data=None, weights=None):

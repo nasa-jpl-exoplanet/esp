@@ -9,18 +9,18 @@ import os
 import glob
 import logging
 
-import dawgie
-import dawgie.context
+# import dawgie
+# import dawgie.context
 
 import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.time
 from excalibur.util import nerdclub
 
-import lmfit as lm
+# import lmfit as lm
 import matplotlib.pyplot as plt
 import time as raissatime
-from ldtk import LDPSetCreator, BoxcarFilter
+# from ldtk import LDPSetCreator, BoxcarFilter
 import datetime
 
 import scipy.interpolate as itp
@@ -34,7 +34,7 @@ from scipy.ndimage.morphology import (
     binary_fill_holes,
 )
 
-from photutils.aperture import aperture_photometry, CircularAperture
+# from photutils.aperture import aperture_photometry, CircularAperture
 import pyvo as vo
 
 import numpy as np

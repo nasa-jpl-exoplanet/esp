@@ -6,9 +6,9 @@
 
 # -- IMPORTS -- ------------------------------------------------------
 import os
-import pymc
+# import pymc
 import numpy as np
-import corner
+# import corner
 import logging
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
