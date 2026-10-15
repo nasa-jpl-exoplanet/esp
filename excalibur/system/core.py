@@ -44,6 +44,7 @@ def validateversion():
     '''
     return dawgie.VERSION(1, 2, 0)
 
+
 # ----------------- --------------------------------------------------
 # -- BUILD SYSTEM PRIORS -- ------------------------------------------
 def buildsp(autofill, runtime, out, verbose=False):
@@ -1059,6 +1060,7 @@ def write_spreadsheet(svname, aspects, targetlists, st_keys, pl_keys, exts):
                 outfile.write('\n')
 
     return
+
 
 # --------------------------------------------------------------------
 def syspopversion():

@@ -41,7 +41,11 @@ class XslibSv(ExcaliburSV):
                 for dictkey in self['data'][planet_letter].keys():
                     if dictkey.startswith('plot_'):
                         # if dictkey == 'plot_depthprobed':
-                        title = '------ cross-sections for planet '  + planet_letter + ' ------'
+                        title = (
+                            '------ cross-sections for planet '
+                            + planet_letter
+                            + ' ------'
+                        )
                         visitor.add_image(
                             '...',
                             title,
@@ -52,13 +56,22 @@ class XslibSv(ExcaliburSV):
 
                 # special case for JWST data, where results are by visit
                 for maybevisit in self['data'][planet_letter]:
-                    for dictkey in self['data'][planet_letter][maybevisit].keys():
+                    for dictkey in self['data'][planet_letter][
+                        maybevisit
+                    ].keys():
                         if dictkey.startswith('plot_'):
-                            title = '------ cross-sections for planet ' + planet_letter + str(maybevisit) + ' ------'
+                            title = (
+                                '------ cross-sections for planet '
+                                + planet_letter
+                                + str(maybevisit)
+                                + ' ------'
+                            )
                             visitor.add_image(
                                 '...',
                                 title,
-                                self['data'][planet_letter][maybevisit][dictkey],
+                                self['data'][planet_letter][maybevisit][
+                                    dictkey
+                                ],
                             )
                             pass
                         pass
