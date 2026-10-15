@@ -82,25 +82,26 @@ class Normalization(dawgie.Algorithm):
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
-
             update = False
-            vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
-            vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
-            if vcal and vtme and vfin:
-                log.info(
-                    '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
-                )
-                update = self._norm(
-                    self.__cal.sv_as_dict()[fltr],
-                    self.__tme.sv_as_dict()[fltr],
-                    self.__fin.sv_as_dict()['parameters'],
-                    fltrs.index(fltr),
-                    verbose=verbose,
-                )
-                pass
-            else:
-                errstr = [m for m in [scal, stme, sfin] if m is not None]
-                self._failure(errstr[0])
+            if fltr in self.__cal.sv_as_dict():
+                vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
+                vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
+                if vcal and vtme and vfin:
+                    log.info(
+                        '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
+                    )
+                    update = self._norm(
+                        self.__cal.sv_as_dict()[fltr],
+                        self.__tme.sv_as_dict()[fltr],
+                        self.__fin.sv_as_dict()['parameters'],
+                        fltrs.index(fltr),
+                        verbose=verbose,
+                    )
+                    pass
+                else:
+                    errstr = [m for m in [scal, stme, sfin] if m is not None]
+                    self._failure(errstr[0])
+                    pass
                 pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])

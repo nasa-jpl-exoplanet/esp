@@ -3,10 +3,15 @@ GMR: Tools for excalibur dev on mentor
 '''
 
 import os
+import io
 import pickle  # nosec
 import dawgie
 import logging
 import importlib
+
+import matplotlib.pyplot as plt
+
+from PIL import Image
 
 log = logging.getLogger(__name__)
 
@@ -181,9 +186,9 @@ def nospam():
     GMR:For sanity
     '''
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("arviz").setLevel(logging.WARNING)
+    logging.getLogger("arviz").setLevel(logging.CRITICAL)
     logging.getLogger("dawgie").setLevel(logging.CRITICAL)
-    logging.getLogger("numexpr").setLevel(logging.WARNING)
+    logging.getLogger("numexpr").setLevel(logging.CRITICAL)
     logging.getLogger("pytensor").setLevel(logging.CRITICAL)
     return
 
@@ -193,3 +198,28 @@ def planetkeys(inl):
     [I]:inl:[LIST:[str]]
     '''
     return [p for p in map(chr, range(97, 123)) if p in inl]
+
+class tfyftl():
+    '''
+    GMR:If it quacks like a dawgie.visitor
+    '''
+    def __init__(self):
+        '''
+        GMR
+        '''
+        pass
+    def add_declaration(self, yo:str):
+        '''
+        GMR
+        '''
+        log.info('%s', yo)
+        pass
+    def add_image(self, chit:str, chat:str, bff):
+        '''
+        GMR
+        '''
+        log.info('%s: %s', chit, chat)
+        Image.open(io.BytesIO(bff))
+        plt.show()
+        pass
+    pass

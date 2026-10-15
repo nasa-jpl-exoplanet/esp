@@ -143,11 +143,6 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
             for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
             if n.endswith('uncal')
         ]
-        # callocnames = [
-        #    (loc, n.split('_calints')[0])
-        #    for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
-        #    if n.endswith('calints')
-        # ]
         if fastdev > 0:
             rawlocnames = rawlocnames[0:fastdev]
             pass

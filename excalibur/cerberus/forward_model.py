@@ -144,12 +144,23 @@ class crbFM:
             chemistry = ctxt.chemistry
 
         ssc = syscore.ssconstants(mks=True)
-        pgrid = np.arange(
-            np.log(solrad) - Hsmax,
-            np.log(solrad) + Hsmax / nlevels,
-            Hsmax / (nlevels - 1),
-        )
-        pgrid = np.exp(pgrid)
+
+        if Hsmax in [666]:
+            # GMR DIRTY FOR TEST
+            log.info('Cerberus Ariel TEST')
+            pmax = 1.
+            pmin = -6.
+            pgrid = np.arange(pmin, pmax+(pmax - pmin)/nlevels, (pmax - pmin)/(nlevels - 1))
+            pgrid = 10**(pgrid)
+            pass
+        else:
+            pgrid = np.arange(
+                np.log(solrad) - Hsmax,
+                np.log(solrad) + Hsmax / nlevels,
+                Hsmax / (nlevels - 1),
+            )
+            pgrid = np.exp(pgrid)
+            pass
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
