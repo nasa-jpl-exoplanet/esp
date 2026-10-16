@@ -269,7 +269,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 if myexomol == 'CO' and (COselection in hdffiles):
                     hdffilename = COselection
                 elif len(hdffiles) > 1:
-                    print('MORE THAN ONE!')
                     log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
                 with h5py.File(os.path.join(thisxmdir, hdffilename)) as hdfdata:
                     # print(hdfdata.keys())
@@ -354,9 +353,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             plt.xlim(np.min(wgrid), np.max(wgrid))
             plt.title(myexomol + ' (EXOMOL)', fontsize=fontsize + 4)
             plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
-            plt.ylabel(
-                'Cross Section [$cm^{2}/molecule$]', fontsize=fontsize
-            )
+            plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
             plt.tick_params(axis='both', labelsize=fontsize)
             plt.legend(
                 numpoints=1,
