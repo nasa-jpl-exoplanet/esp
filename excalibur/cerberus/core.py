@@ -316,7 +316,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             # plot the cross-sections for this EXOMOL species
             # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
             thisfig = plt.figure(figsize=(20, 5))
-            ax = plt.subplot(1, 3, 1)
+            plt.subplot(1, 3, 1)
             haha = list(set(library[myexomol]['T']))
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
@@ -363,7 +363,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             # if hi-res opacity is available, make two additional plots
             #  (one as a function of T; one as a function of P)
             if len(hdffiles) > 0:
-                ax = plt.subplot(1, 3, 2)
+                plt.subplot(1, 3, 2)
                 # select a subsample of the temperature array
                 # Tselect = np.round(
                 #    np.linspace(0, len(temperatures) - 1, Nplots)
@@ -447,7 +447,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     frameon=True,
                 )
                 # now plot as a function of pressure instead of temperature
-                ax = plt.subplot(1, 3, 3)
+                plt.subplot(1, 3, 3)
                 Pselect = np.round(
                     np.linspace(0, len(pressures) - 1, Nplots)
                 ).astype(int)
