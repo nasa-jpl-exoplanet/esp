@@ -5,6 +5,8 @@
 #  more for customDist pymc method:
 # pylint: disable=invalid-name,cell-var-from-loop
 
+# import time
+
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
 import excalibur
@@ -44,11 +46,13 @@ from excalibur.cerberus.teagrid import get_TEA_grid
 import logging
 import os
 import numpy as np
+import h5py
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
 from scipy.interpolate import interp1d as itp
 from scipy.interpolate import RegularGridInterpolator
+from scipy.stats import binned_statistic
 
 import pymc
 import pytensor.tensor as pytensr
@@ -133,10 +137,14 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
     atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
-    fontsize = 20
-    Nplots = 10  # number of temps/pressures to plot cross-sections for
+    fontsize = 16
+    Nplots = 8  # number of temps/pressures to plot cross-sections for
     temperatureColors = plt.colormaps['magma']
+    # temperatureColors = plt.colormaps['autumn']  # red is too light
     pressureColors = plt.colormaps['PuBuGn']
+    # pressureColors = plt.colormaps['winter']  # didn't test with good spacing
+    # pressureColors = plt.colormaps['cool']  # didn't test with good spacing
+    # pressureColors = plt.colormaps['YlGnBu']
 
     cs = False
     planet_letters = []
@@ -174,6 +182,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
         nugrid = (1e4 / np.copy(wgrid))[::-1]
         dwnu = np.concatenate((np.array([np.diff(nugrid)[0]]), np.diff(nugrid)))
         for myexomol in xmollist:
+            if verbose:
+                print('myexomol', myexomol)
             # log.info('>-- %s', str(myexomol))
             library[myexomol] = {
                 'I': [],
@@ -250,21 +260,103 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     plt.show()
                     pass
                 pass
-            # plot the cross-sections for this species
-            thisfig = plt.figure(figsize=(10, 6))
+            # also include cross-sections at highest resolution, if available
+            hdffiles = [f for f in os.listdir(thisxmdir) if f.endswith('h5')]
+            if verbose:
+                print('hdffiles', hdffiles)
+            # starttime = time.process_time()
+            if len(hdffiles) > 0:
+                hdffilename = hdffiles[0]
+                # decide which HDF file to use
+                HDFselections = {
+                    'CO': 'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'CH3CL': 'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'MGH': '24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
+                }
+                if (
+                    myexomol in HDFselections
+                    and HDFselections[myexomol] in hdffiles
+                ):
+                    hdffilename = HDFselections[myexomol]
+                elif len(hdffiles) > 1:
+                    log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
+                with h5py.File(os.path.join(thisxmdir, hdffilename)) as hdfdata:
+                    # print(hdfdata.keys())
+                    # molecule name is read in as b'H2O'; have to make it utf
+                    # also, cut it off a bit maybe (e.g. 'CO2-626')
+                    molecule = hdfdata['mol_name'][:][0].decode('utf-8')
+                    if '-' in molecule:
+                        molecule = molecule[: molecule.index('-')]
+                    if myexomol.upper() != molecule.upper():
+                        log.error(
+                            '>-- molecule name doesnt match hdf! %s %s',
+                            myexomol,
+                            molecule,
+                        )
+                    else:
+                        log.info(
+                            '>-- Good! hdf molecule name matches for %s',
+                            myexomol,
+                        )
+                    pressures = hdfdata['p'][:]
+                    temperatures = hdfdata['t'][:]
+                    xsecs = hdfdata['xsecarr'][:]
+                    wavenos = hdfdata['bin_edges'][:]
+                    waves = 1.0e4 / wavenos
+                    hdfdata.close()
+                    # print('P shape', pressures.shape)
+                    # print('T shape', temperatures.shape)
+                    # print('XSec shape', xsecs.shape)
+
+                    # save a 2-D (T,P) interpolator for each wavelength
+                    library[myexomol]['SPLNUhires'] = wavenos
+                    library[myexomol]['SPLhires'] = []
+                    for iwave in range(len(waves)):
+                        myspl = RegularGridInterpolator(
+                            (pressures, temperatures),
+                            xsecs[:, :, iwave],
+                            bounds_error=False,
+                            fill_value=None,
+                        )
+                        library[myexomol]['SPLhires'].append(myspl)
+                        pass
+                    pass
+                pass
+            # endtime = time.process_time()
+            # if verbose:
+            # print(' CPU time', endtime - starttime)
+
+            # plot the cross-sections for this EXOMOL species
+            # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
+            thisfig = plt.figure(figsize=(20, 5))
+            plt.subplot(1, 3, 1)
             haha = list(set(library[myexomol]['T']))
             haha = np.sort(np.array(haha))
             haha = haha[::-1]
             # select a subsample of the temperature array
-            Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(
-                int
+            # Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(int)
+            # print('Tselect lin',Tselect)
+            Tselect = (
+                np.round(np.logspace(0, np.log10(len(haha)), Nplots)).astype(
+                    int
+                )
+                - 1
             )
-            for itemp, temp in zip(Tselect, haha[Tselect]):
+            # T grid is backwards, so have to flip log-spaced indices
+            Tselect = (len(haha) - 1 - Tselect)[::-1]
+            # print('Tselect log',Tselect)
+            # for itemp, temp in zip(Tselect, haha[Tselect]):
+            for itemp, temp in enumerate(haha[Tselect]):
                 select = np.array(library[myexomol]['T']) == temp
                 plt.semilogy(
                     1e4 / (np.array(library[myexomol]['nu'])[select]),
                     np.array(library[myexomol]['I'])[select],
-                    color=temperatureColors(0.9 * itemp / (len(haha) - 1)),
+                    # color=temperatureColors(
+                    #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+                    # ),
+                    color=temperatureColors(
+                        0.9 - (0.8 * itemp / (len(Tselect) - 1))
+                    ),
                     label=str(int(temp)) + 'K',
                 )
                 pass
@@ -281,6 +373,169 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 borderaxespad=0.0,
                 frameon=True,
             )
+            # if hi-res opacity is available, make two additional plots
+            #  (one as a function of T; one as a function of P)
+            # starttime = time.process_time()
+            if len(hdffiles) > 0:
+                plt.subplot(1, 3, 2)
+                # select a subsample of the temperature array
+                # Tselect = np.round(
+                #    np.linspace(0, len(temperatures) - 1, Nplots)
+                # ).astype(int)
+                # switch to log-space T selection
+                Tselect = (
+                    np.round(
+                        np.logspace(0, np.log10(len(temperatures)), Nplots)
+                    ).astype(int)
+                    - 1
+                )
+                # print('# of press',len(pressures))
+                # print(' press range',pressures[0],pressures[-1])
+                # print('temp',(temperatures))
+                # print('# of temp',len(temperatures))
+                # print(' temp range',temperatures[0],temperatures[-1])
+                # print(' Tselect',Tselect)
+                press = 1.0e-4
+                for itemp, temp in enumerate(temperatures[Tselect][::-1]):
+                    sigma = np.array(
+                        [
+                            thisspl((press, temp))
+                            for thisspl in library[myexomol]['SPLhires']
+                        ]
+                    )
+                    plt.semilogy(
+                        1e4 / library[myexomol]['SPLNUhires'],
+                        sigma,
+                        lw=0.01,
+                        # color=temperatureColors(
+                        #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+                        # ),
+                        color=temperatureColors(
+                            0.9 - (0.8 * itemp / (len(Tselect) - 1))
+                        ),
+                        # label=str(int(temp)) + 'K',
+                    )
+                    # put it into Ariel bins, to compare with previous plot
+                    wavelength_um = 1e4 / library[myexomol]['SPLNUhires']
+                    wgrid = np.array(spc['data'][p]['WB'])
+                    waveedges = (wgrid[1:] + wgrid[:-1]) / 2
+                    # wavelows = waveedges[:-1]
+                    # wavehighs = waveedges[1:]
+                    # wavelength_um_rebin = []
+                    # sigma_rebin = []
+                    # for wavelow, wavehigh in zip(wavelows, wavehighs):
+                    #    thisWaveBin = np.where(
+                    #        (wavelength_um >= wavelow)
+                    #        & (wavelength_um <= wavehigh)
+                    #    )
+                    #    sigma_rebin.append(np.average(sigma[thisWaveBin]))
+                    #    wavelength_um_rebin.append(
+                    #        np.average(wavelength_um[thisWaveBin])
+                    #    )
+                    sigma_rebin = binned_statistic(
+                        wavelength_um,
+                        sigma,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
+                    wavelength_um_rebin = binned_statistic(
+                        wavelength_um,
+                        wavelength_um,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
+                    plt.semilogy(
+                        wavelength_um_rebin,
+                        sigma_rebin,
+                        # color=temperatureColors(
+                        #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+                        # ),
+                        color=temperatureColors(
+                            0.9 - (0.8 * itemp / (len(Tselect) - 1))
+                        ),
+                        label=str(int(temp)) + 'K',
+                    )
+                    pass
+                plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+                plt.xlim(np.min(wgrid), np.max(wgrid))
+                plt.title(
+                    f'{myexomol} (EXOMOL full-res)  P = {press:1.1e} bar',
+                    fontsize=fontsize + 4,
+                )
+                plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+                plt.ylabel(
+                    'Cross Section [$cm^{2}/molecule$]', fontsize=fontsize
+                )
+                plt.tick_params(axis='both', labelsize=fontsize)
+                plt.legend(
+                    numpoints=1,
+                    borderaxespad=0.0,
+                    frameon=True,
+                )
+                # now plot as a function of pressure instead of temperature
+                plt.subplot(1, 3, 3)
+                Pselect = np.round(
+                    np.linspace(0, len(pressures) - 1, Nplots)
+                ).astype(int)
+                temp = 1000
+                for ipress, press in enumerate(pressures[Pselect]):
+                    sigma = np.array(
+                        [
+                            thisspl((press, temp))
+                            for thisspl in library[myexomol]['SPLhires']
+                        ]
+                    )
+                    plt.semilogy(
+                        1e4 / library[myexomol]['SPLNUhires'],
+                        sigma,
+                        lw=0.01,
+                        color=pressureColors(
+                            1.0
+                            - 0.8 * (len(Pselect) - ipress) / (len(Pselect) - 1)
+                        ),
+                        # label=f'{press:1.1e} bar',
+                    )
+                    # put it into Ariel bins, as with temperature
+                    # sigma_rebin = []
+                    # for wavelow, wavehigh in zip(wavelows, wavehighs):
+                    #    thisWaveBin = np.where(
+                    #        (wavelength_um >= wavelow)
+                    #        & (wavelength_um <= wavehigh)
+                    #    )
+                    #    sigma_rebin.append(np.average(sigma[thisWaveBin]))
+                    sigma_rebin = binned_statistic(
+                        wavelength_um,
+                        sigma,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
+                    plt.semilogy(
+                        wavelength_um_rebin,
+                        sigma_rebin,
+                        color=pressureColors(
+                            1.0
+                            - 0.8 * (len(Pselect) - ipress) / (len(Pselect) - 1)
+                        ),
+                        label=f'{press:1.1e} bar',
+                    )
+                    pass
+                plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+                plt.xlim(np.min(wgrid), np.max(wgrid))
+                plt.title(
+                    f'{myexomol} (EXOMOL full-res)  T = {int(temp):d} K',
+                    fontsize=fontsize + 4,
+                )
+                plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+                plt.ylabel(
+                    'Cross Section [$cm^{2}/molecule$]', fontsize=fontsize
+                )
+                plt.tick_params(axis='both', labelsize=fontsize)
+                plt.legend(
+                    numpoints=1,
+                    borderaxespad=0.0,
+                    frameon=True,
+                )
+
             plt.tight_layout()
             out['data'][p]['plot_crossSections_' + myexomol] = save_plot_tosv(
                 thisfig
@@ -290,7 +545,12 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 pass
             plt.close(thisfig)
             pass
+            # endtime = time.process_time()
+            # if verbose:
+            # print(' CPU time', endtime - starttime)
         for mycia in cialist:
+            if verbose:
+                print('mycia', mycia)
             # log.info('>-- %s', str(mycia))
             myfile = '_'.join((os.path.join(ciadir, mycia), '2011.cia'))
             library[mycia] = {
@@ -362,7 +622,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
-            # plot the cross-sections for this species
+
+            # plot the cross-sections for this CIA species
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
             haha = list(set(library[mycia]['T']))
@@ -406,6 +667,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             plt.close(thisfig)
             pass
         for ks in hitemplist:
+            if verbose:
+                print('ks', ks)
             # log.info('>-- %s', str(ks))
             library[ks] = {
                 'MU': [],
@@ -553,7 +816,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 library[ks]['SPL'].append(myspl)
                 library[ks]['SPLNU'].append(iline)
                 pass
-            # plot the cross-sections for this species
+
+            # plot the cross-sections for this HITEMP species
             thisfig = plt.figure(figsize=(10, 6))
             haha = list(set(library[ks]['T']))
             haha = np.sort(np.array(haha))
@@ -607,6 +871,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
         # print('atom-xsec grid range lambda',wavelengths[0],wavelengths[-1])
 
         for thisatom in atomlist:
+            if verbose:
+                print('thisatom', thisatom)
             # log.info('>-- %s', str(thisatom))
             xsec = np.load(atomdir + thisatom + '/grid_3d.npy')
             # use this interpolator for validating interp2d_xsec below
@@ -687,7 +953,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             sigma = np.array(sigmas)
             # print('sigma shape (2d)', sigma.shape)
 
-            # plot the cross-sections for this species as a function of T
+            # plot the cross-sections for this atom as a function of T
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the temperature array
             Tselect = np.round(
@@ -729,7 +995,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 plt.show()
             plt.close(thisfig)
 
-            # plot the cross-sections for this species as a function of P
+            # plot the cross-sections for this atom as a function of P
             thisfig = plt.figure(figsize=(10, 6))
             # select a subsample of the pressure array
             Pselect = np.round(
