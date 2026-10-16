@@ -47,12 +47,12 @@ import logging
 import os
 import numpy as np
 import h5py
-from scipy.stats import binned_statistic
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
 from scipy.interpolate import interp1d as itp
 from scipy.interpolate import RegularGridInterpolator
+from scipy.stats import binned_statistic
 
 import pymc
 import pytensor.tensor as pytensr
