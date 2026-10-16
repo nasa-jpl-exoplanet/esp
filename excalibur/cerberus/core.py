@@ -269,11 +269,14 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 hdffilename = hdffiles[0]
                 # decide which HDF file to use
                 HDFselections = {
-                    'CO':'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
-                    'CH3CL':'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
-                    'MGH':'24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'CO': 'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'CH3CL': 'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'MGH': '24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
                 }
-                if myexomol in HDFselections and HDFselections[myexomol] in hdffiles:
+                if (
+                        myexomol in HDFselections
+                        and HDFselections[myexomol] in hdffiles
+                ):
                     hdffilename = HDFselections[myexomol]
                 elif len(hdffiles) > 1:
                     log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
