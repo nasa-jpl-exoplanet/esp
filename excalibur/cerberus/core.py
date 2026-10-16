@@ -5,6 +5,8 @@
 #  more for customDist pymc method:
 # pylint: disable=invalid-name,cell-var-from-loop
 
+# import time
+
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
 import excalibur
@@ -45,6 +47,7 @@ import logging
 import os
 import numpy as np
 import h5py
+from scipy.stats import binned_statistic
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 from collections import defaultdict
@@ -261,13 +264,17 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             hdffiles = [f for f in os.listdir(thisxmdir) if f.endswith('h5')]
             if verbose:
                 print('hdffiles', hdffiles)
+            # starttime = time.process_time()
             if len(hdffiles) > 0:
                 hdffilename = hdffiles[0]
-                COselection = (
-                    'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5'
-                )
-                if myexomol == 'CO' and (COselection in hdffiles):
-                    hdffilename = COselection
+                # decide which HDF file to use
+                HDFselections = {
+                    'CO':'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'CH3CL':'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
+                    'MGH':'24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
+                }
+                if myexomol in HDFselections and HDFselections[myexomol] in hdffiles:
+                    hdffilename = HDFselections[myexomol]
                 elif len(hdffiles) > 1:
                     log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
                 with h5py.File(os.path.join(thisxmdir, hdffilename)) as hdfdata:
@@ -312,6 +319,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         pass
                     pass
                 pass
+            # endtime = time.process_time()
+            # if verbose:
+            # print(' CPU time', endtime - starttime)
 
             # plot the cross-sections for this EXOMOL species
             # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
@@ -362,6 +372,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             )
             # if hi-res opacity is available, make two additional plots
             #  (one as a function of T; one as a function of P)
+            # starttime = time.process_time()
             if len(hdffiles) > 0:
                 plt.subplot(1, 3, 2)
                 # select a subsample of the temperature array
@@ -403,21 +414,33 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     )
                     # put it into Ariel bins, to compare with previous plot
                     wavelength_um = 1e4 / library[myexomol]['SPLNUhires']
-                    wavelength_um_rebin = []
-                    sigma_rebin = []
                     wgrid = np.array(spc['data'][p]['WB'])
                     waveedges = (wgrid[1:] + wgrid[:-1]) / 2
-                    wavelows = waveedges[:-1]
-                    wavehighs = waveedges[1:]
-                    for wavelow, wavehigh in zip(wavelows, wavehighs):
-                        thisWaveBin = np.where(
-                            (wavelength_um >= wavelow)
-                            & (wavelength_um <= wavehigh)
-                        )
-                        sigma_rebin.append(np.average(sigma[thisWaveBin]))
-                        wavelength_um_rebin.append(
-                            np.average(wavelength_um[thisWaveBin])
-                        )
+                    # wavelows = waveedges[:-1]
+                    # wavehighs = waveedges[1:]
+                    # wavelength_um_rebin = []
+                    # sigma_rebin = []
+                    # for wavelow, wavehigh in zip(wavelows, wavehighs):
+                    #    thisWaveBin = np.where(
+                    #        (wavelength_um >= wavelow)
+                    #        & (wavelength_um <= wavehigh)
+                    #    )
+                    #    sigma_rebin.append(np.average(sigma[thisWaveBin]))
+                    #    wavelength_um_rebin.append(
+                    #        np.average(wavelength_um[thisWaveBin])
+                    #    )
+                    sigma_rebin = binned_statistic(
+                        wavelength_um,
+                        sigma,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
+                    wavelength_um_rebin = binned_statistic(
+                        wavelength_um,
+                        wavelength_um,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
                     plt.semilogy(
                         wavelength_um_rebin,
                         sigma_rebin,
@@ -470,13 +493,19 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         # label=f'{press:1.1e} bar',
                     )
                     # put it into Ariel bins, as with temperature
-                    sigma_rebin = []
-                    for wavelow, wavehigh in zip(wavelows, wavehighs):
-                        thisWaveBin = np.where(
-                            (wavelength_um >= wavelow)
-                            & (wavelength_um <= wavehigh)
-                        )
-                        sigma_rebin.append(np.average(sigma[thisWaveBin]))
+                    # sigma_rebin = []
+                    # for wavelow, wavehigh in zip(wavelows, wavehighs):
+                    #    thisWaveBin = np.where(
+                    #        (wavelength_um >= wavelow)
+                    #        & (wavelength_um <= wavehigh)
+                    #    )
+                    #    sigma_rebin.append(np.average(sigma[thisWaveBin]))
+                    sigma_rebin = binned_statistic(
+                        wavelength_um,
+                        sigma,
+                        statistic='mean',
+                        bins=waveedges,
+                    ).statistic
                     plt.semilogy(
                         wavelength_um_rebin,
                         sigma_rebin,
@@ -513,6 +542,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 pass
             plt.close(thisfig)
             pass
+            # endtime = time.process_time()
+            # if verbose:
+            # print(' CPU time', endtime - starttime)
         for mycia in cialist:
             if verbose:
                 print('mycia', mycia)
