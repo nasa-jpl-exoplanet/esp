@@ -19,7 +19,7 @@ INTERP_TEA_DIR = os.path.join(
 )
 
 
-def get_TEA_grid(modelName=None, verbose=False):
+def get_TEA_grid(modelName=None, verbose=False, debug=False):
     '''
     CB
     GMR: Need better description below
@@ -105,14 +105,22 @@ def get_TEA_grid(modelName=None, verbose=False):
     for molecule in species_name:
         grid_4d = np.load(modelDir + molecule + '.npy')
         # print('grid shape', grid_4d.shape, molecule)
-        interp_tea[molecule] = RegularGridInterpolator(
-            (temperature, np.log10(pressure), XtoH, CtoO),
-            grid_4d,
-            bounds_error=False,
-            # fill_value=np.nan,
-            fill_value=None,
-            method='cubic',  # comment out during debugging (linear is faster)
-        )
+        if debug:
+            interp_tea[molecule] = RegularGridInterpolator(
+                (temperature, np.log10(pressure), XtoH, CtoO),
+                grid_4d,
+                bounds_error=False,
+                fill_value=None,
+            )
+        else:
+            interp_tea[molecule] = RegularGridInterpolator(
+                (temperature, np.log10(pressure), XtoH, CtoO),
+                grid_4d,
+                bounds_error=False,
+                # fill_value=np.nan,
+                fill_value=None,
+                method='cubic',
+            )
         progbar.update()
         pass
     progbar.close()
