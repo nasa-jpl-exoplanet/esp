@@ -2163,6 +2163,32 @@ def ppar():
     #    }
     # }
 
+    # 10/16/2026 adjusting Rstar values to remove JWST fangs
+    overwrite['WASP-178'] = {
+        'R*': 1.67,
+        'R*_uperr': 0.07,
+        'R*_lowerr': -0.07,
+        'R*_ref': 'Hellier et al. 2019',
+    }
+    overwrite['HAT-P-14'] = {
+        'R*': 1.591,
+        'R*_uperr': 0.057,
+        'R*_lowerr': -0.057,
+        'R*_ref': 'Southworth et al. 2012',
+    }
+    overwrite['HAT-P-30'] = {
+        'R*': 1.330,
+        'R*_uperr': 0.03,
+        'R*_lowerr': -0.028,
+        'R*_ref': 'Maciejewski et al. 2016',
+    }
+    overwrite['HAT-P-1'] = {
+        'R*': 1.174,
+        'R*_uperr': 0.026,
+        'R*_lowerr': -0.027,
+        'R*_ref': 'Nikolov et al. 2014',
+    }
+
     return overwrite
 
 
