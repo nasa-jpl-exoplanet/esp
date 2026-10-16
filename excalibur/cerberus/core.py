@@ -836,7 +836,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
         # print('atom-xsec grid range lambda',wavelengths[0],wavelengths[-1])
 
         for thisatom in atomlist:
-            print('thisatom', thisatom)
+            if verbose:
+                print('thisatom', thisatom)
             # log.info('>-- %s', str(thisatom))
             xsec = np.load(atomdir + thisatom + '/grid_3d.npy')
             # use this interpolator for validating interp2d_xsec below

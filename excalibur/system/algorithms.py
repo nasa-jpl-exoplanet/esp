@@ -38,7 +38,7 @@ class Validate(dawgie.Algorithm):
 
     def __init__(self):
         '''__init__ ds'''
-        self._version_ = syscore.validateverion()
+        self._version_ = syscore.validateversion()
         self.__autofill = trgalg.Autofill()
         self.__rt = rtalg.Autofill()
         self.__out = sysstates.PriorsSV('parameters')
