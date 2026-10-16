@@ -9,6 +9,7 @@ import os
 import numpy as np
 import logging
 
+import dawgie
 import excalibur
 
 from excalibur.system.autofill import (
