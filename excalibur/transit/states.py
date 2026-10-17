@@ -43,39 +43,61 @@ class NormSV(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            for p in self['data'].keys():
+            for p in self['data']:
                 visitor.add_declaration('PLANET: ' + p)
-                if 'vignore' in self['data'][p]:
-                    for v, m in zip(
-                        self['data'][p]['vignore'], self['data'][p]['trial']
-                    ):
-                        strignore = str(int(v)) + '  ' + m
-                        visitor.add_declaration('VISIT: ' + strignore)
-                    pass
-
-                if 'plot_normalized_byvisit' in self['data'][p].keys():
-                    for index, v in enumerate(self['data'][p]['visits']):
-                        textlabel = '--------- Visit: ' + str(v) + ' ---------'
-                        if index >= len(
-                            self['data'][p]['plot_normalized_byvisit']
+                if 'HST' in self.name():
+                    if 'vignore' in self['data'][p]:
+                        for v, m in zip(
+                                self['data'][p]['vignore'], self['data'][p]['trial']
                         ):
-                            # this is an error!  should be a plot for each visit!
+                            strignore = str(int(v)) + '  ' + m
+                            visitor.add_declaration('VISIT: ' + strignore)
                             pass
-                        else:
-                            visitor.add_image(
-                                '...',
-                                textlabel,
-                                self['data'][p]['plot_normalized_byvisit'][
-                                    index
-                                ],
-                            )
+                        pass
+                    if 'plot_normalized_byvisit' in self['data'][p].keys():
+                        for index, v in enumerate(self['data'][p]['visits']):
+                            textlabel = '--------- Visit: ' + str(v) + ' ---------'
+                            if index >= len(
+                                    self['data'][p]['plot_normalized_byvisit']
+                            ):
+                                # this is an error!  should be a plot for each visit!
+                                pass
+                            else:
+                                visitor.add_image(
+                                    '...',
+                                    textlabel,
+                                    self['data'][p]['plot_normalized_byvisit'][
+                                        index
+                                    ],
+                                )
+                                pass
+                            pass
+                        pass
+                    # keep on-the-fly plotting, so that older RUNIDs still work
+                    elif 'vrange' in self['data'][p]:
+                        vrange = self['data'][p]['vrange']
+                        plot_normalized_byvisit(self['data'][p], vrange, visitor)
                         pass
                     pass
-                # keep on-the-fly plotting, so that older RUNIDs still work
-                elif 'vrange' in self['data'][p]:
-                    vrange = self['data'][p]['vrange']
-                    plot_normalized_byvisit(self['data'][p], vrange, visitor)
-
+                pass
+            if 'JWST' in self.name():
+                for det in self['data'][p]['nspec']:
+                    for v in self['data'][p]['nspec'][det]:
+                        viewdata = self['data'][p]['nspec'][det][v]
+                        fig = plt.figure(figsize=(12, 9))
+                        plt.imshow(viewdata.T, interpolation='none', aspect='auto')
+                        plt.clim(0.99, 1.01)
+                        cbar = plt.colorbar()
+                        cbar.ax.tick_params(labelsize=18)
+                        plt.tick_params(labelsize=18)
+                        save_plot_toscreen(fig, visitor)
+                        fig = None
+                        pass
+                    pass
+                pass
+            pass
+        pass
+    pass
 
 class WhiteLightSV(ExcaliburSV):
     '''transit.whitelight view'''

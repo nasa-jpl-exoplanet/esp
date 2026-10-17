@@ -272,7 +272,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         select_transit = np.any(
             diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
         )
-
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
@@ -338,7 +337,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                             spectra[select_transit & seldet & selvis][oot],
                             wave[select_transit & seldet & selvis][oot],
                             name=thisdet + ' [' + strvis + ']',
-                            verbose=verbose,
+                            verbose=False,
                         )
                         alltemplates[thisdet][strvis] = np.array(template)
                         allwavet[thisdet][strvis] = np.array(wavet)
@@ -346,15 +345,14 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                         pass
                     pass
                 elif verbose:
-                    print(
-                        "tknot or transit duration mismatch for "
-                        + thisdet
-                        + ", "
-                        + thisvis
+                    log.warning(
+                        "tknot or transit duration mismatch for %s, %s",
+                        thisdet,
+                        thisvis,
                     )
                     pass
                 pass
-            if verbose:
+            if False:
                 plt.figure(figsize=(12, 9))
                 for thisvis in allvisits.get(thisdet, []):
                     plt.plot(
@@ -429,7 +427,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
                     select_transit & seldet & selvis
                 ][valid]
-                if verbose:
+                if False:
                     plt.figure(figsize=(12, 9))
                     plt.title(name, fontsize=20)
                     for w, s in zip(
@@ -438,6 +436,17 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                         plt.plot(w, s)
                         pass
                     plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                    plt.tick_params(labelsize=18)
+                    plt.show()
+                    pass
+                if verbose:
+                    viewdata = allnorms[thisdet][thisvis]
+                    fig = plt.figure(figsize=(12, 9))
+                    plt.imshow(viewdata.T, interpolation='none', aspect='auto')
+                    plt.clim(1. - 1e-2*priors[p]['trandepth'],
+                             1. + 1e-2*priors[p]['trandepth'])
+                    cbar = plt.colorbar()
+                    cbar.ax.tick_params(labelsize=18)
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass

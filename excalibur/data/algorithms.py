@@ -13,6 +13,7 @@ import excalibur
 
 import excalibur.data.core as datcore
 import excalibur.data.states as datstates
+import excalibur.data.coreview as datcvw
 
 import excalibur.target as trg
 import excalibur.target.states as trgstates
@@ -150,7 +151,7 @@ class Timing(dawgie.Algorithm):
         '''Output State Vectors: data.timing'''
         return self.__out
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
         update = False
         fin = self.__fin.sv_as_dict()['parameters']
@@ -176,6 +177,7 @@ class Timing(dawgie.Algorithm):
                     fltr,
                     col['activefilters'][fltr],
                     self.__out[fltrs.index(fltr)],
+                    verbose=verbose,
                 )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
@@ -202,10 +204,10 @@ class Timing(dawgie.Algorithm):
         )
 
     @staticmethod
-    def _timing(fin, fltr, colin, out):
+    def _timing(fin, fltr, colin, out, verbose=False):
         '''Core code call'''
         log.info('--< DATA TIMING: %s >--', fltr)
-        chunked = datcore.timing(fin, fltr, colin, out)
+        chunked = datcore.timing(fin, fltr, colin, out, verbose=verbose)
         return chunked
 
     @staticmethod
@@ -248,7 +250,7 @@ class Calibration(dawgie.Algorithm):
         '''Output State Vectors: data.calibration'''
         return self.__out
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
 
         update = False
@@ -274,6 +276,7 @@ class Calibration(dawgie.Algorithm):
                         repr(self).split('.')[1],
                         fltr,
                         self.__out[fltrs.index(fltr)],
+                        verbose=verbose,
                     )
                     if update:
                         svupdate.append(self.__out[fltrs.index(fltr)])
@@ -302,7 +305,7 @@ class Calibration(dawgie.Algorithm):
         )
 
     @staticmethod
-    def _calib(fin, cll, tim, tid, flttype, out):
+    def _calib(fin, cll, tim, tid, flttype, out, verbose=False):
         '''Core code call'''
         log.info('--< DATA CALIBRATION: %s >--', flttype)
         caled = False
@@ -319,7 +322,7 @@ class Calibration(dawgie.Algorithm):
             caled = datcore.spitzercal(cll, out)
             pass
         if 'JWST' in flttype:
-            caled = datcore.jwstcal(fin, tim, flttype, out, verbose=False)
+            caled = datcore.jwstcal(fin, tim, flttype, out, verbose=verbose)
             pass
         return caled
 
