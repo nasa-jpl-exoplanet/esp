@@ -113,6 +113,7 @@ def load_sv(nms, trg, rid, xcd, svroot=False):
     # ConnectionRefusedError: [Errno 111] Connection refused
     import dawgie.pl  # pylint: disable=redefined-outer-name,import-outside-toplevel
     import dawgie.pl.scan  # pylint: disable=redefined-outer-name,import-outside-toplevel
+
     dawgie.context.ae_base_path = os.path.expandvars(xcd)
     dawgie.context.ae_base_package = 'excalibur'
     dawgie.pl.scan.for_factories(
@@ -192,6 +193,7 @@ def nospam():
     logging.getLogger("pytensor").setLevel(logging.CRITICAL)
     return
 
+
 def planetkeys(inl):
     '''
     GMR:Returns a list of planet letters if they exist in inl
@@ -199,22 +201,26 @@ def planetkeys(inl):
     '''
     return [p for p in map(chr, range(97, 123)) if p in inl]
 
-class tfyftl():
+
+class tfyftl:
     '''
     GMR:If it quacks like a dawgie.visitor
     '''
+
     def __init__(self):
         '''
         GMR
         '''
         pass
-    def add_declaration(self, yo:str):
+
+    def add_declaration(self, yo: str):
         '''
         GMR
         '''
         log.info('%s', yo)
         pass
-    def add_image(self, chit:str, chat:str, bff):
+
+    def add_image(self, chit: str, chat: str, bff):
         '''
         GMR
         '''
@@ -222,4 +228,5 @@ class tfyftl():
         Image.open(io.BytesIO(bff))
         plt.show()
         pass
+
     pass

@@ -48,7 +48,7 @@ class NormSV(ExcaliburSV):
                 if 'HST' in self.name():
                     if 'vignore' in self['data'][p]:
                         for v, m in zip(
-                                self['data'][p]['vignore'], self['data'][p]['trial']
+                            self['data'][p]['vignore'], self['data'][p]['trial']
                         ):
                             strignore = str(int(v)) + '  ' + m
                             visitor.add_declaration('VISIT: ' + strignore)
@@ -56,9 +56,11 @@ class NormSV(ExcaliburSV):
                         pass
                     if 'plot_normalized_byvisit' in self['data'][p].keys():
                         for index, v in enumerate(self['data'][p]['visits']):
-                            textlabel = '--------- Visit: ' + str(v) + ' ---------'
+                            textlabel = (
+                                '--------- Visit: ' + str(v) + ' ---------'
+                            )
                             if index >= len(
-                                    self['data'][p]['plot_normalized_byvisit']
+                                self['data'][p]['plot_normalized_byvisit']
                             ):
                                 # this is an error!  should be a plot for each visit!
                                 pass
@@ -76,7 +78,9 @@ class NormSV(ExcaliburSV):
                     # keep on-the-fly plotting, so that older RUNIDs still work
                     elif 'vrange' in self['data'][p]:
                         vrange = self['data'][p]['vrange']
-                        plot_normalized_byvisit(self['data'][p], vrange, visitor)
+                        plot_normalized_byvisit(
+                            self['data'][p], vrange, visitor
+                        )
                         pass
                     pass
                 pass
@@ -85,7 +89,9 @@ class NormSV(ExcaliburSV):
                     for v in self['data'][p]['nspec'][det]:
                         viewdata = self['data'][p]['nspec'][det][v]
                         fig = plt.figure(figsize=(12, 9))
-                        plt.imshow(viewdata.T, interpolation='none', aspect='auto')
+                        plt.imshow(
+                            viewdata.T, interpolation='none', aspect='auto'
+                        )
                         plt.clim(0.99, 1.01)
                         cbar = plt.colorbar()
                         cbar.ax.tick_params(labelsize=18)
@@ -97,7 +103,9 @@ class NormSV(ExcaliburSV):
                 pass
             pass
         pass
+
     pass
+
 
 class WhiteLightSV(ExcaliburSV):
     '''transit.whitelight view'''

@@ -148,10 +148,14 @@ class crbFM:
         if Hsmax in [666]:
             # GMR DIRTY FOR TEST
             log.info('Cerberus Ariel TEST')
-            pmax = 1.
-            pmin = -6.
-            pgrid = np.arange(pmin, pmax+(pmax - pmin)/nlevels, (pmax - pmin)/(nlevels - 1))
-            pgrid = 10**(pgrid)
+            pmax = 1.0
+            pmin = -6.0
+            pgrid = np.arange(
+                pmin,
+                pmax + (pmax - pmin) / nlevels,
+                (pmax - pmin) / (nlevels - 1),
+            )
+            pgrid = 10 ** (pgrid)
             pass
         else:
             pgrid = np.arange(

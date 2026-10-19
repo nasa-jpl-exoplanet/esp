@@ -443,8 +443,10 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     viewdata = allnorms[thisdet][thisvis]
                     fig = plt.figure(figsize=(12, 9))
                     plt.imshow(viewdata.T, interpolation='none', aspect='auto')
-                    plt.clim(1. - 1e-2*priors[p]['trandepth'],
-                             1. + 1e-2*priors[p]['trandepth'])
+                    plt.clim(
+                        1.0 - 1e-2 * priors[p]['trandepth'],
+                        1.0 + 1e-2 * priors[p]['trandepth'],
+                    )
                     cbar = plt.colorbar()
                     cbar.ax.tick_params(labelsize=18)
                     plt.tick_params(labelsize=18)

@@ -355,8 +355,10 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
 
                 fig = datcvw.timing(out['data'][p], title=p)
                 out['data'][p]['view'] = fig
-                if verbose: plt.show()
-                else: plt.close()
+                if verbose:
+                    plt.show()
+                else:
+                    plt.close()
                 pass
             # ---------- ---------------------------------------------
             # -- SPITZER -- ------------------------------------------
@@ -846,7 +848,9 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     alldq = np.array(rawdata['alldq'])
     for i, _ in enumerate(alldq):
         if alldq[i].shape != caldata['alldq'][i].shape:
-            # Play with allstartpix
+            log.info(
+                '--< !!! Unexpected dims, using starting pixel infos !!! >--'
+            )
             pass
         else:
             alldq[i] = ~np.bool(caldata['alldq'][i])
@@ -986,6 +990,15 @@ def jwstcal(fin, tim, ext, out, verbose=False):
             plt.show()
             pass
 
+        # GMR: NEW IM
+        import pdb
+
+        pdb.set_trace()
+        for det in np.unique(alldet):
+            seldet = np.array([det in d for d in alldet])
+            trc = np.nanmedian(allrexp[seldet], axis=0)
+            pass
+
         out['STATUS'].append(True)
         out['data']['DET'] = alldet
         out['data']['EXP'] = allrexp
@@ -1035,10 +1048,11 @@ def cleanspec(all1d, all1dvalid, alldet, verbose=False):
             fig, ax = plt.subplots(figsize=(12, 9))
             cax = ax.imshow(detset, aspect='auto', interpolation='none')
             plt.title(x, fontsize=20)
-            plt.xticks(fontsize=16)
-            plt.yticks(fontsize=16)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            plt.clim(np.percentile(detset, 1), np.percentile(detset, 99))
             cbar = fig.colorbar(cax)
-            cbar.ax.tick_params(labelsize=16)
+            cbar.ax.tick_params(labelsize=18)
             plt.show()
             pass
         pass

@@ -67,7 +67,7 @@ def ppar():
         'FEH*_lowerr': -0.14,
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Mann et al. 2016',
-    }    
+    }
     overwrite['KELT-1'] = {
         'b': {
             # hmm, these values are off a bit, even though its the same reference
@@ -787,7 +787,7 @@ def ppar():
     # for the newly added comfirmed-planet Ariel targets, some metallicities are missing
     #  oh that's funny. the Chen 2021 compilation has zero for these (with no error bar)
     #   but the source is listed as flag 5, which is the Exoplanet Archive.  fake news!
-    
+
     overwrite['HATS-52'] = {
         'FEH*': -0.09,
         'FEH*_uperr': 0.17,

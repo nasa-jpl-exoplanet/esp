@@ -5,7 +5,8 @@ Can only return a plt.figure()
 
 import matplotlib.pyplot as plt
 
-def timing(dct:dict, title=''):
+
+def timing(dct: dict, title=''):
     '''
     GMR:Timing SV figure
     '''
