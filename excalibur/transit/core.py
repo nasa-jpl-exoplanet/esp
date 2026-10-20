@@ -352,7 +352,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     )
                     pass
                 pass
-            if False:
+            if verbose:
                 plt.figure(figsize=(12, 9))
                 for thisvis in allvisits.get(thisdet, []):
                     plt.plot(
@@ -427,21 +427,21 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
                     select_transit & seldet & selvis
                 ][valid]
-                if False:
-                    plt.figure(figsize=(12, 9))
-                    plt.title(name, fontsize=20)
-                    for w, s in zip(
-                        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
-                    ):
-                        plt.plot(w, s)
-                        pass
-                    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
-                    plt.tick_params(labelsize=18)
-                    plt.show()
-                    pass
+                # if verbose:
+                #    plt.figure(figsize=(12, 9))
+                #    plt.title(name, fontsize=20)
+                #    for w, s in zip(
+                #        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
+                #    ):
+                #        plt.plot(w, s)
+                #        pass
+                #    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                #    plt.tick_params(labelsize=18)
+                #    plt.show()
+                #    pass
                 if verbose:
                     viewdata = allnorms[thisdet][thisvis]
-                    fig = plt.figure(figsize=(12, 9))
+                    _ = plt.figure(figsize=(12, 9))
                     plt.imshow(viewdata.T, interpolation='none', aspect='auto')
                     plt.clim(
                         1.0 - 1e-2 * priors[p]['trandepth'],

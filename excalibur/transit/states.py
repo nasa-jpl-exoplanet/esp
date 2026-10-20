@@ -83,21 +83,21 @@ class NormSV(ExcaliburSV):
                         )
                         pass
                     pass
-                pass
-            if 'JWST' in self.name():
-                for det in self['data'][p]['nspec']:
-                    for v in self['data'][p]['nspec'][det]:
-                        viewdata = self['data'][p]['nspec'][det][v]
-                        fig = plt.figure(figsize=(12, 9))
-                        plt.imshow(
-                            viewdata.T, interpolation='none', aspect='auto'
-                        )
-                        plt.clim(0.99, 1.01)
-                        cbar = plt.colorbar()
-                        cbar.ax.tick_params(labelsize=18)
-                        plt.tick_params(labelsize=18)
-                        save_plot_toscreen(fig, visitor)
-                        fig = None
+                if 'JWST' in self.name():
+                    for det in self['data'][p]['nspec']:
+                        for v in self['data'][p]['nspec'][det]:
+                            viewdata = self['data'][p]['nspec'][det][v]
+                            fig = plt.figure(figsize=(12, 9))
+                            plt.imshow(
+                                viewdata.T, interpolation='none', aspect='auto'
+                            )
+                            plt.clim(0.99, 1.01)
+                            cbar = plt.colorbar()
+                            cbar.ax.tick_params(labelsize=18)
+                            plt.tick_params(labelsize=18)
+                            save_plot_toscreen(fig, visitor)
+                            fig = None
+                            pass
                         pass
                     pass
                 pass

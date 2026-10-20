@@ -851,7 +851,7 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
     # 1 - Data quality initialization
     alldq = np.array(rawdata['alldq'])
     for i, _ in enumerate(alldq):
-        if not(alldq[i].shape != caldata['alldq'][i].shape):
+        if not alldq[i].shape != caldata['alldq'][i].shape:
             # Some pixels are removed in calints so we should not go there
             alldq[i] = ~np.bool(caldata['alldq'][i])
             pass
@@ -985,12 +985,16 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
             for w, s, m in zip(all1dwave, all1d, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
-            plt.ylim(np.nanpercentile(all1d, 2.5), np.nanpercentile(all1d, 97.5))
+            plt.ylim(
+                np.nanpercentile(all1d, 2.5), np.nanpercentile(all1d, 97.5)
+            )
             plt.figure(figsize=(12, 9))
             for w, s, m in zip(all1dwave, clean1D, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
-            plt.ylim(np.nanpercentile(clean1D, 2.5), np.nanpercentile(clean1D, 97.5))
+            plt.ylim(
+                np.nanpercentile(clean1D, 2.5), np.nanpercentile(clean1D, 97.5)
+            )
             plt.show()
             pass
 
@@ -1000,11 +1004,11 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
             trc = np.nanmedian(allrexp[seldet], axis=0)
             pass
         trcx = np.nansum(trc, axis=0)
-        trcy = np.nansum(trc, axis=1)        
+        trcy = np.nansum(trc, axis=1)
         nanmask = ~np.isfinite(trc)
         _ = (trcx, trcy, nanmask)
         # >--
-        
+
         out['STATUS'].append(True)
         out['data']['DET'] = alldet
         out['data']['EXP'] = allrexp
@@ -1056,7 +1060,9 @@ def cleanspec(all1d, all1dvalid, alldet, verbose=False):
             plt.title(x, fontsize=20)
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
-            cax.set_clim(np.nanpercentile(detset, 2.5), np.nanpercentile(detset, 97.5))
+            cax.set_clim(
+                np.nanpercentile(detset, 2.5), np.nanpercentile(detset, 97.5)
+            )
             cbar = fig.colorbar(cax)
             cbar.ax.tick_params(labelsize=18)
             plt.show()

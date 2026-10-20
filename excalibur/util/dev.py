@@ -202,7 +202,7 @@ def planetkeys(inl):
     return [p for p in map(chr, range(97, 123)) if p in inl]
 
 
-class tfyftl:
+class TfyfTl:
     '''
     GMR:If it quacks like a dawgie.visitor
     '''

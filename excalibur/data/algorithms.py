@@ -13,7 +13,8 @@ import excalibur
 
 import excalibur.data.core as datcore
 import excalibur.data.states as datstates
-import excalibur.data.coreview as datcvw
+
+# import excalibur.data.coreview as datcvw
 
 import excalibur.target as trg
 import excalibur.target.states as trgstates
