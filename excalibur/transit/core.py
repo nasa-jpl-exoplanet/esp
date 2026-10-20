@@ -352,7 +352,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                     )
                     pass
                 pass
-            if verbose:
+            if False:
                 plt.figure(figsize=(12, 9))
                 for thisvis in allvisits.get(thisdet, []):
                     plt.plot(
