@@ -133,20 +133,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     '''
     logarithmic_opacity_summing = False
 
-    # TEST
-    if runtime is None:
-        hitemplist = []
-        cialist = []
-        atomlist = []
-        xmollist = ['CO', 'CO2']
-        pass
-    else:
-        hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
-        cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
-        xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
-        atomlist = runtime['cerberus_crbmodel_atoms'].molecules
-        pass
-
     fontsize = 16
     Nplots = 8  # number of temps/pressures to plot cross-sections for
     temperatureColors = plt.colormaps['magma']
