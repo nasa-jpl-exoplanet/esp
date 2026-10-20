@@ -132,6 +132,10 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     G. ROUDIER: Builds Cerberus cross section library
     '''
     logarithmic_opacity_summing = False
+    hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
+    cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
+    xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
+    atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
     fontsize = 16
     Nplots = 8  # number of temps/pressures to plot cross-sections for
