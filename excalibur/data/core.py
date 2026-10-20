@@ -823,13 +823,17 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, tim, ext, out, verbose=False):
+def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
+    if debug:
+        rawloc = rawloc[:1]
+        calloc = calloc[:1]
+        pass
     iexist = {}
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, iexist, raws=True, verbose=verbose)
@@ -847,12 +851,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # 1 - Data quality initialization
     alldq = np.array(rawdata['alldq'])
     for i, _ in enumerate(alldq):
-        if alldq[i].shape != caldata['alldq'][i].shape:
-            log.info(
-                '--< !!! Unexpected dims, using starting pixel infos !!! >--'
-            )
-            pass
-        else:
+        if not(alldq[i].shape != caldata['alldq'][i].shape):
+            # Some pixels are removed in calints so we should not go there
             alldq[i] = ~np.bool(caldata['alldq'][i])
             pass
         pass
@@ -883,8 +883,10 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     allrexp = np.array(rawdata['alldexp'])
     alldq = np.array(rawdata['alldq'])
     allscores['3 NL'] = getscore(allrexp * alldq)
-    # 2.3 - Persistence correction [IM]
-    # 2.4 - Dark subtraction [IM]
+    # 2.3 - Persistence correction
+    # Handled by IM
+    # 2.4 - Dark subtraction
+    # Handled by IM
     # 3 - Reference pixel correction [Exposure Low Freq Noise]
     allrexp = lfnoise(allrexp, alldq, verbose=verbose)
     allscores['4 LFN'] = getscore(allrexp * alldq)
@@ -902,7 +904,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
             fontsize=16,
             rotation=45,
         )
-        plt.yticks(fontsize=16)
+        plt.yticks(fontsize=18)
         plt.ylabel('DN', fontsize=20)
         plt.show()
         pass
@@ -983,22 +985,26 @@ def jwstcal(fin, tim, ext, out, verbose=False):
             for w, s, m in zip(all1dwave, all1d, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
+            plt.ylim(np.nanpercentile(all1d, 2.5), np.nanpercentile(all1d, 97.5))
             plt.figure(figsize=(12, 9))
             for w, s, m in zip(all1dwave, clean1D, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
+            plt.ylim(np.nanpercentile(clean1D, 2.5), np.nanpercentile(clean1D, 97.5))
             plt.show()
             pass
 
-        # GMR: NEW IM
-        import pdb
-
-        pdb.set_trace()
+        # --< GMR: NEW IM
         for det in np.unique(alldet):
             seldet = np.array([det in d for d in alldet])
             trc = np.nanmedian(allrexp[seldet], axis=0)
             pass
-
+        trcx = np.nansum(trc, axis=0)
+        trcy = np.nansum(trc, axis=1)        
+        nanmask = ~np.isfinite(trc)
+        _ = (trcx, trcy, nanmask)
+        # >--
+        
         out['STATUS'].append(True)
         out['data']['DET'] = alldet
         out['data']['EXP'] = allrexp
@@ -1050,7 +1056,7 @@ def cleanspec(all1d, all1dvalid, alldet, verbose=False):
             plt.title(x, fontsize=20)
             plt.xticks(fontsize=18)
             plt.yticks(fontsize=18)
-            plt.clim(np.percentile(detset, 1), np.percentile(detset, 99))
+            cax.set_clim(np.nanpercentile(detset, 2.5), np.nanpercentile(detset, 97.5))
             cbar = fig.colorbar(cax)
             cbar.ax.tick_params(labelsize=18)
             plt.show()
