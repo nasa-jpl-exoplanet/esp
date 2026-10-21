@@ -272,7 +272,6 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         select_transit = np.any(
             diffs <= 2.0 * priors[p]['trandur'] / 24.0, axis=1
         )
-
         if verbose:
             log.info('>-- Planet: %s', p)
             pass
@@ -338,7 +337,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                             spectra[select_transit & seldet & selvis][oot],
                             wave[select_transit & seldet & selvis][oot],
                             name=thisdet + ' [' + strvis + ']',
-                            verbose=verbose,
+                            verbose=False,
                         )
                         alltemplates[thisdet][strvis] = np.array(template)
                         allwavet[thisdet][strvis] = np.array(wavet)
@@ -346,11 +345,10 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                         pass
                     pass
                 elif verbose:
-                    print(
-                        "tknot or transit duration mismatch for "
-                        + thisdet
-                        + ", "
-                        + thisvis
+                    log.warning(
+                        "tknot or transit duration mismatch for %s, %s",
+                        thisdet,
+                        thisvis,
                     )
                     pass
                 pass
@@ -429,15 +427,28 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 allp[thisdet][thisvis] = tme['data'][p]['phase'][
                     select_transit & seldet & selvis
                 ][valid]
+                # if verbose:
+                #    plt.figure(figsize=(12, 9))
+                #    plt.title(name, fontsize=20)
+                #    for w, s in zip(
+                #        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
+                #    ):
+                #        plt.plot(w, s)
+                #        pass
+                #    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                #    plt.tick_params(labelsize=18)
+                #    plt.show()
+                #    pass
                 if verbose:
-                    plt.figure(figsize=(12, 9))
-                    plt.title(name, fontsize=20)
-                    for w, s in zip(
-                        allnwaves[thisdet][thisvis], allnorms[thisdet][thisvis]
-                    ):
-                        plt.plot(w, s)
-                        pass
-                    plt.xlabel(r'Wavelength [$\mu$m]', fontsize=20)
+                    viewdata = allnorms[thisdet][thisvis]
+                    _ = plt.figure(figsize=(12, 9))
+                    plt.imshow(viewdata.T, interpolation='none', aspect='auto')
+                    plt.clim(
+                        1.0 - 1e-2 * priors[p]['trandepth'],
+                        1.0 + 1e-2 * priors[p]['trandepth'],
+                    )
+                    cbar = plt.colorbar()
+                    cbar.ax.tick_params(labelsize=18)
                     plt.tick_params(labelsize=18)
                     plt.show()
                     pass
@@ -3683,6 +3694,8 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bntst=1,
+    binstart=0,
+    binstop=-1,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3809,6 +3822,18 @@ def jwstspectrum(
                     dltwvl = newdltwvl
                     zndata = np.array(newzndata)
                     pass
+                # --< GMR SPEED UP FOR TESTS
+                if binstart > 0:
+                    zndata = zndata[binstart:binstop]
+                    allwvl = allwvl[binstart:binstop]
+                    dltwvl = dltwvl[binstart:binstop]
+                    if 'NRS1' in det:
+                        zndata = zndata[-2:]
+                        allwvl = allwvl[-2:]
+                        dltwvl = dltwvl[-2:]
+                        pass
+                    pass
+                # >--
                 znderr = np.nanstd(
                     zndata.T[abs(zst) > (1e0 + 2e0 * rpors)], axis=0
                 )
