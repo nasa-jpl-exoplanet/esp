@@ -420,9 +420,10 @@ class StatusSV(dawgie.StateVector):
         self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
         self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
         self['transit_limbdarkening_lethe'] = BoolValue()
-        self['spectrum_chains'] = excalibur.ValueScalar()
-        self['spectrum_steps'] = excalibur.ValueScalar()
         self['transit_pymc_sliceSampler'] = BoolValue()
+        # GMR: Not sure it is safe to just ditch those lines yet
+        # self['spectrum_chains'] = excalibur.ValueScalar()
+        # self['spectrum_steps'] = excalibur.ValueScalar()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
