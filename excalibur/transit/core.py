@@ -3694,6 +3694,8 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bntst=1,
+    binstart=0,
+    binstop=-1,
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3820,6 +3822,18 @@ def jwstspectrum(
                     dltwvl = newdltwvl
                     zndata = np.array(newzndata)
                     pass
+                # --< GMR SPEED UP FOR TESTS
+                if binstart > 0:
+                    zndata = zndata[binstart:binstop]
+                    allwvl = allwvl[binstart:binstop]
+                    dltwvl = dltwvl[binstart:binstop]
+                    if 'NRS1' in det:
+                        zndata = zndata[-2:]
+                        allwvl = allwvl[-2:]
+                        dltwvl = dltwvl[-2:]
+                        pass
+                    pass
+                # >--
                 znderr = np.nanstd(
                     zndata.T[abs(zst) > (1e0 + 2e0 * rpors)], axis=0
                 )
