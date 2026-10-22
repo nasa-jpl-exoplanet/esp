@@ -108,6 +108,25 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
         'selftest_Nrepeats',
+        'ignoreinput_target_scrape',
+        'ignoreinput_transit_normalization',
+        'ignoreinput_transit_whitelight',
+        'ignoreinput_transit_spectrum',
+        'ignoreinput_transit_starspots',
+        'ignoreinput_eclipse_normalization',
+        'ignoreinput_eclipse_whitelight',
+        'ignoreinput_eclipse_spectum',
+        'ignoreinput_phasecurve_normalization',
+        'ignoreinput_phasecurve_whitelight',
+        'ignoreinput_phasecurve_flares',
+        'ignoreinput_gemli_mlfit',
+        'ignoreinput_hwo_sim_spectrum',
+        'ignoreinput_selftest_sim_spectrum',
+        'ignoreinput_ariel_sim_spectrum',
+        'ignoreinput_cerberus_xslib_jwst',
+        'ignoreinput_cerberus_xslib_ariel',
+        'ignoreinput_cerberus_atmos_jwst',
+        'ignoreinput_cerberus_atmos_ariel',
     ]:
         if isinstance(
             table['controls'][key], excalibur.runtime.states.BoolValue
@@ -149,18 +168,6 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             ]
         )
 
-    pymc = table['pymc-spectrumchainlen']
-    default = pymc['default'].value()
-    sv['spectrum_steps'] = sv['spectrum_steps'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
-    pymc = table['pymc-spectrumchains']
-    default = pymc['default'].value()
-    sv['spectrum_chains'] = sv['spectrum_chains'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
     return
 
 
@@ -193,8 +200,6 @@ def load(sv_dict: {str: {}}, targets) -> None:
     for pymc in [
         'cerberuschains',
         'cerberuschainlen',
-        'spectrumchains',
-        'spectrumchainlen',
     ]:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']
