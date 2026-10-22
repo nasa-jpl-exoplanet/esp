@@ -180,7 +180,7 @@ class Normalization(dawgie.Algorithm):
 
 class WhiteLight(dawgie.Algorithm):
     '''
-    G. ROUDIER: See inheritance and CI5 thread with A NIESSNER
+    G. ROUDIER: See inheritance and CI5 thread with A. NIESSNER
     for __init__() method and class attributes
     https://github-fn.jpl.nasa.gov/EXCALIBUR/esp/pull/86
     '''
@@ -207,7 +207,7 @@ class WhiteLight(dawgie.Algorithm):
                 dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
                 dawgie.ALG_REF(sys.task, self.__fin),
             ]
-            + self.__rt.trigger('spectrum')
+            + self.__rt.trigger(self._type)
             + self.__rt.refs_for_proceed()
         )
 
@@ -421,7 +421,7 @@ class Spectrum(dawgie.Algorithm):
                 dawgie.ALG_REF(fetch('excalibur.transit').task, self._nrm),
                 dawgie.ALG_REF(fetch('excalibur.transit').task, self._wht),
             ]
-            + self.__rt.trigger('spectrum')
+            + self.__rt.trigger(self._type)
             + self.__rt.refs_for_proceed()
         )
 
