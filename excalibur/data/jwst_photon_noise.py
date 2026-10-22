@@ -1,5 +1,33 @@
 
 import numpy as np
+from astropy.io import fits
+
+
+def read_jwst_noise_parameters(calibrated_paths):
+    """Read per-detector times and scalar NIRSpec gain estimates. This is from STSci"""
+    average_gain = {"NRS1": 0.996, "NRS2": 1.137}
+    integration_time = {}
+    gains = {}
+
+    for path in calibrated_paths:
+        header = fits.getheader(path, 0)
+        detector_name = header["DETECTOR"]
+        detector_time = header["EFFINTTM"]
+        detector_gain = average_gain[detector_name] * header["GAINFACT"]
+
+        if detector_name in integration_time:
+            if (
+                integration_time[detector_name] != detector_time
+                or gains[detector_name] != detector_gain
+            ):
+                raise ValueError(
+                    f'Integration time or gain varies between files for {detector_name}.'
+                )
+
+        integration_time[detector_name] = detector_time
+        gains[detector_name] = detector_gain
+
+    return integration_time, gains
 
 def extract_jwst_photon_noise(source_rate, integration_time, gain):
     """
@@ -17,6 +45,39 @@ def extract_jwst_photon_noise(source_rate, integration_time, gain):
     }
 
     return output_dict
+
+def calculate_jwst_native_photon_noise(
+    source_rate,
+    detector,
+    valid,
+    integration_time,
+    gains,
+):
+    photon_noise_by_detector = {}
+
+    for detector_name in np.unique(detector):
+        selection = detector == detector_name
+
+        detector_rate = np.where(
+            valid[selection],
+            source_rate[selection],
+            np.nan,
+        )
+
+        if isinstance(integration_time, dict):
+            detector_time = integration_time[detector_name]
+        else:
+            detector_time = integration_time
+
+        photon_noise_by_detector[detector_name] = (
+            extract_jwst_photon_noise(
+                detector_rate,
+                detector_time,
+                gains[detector_name],
+            )
+        )
+
+    return photon_noise_by_detector
 
 def bin_jwst_photon_noise(electron_count, wavelength, in_transit, out_of_transit, wavelength_low, wavelength_high):
     """
@@ -46,42 +107,39 @@ def calculate_jwst_photon_noise(
     planet_spectrum,
     integration_time,
     gains,
+    visits,
 ):
     """
     Does the actual photon noise calculation by gathering the noise and binning to jwst spectrum
     """
+    if visits.shape != detector.shape:
+        raise ValueError('Visit labels must have one entry per integration.')
+
+    native_noise = calculate_jwst_native_photon_noise(
+        source_rate, detector, valid, integration_time, gains
+    )
     binned_photon_noise = {}
 
     for detector_key, detector_data in planet_spectrum.items():
         detector_name = str(detector_key)
         detector_selection = detector == detector_name
 
-        detector_rate = np.where(
-            valid[detector_selection],
-            source_rate[detector_selection],
-            np.nan,
-        )
-
-        if isinstance(integration_time, dict):
-            detector_integration_time = integration_time[detector_name]
-        else:
-            detector_integration_time = integration_time
-
-        photon_noise = extract_jwst_photon_noise(
-            detector_rate,
-            detector_integration_time,
-            gains[detector_name],
-        )
-
         binned_photon_noise[detector_name] = {}
 
         for visit, visit_data in detector_data.items():
+            # Each fitted spectrum uses only its own visit's integrations.
+            visit_selection = visits[detector_selection] == int(visit)
+            if not np.any(visit_selection):
+                raise ValueError(
+                    f'No calibration integrations for {detector_name} visit {visit}.'
+                )
+
             binned_photon_noise[detector_name][visit] = (
                 bin_jwst_photon_noise(
-                    photon_noise["electron_count"],
+                    native_noise[detector_name]["electron_count"],
                     wavelength[detector_selection],
-                    in_transit[detector_selection],
-                    out_of_transit[detector_selection],
+                    in_transit[detector_selection] & visit_selection,
+                    out_of_transit[detector_selection] & visit_selection,
                     visit_data["WBlow"],
                     visit_data["WBup"],
                 )

@@ -308,8 +308,9 @@ def normversion():
     1.1.8: added jwst filter
     1.1.9: NIRSPEC
     1.1.10: JWST Template per visit and speed things up by a factor of 100
+    1.1.11: Carry per-visit electron counts for photon-noise estimates
     '''
-    return dawgie.VERSION(1, 1, 10)
+    return dawgie.VERSION(1, 1, 11)
 
 
 def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
@@ -368,6 +369,8 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         if test is not None:
             tme['data'][p]['z'] = tme['data'][p]['z'][:test]
             tme['data'][p]['visits'] = tme['data'][p]['visits'][:test]
+            tme['data'][p]['time'] = tme['data'][p]['time'][:test]
+            tme['data'][p]['phase'] = tme['data'][p]['phase'][:test]
             pass
         visp = tme['data'][p]['visits']
         rp = priors[p]['rp'] / priors['R*'] * ssc['Rjup/Rsun']
@@ -446,6 +449,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             pass
         # NORM
         allnorms = {}
+        allcounts = {}
         allnwaves = {}
         allz = {}
         allt = {}
@@ -458,6 +462,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
         }
         for thisdet, _ in allvisits.items():
             allnorms[thisdet] = {}
+            allcounts[thisdet] = {}
             allnwaves[thisdet] = {}
             allz[thisdet] = {}
             allt[thisdet] = {}
@@ -485,6 +490,11 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
                 allnorms[thisdet][thisvis] = (
                     np.array(spectra[seldet & selvis][valid]) / divideme
                 )
+                detector_counts = cal['data']['PHOTON_NOISE'][thisdet]['electron_count']
+                detector_counts = detector_counts[:np.count_nonzero(seldet)]
+                allcounts[thisdet][thisvis] = (
+                    detector_counts[selvis[seldet]][valid]
+                )
                 allnwaves[thisdet][thisvis] = wave[seldet & selvis][valid]
                 allz[thisdet][thisvis] = tme['data'][p]['z'][seldet & selvis][
                     valid
@@ -511,6 +521,7 @@ def norm_jwst(cal, tme, fin, ext, out, selftype, verbose=False, test=None):
             pass
         out['data'][p]['visits'] = allvisits
         out['data'][p]['nspec'] = allnorms
+        out['data'][p]['electron_count'] = allcounts
         out['data'][p]['wave'] = allnwaves
         out['data'][p]['z'] = allz
         out['data'][p]['time'] = allt
