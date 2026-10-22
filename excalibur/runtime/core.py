@@ -168,18 +168,6 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             ]
         )
 
-    pymc = table['pymc-spectrumchainlen']
-    default = pymc['default'].value()
-    sv['spectrum_steps'] = sv['spectrum_steps'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
-    pymc = table['pymc-spectrumchains']
-    default = pymc['default'].value()
-    sv['spectrum_chains'] = sv['spectrum_chains'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
     return
 
 
@@ -212,8 +200,6 @@ def load(sv_dict: {str: {}}, targets) -> None:
     for pymc in [
         'cerberuschains',
         'cerberuschainlen',
-        'spectrumchains',
-        'spectrumchainlen',
     ]:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']

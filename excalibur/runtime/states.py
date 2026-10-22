@@ -3,6 +3,9 @@
 # Heritage code shame:
 #  no-member is for "Instance of HiLoValue has no _hi"
 # pylint: disable=no-member,method-hidden,invalid-name,too-many-statements
+# there's similar list of switches in runtime/core.py
+# eventually it would help to pull that all out to a separate shared file
+# pylint: disable=duplicate-code
 
 import dawgie
 import excalibur
@@ -439,8 +442,6 @@ class StatusSV(dawgie.StateVector):
         self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
         self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
         self['transit_limbdarkening_lethe'] = BoolValue()
-        self['spectrum_chains'] = excalibur.ValueScalar()
-        self['spectrum_steps'] = excalibur.ValueScalar()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
@@ -504,16 +505,12 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline('PYMC Sampling Parameters', tag='b')
         table = visitor.add_table(
-            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2
+            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 1
         )
         table.get_cell(0, 0).add_primitive('cerberus')
         table.get_cell(0, 1).add_primitive('metropolis-hastings')
         table.get_cell(0, 2).add_primitive(self['cerberus_chains'].value())
         table.get_cell(0, 3).add_primitive(self['cerberus_steps'].value())
-        table.get_cell(1, 0).add_primitive('spectrum')
-        table.get_cell(1, 1).add_primitive('metropolis-hastings')
-        table.get_cell(1, 2).add_primitive(self['spectrum_chains'].value())
-        table.get_cell(1, 3).add_primitive(self['spectrum_steps'].value())
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
