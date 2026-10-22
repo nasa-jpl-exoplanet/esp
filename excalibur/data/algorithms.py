@@ -227,7 +227,7 @@ class Calibration(dawgie.Algorithm):
 
     def __init__(self):
         '''__init__ ds'''
-        self._version_ = dawgie.VERSION(1, 4, 4)
+        self._version_ = dawgie.VERSION(1, 4, 5)
         self.__fin = sysalg.Finalize()
         self.__col = Collect()
         self.__rt = rtalg.Autofill()
