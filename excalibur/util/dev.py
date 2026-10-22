@@ -152,7 +152,12 @@ def pickle_sv(args, svroot=False, clncrn=False, saveme=None):
     fullname = [trg, str(rid)]
     fullname.extend(nms)
     strname = '.'.join(fullname)
-    mycornichon = odr + strname + '.pkl'
+    if svroot:
+        mycornichon = odr + strname + '.SV.pkl'
+        pass
+    else:
+        mycornichon = odr + strname + '.pkl'
+        pass
     if clncrn:
         if os.path.isfile(mycornichon):
             os.remove(mycornichon)
