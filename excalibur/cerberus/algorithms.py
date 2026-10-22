@@ -69,6 +69,7 @@ class XSLib(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
         svupdate = []
 
@@ -106,8 +107,6 @@ class XSLib(dawgie.Algorithm):
             else:
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
-
-            runtime = self.__rt.sv_as_dict()['status']
 
             # for Ariel targets, option to only do the actually Tier-2 targets
             targetlistcheck = True

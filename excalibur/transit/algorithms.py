@@ -438,9 +438,7 @@ class Spectrum(dawgie.Algorithm):
             msg = 'runtime option to skip transit.spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        if (
-            self._type == 'eclipse' and runtime['ignoreinput_eclipse_spectrum']
-        ):
+        if self._type == 'eclipse' and runtime['ignoreinput_eclipse_spectrum']:
             msg = 'runtime option to skip eclipse.spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
