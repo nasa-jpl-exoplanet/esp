@@ -86,7 +86,7 @@ class Normalization(dawgie.Algorithm):
             msg = 'runtime option to skip transit.normalization: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        elif (
+        if (
             self._type == 'eclipse'
             and runtime['ignoreinput_eclipse_normalization']
         ):
@@ -227,7 +227,7 @@ class WhiteLight(dawgie.Algorithm):
             msg = 'runtime option to skip transit.whitelight: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        elif (
+        if (
             self._type == 'eclipse'
             and runtime['ignoreinput_eclipse_whitelight']
         ):
