@@ -210,6 +210,25 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        self['ignoreinput_target_scrape'] = BoolValue()
+        self['ignoreinput_transit_normalization'] = BoolValue()
+        self['ignoreinput_transit_whitelight'] = BoolValue()
+        self['ignoreinput_transit_spectrum'] = BoolValue()
+        self['ignoreinput_transit_starspots'] = BoolValue()
+        self['ignoreinput_eclipse_normalization'] = BoolValue()
+        self['ignoreinput_eclipse_whitelight'] = BoolValue()
+        self['ignoreinput_eclipse_spectum'] = BoolValue()
+        self['ignoreinput_phasecurve_normalization'] = BoolValue()
+        self['ignoreinput_phasecurve_whitelight'] = BoolValue()
+        self['ignoreinput_phasecurve_flares'] = BoolValue()
+        self['ignoreinput_gemli_mlfit'] = BoolValue()
+        self['ignoreinput_hwo_sim_spectrum'] = BoolValue()
+        self['ignoreinput_selftest_sim_spectrum'] = BoolValue()
+        self['ignoreinput_ariel_sim_spectrum'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_ariel'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_ariel'] = BoolValue()
         return
 
     def features(self):
@@ -426,6 +445,25 @@ class StatusSV(dawgie.StateVector):
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        self['ignoreinput_target_scrape'] = BoolValue()
+        self['ignoreinput_transit_normalization'] = BoolValue()
+        self['ignoreinput_transit_whitelight'] = BoolValue()
+        self['ignoreinput_transit_spectrum'] = BoolValue()
+        self['ignoreinput_transit_starspots'] = BoolValue()
+        self['ignoreinput_eclipse_normalization'] = BoolValue()
+        self['ignoreinput_eclipse_whitelight'] = BoolValue()
+        self['ignoreinput_eclipse_spectum'] = BoolValue()
+        self['ignoreinput_phasecurve_normalization'] = BoolValue()
+        self['ignoreinput_phasecurve_whitelight'] = BoolValue()
+        self['ignoreinput_phasecurve_flares'] = BoolValue()
+        self['ignoreinput_gemli_mlfit'] = BoolValue()
+        self['ignoreinput_hwo_sim_spectrum'] = BoolValue()
+        self['ignoreinput_selftest_sim_spectrum'] = BoolValue()
+        self['ignoreinput_ariel_sim_spectrum'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_ariel'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_ariel'] = BoolValue()
         return
 
     def name(self):
@@ -546,6 +584,25 @@ class StatusSV(dawgie.StateVector):
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
             'selftest_Nrepeats',
+            'ignoreinput_target_scrape',
+            'ignoreinput_transit_normalization',
+            'ignoreinput_transit_whitelight',
+            'ignoreinput_transit_spectrum',
+            'ignoreinput_transit_starspots',
+            'ignoreinput_eclipse_normalization',
+            'ignoreinput_eclipse_whitelight',
+            'ignoreinput_eclipse_spectum',
+            'ignoreinput_phasecurve_normalization',
+            'ignoreinput_phasecurve_whitelight',
+            'ignoreinput_phasecurve_flares',
+            'ignoreinput_gemli_mlfit',
+            'ignoreinput_hwo_sim_spectrum',
+            'ignoreinput_selftest_sim_spectrum',
+            'ignoreinput_ariel_sim_spectrum',
+            'ignoreinput_cerberus_xslib_jwst',
+            'ignoreinput_cerberus_xslib_ariel',
+            'ignoreinput_cerberus_atmos_jwst',
+            'ignoreinput_cerberus_atmos_ariel',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):

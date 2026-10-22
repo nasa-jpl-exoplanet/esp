@@ -1,7 +1,7 @@
 # ./excalibur/runtime/binding.py
 # -*- coding: utf-8 -*-
 # PyXB bindings for NM:e92452c8d3e28a9e27abfc9994d2007779e7f4c9
-# Generated 2026-09-03 16:41:45.594517 by PyXB version 1.3.3 using Python 3.12.3.final.0
+# Generated 2026-10-16 18:39:41.506218 by PyXB version 1.3.3 using Python 3.12.3.final.0
 # Namespace AbsentNamespace0
 
 from __future__ import unicode_literals
@@ -14,7 +14,7 @@ import pyxb.utils.domutils
 import sys
 import pyxb.utils.sal as _six
 # Unique identifier for bindings created at the same time
-_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:0600e98c-a7f1-11f1-b1de-0cc47aaa0c06')
+_GenerationUID = pyxb.utils.utility.UniqueIdentifier('urn:uuid:9f5eb969-c9cb-11f1-a45d-0cc47aaa0c06')
 
 # Version of PyXB used to generate the bindings
 _PyXBVersion = '1.3.3'
@@ -216,7 +216,7 @@ class filter_names (pyxb.binding.datatypes.normalizedString, pyxb.binding.basis.
     """An atomic simple type."""
 
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'filter_names')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 414, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 452, 2)
     _Documentation = None
 filter_names._CF_enumeration = pyxb.binding.facets.CF_enumeration(value_datatype=filter_names, enum_prefix=None)
 filter_names.Ariel_sim = filter_names._CF_enumeration.addEnumeration(unicode_value='Ariel-sim', tag='Ariel_sim')
@@ -986,6 +986,158 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
     
     selftest_Nrepeats = property(__selftest_Nrepeats.value, __selftest_Nrepeats.set, None, None)
 
+    
+    # Attribute ignoreinput.target.scrape uses Python identifier ignoreinput_target_scrape
+    __ignoreinput_target_scrape = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.target.scrape'), 'ignoreinput_target_scrape', '__AbsentNamespace0_control_type_ignoreinput_target_scrape', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_target_scrape._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 303, 4)
+    __ignoreinput_target_scrape._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 303, 4)
+    
+    ignoreinput_target_scrape = property(__ignoreinput_target_scrape.value, __ignoreinput_target_scrape.set, None, None)
+
+    
+    # Attribute ignoreinput.transit.normalization uses Python identifier ignoreinput_transit_normalization
+    __ignoreinput_transit_normalization = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.transit.normalization'), 'ignoreinput_transit_normalization', '__AbsentNamespace0_control_type_ignoreinput_transit_normalization', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_transit_normalization._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 305, 4)
+    __ignoreinput_transit_normalization._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 305, 4)
+    
+    ignoreinput_transit_normalization = property(__ignoreinput_transit_normalization.value, __ignoreinput_transit_normalization.set, None, None)
+
+    
+    # Attribute ignoreinput.transit.whitelight uses Python identifier ignoreinput_transit_whitelight
+    __ignoreinput_transit_whitelight = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.transit.whitelight'), 'ignoreinput_transit_whitelight', '__AbsentNamespace0_control_type_ignoreinput_transit_whitelight', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_transit_whitelight._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 307, 4)
+    __ignoreinput_transit_whitelight._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 307, 4)
+    
+    ignoreinput_transit_whitelight = property(__ignoreinput_transit_whitelight.value, __ignoreinput_transit_whitelight.set, None, None)
+
+    
+    # Attribute ignoreinput.transit.spectrum uses Python identifier ignoreinput_transit_spectrum
+    __ignoreinput_transit_spectrum = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.transit.spectrum'), 'ignoreinput_transit_spectrum', '__AbsentNamespace0_control_type_ignoreinput_transit_spectrum', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_transit_spectrum._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 309, 4)
+    __ignoreinput_transit_spectrum._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 309, 4)
+    
+    ignoreinput_transit_spectrum = property(__ignoreinput_transit_spectrum.value, __ignoreinput_transit_spectrum.set, None, None)
+
+    
+    # Attribute ignoreinput.transit.starspots uses Python identifier ignoreinput_transit_starspots
+    __ignoreinput_transit_starspots = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.transit.starspots'), 'ignoreinput_transit_starspots', '__AbsentNamespace0_control_type_ignoreinput_transit_starspots', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_transit_starspots._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 311, 4)
+    __ignoreinput_transit_starspots._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 311, 4)
+    
+    ignoreinput_transit_starspots = property(__ignoreinput_transit_starspots.value, __ignoreinput_transit_starspots.set, None, None)
+
+    
+    # Attribute ignoreinput.eclipse.normalization uses Python identifier ignoreinput_eclipse_normalization
+    __ignoreinput_eclipse_normalization = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.eclipse.normalization'), 'ignoreinput_eclipse_normalization', '__AbsentNamespace0_control_type_ignoreinput_eclipse_normalization', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_eclipse_normalization._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 313, 4)
+    __ignoreinput_eclipse_normalization._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 313, 4)
+    
+    ignoreinput_eclipse_normalization = property(__ignoreinput_eclipse_normalization.value, __ignoreinput_eclipse_normalization.set, None, None)
+
+    
+    # Attribute ignoreinput.eclipse.whitelight uses Python identifier ignoreinput_eclipse_whitelight
+    __ignoreinput_eclipse_whitelight = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.eclipse.whitelight'), 'ignoreinput_eclipse_whitelight', '__AbsentNamespace0_control_type_ignoreinput_eclipse_whitelight', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_eclipse_whitelight._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 315, 4)
+    __ignoreinput_eclipse_whitelight._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 315, 4)
+    
+    ignoreinput_eclipse_whitelight = property(__ignoreinput_eclipse_whitelight.value, __ignoreinput_eclipse_whitelight.set, None, None)
+
+    
+    # Attribute ignoreinput.eclipse.spectum uses Python identifier ignoreinput_eclipse_spectum
+    __ignoreinput_eclipse_spectum = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.eclipse.spectum'), 'ignoreinput_eclipse_spectum', '__AbsentNamespace0_control_type_ignoreinput_eclipse_spectum', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_eclipse_spectum._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 317, 4)
+    __ignoreinput_eclipse_spectum._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 317, 4)
+    
+    ignoreinput_eclipse_spectum = property(__ignoreinput_eclipse_spectum.value, __ignoreinput_eclipse_spectum.set, None, None)
+
+    
+    # Attribute ignoreinput.phasecurve.normalization uses Python identifier ignoreinput_phasecurve_normalization
+    __ignoreinput_phasecurve_normalization = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.phasecurve.normalization'), 'ignoreinput_phasecurve_normalization', '__AbsentNamespace0_control_type_ignoreinput_phasecurve_normalization', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_phasecurve_normalization._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 4)
+    __ignoreinput_phasecurve_normalization._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 4)
+    
+    ignoreinput_phasecurve_normalization = property(__ignoreinput_phasecurve_normalization.value, __ignoreinput_phasecurve_normalization.set, None, None)
+
+    
+    # Attribute ignoreinput.phasecurve.whitelight uses Python identifier ignoreinput_phasecurve_whitelight
+    __ignoreinput_phasecurve_whitelight = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.phasecurve.whitelight'), 'ignoreinput_phasecurve_whitelight', '__AbsentNamespace0_control_type_ignoreinput_phasecurve_whitelight', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_phasecurve_whitelight._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 4)
+    __ignoreinput_phasecurve_whitelight._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 4)
+    
+    ignoreinput_phasecurve_whitelight = property(__ignoreinput_phasecurve_whitelight.value, __ignoreinput_phasecurve_whitelight.set, None, None)
+
+    
+    # Attribute ignoreinput.phasecurve.flares uses Python identifier ignoreinput_phasecurve_flares
+    __ignoreinput_phasecurve_flares = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.phasecurve.flares'), 'ignoreinput_phasecurve_flares', '__AbsentNamespace0_control_type_ignoreinput_phasecurve_flares', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_phasecurve_flares._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 323, 4)
+    __ignoreinput_phasecurve_flares._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 323, 4)
+    
+    ignoreinput_phasecurve_flares = property(__ignoreinput_phasecurve_flares.value, __ignoreinput_phasecurve_flares.set, None, None)
+
+    
+    # Attribute ignoreinput.gemli.mlfit uses Python identifier ignoreinput_gemli_mlfit
+    __ignoreinput_gemli_mlfit = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.gemli.mlfit'), 'ignoreinput_gemli_mlfit', '__AbsentNamespace0_control_type_ignoreinput_gemli_mlfit', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_gemli_mlfit._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 325, 4)
+    __ignoreinput_gemli_mlfit._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 325, 4)
+    
+    ignoreinput_gemli_mlfit = property(__ignoreinput_gemli_mlfit.value, __ignoreinput_gemli_mlfit.set, None, None)
+
+    
+    # Attribute ignoreinput.hwo.sim_spectrum uses Python identifier ignoreinput_hwo_sim_spectrum
+    __ignoreinput_hwo_sim_spectrum = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.hwo.sim_spectrum'), 'ignoreinput_hwo_sim_spectrum', '__AbsentNamespace0_control_type_ignoreinput_hwo_sim_spectrum', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_hwo_sim_spectrum._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 327, 4)
+    __ignoreinput_hwo_sim_spectrum._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 327, 4)
+    
+    ignoreinput_hwo_sim_spectrum = property(__ignoreinput_hwo_sim_spectrum.value, __ignoreinput_hwo_sim_spectrum.set, None, None)
+
+    
+    # Attribute ignoreinput.selftest.sim_spectrum uses Python identifier ignoreinput_selftest_sim_spectrum
+    __ignoreinput_selftest_sim_spectrum = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.selftest.sim_spectrum'), 'ignoreinput_selftest_sim_spectrum', '__AbsentNamespace0_control_type_ignoreinput_selftest_sim_spectrum', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_selftest_sim_spectrum._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 329, 4)
+    __ignoreinput_selftest_sim_spectrum._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 329, 4)
+    
+    ignoreinput_selftest_sim_spectrum = property(__ignoreinput_selftest_sim_spectrum.value, __ignoreinput_selftest_sim_spectrum.set, None, None)
+
+    
+    # Attribute ignoreinput.ariel.sim_spectrum uses Python identifier ignoreinput_ariel_sim_spectrum
+    __ignoreinput_ariel_sim_spectrum = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.ariel.sim_spectrum'), 'ignoreinput_ariel_sim_spectrum', '__AbsentNamespace0_control_type_ignoreinput_ariel_sim_spectrum', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_ariel_sim_spectrum._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 331, 4)
+    __ignoreinput_ariel_sim_spectrum._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 331, 4)
+    
+    ignoreinput_ariel_sim_spectrum = property(__ignoreinput_ariel_sim_spectrum.value, __ignoreinput_ariel_sim_spectrum.set, None, None)
+
+    
+    # Attribute ignoreinput.cerberus.xslib.jwst uses Python identifier ignoreinput_cerberus_xslib_jwst
+    __ignoreinput_cerberus_xslib_jwst = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.cerberus.xslib.jwst'), 'ignoreinput_cerberus_xslib_jwst', '__AbsentNamespace0_control_type_ignoreinput_cerberus_xslib_jwst', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_cerberus_xslib_jwst._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 333, 4)
+    __ignoreinput_cerberus_xslib_jwst._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 333, 4)
+    
+    ignoreinput_cerberus_xslib_jwst = property(__ignoreinput_cerberus_xslib_jwst.value, __ignoreinput_cerberus_xslib_jwst.set, None, None)
+
+    
+    # Attribute ignoreinput.cerberus.xslib.ariel uses Python identifier ignoreinput_cerberus_xslib_ariel
+    __ignoreinput_cerberus_xslib_ariel = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.cerberus.xslib.ariel'), 'ignoreinput_cerberus_xslib_ariel', '__AbsentNamespace0_control_type_ignoreinput_cerberus_xslib_ariel', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_cerberus_xslib_ariel._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 335, 4)
+    __ignoreinput_cerberus_xslib_ariel._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 335, 4)
+    
+    ignoreinput_cerberus_xslib_ariel = property(__ignoreinput_cerberus_xslib_ariel.value, __ignoreinput_cerberus_xslib_ariel.set, None, None)
+
+    
+    # Attribute ignoreinput.cerberus.atmos.jwst uses Python identifier ignoreinput_cerberus_atmos_jwst
+    __ignoreinput_cerberus_atmos_jwst = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.cerberus.atmos.jwst'), 'ignoreinput_cerberus_atmos_jwst', '__AbsentNamespace0_control_type_ignoreinput_cerberus_atmos_jwst', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_cerberus_atmos_jwst._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 337, 4)
+    __ignoreinput_cerberus_atmos_jwst._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 337, 4)
+    
+    ignoreinput_cerberus_atmos_jwst = property(__ignoreinput_cerberus_atmos_jwst.value, __ignoreinput_cerberus_atmos_jwst.set, None, None)
+
+    
+    # Attribute ignoreinput.cerberus.atmos.ariel uses Python identifier ignoreinput_cerberus_atmos_ariel
+    __ignoreinput_cerberus_atmos_ariel = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'ignoreinput.cerberus.atmos.ariel'), 'ignoreinput_cerberus_atmos_ariel', '__AbsentNamespace0_control_type_ignoreinput_cerberus_atmos_ariel', pyxb.binding.datatypes.boolean, required=True)
+    __ignoreinput_cerberus_atmos_ariel._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 339, 4)
+    __ignoreinput_cerberus_atmos_ariel._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 339, 4)
+    
+    ignoreinput_cerberus_atmos_ariel = property(__ignoreinput_cerberus_atmos_ariel.value, __ignoreinput_cerberus_atmos_ariel.set, None, None)
+
     _ElementMap.update({
         __cerberus_crbmodel_fitmolecules.name() : __cerberus_crbmodel_fitmolecules,
         __cerberus_crbmodel_HITEMPmolecules.name() : __cerberus_crbmodel_HITEMPmolecules,
@@ -1048,7 +1200,26 @@ class control_type (pyxb.binding.basis.complexTypeDefinition):
         __transit_spectrum_chainlen.name() : __transit_spectrum_chainlen,
         __transit_limbdarkening_lethe.name() : __transit_limbdarkening_lethe,
         __transit_pymc_sliceSampler.name() : __transit_pymc_sliceSampler,
-        __selftest_Nrepeats.name() : __selftest_Nrepeats
+        __selftest_Nrepeats.name() : __selftest_Nrepeats,
+        __ignoreinput_target_scrape.name() : __ignoreinput_target_scrape,
+        __ignoreinput_transit_normalization.name() : __ignoreinput_transit_normalization,
+        __ignoreinput_transit_whitelight.name() : __ignoreinput_transit_whitelight,
+        __ignoreinput_transit_spectrum.name() : __ignoreinput_transit_spectrum,
+        __ignoreinput_transit_starspots.name() : __ignoreinput_transit_starspots,
+        __ignoreinput_eclipse_normalization.name() : __ignoreinput_eclipse_normalization,
+        __ignoreinput_eclipse_whitelight.name() : __ignoreinput_eclipse_whitelight,
+        __ignoreinput_eclipse_spectum.name() : __ignoreinput_eclipse_spectum,
+        __ignoreinput_phasecurve_normalization.name() : __ignoreinput_phasecurve_normalization,
+        __ignoreinput_phasecurve_whitelight.name() : __ignoreinput_phasecurve_whitelight,
+        __ignoreinput_phasecurve_flares.name() : __ignoreinput_phasecurve_flares,
+        __ignoreinput_gemli_mlfit.name() : __ignoreinput_gemli_mlfit,
+        __ignoreinput_hwo_sim_spectrum.name() : __ignoreinput_hwo_sim_spectrum,
+        __ignoreinput_selftest_sim_spectrum.name() : __ignoreinput_selftest_sim_spectrum,
+        __ignoreinput_ariel_sim_spectrum.name() : __ignoreinput_ariel_sim_spectrum,
+        __ignoreinput_cerberus_xslib_jwst.name() : __ignoreinput_cerberus_xslib_jwst,
+        __ignoreinput_cerberus_xslib_ariel.name() : __ignoreinput_cerberus_xslib_ariel,
+        __ignoreinput_cerberus_atmos_jwst.name() : __ignoreinput_cerberus_atmos_jwst,
+        __ignoreinput_cerberus_atmos_ariel.name() : __ignoreinput_cerberus_atmos_ariel
     })
 _module_typeBindings.control_type = control_type
 Namespace.addCategoryObject('typeBinding', 'control_type', control_type)
@@ -1070,20 +1241,20 @@ class filter_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'filter_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 305, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 343, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Element exclude uses Python identifier exclude
-    __exclude = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'exclude'), 'exclude', '__AbsentNamespace0_filter_type_exclude', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 6), )
+    __exclude = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'exclude'), 'exclude', '__AbsentNamespace0_filter_type_exclude', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 357, 6), )
 
     
     exclude = property(__exclude.value, __exclude.set, None, None)
 
     
     # Element include uses Python identifier include
-    __include = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'include'), 'include', '__AbsentNamespace0_filter_type_include', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 6), )
+    __include = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'include'), 'include', '__AbsentNamespace0_filter_type_include', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 359, 6), )
 
     
     include = property(__include.value, __include.set, None, None)
@@ -1116,41 +1287,41 @@ class lever_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'lever_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 326, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 364, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Element controls uses Python identifier controls
-    __controls = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'controls'), 'controls', '__AbsentNamespace0_lever_type_controls', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 341, 6), )
+    __controls = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'controls'), 'controls', '__AbsentNamespace0_lever_type_controls', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 379, 6), )
 
     
     controls = property(__controls.value, __controls.set, None, None)
 
     
     # Element filters uses Python identifier filters
-    __filters = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'filters'), 'filters', '__AbsentNamespace0_lever_type_filters', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 342, 6), )
+    __filters = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'filters'), 'filters', '__AbsentNamespace0_lever_type_filters', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 380, 6), )
 
     
     filters = property(__filters.value, __filters.set, None, None)
 
     
     # Element pymc uses Python identifier pymc
-    __pymc = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'pymc'), 'pymc', '__AbsentNamespace0_lever_type_pymc', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 343, 6), )
+    __pymc = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'pymc'), 'pymc', '__AbsentNamespace0_lever_type_pymc', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 381, 6), )
 
     
     pymc = property(__pymc.value, __pymc.set, None, None)
 
     
     # Element run_only uses Python identifier run_only
-    __run_only = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'run_only'), 'run_only', '__AbsentNamespace0_lever_type_run_only', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 344, 6), )
+    __run_only = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'run_only'), 'run_only', '__AbsentNamespace0_lever_type_run_only', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 382, 6), )
 
     
     run_only = property(__run_only.value, __run_only.set, None, None)
 
     
     # Element sequester uses Python identifier sequester
-    __sequester = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'sequester'), 'sequester', '__AbsentNamespace0_lever_type_sequester', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 345, 6), )
+    __sequester = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'sequester'), 'sequester', '__AbsentNamespace0_lever_type_sequester', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 383, 6), )
 
     
     sequester = property(__sequester.value, __sequester.set, None, None)
@@ -1158,8 +1329,8 @@ class lever_type (pyxb.binding.basis.complexTypeDefinition):
     
     # Attribute index uses Python identifier index
     __index = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'index'), 'index', '__AbsentNamespace0_lever_type_index', pyxb.binding.datatypes.normalizedString, unicode_default='registry')
-    __index._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 347, 4)
-    __index._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 347, 4)
+    __index._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 4)
+    __index._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 4)
     
     index = property(__index.value, __index.set, None, None)
 
@@ -1187,13 +1358,13 @@ class pymc_count_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'pymc_count_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 350, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 388, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Element target uses Python identifier target
-    __target = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'target'), 'target', '__AbsentNamespace0_pymc_count_type_target', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 358, 6), )
+    __target = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'target'), 'target', '__AbsentNamespace0_pymc_count_type_target', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 396, 6), )
 
     
     target = property(__target.value, __target.set, None, None)
@@ -1201,8 +1372,8 @@ class pymc_count_type (pyxb.binding.basis.complexTypeDefinition):
     
     # Attribute default uses Python identifier default
     __default = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'default'), 'default', '__AbsentNamespace0_pymc_count_type_default', pyxb.binding.datatypes.positiveInteger, required=True)
-    __default._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 361, 4)
-    __default._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 361, 4)
+    __default._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 399, 4)
+    __default._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 399, 4)
     
     default = property(__default.value, __default.set, None, None)
 
@@ -1225,34 +1396,34 @@ class pymc_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'pymc_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 364, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 402, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Element cerberuschains uses Python identifier cerberuschains
-    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 371, 6), )
+    __cerberuschains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschains'), 'cerberuschains', '__AbsentNamespace0_pymc_type_cerberuschains', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 409, 6), )
 
     
     cerberuschains = property(__cerberuschains.value, __cerberuschains.set, None, None)
 
     
     # Element cerberuschainlen uses Python identifier cerberuschainlen
-    __cerberuschainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), 'cerberuschainlen', '__AbsentNamespace0_pymc_type_cerberuschainlen', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 372, 6), )
+    __cerberuschainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), 'cerberuschainlen', '__AbsentNamespace0_pymc_type_cerberuschainlen', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 410, 6), )
 
     
     cerberuschainlen = property(__cerberuschainlen.value, __cerberuschainlen.set, None, None)
 
     
     # Element spectrumchains uses Python identifier spectrumchains
-    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 373, 6), )
+    __spectrumchains = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchains'), 'spectrumchains', '__AbsentNamespace0_pymc_type_spectrumchains', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 411, 6), )
 
     
     spectrumchains = property(__spectrumchains.value, __spectrumchains.set, None, None)
 
     
     # Element spectrumchainlen uses Python identifier spectrumchainlen
-    __spectrumchainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), 'spectrumchainlen', '__AbsentNamespace0_pymc_type_spectrumchainlen', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 374, 6), )
+    __spectrumchainlen = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), 'spectrumchainlen', '__AbsentNamespace0_pymc_type_spectrumchainlen', False, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 412, 6), )
 
     
     spectrumchainlen = property(__spectrumchainlen.value, __spectrumchainlen.set, None, None)
@@ -1279,13 +1450,13 @@ class sequester_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'sequester_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 378, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 416, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Element target uses Python identifier target
-    __target = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'target'), 'target', '__AbsentNamespace0_sequester_type_target', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 6), )
+    __target = pyxb.binding.content.ElementDeclaration(pyxb.namespace.ExpandedName(None, 'target'), 'target', '__AbsentNamespace0_sequester_type_target', True, pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 423, 6), )
 
     
     target = property(__target.value, __target.set, None, None)
@@ -1309,23 +1480,23 @@ class target_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_SIMPLE
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'target_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 390, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 428, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.normalizedString
     
     # Attribute because uses Python identifier because
     __because = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'because'), 'because', '__AbsentNamespace0_target_type_because', pyxb.binding.datatypes.normalizedString, required=True)
-    __because._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 398, 8)
-    __because._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 398, 8)
+    __because._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 436, 8)
+    __because._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 436, 8)
     
     because = property(__because.value, __because.set, None, None)
 
     
     # Attribute isRegex uses Python identifier isRegex
     __isRegex = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'isRegex'), 'isRegex', '__AbsentNamespace0_target_type_isRegex', pyxb.binding.datatypes.boolean, unicode_default='false')
-    __isRegex._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 399, 8)
-    __isRegex._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 399, 8)
+    __isRegex._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 437, 8)
+    __isRegex._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 437, 8)
     
     isRegex = property(__isRegex.value, __isRegex.set, None, None)
 
@@ -1349,23 +1520,23 @@ class target_override_type (pyxb.binding.basis.complexTypeDefinition):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_EMPTY
     _Abstract = False
     _ExpandedName = pyxb.namespace.ExpandedName(Namespace, 'target_override_type')
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 404, 2)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 442, 2)
     _ElementMap = {}
     _AttributeMap = {}
     # Base type is pyxb.binding.datatypes.anyType
     
     # Attribute name uses Python identifier name
     __name = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'name'), 'name', '__AbsentNamespace0_target_override_type_name', pyxb.binding.datatypes.normalizedString, required=True)
-    __name._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 410, 4)
-    __name._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 410, 4)
+    __name._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 448, 4)
+    __name._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 448, 4)
     
     name = property(__name.value, __name.set, None, None)
 
     
     # Attribute steps uses Python identifier steps
     __steps = pyxb.binding.content.AttributeUse(pyxb.namespace.ExpandedName(None, 'steps'), 'steps', '__AbsentNamespace0_target_override_type_steps', pyxb.binding.datatypes.positiveInteger, required=True)
-    __steps._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 411, 4)
-    __steps._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 411, 4)
+    __steps._DeclarationLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 449, 4)
+    __steps._UseLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 449, 4)
     
     steps = property(__steps.value, __steps.set, None, None)
 
@@ -1393,7 +1564,7 @@ class CTD_ANON (lever_type):
     _ContentTypeTag = pyxb.binding.basis.complexTypeDefinition._CT_ELEMENT_ONLY
     _Abstract = False
     _ExpandedName = None
-    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 433, 4)
+    _XSDLocation = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 471, 4)
     _ElementMap = lever_type._ElementMap.copy()
     _AttributeMap = lever_type._AttributeMap.copy()
     # Base type is lever_type
@@ -1418,7 +1589,7 @@ class CTD_ANON (lever_type):
 _module_typeBindings.CTD_ANON = CTD_ANON
 
 
-levers = pyxb.binding.basis.element(pyxb.namespace.ExpandedName(Namespace, 'levers'), CTD_ANON, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 432, 2))
+levers = pyxb.binding.basis.element(pyxb.namespace.ExpandedName(Namespace, 'levers'), CTD_ANON, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 470, 2))
 Namespace.addCategoryObject('elementBinding', levers.name().localName(), levers)
 
 
@@ -1717,9 +1888,9 @@ control_type._Automaton = _BuildAutomaton_5()
 
 
 
-filter_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'exclude'), filter_names, scope=filter_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 6)))
+filter_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'exclude'), filter_names, scope=filter_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 357, 6)))
 
-filter_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'include'), filter_names, scope=filter_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 6)))
+filter_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'include'), filter_names, scope=filter_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 359, 6)))
 
 def _BuildAutomaton_6 ():
     # Remove this helper function from the namespace after it is invoked
@@ -1728,19 +1899,19 @@ def _BuildAutomaton_6 ():
     import pyxb.utils.fac as fac
 
     counters = set()
-    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 6))
+    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 357, 6))
     counters.add(cc_0)
-    cc_1 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 6))
+    cc_1 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 359, 6))
     counters.add(cc_1)
     states = []
     final_update = set()
     final_update.add(fac.UpdateInstruction(cc_0, False))
-    symbol = pyxb.binding.content.ElementUse(filter_type._UseForTag(pyxb.namespace.ExpandedName(None, 'exclude')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 319, 6))
+    symbol = pyxb.binding.content.ElementUse(filter_type._UseForTag(pyxb.namespace.ExpandedName(None, 'exclude')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 357, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     final_update = set()
     final_update.add(fac.UpdateInstruction(cc_1, False))
-    symbol = pyxb.binding.content.ElementUse(filter_type._UseForTag(pyxb.namespace.ExpandedName(None, 'include')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 321, 6))
+    symbol = pyxb.binding.content.ElementUse(filter_type._UseForTag(pyxb.namespace.ExpandedName(None, 'include')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 359, 6))
     st_1 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_1)
     transitions = []
@@ -1759,15 +1930,15 @@ filter_type._Automaton = _BuildAutomaton_6()
 
 
 
-lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'controls'), control_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 341, 6)))
+lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'controls'), control_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 379, 6)))
 
-lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'filters'), filter_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 342, 6)))
+lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'filters'), filter_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 380, 6)))
 
-lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'pymc'), pymc_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 343, 6)))
+lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'pymc'), pymc_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 381, 6)))
 
-lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'run_only'), sequester_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 344, 6)))
+lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'run_only'), sequester_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 382, 6)))
 
-lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'sequester'), sequester_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 345, 6)))
+lever_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'sequester'), sequester_type, scope=lever_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 383, 6)))
 
 def _BuildAutomaton_8 ():
     # Remove this helper function from the namespace after it is invoked
@@ -1778,7 +1949,7 @@ def _BuildAutomaton_8 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'controls')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 341, 6))
+    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'controls')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 379, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1794,7 +1965,7 @@ def _BuildAutomaton_9 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'filters')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 342, 6))
+    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'filters')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 380, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1810,7 +1981,7 @@ def _BuildAutomaton_10 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'pymc')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 343, 6))
+    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'pymc')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 381, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1826,7 +1997,7 @@ def _BuildAutomaton_11 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'run_only')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 344, 6))
+    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'run_only')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 382, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1842,7 +2013,7 @@ def _BuildAutomaton_12 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'sequester')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 345, 6))
+    symbol = pyxb.binding.content.ElementUse(lever_type._UseForTag(pyxb.namespace.ExpandedName(None, 'sequester')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 383, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1864,7 +2035,7 @@ def _BuildAutomaton_7 ():
     sub_automata.append(_BuildAutomaton_11())
     sub_automata.append(_BuildAutomaton_12())
     final_update = set()
-    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 340, 4)
+    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 378, 4)
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=True)
     st_0._set_subAutomata(*sub_automata)
     states.append(st_0)
@@ -1876,7 +2047,7 @@ lever_type._Automaton = _BuildAutomaton_7()
 
 
 
-pymc_count_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'target'), target_override_type, scope=pymc_count_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 358, 6)))
+pymc_count_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'target'), target_override_type, scope=pymc_count_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 396, 6)))
 
 def _BuildAutomaton_13 ():
     # Remove this helper function from the namespace after it is invoked
@@ -1885,12 +2056,12 @@ def _BuildAutomaton_13 ():
     import pyxb.utils.fac as fac
 
     counters = set()
-    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 358, 6))
+    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 396, 6))
     counters.add(cc_0)
     states = []
     final_update = set()
     final_update.add(fac.UpdateInstruction(cc_0, False))
-    symbol = pyxb.binding.content.ElementUse(pymc_count_type._UseForTag(pyxb.namespace.ExpandedName(None, 'target')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 358, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_count_type._UseForTag(pyxb.namespace.ExpandedName(None, 'target')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 396, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1903,13 +2074,13 @@ pymc_count_type._Automaton = _BuildAutomaton_13()
 
 
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 371, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 409, 6)))
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 372, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'cerberuschainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 410, 6)))
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 373, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchains'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 411, 6)))
 
-pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 374, 6)))
+pymc_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'spectrumchainlen'), pymc_count_type, scope=pymc_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 412, 6)))
 
 def _BuildAutomaton_15 ():
     # Remove this helper function from the namespace after it is invoked
@@ -1920,7 +2091,7 @@ def _BuildAutomaton_15 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschains')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 371, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschains')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 409, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1936,7 +2107,7 @@ def _BuildAutomaton_16 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschainlen')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 372, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'cerberuschainlen')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 410, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1952,7 +2123,7 @@ def _BuildAutomaton_17 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchains')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 373, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchains')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 411, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1968,7 +2139,7 @@ def _BuildAutomaton_18 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchainlen')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 374, 6))
+    symbol = pyxb.binding.content.ElementUse(pymc_type._UseForTag(pyxb.namespace.ExpandedName(None, 'spectrumchainlen')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 412, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -1989,7 +2160,7 @@ def _BuildAutomaton_14 ():
     sub_automata.append(_BuildAutomaton_17())
     sub_automata.append(_BuildAutomaton_18())
     final_update = set()
-    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 370, 4)
+    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 408, 4)
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=True)
     st_0._set_subAutomata(*sub_automata)
     states.append(st_0)
@@ -2001,7 +2172,7 @@ pymc_type._Automaton = _BuildAutomaton_14()
 
 
 
-sequester_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'target'), target_type, scope=sequester_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 6)))
+sequester_type._AddElement(pyxb.binding.basis.element(pyxb.namespace.ExpandedName(None, 'target'), target_type, scope=sequester_type, location=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 423, 6)))
 
 def _BuildAutomaton_19 ():
     # Remove this helper function from the namespace after it is invoked
@@ -2010,12 +2181,12 @@ def _BuildAutomaton_19 ():
     import pyxb.utils.fac as fac
 
     counters = set()
-    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 6))
+    cc_0 = fac.CounterCondition(min=0, max=None, metadata=pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 423, 6))
     counters.add(cc_0)
     states = []
     final_update = set()
     final_update.add(fac.UpdateInstruction(cc_0, False))
-    symbol = pyxb.binding.content.ElementUse(sequester_type._UseForTag(pyxb.namespace.ExpandedName(None, 'target')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 385, 6))
+    symbol = pyxb.binding.content.ElementUse(sequester_type._UseForTag(pyxb.namespace.ExpandedName(None, 'target')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 423, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2037,7 +2208,7 @@ def _BuildAutomaton_21 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'controls')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 341, 6))
+    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'controls')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 379, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2053,7 +2224,7 @@ def _BuildAutomaton_22 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'filters')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 342, 6))
+    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'filters')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 380, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2069,7 +2240,7 @@ def _BuildAutomaton_23 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'pymc')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 343, 6))
+    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'pymc')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 381, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2085,7 +2256,7 @@ def _BuildAutomaton_24 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'run_only')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 344, 6))
+    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'run_only')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 382, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2101,7 +2272,7 @@ def _BuildAutomaton_25 ():
     counters = set()
     states = []
     final_update = set()
-    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'sequester')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 345, 6))
+    symbol = pyxb.binding.content.ElementUse(CTD_ANON._UseForTag(pyxb.namespace.ExpandedName(None, 'sequester')), pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 383, 6))
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=False)
     states.append(st_0)
     transitions = []
@@ -2123,7 +2294,7 @@ def _BuildAutomaton_20 ():
     sub_automata.append(_BuildAutomaton_24())
     sub_automata.append(_BuildAutomaton_25())
     final_update = set()
-    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 340, 4)
+    symbol = pyxb.utils.utility.Location('/home/bryden/gitrepos/esp/excalibur/runtime/levers.xsd', 378, 4)
     st_0 = fac.State(symbol, is_initial=True, final_update=final_update, is_unordered_catenation=True)
     st_0._set_subAutomata(*sub_automata)
     states.append(st_0)

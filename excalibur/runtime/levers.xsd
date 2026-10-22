@@ -300,6 +300,44 @@
                   type="xs:boolean" use="required"/>
     <xs:attribute name="selftest.Nrepeats"
                   type="xs:integer" use="required"/>
+    <xs:attribute name="ignoreinput.target.scrape"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.transit.normalization"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.transit.whitelight"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.transit.spectrum"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.transit.starspots"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.eclipse.normalization"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.eclipse.whitelight"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.eclipse.spectum"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.phasecurve.normalization"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.phasecurve.whitelight"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.phasecurve.flares"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.gemli.mlfit"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.hwo.sim_spectrum"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.selftest.sim_spectrum"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.ariel.sim_spectrum"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.cerberus.xslib.jwst"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.cerberus.xslib.ariel"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.cerberus.atmos.jwst"
+                  type="xs:boolean" use="required"/>
+    <xs:attribute name="ignoreinput.cerberus.atmos.ariel"
+                  type="xs:boolean" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="filter_type">
