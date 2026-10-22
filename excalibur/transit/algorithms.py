@@ -79,11 +79,17 @@ class Normalization(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if self._type == 'transit' and runtime['ignoreinputs_transit_normalization']:
+        if (
+            self._type == 'transit'
+            and runtime['ignoreinputs_transit_normalization']
+        ):
             msg = 'runtime option to skip transit.normalization: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_normalization']:
+        elif (
+            self._type == 'eclipse'
+            and runtime['ignoreinputs_eclipse_normalization']
+        ):
             msg = 'runtime option to skip eclipse.normalization: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
@@ -214,11 +220,17 @@ class WhiteLight(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if self._type == 'transit' and runtime['ignoreinputs_transit_whitelight']:
+        if (
+            self._type == 'transit'
+            and runtime['ignoreinputs_transit_whitelight']
+        ):
             msg = 'runtime option to skip transit.whitelight: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_whitelight']:
+        elif (
+            self._type == 'eclipse'
+            and runtime['ignoreinputs_eclipse_whitelight']
+        ):
             msg = 'runtime option to skip eclipse.whitelight: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
@@ -426,7 +438,9 @@ class Spectrum(dawgie.Algorithm):
             msg = 'runtime option to skip transit.spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
-        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_spectrum']:
+        elif (
+            self._type == 'eclipse' and runtime['ignoreinputs_eclipse_spectrum']
+        ):
             msg = 'runtime option to skip eclipse.spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
