@@ -77,6 +77,17 @@ class Normalization(dawgie.Algorithm):
     def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if self._type == 'transit' and runtime['ignoreinputs_transit_normalization']:
+            msg = 'runtime option to skip transit.normalization: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_normalization']:
+            msg = 'runtime option to skip eclipse.normalization: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
@@ -200,6 +211,17 @@ class WhiteLight(dawgie.Algorithm):
 
     def run(self, ds, ps):
         '''Top level algorithm call'''
+
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if self._type == 'transit' and runtime['ignoreinputs_transit_whitelight']:
+            msg = 'runtime option to skip transit.whitelight: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_whitelight']:
+            msg = 'runtime option to skip eclipse.whitelight: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
 
         svupdate = []
         rnt = self.__rt.sv_as_dict()['status']
@@ -398,9 +420,20 @@ class Spectrum(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
-        svupdate = []
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if self._type == 'transit' and runtime['ignoreinputs_transit_spectrum']:
+            msg = 'runtime option to skip transit.spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+        elif self._type == 'eclipse' and runtime['ignoreinputs_eclipse_spectrum']:
+            msg = 'runtime option to skip eclipse.spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
+        svupdate = []
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -527,12 +560,19 @@ class StarSpots(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
-        svupdate = []
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if runtime['ignoreinputs_transit_starspots']:
+            msg = 'runtime option to skip transit.starspots: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
         # print('STARSPOTS: allowed filters',
         #      self.__rt.sv_as_dict()['status']['allowed_filter_names'])
 
+        svupdate = []
         # for fltr in ['HST-WFC3-IR-G141-SCAN']:  # for debugging, just run G141
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target

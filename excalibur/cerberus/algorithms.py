@@ -77,6 +77,25 @@ class XSLib(dawgie.Algorithm):
             self.__rt.proceed(fltr)
             update = False
 
+            if (
+                fltr.startswith('JWST')
+                and runtime['ignoreinputs_cerberus_xslib_jwst']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.xslib for JWST: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
+            elif (
+                fltr.startswith('Ariel')
+                and runtime['ignoreinputs_cerberus_xslib_ariel']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.xslib for Ariel: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
+
             if fltr == 'Ariel-sim':
                 sv = self.__arielsim.sv_as_dict()['parameters']
                 vspc, sspc = checksv(sv)
@@ -213,6 +232,25 @@ class Atmos(dawgie.Algorithm):
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
+
+            if (
+                fltr.startswith('JWST')
+                and runtime['ignoreinputs_cerberus_atmos_jwst']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.atmos for JWST: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
+            elif (
+                fltr.startswith('Ariel')
+                and runtime['ignoreinputs_cerberus_atmos_ariel']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.atmos for Ariel: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
 
             update = False
             # XSLIB CHECK

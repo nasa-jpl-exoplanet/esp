@@ -206,6 +206,13 @@ class Scrape(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = self.name().upper()
+        if runtime['ignoreinputs_target_scrape']:
+            msg = 'runtime option to skip target.scrape: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
             log.info(

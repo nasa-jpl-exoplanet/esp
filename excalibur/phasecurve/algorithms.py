@@ -74,6 +74,13 @@ class pcnormalization(dawgie.Algorithm):
 
     def run(self, ds, ps):
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if runtime['ignoreinputs_phasecurve_normalization']:
+            msg = 'runtime option to skip phasecurve.normalization: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
         svupdate = []
@@ -157,6 +164,13 @@ class pcwhitelight(dawgie.Algorithm):
 
     def run(self, ds, ps):
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if runtime['ignoreinputs_phasecurve_whitelight']:
+            msg = 'runtime option to skip phasecurve.whitelight: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
 
@@ -238,11 +252,17 @@ class pcflaredetection(dawgie.Algorithm):
 
     def run(self, ds, ps):
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if runtime['ignoreinputs_phasecurve_flares']:
+            msg = 'runtime option to skip phasecurve.flares: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
 
         svupdate = []
-        target = repr(self).split('.')[1]
         # for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
         #     stop here if it is not a runtime target
         #     self.__rt.proceed(fltr)
