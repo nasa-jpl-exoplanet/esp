@@ -86,7 +86,7 @@ class XSLib(dawgie.Algorithm):
                 )
                 log.info(msg)
                 raise dawgie.NoValidInputDataError(msg)
-            elif (
+            if (
                 fltr.startswith('Ariel')
                 and runtime['ignoreinputs_cerberus_xslib_ariel']
             ):
@@ -242,7 +242,7 @@ class Atmos(dawgie.Algorithm):
                 )
                 log.info(msg)
                 raise dawgie.NoValidInputDataError(msg)
-            elif (
+            if (
                 fltr.startswith('Ariel')
                 and runtime['ignoreinputs_cerberus_atmos_ariel']
             ):
