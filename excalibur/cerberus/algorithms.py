@@ -79,7 +79,7 @@ class XSLib(dawgie.Algorithm):
 
             if (
                 fltr.startswith('JWST')
-                and runtime['ignoreinputs_cerberus_xslib_jwst']
+                and runtime['ignoreinput_cerberus_xslib_jwst']
             ):
                 msg = (
                     'runtime option to skip cerberus.xslib for JWST: ' + target
@@ -88,7 +88,7 @@ class XSLib(dawgie.Algorithm):
                 raise dawgie.NoValidInputDataError(msg)
             if (
                 fltr.startswith('Ariel')
-                and runtime['ignoreinputs_cerberus_xslib_ariel']
+                and runtime['ignoreinput_cerberus_xslib_ariel']
             ):
                 msg = (
                     'runtime option to skip cerberus.xslib for Ariel: ' + target
@@ -235,7 +235,7 @@ class Atmos(dawgie.Algorithm):
 
             if (
                 fltr.startswith('JWST')
-                and runtime['ignoreinputs_cerberus_atmos_jwst']
+                and runtime['ignoreinput_cerberus_atmos_jwst']
             ):
                 msg = (
                     'runtime option to skip cerberus.atmos for JWST: ' + target
@@ -244,7 +244,7 @@ class Atmos(dawgie.Algorithm):
                 raise dawgie.NoValidInputDataError(msg)
             if (
                 fltr.startswith('Ariel')
-                and runtime['ignoreinputs_cerberus_atmos_ariel']
+                and runtime['ignoreinput_cerberus_atmos_ariel']
             ):
                 msg = (
                     'runtime option to skip cerberus.atmos for Ariel: ' + target

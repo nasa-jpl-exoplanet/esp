@@ -76,7 +76,7 @@ class pcnormalization(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if runtime['ignoreinputs_phasecurve_normalization']:
+        if runtime['ignoreinput_phasecurve_normalization']:
             msg = 'runtime option to skip phasecurve.normalization: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
@@ -166,7 +166,7 @@ class pcwhitelight(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if runtime['ignoreinputs_phasecurve_whitelight']:
+        if runtime['ignoreinput_phasecurve_whitelight']:
             msg = 'runtime option to skip phasecurve.whitelight: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
@@ -254,7 +254,7 @@ class pcflaredetection(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if runtime['ignoreinputs_phasecurve_flares']:
+        if runtime['ignoreinput_phasecurve_flares']:
             msg = 'runtime option to skip phasecurve.flares: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)

@@ -86,7 +86,7 @@ class MLfit(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if runtime['ignoreinputs_gemli_sim_spectrum']:
+        if runtime['ignoreinput_gemli_sim_spectrum']:
             msg = 'runtime option to skip gemli.sim_spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)

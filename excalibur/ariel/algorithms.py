@@ -55,7 +55,7 @@ class SimSpectrum(dawgie.Algorithm):
 
         runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
-        if runtime['ignoreinputs_ariel_sim_spectrum']:
+        if runtime['ignoreinput_ariel_sim_spectrum']:
             msg = 'runtime option to skip ariel.sim-spectrum: ' + target
             log.info(msg)
             raise dawgie.NoValidInputDataError(msg)
