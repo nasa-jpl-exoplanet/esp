@@ -40,7 +40,6 @@ class XslibSv(ExcaliburSV):
             for planet_letter in self['data']:
                 for dictkey in self['data'][planet_letter].keys():
                     if dictkey.startswith('plot_'):
-                        # if dictkey == 'plot_depthprobed':
                         title = (
                             '------ cross-sections for planet '
                             + planet_letter
@@ -52,27 +51,27 @@ class XslibSv(ExcaliburSV):
                             self['data'][planet_letter][dictkey],
                         )
                         pass
-                    pass
 
-                # special case for JWST data, where results are by visit
-                for maybevisit in self['data'][planet_letter]:
-                    for dictkey in self['data'][planet_letter][
-                        maybevisit
-                    ].keys():
-                        if dictkey.startswith('plot_'):
-                            title = (
-                                '------ cross-sections for planet '
-                                + planet_letter
-                                + str(maybevisit)
-                                + ' ------'
-                            )
-                            visitor.add_image(
-                                '...',
-                                title,
-                                self['data'][planet_letter][maybevisit][
-                                    dictkey
-                                ],
-                            )
+                    # special case for JWST data, where results are by visit
+                    #  check if there are dictionary keys '0','1',etc.
+                    if dictkey.isdigit():
+                        # for JWST it should be a dict inside of the dict
+                        for jwstkey in self['data'][planet_letter][dictkey]:
+                            if jwstkey.startswith('plot_'):
+                                title = (
+                                    '------ cross-sections for planet '
+                                    + planet_letter
+                                    + str(dictkey)
+                                    + ' ------'
+                                )
+                                visitor.add_image(
+                                    '...',
+                                    title,
+                                    self['data'][planet_letter][dictkey][
+                                        jwstkey
+                                    ],
+                                )
+                                pass
                             pass
                         pass
                     pass
