@@ -8,6 +8,7 @@ import copy
 from importlib import import_module as fetch
 from excalibur.system.autofill import (
     derive_LOGGplanet_from_R_and_M,
+    derive_LOGGstar_from_R_and_M,
     derive_Teqplanet_from_Lstar_and_sma,
 )
 
@@ -1271,6 +1272,122 @@ def ppar():
             't0': 56987.87473479712,
         },
     }
+
+    # 10/16/2026 adjusting Rstar values to remove JWST fangs
+    overwrite['WASP-178'] = {
+        'R*': 1.67,
+        'R*_uperr': 0.07,
+        'R*_lowerr': -0.07,
+        'R*_ref': 'Hellier et al. 2019',
+        'M*': 2.07,
+        'M*_uperr': 0.11,
+        'M*_lowerr': -0.11,
+        'M*_ref': 'Hellier et al. 2019',
+        'LOGG*': 4.31,
+        'LOGG*_uperr': 0.04,
+        'LOGG*_lowerr': -0.04,
+        'LOGG*_ref': 'Hellier et al. 2019',
+        'FEH*': 0.21,
+        'FEH*_uperr': 0.16,
+        'FEH*_lowerr': -0.16,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Hellier et al. 2019',
+        'T*': 9360,
+        'T*_uperr': 150,
+        'T*_lowerr': -150,
+        'T*_ref': 'Hellier et al. 2019',
+    }
+    overwrite['HAT-P-14'] = {
+        'R*': 1.591,
+        'R*_uperr': 0.057,
+        'R*_lowerr': -0.057,
+        'R*_ref': 'Southworth et al. 2012',
+        'M*': 1.418,
+        'M*_uperr': 0.054,
+        'M*_lowerr': -0.054,
+        'M*_ref': 'Southworth et al. 2012',
+        'LOGG*': 4.187,
+        'LOGG*_uperr': 0.025,
+        'LOGG*_lowerr': -0.025,
+        'LOGG*_ref': 'Southworth et al. 2012',
+        'FEH*': 0.11,
+        'FEH*_uperr': 0.08,
+        'FEH*_lowerr': -0.08,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Southworth et al. 2012',
+        'T*': 6600,
+        'T*_uperr': 90,
+        'T*_lowerr': -90,
+        'T*_ref': 'Southworth et al. 2012',
+    }
+    overwrite['HAT-P-30'] = {
+        'R*': 1.31,
+        'R*_uperr': 0.13,
+        'R*_lowerr': -0.13,
+        'R*_ref': 'Stassun et al. 2017',
+        'M*': 1.55,
+        'M*_uperr': 0.51,
+        'M*_lowerr': -0.51,
+        'M*_ref': 'Stassun et al. 2017',
+        'LOGG*': 4.36,
+        'LOGG*_uperr': 0.30,
+        'LOGG*_lowerr': -0.30,
+        'LOGG*_ref': 'Stassun et al. 2017',
+        'FEH*': 0.13,
+        'FEH*_uperr': 0.08,
+        'FEH*_lowerr': -0.08,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Stassun et al. 2017',
+        'T*': 6304,
+        'T*_uperr': 88,
+        'T*_lowerr': -88,
+        'T*_ref': 'Stassun et al. 2017',
+    }
+    overwrite['HAT-P-1'] = {
+        'R*': 1.174,
+        'R*_uperr': 0.026,
+        'R*_lowerr': -0.027,
+        'R*_ref': 'Nikolov et al. 2014',
+        'M*': 1.151,
+        'M*_uperr': 0.052,
+        'M*_lowerr': -0.051,
+        'M*_ref': 'Nikolov et al. 2014',
+        'LOGG*': 4.359,
+        'LOGG*_uperr': 0.014,
+        'LOGG*_lowerr': -0.014,
+        'LOGG*_ref': 'Nikolov et al. 2014',
+        'FEH*': 0.130,
+        'FEH*_uperr': 0.008,
+        'FEH*_lowerr': -0.008,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Nikolov et al. 2014',
+        'T*': 5980,
+        'T*_uperr': 49,
+        'T*_lowerr': -49,
+        'T*_ref': 'Nikolov et al. 2014',
+    }
+    # OK this check verifies that log-g* matches M*,R* for these 4 star updates
+    #  but the published HAT-P-1 uncertainties are about half those derived
+    #  HAT-P-14 ones are significantly smaller too.
+    #  could be that M* uncertainty was hiked up for those
+    # Stassun (HAT-P-30) is inconsistent logg by 8%. And uncertainties 2x too large
+    #  let's keep the derived logg for that one
+    # for starname in ['WASP-178', 'HAT-P-1', 'HAT-P-14', 'HAT-P-30']:
+    for starname in ['HAT-P-30']:
+        # print('overwrite before', overwrite[starname])
+        system_info = copy.deepcopy(overwrite[starname])
+        (
+            logg_derived,
+            logg_lowerr_derived,
+            logg_uperr_derived,
+            logg_ref_derived,
+        ) = derive_LOGGstar_from_R_and_M(system_info)
+        overwrite[starname]['LOGG*'] = float(logg_derived[0])
+        overwrite[starname]['LOGG*_lowerr'] = float(logg_lowerr_derived[0])
+        overwrite[starname]['LOGG*_uperr'] = float(logg_uperr_derived[0])
+        overwrite[starname]['LOGG*_ref'] = logg_ref_derived[0]
+        # print('overwrite after', overwrite[starname])
+        # print()
 
     return overwrite
 

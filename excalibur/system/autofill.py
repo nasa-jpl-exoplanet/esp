@@ -796,6 +796,18 @@ def derive_LOGGstar_from_R_and_M(starInfo):
     LOGG_uperr_derived = []
     LOGG_ref_derived = []
 
+    # this allows for calls from overwrite, where the dictionary is filled with floats, not lists
+    if not isinstance(starInfo['R*'], list):
+        starInfo['R*'] = [starInfo['R*']]
+        starInfo['R*_lowerr'] = [starInfo['R*_lowerr']]
+        starInfo['R*_uperr'] = [starInfo['R*_uperr']]
+        starInfo['M*'] = [starInfo['M*']]
+        starInfo['M*_lowerr'] = [starInfo['M*_lowerr']]
+        starInfo['M*_uperr'] = [starInfo['M*_uperr']]
+        starInfo['LOGG*'] = ['']
+        starInfo['LOGG*_lowerr'] = ['']
+        starInfo['LOGG*_uperr'] = ['']
+
     for (
         R,
         Rerr1,
@@ -878,11 +890,6 @@ def derive_LOGGplanet_from_R_and_M(starInfo, planet_letter, verbose=False):
     logg_lowerr_derived = []
     logg_uperr_derived = []
     logg_ref_derived = []
-
-    # print()
-    # print(starInfo[planet_letter])
-    # print(starInfo[planet_letter].keys())
-    # print()
 
     # this allows for calls from overwrite, where the dictionary is filled with floats, not lists
     # print(starInfo[planet_letter]['rp'], type(starInfo[planet_letter]['rp']))
