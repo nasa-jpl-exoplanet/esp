@@ -31,7 +31,7 @@ def calculate_ariel_instrument(
     target,
     system_params,
     ancil_params,
-    runtime_params,
+    runtime,
     verbose=False,
 ):
     '''
@@ -40,9 +40,9 @@ def calculate_ariel_instrument(
     Uncertainty is for a single visit;
     number of observed transits is taken into account later
     '''
-    tier = runtime_params.tier
-    thorngren = runtime_params.thorngrenMassMetals
-    chachan = runtime_params.chachanMassMetals
+    tier = runtime['ariel_simspectrum_tier'].value()
+    thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
+    chachan = runtime['ariel_simspectrum_chachanMassMetals']
 
     planet_letter = target[-1]
 
@@ -168,17 +168,17 @@ def calculate_ariel_instrument(
 
 
 # ---------------------------- ---------------------------------------
-def load_arielrad_results(target, runtime_params):
+def load_arielrad_results(target, runtime):
     '''
     NEW 2026 VERSION WHERE EACH PLANET HAS ITS OWN ARIELRAD RESULTS FILE
     Load in the output from ArielRad - uncertainty as a function of wavelength
     Uncertainty is for a single visit;
     number of observed transits is taken into account later
     '''
-    tier = runtime_params.tier
-    # arielRad_version = runtime_params.arielRad  # not yet implemented
-    thorngren = runtime_params.thorngrenMassMetals
-    chachan = runtime_params.chachanMassMetals
+    tier = runtime['ariel_simspectrum_tier'].value()
+    # arielRad_version = runtime['ariel_simspectrum_arielRad'].value()  # not yet implemented
+    thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
+    chachan = runtime['ariel_simspectrum_chachanMassMetals']
 
     ariel_instrument = None
 
@@ -243,17 +243,17 @@ def load_arielrad_results(target, runtime_params):
 
 
 # ---------------------------- ---------------------------------------
-def load_ariel_instrument(target, runtime_params):
+def load_ariel_instrument(target, runtime):
     '''
     Load in the output from ArielRad - uncertainty as a function of wavelength
 
     Uncertainty is for a single visit;
     number of observed transits is taken into account later
     '''
-    tier = runtime_params.tier
-    arielRad_version = runtime_params.arielRad
-    thorngren = runtime_params.thorngrenMassMetals
-    chachan = runtime_params.chachanMassMetals
+    tier = runtime['ariel_simspectrum_tier'].value()
+    arielRad_version = runtime['ariel_simspectrum_arielRad'].value()
+    thorngren = runtime['ariel_simspectrum_thorngrenMassMetals']
+    chachan = runtime['ariel_simspectrum_chachanMassMetals']
 
     noise_model_dir = excalibur.context['data_dir'] + '/ariel/'
 

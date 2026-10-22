@@ -14,9 +14,13 @@ import dawgie.context
 
 import excalibur
 import excalibur.system.core as syscore
+import excalibur.data.coreview as datcvw
 import excalibur.util.time
 from excalibur.util import nerdclub
-from excalibur.data.jwst_photon_noise import read_jwst_noise_parameters, calculate_jwst_native_photon_noise
+from excalibur.data.jwst_photon_noise import (
+    read_jwst_noise_parameters,
+    calculate_jwst_native_photon_noise,
+)
 
 import lmfit as lm
 import matplotlib.pyplot as plt
@@ -143,11 +147,6 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
             for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
             if n.endswith('uncal')
         ]
-        # callocnames = [
-        #    (loc, n.split('_calints')[0])
-        #    for loc, n in zip(clc['LOC'], clc['ROOTNAME'])
-        #    if n.endswith('calints')
-        # ]
         if fastdev > 0:
             rawlocnames = rawlocnames[0:fastdev]
             pass
@@ -357,6 +356,13 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['data'][p]['ordt'] = ordt
                 out['data'][p]['ignore'] = ign
                 out['STATUS'].append(True)
+
+                fig = datcvw.timing(out['data'][p], title=p)
+                out['data'][p]['view'] = fig
+                if verbose:
+                    plt.show()
+                else:
+                    plt.close()
                 pass
             # ---------- ---------------------------------------------
             # -- SPITZER -- ------------------------------------------
@@ -586,20 +592,17 @@ def timing(force, ext, clc, out, fastdev=-1, verbose=False):
                 out['STATUS'].append(True)
                 pass
             # --------- ----------------------------------------------
-            if verbose:
-                log.warning('>-- Planet: %s', p)
-                log.warning('--< Transit: %s', str(out['data'][p]['transit']))
-                log.warning('--< Eclipse: %s', str(out['data'][p]['eclipse']))
-                log.warning(
-                    '--< Phase Curve: %s', str(out['data'][p]['phasecurve'])
-                )
-                pass
+            log.info('>-- Planet: %s', p)
+            log.info('--< Transit: %s', str(out['data'][p]['transit']))
+            log.info('--< Eclipse: %s', str(out['data'][p]['eclipse']))
+            log.info('--< Phase Curve: %s', str(out['data'][p]['phasecurve']))
             if (
                 out['data'][p]['transit']
                 or out['data'][p]['eclipse']
                 or out['data'][p]['phasecurve']
             ):
                 chunked = True
+                pass
             pass
         pass
     return chunked
@@ -699,6 +702,7 @@ def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
         )  # [s]
         xfit = deltat * np.arange(len(dramps))
         # LINFIT
+        # GMR: SOME DATASETS ONLY HAVE 2 FRAMES
         fitresult = np.polyfit(xfit, np.array(dramps), 1, cov=True, full=False)
         raws['alldexp'][i] = fitresult[0][0].reshape(f0shape)
         raws['allerr'].append(np.sqrt(abs(fitresult[1][0, 0].reshape(f0shape))))
@@ -823,13 +827,17 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, tim, ext, out, verbose=False):
+def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''
     dbs = os.path.join(dawgie.context.data_dbs, 'mast')
     rawloc = tim['data']['RAWLOC']
     calloc = tim['data']['CALLOC']
+    if debug:
+        rawloc = rawloc[:1]
+        calloc = calloc[:1]
+        pass
     iexist = {}
     # DATASET
     rawdata = readfitsdata(rawloc, dbs, iexist, raws=True, verbose=verbose)
@@ -847,10 +855,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # 1 - Data quality initialization
     alldq = np.array(rawdata['alldq'])
     for i, _ in enumerate(alldq):
-        if alldq[i].shape != caldata['alldq'][i].shape:
-            # Play with allstartpix
-            pass
-        else:
+        if not alldq[i].shape != caldata['alldq'][i].shape:
+            # Some pixels are removed in calints so we should not go there
             alldq[i] = ~np.bool(caldata['alldq'][i])
             pass
         pass
@@ -881,8 +887,10 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     allrexp = np.array(rawdata['alldexp'])
     alldq = np.array(rawdata['alldq'])
     allscores['3 NL'] = getscore(allrexp * alldq)
-    # 2.3 - Persistence correction [IM]
-    # 2.4 - Dark subtraction [IM]
+    # 2.3 - Persistence correction
+    # Handled by IM
+    # 2.4 - Dark subtraction
+    # Handled by IM
     # 3 - Reference pixel correction [Exposure Low Freq Noise]
     allrexp = lfnoise(allrexp, alldq, verbose=verbose)
     allscores['4 LFN'] = getscore(allrexp * alldq)
@@ -900,7 +908,7 @@ def jwstcal(fin, tim, ext, out, verbose=False):
             fontsize=16,
             rotation=45,
         )
-        plt.yticks(fontsize=16)
+        plt.yticks(fontsize=18)
         plt.ylabel('DN', fontsize=20)
         plt.show()
         pass
@@ -981,12 +989,29 @@ def jwstcal(fin, tim, ext, out, verbose=False):
             for w, s, m in zip(all1dwave, all1d, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
+            plt.ylim(
+                np.nanpercentile(all1d, 2.5), np.nanpercentile(all1d, 97.5)
+            )
             plt.figure(figsize=(12, 9))
             for w, s, m in zip(all1dwave, clean1D, all1dvalid):
                 plt.plot(w[m], s[m])
                 pass
+            plt.ylim(
+                np.nanpercentile(clean1D, 2.5), np.nanpercentile(clean1D, 97.5)
+            )
             plt.show()
             pass
+
+        # --< GMR: NEW IM
+        for det in np.unique(alldet):
+            seldet = np.array([det in d for d in alldet])
+            trc = np.nanmedian(allrexp[seldet], axis=0)
+            pass
+        trcx = np.nansum(trc, axis=0)
+        trcy = np.nansum(trc, axis=1)
+        nanmask = ~np.isfinite(trc)
+        _ = (trcx, trcy, nanmask)
+        # >--
 
         out['STATUS'].append(True)
         out['data']['DET'] = alldet
@@ -1002,12 +1027,11 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         out['data']['EXPFLAG'] = alldq
         pass
         ## JWST photon noise - each integration and channel
-        calibrated_paths = [
-            os.path.join(dbs, location)
-            for location in calloc
-        ]
+        calibrated_paths = [os.path.join(dbs, location) for location in calloc]
         inttimes, gains = read_jwst_noise_parameters(calibrated_paths)
-        native_photon_noise = calculate_jwst_native_photon_noise(np.asarray(all1d),alldet,np.asarray(all1dvalid),inttimes,gains)
+        native_photon_noise = calculate_jwst_native_photon_noise(
+            np.asarray(all1d), alldet, np.asarray(all1dvalid), inttimes, gains
+        )
         out['data']['PHOTON_NOISE'] = native_photon_noise
     # I know it is useless but I feel bad
     for it in iexist.values():
@@ -1045,10 +1069,13 @@ def cleanspec(all1d, all1dvalid, alldet, verbose=False):
             fig, ax = plt.subplots(figsize=(12, 9))
             cax = ax.imshow(detset, aspect='auto', interpolation='none')
             plt.title(x, fontsize=20)
-            plt.xticks(fontsize=16)
-            plt.yticks(fontsize=16)
+            plt.xticks(fontsize=18)
+            plt.yticks(fontsize=18)
+            cax.set_clim(
+                np.nanpercentile(detset, 2.5), np.nanpercentile(detset, 97.5)
+            )
             cbar = fig.colorbar(cax)
-            cbar.ax.tick_params(labelsize=16)
+            cbar.ax.tick_params(labelsize=18)
             plt.show()
             pass
         pass

@@ -9,6 +9,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from excalibur.util.plotters import add_scale_height_labels, save_plot_tosv
+import logging
+
+log = logging.getLogger(__name__)
 
 # ------------------------- ------------------------------------------
 
@@ -106,8 +109,12 @@ def plot_spectrum(
     baseline = 666
     maxdepth = -666
     for imole, molecule in enumerate(molecules):
-        baseline = np.min(np.append(baseline, fluxDepth_by_molecule[molecule]))
-        maxdepth = np.max(np.append(maxdepth, fluxDepth_by_molecule[molecule]))
+        baseline = np.nanmin(
+            np.append(baseline, fluxDepth_by_molecule[molecule])
+        )
+        maxdepth = np.nanmax(
+            np.append(maxdepth, fluxDepth_by_molecule[molecule])
+        )
     negligible_molecules = ''
     negligible_molecules_more = ''
     Nnegligible = 0
@@ -148,28 +155,31 @@ def plot_spectrum(
                 label=molecule,
             )
         extra = (maxdepth - baseline) / 13
-        plt.ylim((baseline - extra, maxdepth + extra))
-        yrange = plt.ylim()
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
-            'negligible contribution:',
-            fontsize=8,
-        )
-        # there's formating problems when too many negligible molecules
-        # better to split it up over two lines
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
-            negligible_molecules,
-            fontsize=8,
-        )
-        plt.text(
-            negligibletextloc,
-            yrange[0] + (yrange[1] - yrange[0]) * (-0.23),
-            negligible_molecules_more,
-            fontsize=8,
-        )
+        if ~np.isfinite(extra):
+            log.error('NaN/Inf in plot_spectrum: %s', target)
+        else:
+            plt.ylim((baseline - extra, maxdepth + extra))
+            yrange = plt.ylim()
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.13),
+                'negligible contribution:',
+                fontsize=8,
+            )
+            # there's formating problems when too many negligible molecules
+            # better to split it up over two lines
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.18),
+                negligible_molecules,
+                fontsize=8,
+            )
+            plt.text(
+                negligibletextloc,
+                yrange[0] + (yrange[1] - yrange[0]) * (-0.23),
+                negligible_molecules_more,
+                fontsize=8,
+            )
     if plottype == 'Ariel':
         plt.xlim(0.0, 8.0)
     else:
@@ -446,6 +456,7 @@ def plot_vertical_profiles(
     planet_letter,
     molecule_profiles,
     pressure,
+    temperature=None,
     verbose=False,
 ):
     colorlist = [
@@ -458,20 +469,23 @@ def plot_vertical_profiles(
     ]
     stylelist = ['-'] * 6 + ['--'] * 6 + [':'] * 6 + ['-.'] * 6
     # set mixing ratio boundaries for main molecules, trace molecules, and absolute cutoff
-    floor_ppm = 1e-12
-    split_ppm = 1e-6
+    floor_ppm = 1e-10
+    # split_ppm = 1e-6
     xmax_ppm = 1e6
 
-    myfig, (ax_main, ax_trace) = plt.subplots(
-        2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}, figsize=(8, 4)
+    # myfig, (ax_main, ax_trace) = plt.subplots(
+    #    2, 1, sharey=True, gridspec_kw={"height_ratios": [3, 1]}, figsize=(8, 4)
+    # )
+    myfig, (ax_chem, ax_T) = plt.subplots(
+        1, 2, sharey=True, gridspec_kw={"width_ratios": [3, 2]}, figsize=(10, 4)
     )
     for imole, molecule in enumerate(molecule_profiles.keys()):
         x = 10 ** molecule_profiles[molecule]
         x = x.astype(float)
         # main molecules, shown in main plot
         x_main = x.copy()
-        x_main[(x_main < split_ppm)] = np.nan
-        ax_main.plot(
+        # x_main[(x_main < split_ppm)] = np.nan
+        ax_chem.plot(
             x_main,
             pressure,
             label=molecule,
@@ -479,34 +493,50 @@ def plot_vertical_profiles(
             ls=stylelist[imole % len(stylelist)],
         )
         # trace molecules shown in smaller snippet
-        x_trace = x.copy()
-        x_trace[(x_trace >= split_ppm) | (x_trace < floor_ppm)] = np.nan
-        ax_trace.plot(
-            x_trace,
-            pressure,
-            color=colorlist[imole % len(colorlist)],
-            ls=stylelist[imole % len(stylelist)],
-        )
-    ax_main.set_yscale('log')
-    ax_trace.set_yscale('log')
-    ax_main.set_xscale('log')
-    ax_trace.set_xscale('log')
-    ax_main.set_xlim(split_ppm, xmax_ppm)
-    ax_trace.set_xlim(floor_ppm, split_ppm)
+        # x_trace = x.copy()
+        # x_trace[(x_trace >= split_ppm) | (x_trace < floor_ppm)] = np.nan
+        # ax_chem.plot(
+        #    x_trace,
+        #    pressure,
+        #    color=colorlist[imole % len(colorlist)],
+        #    ls=stylelist[imole % len(stylelist)],
+        # )
+    # print('T profile!!', temperature)
+    if temperature is not None:
+        # print('len check',temperature.shape, pressure.shape)
+        if temperature.shape != pressure.shape:
+            log.error('Wrong length for the temperature array!')
+        else:
+            ax_T.plot(
+                temperature,
+                pressure,
+                color='k',
+            )
+    ax_chem.set_yscale('log')
+    ax_T.set_yscale('log')
+    ax_chem.set_xscale('log')
+    # ax_T.set_xscale('log')
+    ax_chem.set_xlim(floor_ppm, xmax_ppm)
+    # ax_T.set_xlim(floor_ppm, split_ppm)
     pmin = float(np.nanmin(pressure))
     pmax = float(np.nanmax(pressure))
-    ax_main.set_ylim(pmax, pmin)
+    ax_chem.set_ylim(pmax, pmin)
     # 2 column legend if more than 10 molecules
     if len(molecule_profiles.keys()) > 10:
         ncols = 2
     else:
         ncols = 1
     # ax_main.legend(bbox_to_anchor=(1.0, 1.0), ncol=ncols)
-    ax_main.legend(loc='center left', bbox_to_anchor=(1.16, 0.48), ncol=ncols)
-    ax_trace.set_xlabel('Volume Mixing Ratio [ppm]', fontsize=14)
-    ax_main.set_ylabel('Pressure [bar]', fontsize=14)
-    ax_main.set_title(
-        'Vertical Chemical Profile : ' + target + ' ' + planet_letter,
+    # ax_chem.legend(loc='center left', bbox_to_anchor=(1.16, 0.48), ncol=ncols)
+    ax_chem.legend(loc='center left', bbox_to_anchor=(1.05, 0.48), ncol=ncols)
+    ax_T.set_xlabel('T [K]', fontsize=14)
+    ax_chem.set_ylabel('Pressure [bar]', fontsize=14)
+    ax_chem.set_title(
+        'Chemical Profile : ' + target + ' ' + planet_letter,
+        fontsize=16,
+    )
+    ax_T.set_title(
+        'Temperature Profile',
         fontsize=16,
     )
     plt.tight_layout()

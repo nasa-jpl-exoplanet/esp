@@ -8,6 +8,7 @@ import copy
 from importlib import import_module as fetch
 from excalibur.system.autofill import (
     derive_LOGGplanet_from_R_and_M,
+    derive_LOGGstar_from_R_and_M,
     derive_Teqplanet_from_Lstar_and_sma,
 )
 
@@ -59,84 +60,7 @@ def ppar():
     }
     '''
     sscmks = fetch('excalibur.system.core').ssconstants(cgs=True)
-
     overwrite = {}
-    # this one is somewhat higher than bonomo (0.6).  drop here ig
-    # overwrite['GJ 9827'] = {
-    #    'R*':0.637, 'R*_uperr':0.063, 'R*_lowerr':-0.063,
-    #    'R*_ref':'Prieto-Arranz et al. 2018',
-    # }
-    overwrite['HAT-P-11'] = {
-        #  archive gives Yee 2018 but it's rounded to 0.68 for some reason
-        'R*': 0.683,
-        'R*_uperr': 0.009,
-        'R*_lowerr': -0.009,
-        'R*_ref': 'Yee et al. 2018',
-        # Yee 2018 table 2 doesn't seem to have any error bars.  archive has 7e-5; we have 3e-7
-        #  there's no error bar on t0 either. strange.  oh it says that both come from Huber 2017
-        'b': {
-            'period': 4.887802443,
-            'period_uperr': 3e-7,
-            'period_lowerr': -3e-7,
-            'period_ref': 'Yee et al. 2018',
-        },
-    }
-    # overwrite['HAT-P-17'] = {
-    # stassun 2017 default is similar (0.87 vs 0.838).  let's drop this one
-    # 'R*':0.838, 'R*_uperr':0.021, 'R*_lowerr':-0.021,
-    # 'R*_ref':'Howard et al. 2012',
-    # 'b':{
-    # stassun 2017 inc is the same, but with shifted errors (+-0.15 instead of +0.2-0.1)
-    # 'inc':89.2,
-    # 'inc_uperr':0.2, 'inc_lowerr':-0.1,
-    # 'inc_ref':'Howard et al. 2012',
-    # NOT SURE ABOUT THIS ONE.  currently we use Kokuri 2023.  should be a lot better
-    # 't0':2454801.16945,
-    # 't0_uperr':0.0002, 't0_lowerr':-0.0002,
-    # 't0_ref':'Howard et al. 2012',
-    # this sma doesn't at all match the one derived from P,M* (0.0926).  drop this one
-    # 'sma':0.06,
-    # 'sma_uperr':0.0014, 'sma_lowerr':-0.0014,
-    # 'sma_ref':'Howard et al. 2012 + high ecc',
-    # this is the same as stassun 2017, more or less (10.33852)
-    # 'period':10.338523,
-    # 'period_ref':'Howard et al. 2012'}
-    # }
-    # drop the sma fill in; better to use a consistently derived number
-    # also drop t0; the default is now a newer kokori (2023)
-    # overwrite['HAT-P-3'] = {
-    #    'b':{'sma':0.03878,  # this is 0.0406 when derived from P,M* (the default)
-    #         'sma_uperr':0.00065, 'sma_lowerr':-0.00065,
-    #         'sma_ref':'Kokori et al. 2021',
-    #         't0':2455694.72623,
-    #         't0_uperr':8e-05, 't0_lowerr':-8e-05,
-    #         't0_ref':'Kokori et al. 2021'}
-    # }
-    # this R* is very different from stassun (2.05); keep the self-consistent one
-    #  same for sma
-    # overwrite['HAT-P-41'] = {
-    #     'R*':1.683, 'R*_uperr':0.058, 'R*_lowerr':-0.036,
-    #     'R*_ref':'Hartman et al. 2012',
-    #     'b':{'sma':0.04258,
-    #          'sma_uperr':0.00047, 'sma_lowerr':-0.00048,
-    #          'sma_ref':'Kokori et al. 2021'}
-    # }
-    # default (barros 2017) has similar values. no real reason to set here by hand
-    # overwrite['HD 106315'] = {
-    #     'R*':1.18, 'R*_uperr':0.11, 'R*_lowerr':-0.11,
-    #     'R*_ref':'Crossfield et al. 2017',
-    #     'T*':6290, 'T*_uperr':60, 'T*_lowerr':-60,
-    #     'T*_ref':'Crossfield et al. 2017',
-    #     'FEH*':-0.24, 'FEH*_uperr':0.04, 'FEH*_lowerr':-0.04,
-    #     'FEH*_ref':'Crossfield et al. 2017',
-    #     'LOGG*':4.29, 'LOGG*_uperr':0.07, 'LOGG*_lowerr':-0.07,
-    #     'LOGG*_ref':'Crossfield et al. 2017',
-    # }
-    # let's keep the derived value of 0.0831
-    # overwrite['HD 97658'] = {
-    #    'b':{'sma':0.0805,
-    #         'sma_uperr':0.001, 'sma_lowerr':-0.001,
-    #         'sma_ref':'ExoFOP-TESS TOI'}}
 
     overwrite['K2-33'] = {
         'FEH*': 0.0,
@@ -145,93 +69,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Mann et al. 2016',
     }
-
-    # default (becker 2019) has similar values. no real reason to set here by hand
-    #  hmm, the new one is missing Rp though. strange
-    # overwrite['K2-93'] = {
-    #     'R*':1.4, 'R*_uperr':0.19, 'R*_lowerr':-0.19,
-    #     'R*_ref':'Vanderburg et al. 2016',
-    #     'T*':6199, 'T*_uperr':50, 'T*_lowerr':-50,
-    #     'T*_ref':'Vanderburg et al. 2016',
-    #     'FEH*':-0.11, 'FEH*_uperr':0.08, 'FEH*_lowerr':-0.08,
-    #     'FEH*_ref':'Vanderburg et al. 2016',
-    #     'LOGG*':4.18, 'LOGG*_uperr':0.1, 'LOGG*_lowerr':-0.1,
-    #     'LOGG*_ref':'Vanderburg et al. 2016',
-    #     'b':{'inc':88.4,
-    #          'inc_uperr':1.6, 'inc_lowerr':-1.6,
-    #          'inc_ref':'Vanderburg et al. 2016',
-    #          't0':2457152.2844,
-    #          't0_uperr':0.0021, 't0_lowerr':-0.0021,
-    #          't0_ref':'Vanderburg et al. 2016',
-    #          'sma':0.12695775622426692,
-    #          'sma_uperr':0.0029, 'sma_lowerr':-0.0029,
-    #          'sma_ref':'Vanderburg et al. 2016',
-    #          'ecc':0,
-    #          'ecc_ref':'Vanderburg et al. 2016',
-    #          'rp':0.2561240978011526,
-    #          'rp_ref':'Vanderburg et al. 2016',
-    #          'period':15.5712,
-    #          'period_ref':'Vanderburg et al. 2016',
-    # our assumed M-R relation gives 0.03103
-    # 'mass':0.0258,
-    # 'mass_uperr':0.0110,
-    # 'mass_lowerr':-0.0077,
-    # 'mass_ref':'Pearson 2019',
-    # 'mass_units':'Jupiter mass',
-    # 'logg':2.9791,
-    # 'logg_lowerr':-0.1539, 'logg_uperr':0.1539,
-    # 'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #          }}
-    # default (bonomo 2023) has similar values. mostly identical in fact
-    # overwrite['K2-96'] = {
-    #     'R*':0.872, 'R*_uperr':0.057, 'R*_lowerr':-0.057,
-    #     'R*_ref':'Christiansen et al. 2017',
-    #     'T*':5261, 'T*_uperr':60, 'T*_lowerr':-60,
-    #     'T*_ref':'Christiansen et al. 2017',
-    #     'FEH*':0.04, 'FEH*_uperr':0.05, 'FEH*_lowerr':-0.05,
-    #     'FEH*_ref':'Christiansen et al. 2017',
-    #     'LOGG*':4.47, 'LOGG*_uperr':0.05, 'LOGG*_lowerr':-0.05,
-    #     'LOGG*_ref':'Christiansen et al. 2017',
-    #     'b':{'inc':83.4,
-    #          'inc_uperr':4.6, 'inc_lowerr':-7.7,
-    #          'inc_ref':'Christiansen et al. 2017',
-    #          't0':2457394.37454,
-    #          't0_uperr':0.00043, 't0_lowerr':-0.00043,
-    #          't0_ref':'Christiansen et al. 2017',
-    #          'sma':0.01815,
-    #          'sma_uperr':0.00023, 'sma_lowerr':-0.00023,
-    #          'sma_ref':'Christiansen et al. 2017',
-    #          'ecc':0,
-    #          'ecc_ref':'Christiansen et al. 2017',
-    #          'rp':0.152,
-    #          'rp_ref':'Christiansen et al. 2017',
-    #          'period':0.959641,
-    #          'period_ref':'Christiansen et al. 2017',
-    #          'logg':3.22900042686,
-    #          'logg_lowerr':0.3, 'logg_uperr':-0.3,
-    #          'logg_ref':'System Prior Auto Fill', 'logg_units':'log10[cm.s-2]'},
-    #     'c':{'inc':89.30,
-    #          'inc_uperr':0.5, 'inc_lowerr':-0.96,
-    #          'inc_ref':'Christiansen et al. 2017',
-    #          't0':2457394.9788,
-    #          't0_uperr':0.0012, 't0_lowerr':-0.0012,
-    #          't0_ref':'Christiansen et al. 2017',
-    #          'sma':0.1795,
-    #          'sma_uperr':0.0023, 'sma_lowerr':-0.0023,
-    #          'sma_ref':'Christiansen et al. 2017',
-    #          'ecc':0,
-    #          'ecc_ref':'Christiansen et al. 2017',
-    #          'rp':0.269,
-    #          'rp_ref':'Christiansen et al. 2017',
-    #          'period':29.8454,
-    #          'period_ref':'Christiansen et al. 2017',
-    #          'logg':3.02377443746,
-    #          'logg_lowerr':0.3, 'logg_uperr':-0.3,
-    #          'logg_ref':'System Prior Auto Fill', 'logg_units':'log10[cm.s-2]'}}
     overwrite['KELT-1'] = {
-        # default FEH is now 0.131 (from TICv8)
-        # 'FEH*':0.009, 'FEH*_uperr':0.073, 'FEH*_lowerr':-0.073,
-        # 'FEH*_units':'[dex]', 'FEH*_ref':'Siverd et al. 2012',
         'b': {
             # hmm, these values are off a bit, even though its the same reference
             # might as well stick with the originals
@@ -291,40 +129,8 @@ def ppar():
             # 'period_ref':'Doyle et al. 2011'
         },
     }
-    # overwrite['Kepler-1625'] = {
-    # logg is very similar to our derived result
-    # 'b':{'logg':3.0132,
-    #     'logg_uperr':0.15, 'logg_lowerr':-0.15,
-    #     'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    # this sma would be a bit higher than our derived value (0.8407)
-    #     'sma':0.898,
-    #     'sma_uperr':0.1,
-    #     'sma_lowerr':-0.1,
-    #     'sma_ref':'Morton et al. 2016'}}
-    # might as well use default Chakrabarty & Sengupta 2019 rather than two refs here
     overwrite['WASP-12'] = {
-        #     'R*':1.59, 'R*_uperr':0.18, 'R*_lowerr':-0.18,
-        #     'R*_ref':'Stassun et al. 2017',
-        #     'T*':6300, 'T*_uperr':150, 'T*_lowerr':-150,
-        #     'T*_ref':'Stassun et al. 2017',
-        # same FEH as ozul emden 2017 (but larger uncertainty here)
-        # 'FEH*':0.3, 'FEH*_uperr':0.14, 'FEH*_lowerr':-0.17,
-        # 'FEH*_ref':'Stassun et al. 2017',
-        #     'LOGG*':4.38, 'LOGG*_uperr':0.1, 'LOGG*_lowerr':-0.1,
-        #     'LOGG*_ref':'Stassun et al. 2017',
         'b': {
-            #         'inc':82.5,
-            #         'inc_uperr':0.75, 'inc_lowerr':-0.75,
-            #         'inc_ref':'Stassun et al. 2017',
-            #         't0':2456176.6683,
-            #         't0_uperr':0.000078, 't0_lowerr':-0.000078,
-            #         't0_ref':'Collins et al. 2017',
-            #         'sma':0.0234,
-            #         'sma_uperr':0.00056, 'sma_lowerr':-0.0005,
-            #         'sma_ref':'Collins et al. 2017',
-            #         'period':1.09142245,
-            #         'period_ref':'Stassun et al. 2017',
-            # limb darkening
             "Spitzer_IRAC1_subarray": [
                 0.36885966190119,
                 -0.148367404490232,
@@ -339,15 +145,7 @@ def ppar():
             ],
         }
     }
-    # this is significantly different from Mancini 2017 (0.01) but no reason to think it's better
-    # overwrite['WASP-39'] = {
-    #    'FEH*':-0.10, 'FEH*_uperr':0.1, 'FEH*_lowerr':-0.1,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Faedi et al. 2011',
-    #    }
     overwrite['WASP-43'] = {
-        # FEH is exactly same as bonomo 2017 default
-        # 'FEH*':-0.05, 'FEH*_uperr':0.17, 'FEH*_lowerr':-0.17,
-        # 'FEH*_units':'[dex]', 'FEH*_ref':'Hellier et al. 2011',
         "b": {
             "Spitzer_IRAC1_subarray": [
                 0.5214015151262713,
@@ -363,42 +161,6 @@ def ppar():
             ],
         }
     }
-    # overwrite['WASP-6'] = {
-    # drop t0. there's a newer Kokori (2023) as default
-    #     'b':{'t0':2455591.28967,
-    #          't0_uperr':7e-05, 't0_lowerr':-7e-05,
-    #          't0_ref':'Kokori et al. 2021',
-    # use derived sma as default
-    # 'sma':0.04217,
-    # 'sma_uperr':0.00079,
-    # 'sma_lowerr':-0.0012,
-    # 'sma_ref':'Kokori et al. 2021'}
-    # }
-    # drop this one; it's the same as the default
-    # overwrite['XO-2'] = {
-    #     'b':{'t0':2454508.73829,
-    #          't0_uperr':0.00014, 't0_lowerr':-0.00016,
-    #          't0_ref':'Crouzet et al. 2012'}
-    # }
-    # overwrite['XO-3'] = {
-    #     'b':{
-    # inclination is quite different from stassun 2017 (79.32)
-    #  seems best to keep a value that is consistent with the other system params
-    # 'inc': 84.20,
-    # 'inc_uperr':0.54,
-    # 'inc_lowerr':-0.54,
-    # 'inc_ref':'Bonomo et al. 2017',
-    # omega is similar to bonomo 2017 (349.35)
-    # 'omega':347,
-    # 'omega_lowerr':-3,
-    # 'omega_uperr':3,
-    # 'omega_ref':'Wong et al. 2014',
-    # ecc is the same as the current value, but errors here much smaller, and ref missing
-    # 'ecc':0.29,
-    # 'ecc_lowerr':-0.01,
-    # 'ecc_uperr':0.01,
-    #    }
-    # }
     overwrite['HAT-P-23'] = {
         'b': {
             "Spitzer_IRAC1_subarray": [
@@ -447,233 +209,6 @@ def ppar():
             ],
         }
     }
-    # barsato 2019 is about the same, but improved precision
-    # overwrite['Kepler-9'] = {
-    #     'b':{
-    #        'mass':0.137,
-    #        'mass_uperr':0.008,
-    #        'mass_lowerr':-0.01,
-    #        'mass_ref':'Hadden & Lithwick et al. 2017',
-    #        'mass_units':'Jupiter mass',
-    #    }}
-    # overwrite['LHS 3844'] = {
-    #    'FEH*':0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':"Kyle's best guess",
-    #    # this mass is somewhat higher than our assumed M-R relation (0.0063)
-    #    # 'b':{
-    #    #    'mass':0.0118,
-    #    #    'mass_uperr':0.0051,
-    #    #    'mass_lowerr':-0.0036,
-    #    #    'mass_ref':'Pearson 2019',
-    #    #    'mass_units':'Jupiter mass',
-    #    #    'logg':3.323,
-    #    #    'logg_lowerr':-0.15, 'logg_uperr':0.16,
-    #    #    'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    # }
-    # }
-    # real masses now from Mayo 2023 (0.01353, 0.05695, 0.00944)
-    # omega is quite different (124 vs 24.6) but it's best to stay consistent with Mayo
-    #  and both have large uncertainty anyway.  more or less junk
-    # overwrite['K2-136'] = {
-    #    'b':{
-    #        'mass':0.0105,
-    #        'mass_uperr':0.0045,
-    #        'mass_lowerr':-0.0032,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.513,
-    #        'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    },
-    #    'c':{
-    #        'mass':0.0272,
-    #        'mass_uperr':0.0116,
-    #        'mass_lowerr':-0.0081,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':2.9791,
-    #        'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    #        'omega':24.6,
-    #        'omega_lowerr':-74.0,
-    #        'omega_uperr':141.0,
-    #        'omega_ref':"Mann et al. 2017"
-    #    },
-    #    'd':{
-    #        'mass':0.0130,
-    #        'mass_uperr':0.0056,
-    #        'mass_lowerr':-0.0039,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.2749,
-    #        'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
-    # overwrite['K2-25'] = {
-    #    'b':{
-    # there is a real mass measurement now; it's a lot lower (0.07709)  stefansson 2020
-    # 'mass':0.0335,
-    # 'mass_uperr':0.0143,
-    # 'mass_lowerr':-0.0100,
-    # 'mass_ref':'Pearson 2019',
-    # 'mass_units':'Jupiter mass',
-    # 'logg':2.948,
-    # 'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    # 'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    # sma is similar to stefansson
-    # 'sma':0.029535117574370662,
-    # 'sma_uperr':0.0021173577439160705,
-    # 'sma_lowerr':-0.0021173577439160705,
-    # 'sma_ref':'Mann et al. 2016',
-    # omega is different now (120+12-14) (from stefansson 2020)
-    # 'omega':62,
-    # 'omega_lowerr':-39,
-    # 'omega_uperr':44,
-    # 'omega_ref':"Mann et al. 2016"
-    #    }}
-    # our assumed M-R relation gives 0.0310
-    # overwrite['K2-124'] = {
-    #     'b':{
-    #         'mass':0.0259,
-    #         'mass_uperr':0.0110,
-    #         'mass_lowerr':-0.0077,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':2.9791,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.0205
-    # overwrite['K2-167'] = {
-    #     'b':{
-    #         'mass':0.0246,
-    #         'mass_uperr':0.0105,
-    #         'mass_lowerr':-0.0074,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':2.9871,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # overwrite['K2-19'] = {
-    # there are real mass measurements now by petigura 2020 (0.102,0.034,0.031) very different now
-    # 'b':{
-    # 'mass':0.2554,
-    # 'mass_uperr':0.109,
-    # 'mass_lowerr':-0.0764,
-    # 'mass_ref':'Pearson 2019',
-    # 'mass_units':'Jupiter mass',
-    # 'logg':3.1228,
-    # 'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    # 'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    # there's a newer one now Nespral 2017. 271-12.  quite different but not much effect
-    # 'omega':179,
-    # 'omega_lowerr':-52,
-    # 'omega_uperr':52,
-    # 'omega_ref':"Barros et al. 2015"
-    # },
-    # 'c':{
-    # 'mass':0.0683,
-    # 'mass_uperr':0.0292,
-    # 'mass_lowerr':-0.0204,
-    # 'mass_ref':'Pearson 2019',
-    # 'mass_units':'Jupiter mass',
-    # 'logg':2.9542,
-    # 'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    # 'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    # },
-    # 'd':{
-    # 'mass':0.011,
-    # 'mass_uperr':0.0047,
-    # 'mass_lowerr':-0.0033,
-    # 'mass_ref':'Pearson 2019',
-    # 'mass_units':'Jupiter mass',
-    # 'logg':3.4207,
-    # 'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    # 'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    # }}
-    # our assumed M-R relation gives 0.0133,0.0236
-    # overwrite['K2-21'] = {
-    #     'b':{
-    #         'mass':0.0153,
-    #         'mass_uperr':0.0065,
-    #         'mass_lowerr':-0.0046,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.1488,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    #     },
-    #     'c':{
-    #         'mass':0.0210,
-    #         'mass_uperr':0.0089,
-    #         'mass_lowerr':-0.0063,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0235,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    #     }}
-    # our assumed M-R relation gives 0.0263
-    # overwrite['K2-212'] = {
-    #     'b':{
-    #         'mass':0.0213,
-    #         'mass_uperr':0.0091,
-    #         'mass_lowerr':-0.0064,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0195,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.0268
-    # overwrite['K2-26'] = {
-    #     'b':{
-    #         'mass':0.0230,
-    #         'mass_uperr':0.0098,
-    #         'mass_lowerr':-0.0069,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0014,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.0208
-    # overwrite['K2-28'] = {
-    #     'b':{
-    #         'mass':0.0193,
-    #         'mass_uperr':0.0082,
-    #         'mass_lowerr':-0.0058,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0487,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.2985 (quite a bit lower)
-    # overwrite['K2-289'] = {
-    #     'b':{
-    #         'mass':0.4283,
-    #         'mass_uperr':0.1824,
-    #         'mass_lowerr':-0.1279,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.2067,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 1
-    # overwrite['K2-52'] = {
-    #     'b':{
-    #         'mass':1.0821,
-    #         'mass_uperr':0.4619,
-    #         'mass_lowerr':-0.3237,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0168,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
     overwrite['K2-55'] = {
         'FEH*': 0,
         'FEH*_uperr': 0.25,
@@ -681,152 +216,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': "Kyle's best guess",
         # our assumed M-R relation gives 0.0497
-        # 'b':{
-        #     'mass':0.0539,
-        #     'mass_uperr':0.0230,
-        #     'mass_lowerr':-0.0161,
-        #     'mass_ref':'Pearson 2019',
-        #     'mass_units':'Jupiter mass',
-        #     'logg':2.9414,
-        #     'logg_lowerr':-0.15, 'logg_uperr':0.15,
-        #     'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'}
     }
-    # our assumed M-R relation gives 0.0270,0.0104,0.0116
-    # overwrite['K2-58'] = {
-    #     'b':{
-    #         'mass':0.0221,
-    #         'mass_uperr':0.0094,
-    #         'mass_lowerr':-0.0066,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0107,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     },
-    #     'c':{
-    #         'mass':0.0138,
-    #         'mass_uperr':0.0059,
-    #         'mass_lowerr':-0.0041,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.2137,
-    #         'logg_lowerr':-0.15, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     },
-    #     'd':{
-    #         'mass':0.0144,
-    #         'mass_uperr':0.0061,
-    #         'mass_lowerr':-0.0043,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.1854,
-    #         'logg_lowerr':-0.1540, 'logg_uperr':0.15,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.02895
-    # overwrite['K2-79'] = {
-    #     'b':{
-    #         'mass':0.0382,
-    #         'mass_uperr':0.0163,
-    #         'mass_lowerr':-0.0114,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':2.9409,
-    #         'logg_lowerr':-0.1541, 'logg_uperr':0.1541,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     }}
-    # our assumed M-R relation gives 0.180 (quite a bit lower)
-    # overwrite['K2-87'] = {
-    #    'b':{
-    #        'mass':0.2410,
-    #        'mass_uperr':0.1029,
-    #        'mass_lowerr':-0.0721,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.1135,
-    #        'logg_lowerr':-0.1544, 'logg_uperr':0.1544,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
-    # our assumed M-R relation gives 0.0197
-    # overwrite['K2-9'] = {
-    #    'b':{
-    #        'mass':0.0187,
-    #        'mass_uperr':0.008,
-    #        'mass_lowerr':-0.0056,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.0604,
-    #        'logg_lowerr':-0.1540, 'logg_uperr':0.1540,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
-    # our assumed M-R relation gives 0.0256,0.0063 (lower, especially c)
-    # overwrite['K2-90'] = {
-    #     'b':{
-    #         'mass':0.0222,
-    #         'mass_uperr':0.0094,
-    #         'mass_lowerr':-0.0066,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.0095,
-    #         'logg_lowerr':-0.1539, 'logg_uperr':0.1539,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #     },
-    #     'c':{
-    #         'mass':0.0119,
-    #         'mass_uperr':0.0051,
-    #         'mass_lowerr':-0.0036,
-    #         'mass_ref':'Pearson 2019',
-    #         'mass_units':'Jupiter mass',
-    #         'logg':3.3391,
-    #         'logg_lowerr':-0.1548, 'logg_uperr':0.1548,
-    #         'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]',
-    #     }}
-    # our assumed M-R relation gives 0.0389
-    # overwrite['K2-95'] = {
-    #    'b':{
-    #        'mass':0.0420,
-    #        'mass_uperr':0.0179,
-    #        'mass_lowerr':-0.0125,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':2.9385,
-    #        'logg_lowerr':-0.1541, 'logg_uperr':0.1541,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
-    # bonomo 2023 masses are somewhat larger (0.01564 and 0.03502)
-    # overwrite['K2-96'] = {
-    #    'b':{
-    #        'mass':0.0143,
-    #        'mass_uperr':0.0061,
-    #        'mass_lowerr':-0.0043,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.1884,
-    #        'logg_lowerr':-0.1543, 'logg_uperr':0.1543,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    },
-    #    'c':{
-    #        'mass':0.0252,
-    #        'mass_uperr':0.0107,
-    #        'mass_lowerr':-0.0075,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':2.9825,
-    #        'logg_lowerr':-0.1539, 'logg_uperr':0.1539,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
-    # Grunblatt 2018 default is somewhat lower than this (0.48)
-    # overwrite['K2-97'] = {
-    #    'b':{
-    #        'mass':0.6808,
-    #        'mass_uperr':0.2892,
-    #        'mass_lowerr':-0.2030,
-    #        'mass_ref':'Pearson 2019',
-    #        'mass_units':'Jupiter mass',
-    #        'logg':3.2746,
-    #        'logg_lowerr':-0.1538, 'logg_uperr':0.1538,
-    #        'logg_ref':'Pearson 2019', 'logg_units':'log10[cm.s-2]'
-    #    }}
     overwrite["CoRoT-2"] = {
         "b": {
             "Spitzer-IRAC-IR-45-SUB": {
@@ -865,9 +255,6 @@ def ppar():
             ],
         }
     }
-
-    # Limb darkening coefficients computed with
-    # https://github.com/ucl-exoplanets/ExoTETHyS
     overwrite["HD 189733"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -884,7 +271,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["HD 209458"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -901,7 +287,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["KELT-9"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -918,7 +303,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["WASP-33"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -935,7 +319,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["WASP-103"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -952,7 +335,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["KELT-16"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -969,7 +351,6 @@ def ppar():
             ],
         }
     }
-
     overwrite["WASP-121"] = {
         "b": {
             "Spitzer_IRAC1_subarray": [
@@ -1209,14 +590,41 @@ def ppar():
     }
 
     overwrite["GJ 1214"] = {
+        # --< GMR: JWST NIRSPEC
+        'R*': 0.215,
+        'R*_uperr': 0.008,
+        'R*_lowerr': -0.008,
+        'R*_ref': 'https://doi.org/10.3847/1538-3881/ac1584',
+        'T*': 3250,
+        'T*_uperr': 100,
+        'T*_lowerr': -100,
+        'T*_ref': 'https://doi.org/10.3847/1538-3881/ac1584',
+        'LOGG*': 5.026,
+        'LOGG*_uperr': 0.04,
+        'LOGG*_lowerr': -0.04,
+        'LOGG*_ref': 'https://doi.org/10.3847/1538-3881/ac1584',
+        'FEH*': 0.29,
+        'FEH*_uperr': 0.12,
+        'FEH*_lowerr': -0.12,
+        'FEH*_ref': 'https://doi.org/10.3847/1538-3881/ac1584',
         "b": {
-            # switch from the most recent ephemeris (Kokori 2022 = exoClock) back to the default
-            # 'period':1.58040433,
-            # 'period_uperr':1.3e-7, 'period_lowerr':-1.3e-7,
-            # 'period_ref':'Cloutier et al. 2021',
-            # 't0':2455701.413328,
-            # 't0_uperr':0.000066, 't0_lowerr':-0.000059,
-            # 't0_ref':'Cloutier et al. 2021',
+            'period': 1.580404341,
+            'period_uperr': 0.000000079,
+            'period_lowerr': -0.000000079,
+            'period_ref': 'https://doi.org/10.3847/2041-8213/ad7fef',
+            't0': 2460143.93029503,
+            't0_uperr': 0.00000358,
+            't0_lowerr': -0.00000358,
+            't0_ref': 'https://doi.org/10.3847/2041-8213/ad7fef',
+            'inc': 89.32,
+            'inc_uperr': 0.03,
+            'inc_lowerr': -0.03,
+            'inc_ref': 'https://doi.org/10.3847/2041-8213/ad7fef',
+            'sma': 0.015267716541101813,
+            'sma_uperr': 2e-5,
+            'sma_lowerr': -2e-5,
+            'sma_ref': 'https://doi.org/10.3847/2041-8213/ad7fef',
+            # >--
             "Spitzer_IRAC1_subarray": [
                 0.9083242210542111,
                 -0.7976911808204602,
@@ -1229,7 +637,117 @@ def ppar():
                 0.4513165756893245,
                 -0.11497950826716168,
             ],
-        }
+        },
+    }
+
+    overwrite["GJ 357"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 60282.3413,
+            't0_uperr': 3e-5,
+            't0_lowerr': -3e-5,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/adee92/pdf',
+        },
+    }
+
+    overwrite["K2-18"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 59964.969453,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/2041-8213/acf577/pdf',
+        },
+    }
+
+    overwrite["HAT-P-11"] = {
+        # --< CB: JWST NIRSPEC
+        'R*': 0.872,
+        'b': {
+            'period': 4.88781501,
+            'period_uperr': 6.8e-7,
+            'period_lowerr': -6.8e-7,
+            'period_ref': 'Winn et al 2010',
+            'inc': 89.17,
+            'inc_uperr': 0.46,
+            'inc_lowerr': -0.60,
+            'inc_ref': 'Winn et al 2010',
+            'sma': 0.05196,
+            'sma_ref': 'Winn et al 2010',
+            't0': 60504.965,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+        },
+    }
+
+    overwrite["HAT-P-14"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 59729.203001524,
+            't0_uperr': 0.000010,
+            't0_lowerr': -0.000010,
+            't0_ref': 'https://iopscience.iop.org/article/10.1088/1538-3873/aca3d3/pdf',
+        },
+    }
+
+    overwrite["HAT-P-26"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            'period': 4.2344923,
+            'period_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            't0': 60110.30657380267,
+            't0_uperr': 0.000036,
+            't0_lowerr': -0.000036,
+            't0_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'sma': 0.0459,
+            'sma_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'inc': 87.8,
+            'inc_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+            'ecc': 0.0,
+            'ecc_ref': 'https://iopscience.iop.org/article/10.3847/1538-3881/ae0929/pdf',
+        },
+    }
+
+    overwrite["HD 15337"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 60142.14151,
+            't0_uperr': 0.00011,
+            't0_lowerr': -0.00011,
+            't0_ref': 'https://ntrs.nasa.gov/api/citations/20260005584/downloads/20260005584-TOI_402_01.pdf',
+        },
+        "c": {
+            't0': 60149.25631,
+            't0_uperr': 0.00012,
+            't0_lowerr': -0.00012,
+            't0_ref': 'https://arxiv.org/pdf/2602.22327',
+            'inc': 88.0,
+            'inc_uperr': 0.1,
+            'inc_lowerr': -0.1,
+            'inc_ref': 'https://arxiv.org/pdf/2602.22327',
+            'sma': 0.1113,
+            'sma_ref': 'https://arxiv.org/pdf/2602.22327',
+        },
+    }
+
+    overwrite["LHS 3844"] = {
+        # --< CB: JWST NIRSPEC
+        "b": {
+            't0': 58325.22129184415,
+            't0_uperr': 0.0001,
+            't0_lowerr': -0.0001,
+            't0_ref': 'file:///Users/cbernard/Downloads/s41550-026-02860-3-3.pdf',
+        },
+    }
+
+    overwrite["LTT 1445 A"] = {
+        # --< CB: JWST NIRSPEC
+        "c": {
+            't0': 58412.076569440804,
+            't0_uperr': 0.00078,
+            't0_lowerr': -0.00074,
+            't0_ref': 'CB',
+        },
     }
 
     # overwrite['WASP-87'] = {
@@ -1266,39 +784,11 @@ def ppar():
     #   1) the radius is only from an older KOI table and is only SNR=2
     #   2) the mass is a recent measurement (but probably it's just the TTV measure?)
     #   3) 0.4 REarth and 8 MEarth is pretty crazy
-    # overwrite['Kepler-37'] = {
-    #    'e':{'rp':0.033,
-    #         'rp_uperr':0.016, 'rp_lowerr':-0.016,
-    #         'rp_units':'[Jupiter radius]',
-    #         'rp_ref':'Q1-Q8 KOI Table',
-    #         # there's a real mass measurement now from Weiss 2024 (0.0255)
-    #         #   hold on this is 100x larger!
-    #         # 'mass':0.0002,
-    #         # 'mass_uperr':0.0002, 'mass_lowerr':-0.0001,
-    #         # 'mass_units':'[Jupiter mass]',
-    #         # 'mass_ref':'Assumed mass/radius relation',
-    #         # 'logg':2.7,
-    #         # 'logg_uperr':0.3, 'logg_lowerr':-0.2,
-    #         # 'logg_units':'log10[cm.s-2]',
-    #         # 'logg_ref':'Assumed mass/radius relation'
-    #         # we still need to set logg, because there is originally no radius, so it's blank
-    #         'logg':4.76,  # gees it's 100x larger gravity now.  this is junk
-    #         'logg_uperr':0.3, 'logg_lowerr':-0.2,
-    #         'logg_units':'log10[cm.s-2]',
-    #         'logg_ref':'from Mp and Rp'
-    #         }}
 
     # for the newly added comfirmed-planet Ariel targets, some metallicities are missing
     #  oh that's funny. the Chen 2021 compilation has zero for these (with no error bar)
     #   but the source is listed as flag 5, which is the Exoplanet Archive.  fake news!
-    # overwrite['HATS-50'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Chen et al. 2021'}
-    # overwrite['HATS-51'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Chen et al. 2021'}
+
     overwrite['HATS-52'] = {
         'FEH*': -0.09,
         'FEH*_uperr': 0.17,
@@ -1306,14 +796,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Magrini et al. 2022',
     }
-    # overwrite['HATS-53'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Chen et al. 2021'}
-    # overwrite['HATS-58 A'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Chen et al. 2021'}
+
     overwrite['K2-129'] = {
         'FEH*': 0.105,
         'FEH*_uperr': 0.235,
@@ -1321,48 +804,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Hardagree-Ullman et al. 2020',
     }
-    # overwrite['LHS 1678'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # Ammons 2006 has 0.76+-2.26, which is absurd
-    # overwrite['TIC 257060897'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-122'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-1227'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-1442'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-1693'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-237'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-2411'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-2427'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-451'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-540'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # there's a value for this one now (osborne 2023)
-    # overwrite['TOI-544'] = {
-    #     'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #     'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # overwrite['TOI-833'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # this one is missing JHK photometry.  not sure why; it's in 2MASS/Simbad
+
     overwrite['K2-295'] = {
         'Jmag': 11.807,
         'Jmag_uperr': 0.027,
@@ -1425,16 +867,6 @@ def ppar():
         },
     }
 
-    # this one is weird. there's a metallicity value in the Archive for 'c' but not for 'b'
-    # looks like this is fixed by 2024 archive update; Capistrant et al. 2024 is similar (0.03)
-    # overwrite['HD 63433'] = {
-    #    'FEH*':0.05, 'FEH*_uperr':0.05, 'FEH*_lowerr':-0.05,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Dai et al. 2020'}
-
-    # overwrite['TOI-1411'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-
     # why isn't this in the archive?  non-hipparcos, but still..
     overwrite['TRAPPIST-1'] = {
         'dist': (1000.0 / 80.2123),
@@ -1460,7 +892,8 @@ def ppar():
     }
     # also had to use vizier for this one
     # it's in Gaia, but there's no parallax
-    # wikipedia has it at 980pc from 2011 schneider site from buchhave 2011 discovery paper
+    # wikipedia has it at 980pc from 2011 schneider site
+    # from buchhave 2011 discovery paper
     # the paper says it is from Girardi isochrone fitting
     overwrite['Kepler-14'] = {
         'dist': 980.0,
@@ -1469,33 +902,6 @@ def ppar():
         'dist_units': '[pc]',
         'dist_ref': 'Buchhave et al. 2011',
     }
-
-    # 11/10/23 period update to match G141 phase
-    overwrite['HAT-P-26'] = {
-        # 'b':{'period':4.234520,  # this is the default. decreasing it a bit
-        'b': {
-            'period': 4.2345002,
-            'period_uperr': 7e-7,
-            'period_lowerr': -7e-7,
-            'period_ref': 'Kokori et al. 2022',
-        }
-    }
-
-    # 11/12/23 period updates to match G141 phase
-    # overwrite['HAT-P-18'] = {
-    # 'b':{'period':5.508023,  # this is the default. increasing it a bit
-    # hmm, these are about the same.  what about t0?  308P+1.4min diff
-    # yeah it's about the same itk. drop it
-    # 'b':{'period':5.5080287,
-    # 'period_uperr':1.4e-6, 'period_lowerr':-1.4e-6,
-    # 'period_ref':'Ivshina & Winn 2022',
-    # this is similar to Hartman 2011 120+-56
-    # 'omega':104.0,
-    # 'omega_lowerr':-50,
-    # 'omega_uperr':50,
-    # 'omega_ref':"Esposito et al. 2014"
-    # }
-    # }
 
     # some of the new JWST targets are missing mandatory parameters
     #  (without these system.finalize will crash)
@@ -1560,9 +966,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Ding et al. 2022',
     }
-    # overwrite['K2-417'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
+
     overwrite['TOI-206'] = {
         'FEH*': 0.057,
         'FEH*_uperr': 0.25,
@@ -1570,9 +974,7 @@ def ppar():
         'FEH*_units': '[dex]',
         'FEH*_ref': 'Sprague et al. 2022',
     }
-    # overwrite['TOI-4308'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
+
     overwrite['TOI-4342'] = {
         'FEH*': -0.090,
         'FEH*_uperr': 0.25,
@@ -1600,141 +1002,6 @@ def ppar():
         'dist_units': '[pc]',
         'dist_ref': 'Gaia EDR3',
     }
-    # this one is NOT in simbad.  Gaia Plx missing in Vizier.   parallax =
-    #  oh wait, it's already set above. nevermind
-    # overwrite['Kepler-14'] = {
-    #    'dist':, 'dist_uperr':, 'dist_lowerr':,
-    #    'dist_units':'[pc]', 'dist_ref':'Gaia EDR3'}
-    # this one is in simbad.   parallax = 7.0083 [0.1077]
-    #  drop it - it's already done above here
-    # overwrite['Kepler-1314'] = {
-    #    'dist':142.69, 'dist_uperr':2.2, 'dist_lowerr':-2.2,
-    #    'dist_units':'[pc]', 'dist_ref':'Gaia EDR3'}
-    # this one is NOT in simbad, but Vizier has it.   parallax = 3.8714+-0.1759
-    #  drop it - it's already done above here
-    # overwrite['NGTS-10'] = {
-    #    'dist':258.30, 'dist_uperr':11.7, 'dist_lowerr':-11.7,
-    #    'dist_units':'[pc]', 'dist_ref':'Gaia EDR3'}
-    # this one is in simbad.   parallax = 80.2123 [0.0716]
-    #  drop it - it's already done above here
-    # overwrite['TRAPPIST-1'] = {
-    #    'dist':12.467, 'dist_uperr':0.01, 'dist_lowerr':-0.01,
-    #    'dist_units':'[pc]', 'dist_ref':'Gaia EDR3'}
-
-    # for debugging:
-    # overwrite["WASP-69"] = {
-    #    "b": {
-    #        't0':2455748.8342,
-    #        't0_uperr':0.00018, 't0_lowerr':-0.00018,
-    #        't0_ref':'Bonomo et al. 2017',
-    #    }}
-
-    # (for Raissa's paper on L 98-59)
-    # make planets c and d consistent with planet b
-    # 12/23/2024  fixed now with the self-consistent parameter selection
-    # overwrite['L 98-59'] = {
-    #    'c':{
-    #        'rp':0.1236, 'rp_uperr':0.0085, 'rp_lowerr':-0.0067,
-    #        'rp_ref':'Demangeon et al. 2021',
-    #        'mass':0.00698, 'mass_uperr':0.00082, 'mass_lowerr':-0.00079,
-    #        'mass_ref':'Demangeon et al. 2021',
-    #        'logg_ref':'Demangeon et al. 2021',
-    #        'teq_ref':'Demangeon et al. 2021',
-    #        'sma':0.0304, 'sma_uperr':0.0011, 'sma_lowerr':-0.0012,
-    #        'sma_ref':'Demangeon et al. 2021',
-    #        'period':3.6906777, 'period_uperr':1.6e-6, 'period_lowerr':-2.6e-6,
-    #        'period_ref':'Demangeon et al. 2021',
-    #        't0':2458367.27375, 't0_uperr':0.00013, 't0_lowerr':-0.00022,
-    #        't0_ref':'Demangeon et al. 2021',
-    #        'inc':88.11, 'inc_uperr':0.36, 'inc_lowerr':-0.16,
-    #        'inc_ref':'Demangeon et al. 2021',
-    #        'ecc':0.103, 'ecc_uperr':0.045, 'ecc_lowerr':-0.058,
-    #        'ecc_ref':'Demangeon et al. 2021',
-    #        'omega':261., 'omega_uperr':20., 'omega_lowerr':-10.,
-    #        'omega_ref':'Demangeon et al. 2021',
-    #        'impact':0.601, 'impact_uperr':0.081, 'impact_lowerr':-0.066,
-    #        'impact_ref':'Demangeon et al. 2021',
-    #        'trandur':1.346, 'trandur_uperr':0.122, 'trandur_lowerr':-0.069,
-    #        'trandur_ref':'Demangeon et al. 2021',
-    #        'ars':19.00, 'ars_uperr':1.20, 'ars_lowerr':-0.80,
-    #        'ars_ref':'Demangeon et al. 2021',
-    #        'rprs':0.04088, 'rprs_uperr':0.00068, 'rprs_lowerr':-0.00056,
-    #        'rprs_ref':'Demangeon et al. 2021',
-    #        },
-    #    'd':{
-    #        'rp':0.1357, 'rp_uperr':0.0106, 'rp_lowerr':-0.0087,
-    #        'rp_ref':'Demangeon et al. 2021',
-    #        'mass':0.00610, 'mass_uperr':0.00088, 'mass_lowerr':-0.00088,
-    #        'mass_ref':'Demangeon et al. 2021',
-    #        'logg_ref':'Demangeon et al. 2021',
-    #        'teq_ref':'Demangeon et al. 2021',
-    #        'sma':0.0486, 'sma_uperr':0.0018, 'sma_lowerr':-0.0019,
-    #        'sma_ref':'Demangeon et al. 2021',
-    #        'period':7.4507245, 'period_uperr':8.1e-6, 'period_lowerr':-4.6e-6,
-    #        'period_ref':'Demangeon et al. 2021',
-    #        't0':2458362.73974, 't0_uperr':0.00031, 't0_lowerr':-0.00040,
-    #        't0_ref':'Demangeon et al. 2021',
-    #        'inc':88.449, 'inc_uperr':0.058, 'inc_lowerr':-0.111,
-    #        'inc_ref':'Demangeon et al. 2021',
-    #        'ecc':0.0740, 'ecc_uperr':0.0570, 'ecc_lowerr':-0.0460,
-    #        'ecc_ref':'Demangeon et al. 2021',
-    #        'omega':180., 'omega_uperr':27., 'omega_lowerr':-50.,
-    #        'omega_ref':'Demangeon et al. 2021',
-    #        'impact':0.922, 'impact_uperr':0.059, 'impact_lowerr':-0.059,
-    #        'impact_ref':'Demangeon et al. 2021',
-    #        'trandur':0.840, 'trandur_uperr':0.150, 'trandur_lowerr':-0.200,
-    #        'trandur_ref':'Demangeon et al. 2021',
-    #        'ars':33.7, 'ars_uperr':1.9, 'ars_lowerr':-1.7,
-    #        'ars_ref':'Demangeon et al. 2021',
-    #        'rprs':0.04480, 'rprs_uperr':0.00106, 'rprs_lowerr':-0.00100,
-    #        'rprs_ref':'Demangeon et al. 2021',
-    #         }}
-
-    # g = sscmks['G'] * float(overwrite['L 98-59']['c']['mass'])*sscmks['Mjup'] / \
-    #     (float(overwrite['L 98-59']['c']['rp'])*sscmks['Rjup'])**2
-    # overwrite['L 98-59']['c']['logg'] = numpy.log10(g)
-    # g = sscmks['G'] * float(overwrite['L 98-59']['d']['mass'])*sscmks['Mjup'] / \
-    #    (float(overwrite['L 98-59']['d']['rp'])*sscmks['Rjup'])**2
-    # overwrite['L 98-59']['d']['logg'] = numpy.log10(g)
-    # print('logg before',overwrite['L 98-59']['c']['logg'])
-    # print('logg before',overwrite['L 98-59']['d']['logg'])
-
-    # system_info = copy.deepcopy(overwrite['L 98-59'])
-    # system_info['L*'] = [0.0113]
-    # system_info['L*_uperr'] = [0.0004]
-    # system_info['L*_lowerr'] = [-0.0004]
-    # for p in ['c','d']:
-    #    system_info[p]['teq'] = ['']
-    #    system_info[p]['teq_uperr'] = ['']
-    #    system_info[p]['teq_lowerr'] = ['']
-    #    system_info[p]['teq_ref'] = ['']
-    #
-    #    logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = \
-    #        derive_LOGGplanet_from_R_and_M(system_info, p)
-    #    overwrite['L 98-59'][p]['logg'] = logg_derived[0]
-    #    overwrite['L 98-59'][p]['logg_lowerr'] = logg_lowerr_derived[0]
-    #    overwrite['L 98-59'][p]['logg_uperr'] = logg_uperr_derived[0]
-    #    overwrite['L 98-59'][p]['logg_ref'] = logg_ref_derived[0]
-    #
-    #    teq_derived, teq_lowerr_derived, teq_uperr_derived, teq_ref_derived = \
-    #        derive_Teqplanet_from_Lstar_and_sma(system_info, p)
-    #    overwrite['L 98-59'][p]['teq'] = teq_derived[0]
-    #    overwrite['L 98-59'][p]['teq_lowerr'] = teq_lowerr_derived[0]
-    #    overwrite['L 98-59'][p]['teq_uperr'] = teq_uperr_derived[0]
-    #    overwrite['L 98-59'][p]['teq_ref'] = teq_ref_derived[0]
-
-    # print('overwrite final',overwrite['L 98-59'])
-    # print(derive_LOGGplanet_from_R_and_M(overwrite['L 98-59'], 'c'))
-    # print(derive_LOGGplanet_from_R_and_M(overwrite['L 98-59'], 'd'))
-    # print('logg after',overwrite['L 98-59']['c']['logg'])
-    # print('logg after',overwrite['L 98-59']['d']['logg'])
-    # print('')
-
-    # these had FEH* upper limits (e.g. >-0.5 for TOI-2081) that were removed
-    # overwrite['TOI-2081'] = {
-    #    'FEH*':0.0, 'FEH*_uperr':0.25, 'FEH*_lowerr':-0.25,
-    #    'FEH*_units':'[dex]', 'FEH*_ref':'Default to solar metallicity'}
-    # (not sure what the second one was; modified output to include target name)
 
     # Crossfield 2016 has zero for the transit duration
     #  (van Eylen 2016 is the default publication, but it has blank transit duration)
@@ -1979,8 +1246,148 @@ def ppar():
         'M*_uperr': 0.25,
         'M*_lowerr': -0.25,
         'M*_ref': 'Staussun et al. 2019',
+        'RHO*': 1.13,  # from R*=0.93
+        'RHO*_uperr': 0.25,
+        'RHO*_lowerr': -0.25,
+        'RHO*_ref': 'derived from M*,R*',
     }
-    # ~50 are missing transit duration. update analytically?
+
+    # missing t0 for Kepler-453 b (so it comes up as no planets)
+    # strange, it actually is in the default publication. binary oddness
+    overwrite['Kepler-453'] = {
+        'b': {
+            't0': 2455069.020,
+            't0_uperr': 0.054,
+            't0_lowerr': -0.054,
+            't0_ref': 'Welsh et al. 2015',  # Table 3
+        }
+    }
+
+    # GMR: BJT_TBD_to_MJD_UTC
+    overwrite['WASP-47'] = {
+        'b': {
+            't0': 56982.4774228593,
+        },
+        'd': {
+            't0': 56987.87473479712,
+        },
+    }
+
+    # 10/16/2026 adjusting Rstar values to remove JWST fangs
+    overwrite['WASP-178'] = {
+        'R*': 1.67,
+        'R*_uperr': 0.07,
+        'R*_lowerr': -0.07,
+        'R*_ref': 'Hellier et al. 2019',
+        'M*': 2.07,
+        'M*_uperr': 0.11,
+        'M*_lowerr': -0.11,
+        'M*_ref': 'Hellier et al. 2019',
+        'LOGG*': 4.31,
+        'LOGG*_uperr': 0.04,
+        'LOGG*_lowerr': -0.04,
+        'LOGG*_ref': 'Hellier et al. 2019',
+        'FEH*': 0.21,
+        'FEH*_uperr': 0.16,
+        'FEH*_lowerr': -0.16,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Hellier et al. 2019',
+        'T*': 9360,
+        'T*_uperr': 150,
+        'T*_lowerr': -150,
+        'T*_ref': 'Hellier et al. 2019',
+    }
+    overwrite['HAT-P-14'] = {
+        'R*': 1.591,
+        'R*_uperr': 0.057,
+        'R*_lowerr': -0.057,
+        'R*_ref': 'Southworth et al. 2012',
+        'M*': 1.418,
+        'M*_uperr': 0.054,
+        'M*_lowerr': -0.054,
+        'M*_ref': 'Southworth et al. 2012',
+        'LOGG*': 4.187,
+        'LOGG*_uperr': 0.025,
+        'LOGG*_lowerr': -0.025,
+        'LOGG*_ref': 'Southworth et al. 2012',
+        'FEH*': 0.11,
+        'FEH*_uperr': 0.08,
+        'FEH*_lowerr': -0.08,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Southworth et al. 2012',
+        'T*': 6600,
+        'T*_uperr': 90,
+        'T*_lowerr': -90,
+        'T*_ref': 'Southworth et al. 2012',
+    }
+    overwrite['HAT-P-30'] = {
+        'R*': 1.31,
+        'R*_uperr': 0.13,
+        'R*_lowerr': -0.13,
+        'R*_ref': 'Stassun et al. 2017',
+        'M*': 1.55,
+        'M*_uperr': 0.51,
+        'M*_lowerr': -0.51,
+        'M*_ref': 'Stassun et al. 2017',
+        'LOGG*': 4.36,
+        'LOGG*_uperr': 0.30,
+        'LOGG*_lowerr': -0.30,
+        'LOGG*_ref': 'Stassun et al. 2017',
+        'FEH*': 0.13,
+        'FEH*_uperr': 0.08,
+        'FEH*_lowerr': -0.08,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Stassun et al. 2017',
+        'T*': 6304,
+        'T*_uperr': 88,
+        'T*_lowerr': -88,
+        'T*_ref': 'Stassun et al. 2017',
+    }
+    overwrite['HAT-P-1'] = {
+        'R*': 1.174,
+        'R*_uperr': 0.026,
+        'R*_lowerr': -0.027,
+        'R*_ref': 'Nikolov et al. 2014',
+        'M*': 1.151,
+        'M*_uperr': 0.052,
+        'M*_lowerr': -0.051,
+        'M*_ref': 'Nikolov et al. 2014',
+        'LOGG*': 4.359,
+        'LOGG*_uperr': 0.014,
+        'LOGG*_lowerr': -0.014,
+        'LOGG*_ref': 'Nikolov et al. 2014',
+        'FEH*': 0.130,
+        'FEH*_uperr': 0.008,
+        'FEH*_lowerr': -0.008,
+        'FEH*_units': '[dex]',
+        'FEH*_ref': 'Nikolov et al. 2014',
+        'T*': 5980,
+        'T*_uperr': 49,
+        'T*_lowerr': -49,
+        'T*_ref': 'Nikolov et al. 2014',
+    }
+    # OK this check verifies that log-g* matches M*,R* for these 4 star updates
+    #  but the published HAT-P-1 uncertainties are about half those derived
+    #  HAT-P-14 ones are significantly smaller too.
+    #  could be that M* uncertainty was hiked up for those
+    # Stassun (HAT-P-30) is inconsistent logg by 8%. And uncertainties 2x too large
+    #  let's keep the derived logg for that one
+    # for starname in ['WASP-178', 'HAT-P-1', 'HAT-P-14', 'HAT-P-30']:
+    for starname in ['HAT-P-30']:
+        # print('overwrite before', overwrite[starname])
+        system_info = copy.deepcopy(overwrite[starname])
+        (
+            logg_derived,
+            logg_lowerr_derived,
+            logg_uperr_derived,
+            logg_ref_derived,
+        ) = derive_LOGGstar_from_R_and_M(system_info)
+        overwrite[starname]['LOGG*'] = float(logg_derived[0])
+        overwrite[starname]['LOGG*_lowerr'] = float(logg_lowerr_derived[0])
+        overwrite[starname]['LOGG*_uperr'] = float(logg_uperr_derived[0])
+        overwrite[starname]['LOGG*_ref'] = logg_ref_derived[0]
+        # print('overwrite after', overwrite[starname])
+        # print()
 
     return overwrite
 

@@ -122,9 +122,10 @@ def plot_corner(
     return save_plot_tosv(figure)
 
 
-def simplecorner(mctrace, verbose=False):
+def simplecorner(mctrace, fullrange=False, verbose=False):
     '''
     GMR: Simple corner plot
+    GMR: Do not use. It is broken or I dont remember how to call it properly
     '''
     Medians = [float(np.median(mctrace[k])) for k in mctrace]
     # Lowerr = [float(np.percentile(mctrace[k], 50 - 95.4 / 2)) for k in mctrace]
@@ -134,6 +135,10 @@ def simplecorner(mctrace, verbose=False):
     ]
     UpBound = [float(np.percentile(mctrace[k], 50 + 99.7 / 2)) for k in mctrace]
     Ranges = list(zip(LowBound, UpBound))
+    if fullrange:
+        thoser = Ranges
+    else:
+        thoser = None
     Figure = corner.corner(
         mctrace,
         quantiles=(0.5 - 0.68 / 2, 0.5 + 0.68 / 2),
@@ -141,7 +146,7 @@ def simplecorner(mctrace, verbose=False):
             0.393,
             0.675,
         ),
-        range=Ranges,
+        range=thoser,
     )
     corner.overplot_lines(Figure, Medians, c='b')
     corner.overplot_points(Figure, np.array(Medians)[None], marker='o', c='b')

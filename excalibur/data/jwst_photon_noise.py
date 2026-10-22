@@ -1,4 +1,3 @@
-
 import numpy as np
 from astropy.io import fits
 
@@ -29,22 +28,26 @@ def read_jwst_noise_parameters(calibrated_paths):
 
     return integration_time, gains
 
+
 def extract_jwst_photon_noise(source_rate, integration_time, gain):
     """
     Estimates the photon noise from JWST observations
     """
     electron_count = source_rate * integration_time * gain
-    electron_count = np.where(electron_count>0,electron_count,np.nan) # change negative values to nan
+    electron_count = np.where(
+        electron_count > 0, electron_count, np.nan
+    )  # change negative values to nan
     photon_noise_abs = np.sqrt(electron_count)
     photon_noise_rel = 1.0 / np.sqrt(electron_count)
 
     output_dict = {
         "electron_count": electron_count,
         "photon_noise_abs": photon_noise_abs,
-        "photon_noise_rel": photon_noise_rel
+        "photon_noise_rel": photon_noise_rel,
     }
 
     return output_dict
+
 
 def calculate_jwst_native_photon_noise(
     source_rate,
@@ -69,25 +72,35 @@ def calculate_jwst_native_photon_noise(
         else:
             detector_time = integration_time
 
-        photon_noise_by_detector[detector_name] = (
-            extract_jwst_photon_noise(
-                detector_rate,
-                detector_time,
-                gains[detector_name],
-            )
+        photon_noise_by_detector[detector_name] = extract_jwst_photon_noise(
+            detector_rate,
+            detector_time,
+            gains[detector_name],
         )
 
     return photon_noise_by_detector
 
-def bin_jwst_photon_noise(electron_count, wavelength, in_transit, out_of_transit, wavelength_low, wavelength_high):
+
+def bin_jwst_photon_noise(
+    electron_count,
+    wavelength,
+    in_transit,
+    out_of_transit,
+    wavelength_low,
+    wavelength_high,
+):
     """
     Bin electron counts and calculate photon limited transit depth errors
     """
     binned_noise = []
     for lower, upper in zip(wavelength_low, wavelength_high):
         wavelength_selection = (wavelength >= lower) & (wavelength < upper)
-        electrons_in = np.nansum(electron_count[wavelength_selection & in_transit[:,None]])
-        electrons_out = np.nansum(electron_count[wavelength_selection & out_of_transit[:,None]])
+        electrons_in = np.nansum(
+            electron_count[wavelength_selection & in_transit[:, None]]
+        )
+        electrons_out = np.nansum(
+            electron_count[wavelength_selection & out_of_transit[:, None]]
+        )
         # make sure the counts exist
         if electrons_in > 0 and electrons_out > 0:
             noise = np.sqrt(1.0 / electrons_in + 1.0 / electrons_out)
@@ -96,6 +109,7 @@ def bin_jwst_photon_noise(electron_count, wavelength, in_transit, out_of_transit
 
         binned_noise.append(noise)
     return np.asarray(binned_noise)
+
 
 def calculate_jwst_photon_noise(
     source_rate,
@@ -134,15 +148,13 @@ def calculate_jwst_photon_noise(
                     f'No calibration integrations for {detector_name} visit {visit}.'
                 )
 
-            binned_photon_noise[detector_name][visit] = (
-                bin_jwst_photon_noise(
-                    native_noise[detector_name]["electron_count"],
-                    wavelength[detector_selection],
-                    in_transit[detector_selection] & visit_selection,
-                    out_of_transit[detector_selection] & visit_selection,
-                    visit_data["WBlow"],
-                    visit_data["WBup"],
-                )
+            binned_photon_noise[detector_name][visit] = bin_jwst_photon_noise(
+                native_noise[detector_name]["electron_count"],
+                wavelength[detector_selection],
+                in_transit[detector_selection] & visit_selection,
+                out_of_transit[detector_selection] & visit_selection,
+                visit_data["WBlow"],
+                visit_data["WBup"],
             )
 
     return binned_photon_noise

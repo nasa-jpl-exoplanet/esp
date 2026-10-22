@@ -4,20 +4,34 @@ SYSTEM manages the astrophysical parameters of the target observed
 - FINALIZE parameters using overwriter.py function ppar()
 '''
 
-# -- IMPORTS -- ------------------------------------------------------
-import excalibur.system.bot as sysbot
+import dawgie
+import dawgie.base
 
-# ------------- ------------------------------------------------------
 DAWGIE_IGNORE = False
+
+# pylint: disable=duplicate-code
+
+
+def analysis(
+    prefix: str, ps_hint: int = 0, runid: int = -1
+) -> dawgie.FactoryPlaceholder[dawgie.base.Analysis]:
+    raise NotImplementedError('placeholder until dawgie monkey patches me')
+
+
+def events() -> dawgie.FactoryPlaceholder[list[dawgie.EVENT]]:
+    raise NotImplementedError('placeholder until dawgie monkey patches me')
+
+
+def regress(
+    prefix: str, ps_hint: int = 0, target: str = '__none__'
+) -> dawgie.FactoryPlaceholder[dawgie.base.Regress]:
+    raise NotImplementedError('placeholder until dawgie monkey patches me')
 
 
 def task(
     prefix: str, ps_hint: int = 0, runid: int = -1, target: str = '__none__'
-):
-    '''Factory'''
-    return sysbot.Actor(prefix, ps_hint, runid, target)
+) -> dawgie.FactoryPlaceholder[dawgie.base.Task]:
+    raise NotImplementedError('placeholder until dawgie monkey patches me')
 
 
-def analysis(prefix: str, ps_hint: int = 0, runid: int = -1):
-    '''analysis ds'''
-    return sysbot.Agent(prefix, ps_hint, runid)
+# pylint: enable=duplicate-code

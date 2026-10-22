@@ -152,6 +152,10 @@ def starspots(fin, spc, out):
                     limb_coeffs[iwave, 1],
                     limb_coeffs[iwave, 2],
                     limb_coeffs[iwave, 3],
+                    0,
+                    0,
+                    0,
+                    0,
                 )
                 * np.pi
             )

@@ -74,35 +74,34 @@ class Normalization(dawgie.Algorithm):
         '''Output State Vectors: transit.normalization'''
         return self.__out
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
 
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
-
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
-
             update = False
-            vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
-            vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
-            if vcal and vtme and vfin:
-                log.info(
-                    '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
-                )
-                update = self._norm(
-                    self.__cal.sv_as_dict()[fltr],
-                    self.__tme.sv_as_dict()[fltr],
-                    self.__fin.sv_as_dict()['parameters'],
-                    fltrs.index(fltr),
-                )
-                pass
-            else:
-                errstr = [m for m in [scal, stme, sfin] if m is not None]
-                self._failure(errstr[0])
+            if fltr in self.__cal.sv_as_dict():
+                vcal, scal = checksv(self.__cal.sv_as_dict()[fltr])
+                vtme, stme = checksv(self.__tme.sv_as_dict()[fltr])
+                if vcal and vtme and vfin:
+                    log.info(
+                        '--< %s NORMALIZATION: %s >--', self._type.upper(), fltr
+                    )
+                    update = self._norm(
+                        self.__cal.sv_as_dict()[fltr],
+                        self.__tme.sv_as_dict()[fltr],
+                        self.__fin.sv_as_dict()['parameters'],
+                        fltrs.index(fltr),
+                        verbose=verbose,
+                    )
+                    pass
+                else:
+                    errstr = [m for m in [scal, stme, sfin] if m is not None]
+                    self._failure(errstr[0])
+                    pass
                 pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
@@ -119,7 +118,7 @@ class Normalization(dawgie.Algorithm):
             )
         return
 
-    def _norm(self, cal, tme, fin, index):
+    def _norm(self, cal, tme, fin, index, verbose=False):
         '''Core code call'''
         if 'Spitzer' in fltrs[index]:
             normed = trncore.norm_spitzer(
@@ -138,6 +137,7 @@ class Normalization(dawgie.Algorithm):
                 fltrs[index],
                 self.__out[index],
                 self._type,
+                verbose=verbose,
             )
             pass
         else:
@@ -148,7 +148,7 @@ class Normalization(dawgie.Algorithm):
                 fltrs[index],
                 self.__out[index],
                 self._type,
-                verbose=False,
+                verbose=verbose,
             )
             pass
         return normed
@@ -201,12 +201,8 @@ class WhiteLight(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
-        runtime = self.__rt.sv_as_dict()['status']
-        runtime_params = trncore.TransitPymcParams(
-            sliceSampler=runtime['transit_pymc_sliceSampler'],
-        )
-
         svupdate = []
+        rnt = self.__rt.sv_as_dict()['status']
         fin = self.__fin.sv_as_dict()['parameters']
         vfin, sfin = checksv(fin)
 
@@ -220,7 +216,6 @@ class WhiteLight(dawgie.Algorithm):
                 'HST-STIS-CCD-G750L-STARE',
                 'HST-STIS-CCD-G430L-STARE',
             ]
-            # for fltr in ['HST-WFC3-IR-G141-SCAN']:
             for fltr in self.__rt.sv_as_dict()['status'][
                 'allowed_filter_names'
             ]:
@@ -254,10 +249,7 @@ class WhiteLight(dawgie.Algorithm):
                     update = self._hstwhitelight(
                         allnormdata,
                         fin,
-                        runtime_params,
-                        self.__rt.sv_as_dict()['status'][
-                            'spectrum_steps'
-                        ].value(),
+                        rnt,
                         self.__out[-1],
                         allfilters,
                     )
@@ -281,11 +273,12 @@ class WhiteLight(dawgie.Algorithm):
             vnrm, snrm = checksv(nrm)
             if vnrm and vfin:
                 log.info('--< %s WHITELIGHT: %s >--', self._type.upper(), fltr)
+                # GMR: Cleaning up runtime
+                # Breaking everything else but JWST
                 update = self._whitelight(
                     nrm,
                     fin,
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    rnt,
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -309,7 +302,7 @@ class WhiteLight(dawgie.Algorithm):
             )
         return
 
-    def _hstwhitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _hstwhitelight(self, nrm, fin, runtime_params, out, fltr):
         '''Core code call for merged HST data'''
 
         wl = trncore.hstwhitelight(
@@ -319,12 +312,11 @@ class WhiteLight(dawgie.Algorithm):
             fltr,
             self._type,
             runtime_params,
-            chainlen=chain_length,
             verbose=False,
         )
         return wl
 
-    def _whitelight(self, nrm, fin, runtime_params, chain_length, out, fltr):
+    def _whitelight(self, nrm, fin, rnt, out, fltr):
         '''Core code call'''
 
         if 'Spitzer' in fltr:
@@ -335,10 +327,10 @@ class WhiteLight(dawgie.Algorithm):
             wl = trncore.jwstwl(
                 nrm,
                 fin,
-                runtime_params,
+                rnt,
                 out,
-                chainlen=chain_length,
                 verbose=False,
+                debug=False,
             )
         else:
             wl = trncore.whitelight(
@@ -348,8 +340,7 @@ class WhiteLight(dawgie.Algorithm):
                 fltr,
                 self._type,
                 self.__out[-1],
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
                 # parentprior=True,  # GMR: Not safe with new data
             )
@@ -410,8 +401,6 @@ class Spectrum(dawgie.Algorithm):
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
 
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -421,18 +410,11 @@ class Spectrum(dawgie.Algorithm):
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
             if vfin and vnrm and vwht:
                 log.info('--< %s SPECTRUM: %s >--', self._type.upper(), fltr)
-
-                runtime = self.__rt.sv_as_dict()['status']
-                runtime_params = trncore.TransitPymcParams(
-                    sliceSampler=runtime['transit_pymc_sliceSampler'],
-                )
-
                 update = self._spectrum(
                     self.__fin.sv_as_dict()['parameters'],
                     self._nrm.sv_as_dict()[fltr],
                     self._wht.sv_as_dict()[fltr],
-                    runtime_params,
-                    self.__rt.sv_as_dict()['status']['spectrum_steps'].value(),
+                    self.__rt.sv_as_dict()['status'],
                     self.__out[fltrs.index(fltr)],
                     fltr,
                 )
@@ -441,11 +423,19 @@ class Spectrum(dawgie.Algorithm):
                 self._failure(errstr[0])
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
+                pass
+            pass
 
-        merg = trncore.hstspectrum(self.__out, fltrs)
-        log.info('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
-        if merg:
-            svupdate.append(self.__out[-1])
+        # HST STIS/WFC3 MERGE
+        if np.sum(
+            ['HST' in svname for svname in [sv.name() for sv in svupdate]]
+        ):
+            merg = trncore.hstspectrum(self.__out, fltrs)
+            log.info('--< %s SPECTRUM MERGED: %s >--', self._type.upper(), merg)
+            if merg:
+                svupdate.append(self.__out[-1])
+                pass
+            pass
 
         self.__out = (
             svupdate  # it will take all the elements that are not empty
@@ -460,17 +450,26 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, runtime_params, chain_length, out, fltr):
+    def _spectrum(self, fin, nrm, wht, rnt, out, fltr):
         '''Core code call'''
-        # chain_length = 10
-        # print('chain length in spectrum',chain_length)
 
         if "Spitzer" in fltr:
             s = trncore.spitzer_spectrum(wht, out, fltr)
         elif "JWST" in fltr:
-            s = trncore.jwst_niriss_spectrum(
-                nrm, fin, out, self._type, wht, method='lm'
+            s = trncore.jwstspectrum(
+                out,
+                nrm,
+                fin,
+                wht,
+                rnt,
+                verbose=False,
+                debug=False,
+                donotuse=False,
+                bntst=4,  # TEMPORARY SHOULD BE IN RUNTIME: CO2
+                binstart=100,
+                binstop=300,
             )
+            pass
         else:
             s = trncore.spectrum(
                 fin,
@@ -479,8 +478,7 @@ class Spectrum(dawgie.Algorithm):
                 out,
                 fltr,
                 self._type,
-                runtime_params,
-                chainlen=chain_length,
+                rnt,
                 verbose=False,
             )
             pass

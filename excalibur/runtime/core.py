@@ -50,29 +50,44 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
     for key in [
         'system_validate_selectMostRecent',
         'system_validate_maximizeSelfConsistency',
+        'transit_imo',
+        'transit_whitelight_threshold',
+        'transit_spectrum_threshold',
+        'transit_spectrum_reject',
+        'transit_spectrum_ntm',
+        'transit_whitelight_chainlen',
+        'transit_spectrum_chainlen',
         'transit_pymc_sliceSampler',
-        'cerberus_atmos_fitCloudParameters',
-        'cerberus_atmos_fitNtoO',
+        'transit_limbdarkening_lethe',
+        'cerberus_atmos_fitCTP',
+        'cerberus_atmos_fitHaze',
         'cerberus_atmos_fitCtoO',
+        'cerberus_atmos_fitNtoO',
+        'cerberus_atmos_fitStoO',
         'cerberus_atmos_fitT',
         'cerberus_atmos_sliceSampler',
         'cerberus_crbmodel_nlevels',
         'cerberus_crbmodel_Hsmax',
         'cerberus_crbmodel_solrad',
-        'cerberus_crbmodel_lbroadening',
-        'cerberus_crbmodel_lshifting',
         'cerberus_crbmodel_isothermal',
         'cerberus_crbmodel_fitmolecules',
         'cerberus_crbmodel_HITEMPmolecules',
         'cerberus_crbmodel_HITRANmolecules',
         'cerberus_crbmodel_EXOMOLmolecules',
+        'cerberus_crbmodel_atoms',
         'cerberus_atmos_bounds_Teq',
         'cerberus_atmos_bounds_abundances',
+        'cerberus_atmos_bounds_metallicity',
+        'cerberus_atmos_bounds_CtoO',
+        'cerberus_atmos_bounds_NtoO',
+        'cerberus_atmos_bounds_StoO',
         'cerberus_atmos_bounds_CTP',
         'cerberus_atmos_bounds_HLoc',
         'cerberus_atmos_bounds_HScale',
         'cerberus_atmos_bounds_HThick',
         'cerberus_plotters_cornerBins',
+        'cerberus_plotters_onlyFitAbove10MEarth',
+        'cerberus_plotters_onlyPlotAbove10MEarth',
         'cerberus_results_nrandomwalkers',
         'cerberus_results_randomseed',
         'cerberus_arielsample_tier',
@@ -93,6 +108,25 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
         'ariel_simspectrum_CtoOaverage',
         'ariel_simspectrum_CtoOdispersion',
         'selftest_Nrepeats',
+        'ignoreinput_target_scrape',
+        'ignoreinput_transit_normalization',
+        'ignoreinput_transit_whitelight',
+        'ignoreinput_transit_spectrum',
+        'ignoreinput_transit_starspots',
+        'ignoreinput_eclipse_normalization',
+        'ignoreinput_eclipse_whitelight',
+        'ignoreinput_eclipse_spectum',
+        'ignoreinput_phasecurve_normalization',
+        'ignoreinput_phasecurve_whitelight',
+        'ignoreinput_phasecurve_flares',
+        'ignoreinput_gemli_mlfit',
+        'ignoreinput_hwo_sim_spectrum',
+        'ignoreinput_selftest_sim_spectrum',
+        'ignoreinput_ariel_sim_spectrum',
+        'ignoreinput_cerberus_xslib_jwst',
+        'ignoreinput_cerberus_xslib_ariel',
+        'ignoreinput_cerberus_atmos_jwst',
+        'ignoreinput_cerberus_atmos_ariel',
     ]:
         if isinstance(
             table['controls'][key], excalibur.runtime.states.BoolValue
@@ -134,18 +168,6 @@ def isolate(sv: {}, table: {str: {}}, tn: str) -> None:
             ]
         )
 
-    pymc = table['pymc-spectrumchainlen']
-    default = pymc['default'].value()
-    sv['spectrum_steps'] = sv['spectrum_steps'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
-    pymc = table['pymc-spectrumchains']
-    default = pymc['default'].value()
-    sv['spectrum_chains'] = sv['spectrum_chains'].new(
-        pymc['overrides'].get(tn, default)
-    )
-
     return
 
 
@@ -157,6 +179,10 @@ def load(sv_dict: {str: {}}, targets) -> None:
     3. have pybgen binding module parse the XML
     4. move data into state vectors
     '''
+    # this is how you can check what's in __all__
+    # for t in targets:
+    #     print('runtime create.core.load target', t)
+
     fn = os.environ[ENV_NAME]
     with open(fn, 'rt', encoding='utf-8') as file:
         xml = file.read()
@@ -174,8 +200,6 @@ def load(sv_dict: {str: {}}, targets) -> None:
     for pymc in [
         'cerberuschains',
         'cerberuschainlen',
-        'spectrumchains',
-        'spectrumchainlen',
     ]:
         cf = getattr(settings.pymc, pymc)
         sv = sv_dict[f'pymc-{pymc}']

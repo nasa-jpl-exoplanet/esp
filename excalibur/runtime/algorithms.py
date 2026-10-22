@@ -141,10 +141,11 @@ class Create(dawgie.Analyzer):
 
     def run(self, aspects: dawgie.Aspect) -> None:
         '''load the configuration file then process it'''
+
         try:
-            log.info('starting load of config')
+            # log.info('starting load of config')
             core.load(self.sv_as_dict(), dawgie.db.targets())
-            log.info('updating state vector')
+            # log.info('updating state vector')
             aspects.ds().update()
         except FileNotFoundError as e:
             log.exception(e)

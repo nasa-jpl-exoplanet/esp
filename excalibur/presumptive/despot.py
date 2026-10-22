@@ -51,7 +51,7 @@ def tyrannize():
     ap.add_argument(
         '-u',
         '--url',
-        default='https://excalibur.jpl.nasa.gov:8080',
+        default='https://excalibur.jpl.nasa.gov',
         type=_url,
         help='the URL for the pipeline [%(default)s]',
     )

@@ -7,8 +7,6 @@
 # -- IMPORTS -- ------------------------------------------------------
 import logging
 
-from collections import namedtuple
-
 # import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
@@ -26,6 +24,8 @@ from excalibur.ariel.ariel_instrument_model import (
 )
 from excalibur.ariel.forward_models import make_cerberus_atmos
 from excalibur.cerberus.core import myxsecs
+from excalibur.cerberus.forward_model import TPprofile
+from excalibur.cerberus.teagrid import get_TEA_grid
 from excalibur.ariel.plotters import (
     plot_spectrum,
     plot_spectrum_topmolecules,
@@ -42,33 +42,6 @@ import scipy.constants as cst
 
 log = logging.getLogger(__name__)
 
-ArielParams = namedtuple(
-    'ariel_params_from_runtime',
-    [
-        'tier',
-        'arielRad',
-        'SNRfactor',
-        'randomSeed',
-        'randomCloudProperties',
-        'thorngrenMassMetals',
-        'chachanMassMetals',
-        'includeMetallicityDispersion',
-        'metallicityDispersion',
-        'CtoOdaSilva',
-        'CtoOaverage',
-        'CtoOdispersion',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-    ],
-)
-
 
 # ----------------- --------------------------------------------------
 # -- SIMULATE ARIEL SPECTRA ------------------------------------------
@@ -77,13 +50,14 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
     calculate the mean molecular weight and scale height
     '''
 
-    # INCLUDE C/O RATIO HERE????  ASDF
-
     if useTEA:
         # log.error('TEA removed for now')
-        tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
+        # tempCoeffs = [0, temperature, 0, 1, 0, -1, 1, 0, -1, 1]  # isothermal
         mixratioprofiles = crbutil.calcTEA(
-            tempCoeffs, pressureArray, metallicity=10.0**X2Hr
+            np.array([temperature] * len(pressureArray)),
+            # tempCoeffs,
+            pressureArray,
+            metallicity=10.0**X2Hr,
         )
         # have to take the average! (same as done in crbce)
         mixratio = {}
@@ -118,7 +92,7 @@ def calc_mmw_Hs(pressureArray, temperature, logg, X2Hr=0, useTEA=False):
 
     # print('mixratio (inside)', mixratio, fH2, fHe)
     # X2Hr=cheq['XtoH'])
-    # assume solar C/O and N/O for now
+    # assume solar C/O,N/O,S/O for now
     # C2Or=cheq['CtoO'], N2Or=cheq['NtoO'])
 
     mmw_kg = mmw * cst.m_p  # [kg]
@@ -133,7 +107,7 @@ def simulate_spectra(
     target,
     system_dict,
     ancil_dict,
-    runtime_params,
+    runtime,
     out,
     verbose=False,
 ):
@@ -145,13 +119,11 @@ def simulate_spectra(
     3) two models for metallicity/mmw (mmw=2.3 or FINESSE mass-metallicity relation)
     4) TEC vs TEA (DISEQ is not implemented yet)
     '''
-    # print(runtime_params)
-    # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
 
     testTarget = bool(target.startswith('test'))
 
     # select Tier-1 or Tier-2 for spectra SNR
-    tier = runtime_params.tier
+    tier = runtime['ariel_simspectrum_tier'].value()
 
     sscmks = syscore.ssconstants(mks=True)
 
@@ -165,11 +137,19 @@ def simulate_spectra(
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
         'cerberus',
-        'cerberusTEA',
-        'cerberuslowmmw',
-        'cerberusNoclouds',
-        'cerberusTEANoclouds',
-        'cerberuslowmmwNoclouds',
+        # 'cerberusNonisothermal',
+        # 'cerberusTEA',
+        # 'cerberusTEANonisothermal',
+        'cerberusTEAgrid',
+        'cerberusTEAgridNonisothermal',
+        # 'cerberusNoclouds',
+        # 'cerberusNocloudsNonisothermal',
+        # 'cerberusTEANoclouds',
+        'cerberusTEAgridNoclouds',
+        # 'cerberuslowmmw',
+        # 'cerberuslowmmwNoclouds',
+        'cerberusGemliNoclouds',
+        'cerberusWaterNoclouds',
     ]
 
     if testTarget:
@@ -179,6 +159,16 @@ def simulate_spectra(
             'cerberusNoclouds',
             'cerberusTEANoclouds',
         ]
+
+    # load TEA equilibrium chemistry interpolation grid
+    modelName = (
+        'Pgrid_'
+        + str(runtime['cerberus_crbmodel_nlevels'].value())
+        + 'levels'
+        + str(runtime['cerberus_crbmodel_Hsmax'].value())
+        + 'scaleHeights'
+    )
+    interp_tea = get_TEA_grid(modelName)
 
     solarCtoO = 0.54951
 
@@ -204,7 +194,8 @@ def simulate_spectra(
             intFromTarget += int(target[-3:])
         for char in target + ' ' + planet_letter:
             intFromTarget = (
-                runtime_params.randomSeed * intFromTarget + ord(char)
+                runtime['ariel_simspectrum_randomseed'].value() * intFromTarget
+                + ord(char)
             ) % 1000000
         np.random.seed(intFromTarget)
 
@@ -223,17 +214,17 @@ def simulate_spectra(
         if oldArielRadformat:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
-                runtime_params,
+                runtime,
             )
         elif newArielRadformat:
             ariel_instrument = load_arielrad_results(
                 targetplanet,
-                runtime_params,
+                runtime,
             )
 
             # old_ariel_instrument = load_ariel_instrument(
             #    targetplanet,
-            #    runtime_params,
+            #    runtime,
             # )
             # print('old Nvisits',old_ariel_instrument['nVisits'])
             # print('new Nvisits',ariel_instrument['nVisits'])
@@ -244,7 +235,7 @@ def simulate_spectra(
                 targetplanet,
                 system_params,
                 ancil_params,
-                runtime_params,
+                runtime,
                 verbose=verbose,
             )
 
@@ -271,10 +262,13 @@ def simulate_spectra(
             )
             pgrid = np.exp(
                 np.arange(
-                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                    np.log(runtime_params.solrad)
-                    + runtime_params.Hsmax / runtime_params.nlevels,
-                    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    - runtime['cerberus_crbmodel_Hsmax'].value(),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    + runtime['cerberus_crbmodel_Hsmax'].value()
+                    / runtime['cerberus_crbmodel_nlevels'].value(),
+                    runtime['cerberus_crbmodel_Hsmax'].value()
+                    / (runtime['cerberus_crbmodel_nlevels'].value() - 1),
                 )
             )
             pressure = pgrid[::-1]
@@ -284,28 +278,30 @@ def simulate_spectra(
             # planet metallicity should be defined relative to the stellar metallicity
             metallicity_star_dex = system_params['FEH*']
             M_p = model_params['Mp']
-            if runtime_params.includeMetallicityDispersion:
+            if runtime['ariel_simspectrum_includeMetallicityDispersion']:
                 # make sure that the random mass is fixed for each target planet
                 np.random.seed(intFromTarget + 1234)
                 metallicity_planet_dex = massMetalRelationDisp(
                     metallicity_star_dex,
                     M_p,
-                    thorngren=runtime_params.thorngrenMassMetals,
-                    chachan=runtime_params.chachanMassMetals,
-                    dispersion=runtime_params.metallicityDispersion,
+                    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'],
+                    chachan=runtime['ariel_simspectrum_chachanMassMetals'],
+                    dispersion=runtime[
+                        'ariel_simspectrum_metallicityDispersion'
+                    ].value(),
                 )
             else:
                 metallicity_planet_dex = massMetalRelation(
                     metallicity_star_dex,
                     M_p,
-                    thorngren=runtime_params.thorngrenMassMetals,
-                    chachan=runtime_params.chachanMassMetals,
+                    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'],
+                    chachan=runtime['ariel_simspectrum_chachanMassMetals'],
                 )
             # print('metallicity_star_dex',metallicity_star_dex)
             # print('metallicity_planet_dex',metallicity_planet_dex)
             # metallicity_planet_dex_nonrandom = massMetalRelation(metallicity_star_dex, M_p,
-            #              thorngren=runtime_params.thorngrenMassMetals)
-            #              chachan=runtime_params.chachanMassMetals)
+            #          thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'])
+            #          chachan=runtime['ariel_simspectrum_chachanMassMetals'])
             # print('metallicity_planet_dex (non random)',metallicity_planet_dex_nonrandom)
             # print('planet mass',M_p)
 
@@ -315,22 +311,28 @@ def simulate_spectra(
 
             # option to use da Silva 2024 C/O trend as the baseline,
             #  (before adding on some dispersion)
-            if runtime_params.CtoOdaSilva:
+            if runtime['ariel_simspectrum_CtoOdaSilva']:
                 CtoOstar = ancil_params['CO*']
                 CtoO_planet_linear = randomCtoO_linear(
                     logCtoOaverage=CtoOstar + np.log10(solarCtoO),
-                    logCtoOdispersion=runtime_params.CtoOdispersion,
+                    logCtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
+                    ].value(),
                 )
                 # oldCtoO_planet_linear = randomCtoO_linear(
-                #    logCtoOaverage=runtime_params.CtoOaverage,
-                #    logCtoOdispersion=runtime_params.CtoOdispersion,
+                #    logCtoOaverage=runtime['ariel_simspectrum_CtoOaverage'].value(),
+                #    logCtoOdispersion=runtime['ariel_simspectrum_CtoOdispersion'].value(),
                 # )
                 # print('CtoO_planet_linear new,old',
                 #      CtoO_planet_linear,oldCtoO_planet_linear)
             else:
                 CtoO_planet_linear = randomCtoO_linear(
-                    logCtoOaverage=runtime_params.CtoOaverage,
-                    logCtoOdispersion=runtime_params.CtoOdispersion,
+                    logCtoOaverage=runtime[
+                        'ariel_simspectrum_CtoOaverage'
+                    ].value(),
+                    logCtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
+                    ].value(),
                 )
                 # print('CtoO_planet_linear',CtoO_planet_linear)
 
@@ -345,9 +347,14 @@ def simulate_spectra(
 
             # allow for arbitrary scaling of the spectrum SNR during testing
             if verbose:
-                print('SNR adjustment factor:', runtime_params.SNRfactor)
-            if runtime_params.SNRfactor:
-                uncertainties /= runtime_params.SNRfactor
+                print(
+                    'SNR adjustment factor:',
+                    runtime['ariel_simspectrum_SNRadjustment'].value(),
+                )
+            if runtime['ariel_simspectrum_SNRadjustment']:
+                uncertainties /= runtime[
+                    'ariel_simspectrum_SNRadjustment'
+                ].value()
 
             # ________LOOP OVER ALL SELECTED MODELS_______
             opticalDepthProfiles = {}
@@ -356,17 +363,75 @@ def simulate_spectra(
                     print()
                     print('starting Atmospheric Model:', atmosModel)
                 useTEA = bool('TEA' in atmosModel)
+                useTEAgrid = bool('TEAgrid' in atmosModel)
                 if useTEA:
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
+                if useTEAgrid:
+                    teagrid = interp_tea
+                else:
+                    teagrid = None
+                # consider non-isothermal T-P profiles
+                isothermal = not bool('Nonisothermal' in atmosModel)
+                if isothermal:
+                    model_params['Tparams'] = None
+                    model_params['temperatures'] = np.array(
+                        [model_params['Teq']] * len(pressure)
+                    )
+                else:
+                    model_params['Tparams'] = eqtemp * np.array(
+                        [
+                            1.4,
+                            1.25,
+                            1.0,
+                            0.85,
+                            0.95,
+                            1.25,
+                        ]
+                    )
+                    model_params['temperatures'] = TPprofile(
+                        model_params['Tparams'], pressure
+                    )
 
                 # ABUNDANCES
-                if 'lowmmw' in atmosModel:
+                mixratio = {}
+                # print('checking for gemli or water', atmosModel)
+                if 'Gemli' in atmosModel or 'Water' in atmosModel:
+                    model_params['metallicity'] = metallicity_planet_dex
+                    model_params['C/O'] = np.log10(
+                        CtoO_planet_linear / solarCtoO
+                    )
+                    mixratio, _, _, _ = crbutil.crbce(
+                        pressure,
+                        model_params['Teq'],
+                        X2Hr=model_params['metallicity'],
+                        C2Or=model_params['C/O'],
+                    )
+                    # print('mixratio!!!', mixratio)
+                    # to match gemli molecules, add CO2
+                    mixratio['CO2'] = mixratio['N2']
+                    # to match gemli molecules, drop N2
+                    mixratio.pop('N2')
+                    # print('mixratio!!!', mixratio)
+
+                    if 'Water' in atmosModel:
+                        molecules = list(mixratio.keys())
+                        for molecule in molecules:
+                            if molecule != 'H2O':
+                                mixratio.pop(molecule)
+                        if verbose:
+                            print('mixratio just water!!!', mixratio)
+
+                    for molecule, value in mixratio.items():
+                        model_params[molecule] = value
+
+                elif 'lowmmw' in atmosModel:
                     # print(' - using a low mmw')
                     model_params['metallicity'] = 0.0  # dex
                     model_params['C/O'] = 0.0  # [C/O] (relative to solar)
                     model_params['N/O'] = 0.0  # [N/O] (relative to solar)
+                    model_params['S/O'] = 0.0  # [S/O] (relative to solar)
                 else:
                     model_params['metallicity*'] = metallicity_star_dex
                     # model_params['metallicity'] = metallicity_star_dex + metallicity_planet_dex
@@ -384,10 +449,11 @@ def simulate_spectra(
                         CtoO_planet_linear / solarCtoO
                     )
                     # print('C/O model param',model_params['C/O'])
-                    if runtime_params.CtoOdaSilva:
+                    if runtime['ariel_simspectrum_CtoOdaSilva']:
                         model_params['N/O'] = ancil_params['NO*']
                     else:
                         model_params['N/O'] = 0
+                    model_params['S/O'] = 0
 
                 # check whether this planet+metallicity combo is convergent/bound atmosphere
                 _, _, Hs = calc_mmw_Hs(
@@ -414,17 +480,14 @@ def simulate_spectra(
 
                 fluxDepth_by_molecule = {}
                 moleculeProfiles = {}
-                mixratio = {}
 
                 if 'cerberus' in atmosModel:
                     # CLOUD PARAMETERS
                     if 'Noclouds' in atmosModel:
-                        model_params['CTP'] = (
-                            3.0  # cloud deck is very deep - 1000 bars
-                        )
-                        model_params['HScale'] = (
-                            -10.0
-                        )  # small number means essentially no haze
+                        # locate cloud deck very deep (1000 bars)
+                        model_params['CTP'] = 3.0
+                        # small number (log scale) means essentially no haze
+                        model_params['HScale'] = -10.0
                         model_params['HLoc'] = 0.0
                         model_params['HThick'] = 0.0
                     else:
@@ -436,7 +499,7 @@ def simulate_spectra(
                         # model_params['HThick'] = 0.
 
                         # use the median from Estrella 2022 or a random selection?
-                        if runtime_params.randomCloudProperties:
+                        if runtime['ariel_simspectrum_randomCloudProperties']:
                             # make sure that random cloud properties are fixed between runs
                             np.random.seed(intFromTarget + 123456)
                             cloudParams = randomCloudParameters()
@@ -474,7 +537,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        _ = myxsecs(tempspc, runtime_params, xslib)
+                        _ = myxsecs(tempspc, runtime, xslib)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -498,12 +561,14 @@ def simulate_spectra(
                         opticalDepthProfiles,
                         moleculeProfiles,
                     ) = make_cerberus_atmos(
-                        runtime_params,
+                        runtime,
                         wavelength_um,
                         model_params,
                         xslib,
                         planet_letter,
                         chemistry=chemistry,
+                        teagrid=teagrid,
+                        mixratios=mixratio,
                     )
                     # pressures should be the same thing as pressure
                     if np.any(pressures != pressure):
@@ -511,41 +576,65 @@ def simulate_spectra(
 
                     # save the mixing ratios for this model
                     # (to compare against FREE chemistry case (especially gemli)
-                    if useTEA:
-                        T = model_params['Teq']
-                        tempCoeffs = [
-                            0,
-                            T,
-                            0,
-                            1,
-                            0,
-                            -1,
-                            1,
-                            0,
-                            -1,
-                            1,
-                        ]
-                        mixratioprofiles = crbutil.calcTEA(
-                            tempCoeffs,
-                            pressure,
-                            metallicity=10.0 ** model_params['metallicity'],
-                            C_O=0.55 * 10.0 ** model_params['C/O'],
-                        )
-                        mixratio = {}
-                        for molecule in mixratioprofiles:
-                            mixratio[molecule] = np.log10(
-                                np.mean(10.0 ** mixratioprofiles[molecule])
+                    # only calculate here if it's not set already as fixed value
+                    if not mixratio:
+                        if useTEAgrid:
+                            grid_points = np.column_stack(
+                                (
+                                    model_params['temperatures'],
+                                    pressure,
+                                    10.0 ** model_params['metallicity']
+                                    * np.ones(pressure.size),
+                                    0.55
+                                    * 10.0 ** model_params['C/O']
+                                    * np.ones(pressure.size),
+                                )
                             )
-                    else:
-                        mixratio, _, _, _ = crbutil.crbce(
-                            pressure,
-                            model_params['Teq'],
-                            X2Hr=model_params['metallicity'],
-                            C2Or=model_params['C/O'],
-                            # X2Hr=10.0 ** model_params['metallicity'],
-                            # C2Or=0.55 * 10.0 ** model_params['C/O'],
-                        )
-                    # print('mixratio!', useTEA, mixratio)
+                            mixratioprofiles = {}
+                            for molecule, interp in interp_tea.items():
+                                # print('molecule', molecule)
+                                # interp = interp_tea[molecule]
+                                mxr = interp(grid_points)
+                                mixratioprofiles[molecule] = mxr
+
+                            mixratio = {}
+                            for (
+                                molecule,
+                                mixratioprofile,
+                            ) in mixratioprofiles.items():
+                                mixratio[molecule] = mixratioprofile
+                                # Don't average the mixratio?
+                                # mixratio[molecule] = np.log10(
+                                #    np.mean(10.0 ** mixratioprofile)
+                                # )
+
+                        elif useTEA:
+                            # T = model_params['Teq']
+                            # tempCoeffs = [0, T, 0, 1, 0, -1, 1, 0, -1, 1]
+                            mixratioprofiles = crbutil.calcTEA(
+                                model_params['temperatures'],
+                                # tempCoeffs,
+                                pressure,
+                                metallicity=10.0 ** model_params['metallicity'],
+                                C_O=0.55 * 10.0 ** model_params['C/O'],
+                            )
+                            mixratio = {}
+                            for molecule in mixratioprofiles:
+                                mixratio[molecule] = mixratioprofiles[molecule]
+                                # Don't average the mixratio?
+                                # mixratio[molecule] = np.log10(
+                                #    np.mean(10.0 ** mixratioprofiles[molecule])
+                                # )
+                        else:
+                            mixratio, _, _, _ = crbutil.crbce(
+                                pressure,
+                                model_params['Teq'],
+                                X2Hr=model_params['metallicity'],
+                                C2Or=model_params['C/O'],
+                                # X2Hr=10.0 ** model_params['metallicity'],
+                                # C2Or=0.55 * 10.0 ** model_params['C/O'],
+                            )
+                        # print('mixratio!', useTEA, mixratio)
 
                 elif 'taurex' in atmosModel:
                     log.error('ERROR: taurex no longer an option')
@@ -624,6 +713,7 @@ def simulate_spectra(
 
                 # save the mixing ratio (to compare against gemli free chemistry)
                 out['data'][planet_letter][atmosModel]['mixratio'] = mixratio
+                # print('mixratio saved at the bottom', mixratio)
 
                 # cerberus also wants the scale height, to normalize the spectrum
                 #  keep Hs as it's own param (not inside of system_ or model_param
@@ -687,7 +777,8 @@ def simulate_spectra(
                         molecules,
                         fluxDepth_by_molecule_rebin,
                         out['data'][planet_letter][atmosModel]['Hs'],
-                        verbose=verbose,
+                        verbose=False,
+                        # verbose=verbose,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -706,7 +797,8 @@ def simulate_spectra(
                     molecules,
                     fluxDepth_by_molecule_rebin,
                     out['data'][planet_letter][atmosModel]['Hs'],
-                    verbose=verbose,
+                    verbose=False,
+                    # verbose=verbose,
                 )
                 out['data'][planet_letter][atmosModel]['plot_depthprobed'] = (
                     plot_depthprobed(
@@ -716,7 +808,8 @@ def simulate_spectra(
                         wavelength_um_rebin,
                         pressure,
                         opticalDepthProfiles,
-                        verbose=verbose,
+                        verbose=False,
+                        # verbose=verbose,
                     )
                 )
                 out['data'][planet_letter][atmosModel][
@@ -726,6 +819,7 @@ def simulate_spectra(
                     planet_letter,
                     moleculeProfiles,
                     pressure,
+                    temperature=model_params['temperatures'],
                     verbose=verbose,
                 )
 

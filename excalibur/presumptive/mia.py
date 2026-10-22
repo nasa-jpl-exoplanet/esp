@@ -54,16 +54,35 @@ def worker(args):
     fn = f'/tmp/{urlparse(args.url).netloc}.mia.pkl'
     total = len(args.nodes) * args.replicas
     response = requests.get(
-        urljoin(args.url, 'app/schedule/crew'), timeout=90, verify=args.ca_path
+        urljoin(args.url, 'api/schedule/stats'), timeout=90, verify=args.ca_path
     )
     response.raise_for_status()
-    current = response.json()
+    full = response.json()
+    if full['status'] != 'success':
+        print(
+            f'Server failsd to complete request api/schedule/status because: {full["msg"]}'
+        )
+        return 1
+    current = full['content']['workers']
     current['idle'] = int(current['idle'])
-    current['busy'] = sorted(
-        task.split('duration')[0].strip() for task in current['busy']
+    current['busy'] = int(current['busy'])
+    response = requests.get(
+        urljoin(args.url, 'api/schedule/in-progress'),
+        timeout=90,
+        verify=args.ca_path,
+    )
+    response.raise_for_status()
+    full = response.json()
+    if full['status'] != 'success':
+        print(
+            f'Server failsd to complete request api/schedule/in-progress because: {full["msg"]}'
+        )
+        return 1
+    current['wip'] = sorted(
+        task.split('duration')[0].strip() for task in full['content']
     )
     current['reported'] = False
-    alive = current['idle'] + len(current['busy'])
+    alive = current['idle'] + current['busy']
     if alive != total:
         previous = {}
         reported = False
@@ -91,7 +110,7 @@ def worker(args):
                         f'''
  The pipeline is reporting {alive - total} undead processes and no other tasks. Resetting the pipeline to purge the undead workers and restore the pipeline availability.
 
-{current['busy']}
+{current['wip']}
                     ''',
                     )
                     reported = True

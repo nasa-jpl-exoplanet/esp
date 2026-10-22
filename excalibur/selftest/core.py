@@ -16,27 +16,13 @@ from collections import defaultdict
 
 from excalibur.selftest.plotters import plot_fits_vs_truth
 
-# from collections import namedtuple
 import logging
 
 log = logging.getLogger(__name__)
 
-# SelftestAnalysisParams = namedtuple(
-#    'cerberus_analysis_params_from_runtime',
-#    [
-#        'tier',
-#        'boundTeq',
-#        'boundAbundances',
-#        'boundCTP',
-#        'boundHLoc',
-#        'boundHScale',
-#        'boundHThick',
-#    ],
-# )
-
 
 # --------------------------------------------------------------------
-# def analysis(aspects, filt, runtime_params, out, verbose=False):
+# def analysis(aspects, filt, runtime, out, verbose=False):
 def analysis(aspects, filt, chemistrymodel, out, verbose=False):
     '''
     Plot out the analysis of the overall sample of test targets
@@ -72,8 +58,8 @@ def analysis(aspects, filt, chemistrymodel, out, verbose=False):
             targetlist.append(a)
     print('targetlist', targetlist)
 
-    # print('runtime', runtime_params)
-    # prior_ranges = set_prior_bound(eqtemp, runtime_params)
+    # print('runtime', runtime)
+    # prior_ranges = set_prior_bound(eqtemp, runtime)
     # print('using this prior range:', prior_ranges)
     # prior_ranges = None
 

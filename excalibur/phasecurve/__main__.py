@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.phasecurve.bot
+import excalibur.phasecurve
 
 # ------------- ------------------------------------------------------
 if __name__ == "__main__":
@@ -17,7 +17,7 @@ if __name__ == "__main__":
         pass
     else:
         NAME = ['normalization', 'whitelight', None][-1]  # -1 to run them all
-        SUBTASKS = excalibur.phasecurve.bot.Actor('phasecurve', 4, rid, tn)
+        SUBTASKS = excalibur.phasecurve.task('phasecurve', 4, rid, tn)
         SUBTASKS.do(NAME)
         pass
     dawgie.db.close()

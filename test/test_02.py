@@ -16,7 +16,23 @@ NS = collections.namedtuple(
 )
 ARGS = NS(None, 't@x.y', 'https://excalibur.jpl.nasa.gov:8080', 3, [1, 2, 3], 5)
 PERFORMED = [False]
-RESPONSE = [{}]
+RESPONSE = [{}, {}, {}]
+
+
+def _pls(name: str, ready: bool, status: str):
+    return {
+        'content': {'name': name, 'ready': ready, 'status': status},
+        'msg': '',
+        'status': 'success',
+    }
+
+
+def _sch(busy: int, idle: int, wip: [str]):
+    return {'content': wip, 'msg': '', 'status': 'success'}, {
+        'content': {'workers': {'busy': busy, 'idle': idle}},
+        'msg': '',
+        'status': 'success',
+    }
 
 
 def fn():
@@ -24,13 +40,18 @@ def fn():
 
 
 def mock_request_get(url, **kwds):
+    known = [
+        '/api/pipeline/state',
+        '/api/schedule/in-progress',
+        '/api/schedule/stats',
+    ]
     mock_response = unittest.mock.Mock()
     path = urlparse(url).path
     unittest.TestCase().assertTrue('timeout' in kwds)
     unittest.TestCase().assertTrue('verify' in kwds)
-    if path in ['/app/pl/state', '/app/schedule/crew']:
+    if path in known:
         mock_response.status_code = 200
-        mock_response.json.return_value = RESPONSE[0]
+        mock_response.json.return_value = RESPONSE[known.index(path)]
         mock_response.raise_for_status.return_value = None
     else:
         mock_reponse.status_code = 404
@@ -75,7 +96,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_check_running(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'name': 'running', 'status': 'active'}
+        RESPONSE[0] = _pls('running', True, 'active')
         retval = fsm.check(ARGS)
         self.assertEqual(0, retval)
         self.assertFalse(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))
@@ -90,7 +111,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_check_inactive(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'name': 'running', 'status': 'inactive'}
+        RESPONSE[0] = _pls('running', False, 'inactive')
         retval = fsm.check(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))
@@ -115,7 +136,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_check_loading(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'name': 'contemplation', 'status': 'entering'}
+        RESPONSE[0] = _pls('contemplation', False, 'entering')
         retval = fsm.check(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))
@@ -140,13 +161,13 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_check_state_change(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'name': 'apple', 'status': 'active'}
+        RESPONSE[0] = _pls('apple', True, 'active')
         retval = fsm.check(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))
         self.assertFalse(PERFORMED[0])
         time.sleep(1)
-        RESPONSE[0] = {'name': 'banana', 'status': 'active'}
+        RESPONSE[0] = _pls('banana', True, 'active')
         retval = fsm.check(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.fsm.pkl'))
@@ -171,7 +192,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_worker_all_idle(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {'busy': [], 'idle': '15'}
+        RESPONSE[1:] = _sch(0, 15, [])
         retval = mia.worker(ARGS)
         self.assertEqual(0, retval)
         self.assertFalse(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
@@ -186,10 +207,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_worker_all_present(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {
-            'busy': ['a b c', 'b b c', 'c b c', 'd b c'],
-            'idle': '11',
-        }
+        RESPONSE[1:] = _sch(4, 11, ['a b c', 'b b c', 'c b c', 'd b c'])
         retval = mia.worker(ARGS)
         self.assertEqual(0, retval)
         self.assertFalse(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
@@ -204,10 +222,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_worker_fallen(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {
-            'busy': ['a b c', 'b b c', 'c b c'],
-            'idle': '11',
-        }
+        RESPONSE[1:] = _sch(3, 11, ['a b c', 'b b c', 'c b c'])
         retval = mia.worker(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
@@ -226,18 +241,12 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_worker_fallen_with_change(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {
-            'busy': ['a b c', 'b b c', 'c b c'],
-            'idle': '11',
-        }
+        RESPONSE[1:] = _sch(3, 11, ['a b c', 'b b c', 'c b c'])
         retval = mia.worker(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
         self.assertFalse(PERFORMED[0])
-        RESPONSE[0] = {
-            'busy': ['a b c', 'b b c'],
-            'idle': '11',
-        }
+        RESPONSE[1:] = _sch(2, 11, ['a b c', 'b b c'])
         retval = mia.worker(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))
@@ -256,10 +265,7 @@ class ValidateDespotism(unittest.TestCase):
         side_effect=mock_subprocess_run,
     )
     def test_worker_undead(self, mock_run, mock_email, mock_get):
-        RESPONSE[0] = {
-            'busy': ['a b c', 'b b c', 'c b c'],
-            'idle': '15',
-        }
+        RESPONSE[1:] = _sch(3, 15, ['a b c', 'b b c', 'c b c'])
         retval = mia.worker(ARGS)
         self.assertEqual(1, retval)
         self.assertTrue(os.path.exists(f'/tmp/{fn()}.mia.pkl'))

@@ -1,124 +1,84 @@
 '''cerberus fmcontext ds'''
 
 # Heritage code shame:
+# pylint: disable=invalid-name
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
 
 import excalibur
 
 from collections import namedtuple
 
-# -- GLOBAL CONTEXT FOR PYMC DETERMINISTICS ---------------------------------------------
+# GLOBAL CONTEXT FOR PYMC DETERMINISTICS
+# GMR: Labels are defined here and nowhere else, overcomplicated for retrocomp
+ndctx = {
+    'atom_xsec': None,
+    'atomlist': None,
+    'chemistry': None,
+    'cialist': None,
+    'cleanup': None,
+    'fixedParams': None,
+    'forwardmodel': None,
+    'hitemplist': None,
+    'Hsmax': None,
+    'hzlib': None,
+    'interp_tea': None,
+    'isothermal': None,
+    'mcmcdat': None,
+    'mcmcsig': None,
+    'mcmcwav': None,
+    'model': None,
+    'modparlbl': None,
+    'nlevels': None,
+    'nodeshape': None,
+    'offsetthr': None,
+    'orbp': None,
+    'planet': None,
+    'priors': None,
+    'rp0': None,
+    'runtime': None,
+    'solrad': None,
+    'spc': None,
+    'tspectrum': None,
+    'xmollist': None,
+    'xsl': None,
+}
 
-CONTEXT = namedtuple(
-    'CONTEXT',
-    [
-        'cleanup',
-        'model',
-        'planet',
-        'rp0',
-        'orbp',
-        'tspectrum',
-        'xsl',
-        'spc',
-        'modparlbl',
-        'hzlib',
-        'fixedParams',
-        'mcmcdat',
-        'mcmcsig',
-        'nodeshape',
-        'forwardmodel',
-        'knownspecies',
-        'cialist',
-        'xmollist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'lbroadening',
-        'lshifting',
-        'isothermal',
-    ],
-)
+CONTEXT = namedtuple('CONTEXT', ndctx.keys())
+
+
+def dctxupdt(dct=None, freeze=False):
+    '''
+    GMR: Rewriting this as it was intended to start with
+    '''
+    if dct is None:  # INIT
+        dctx = ndctx
+        pass
+    else:  # UPDATE
+        dctx = excalibur.cerberus.forward_model.dctx
+        for k in dct:
+            dctx[k] = dct[k]
+            pass
+        pass
+    excalibur.cerberus.forward_model.dctx = dctx
+    # GMR: Immutables are no good at creation for us, use dicts.
+    # Should freeze context before sampling and use namedtuples in forward model.
+    if freeze:
+        ctxt = CONTEXT(**dctx)
+        excalibur.cerberus.forward_model.ctxt = ctxt
+        # GMR: We do not want to duplicate heavy context interpolators
+        # Clean that up someday
+        excalibur.util.tensor.ctxt = ctxt
+        pass
+    return dctx
+
+
+# --------------------------------
+# -- DITCH WHAT S BELOW SOMEDAY --
 
 
 def ctxtinit():
-    ctxt = CONTEXT(
-        cleanup=None,
-        model=None,
-        planet=None,
-        rp0=None,
-        orbp=None,
-        tspectrum=None,
-        xsl=None,
-        spc=None,
-        modparlbl=None,
-        hzlib=None,
-        fixedParams=None,
-        mcmcdat=None,
-        mcmcsig=None,
-        nodeshape=None,
-        forwardmodel=None,
-        knownspecies=None,
-        cialist=None,
-        xmollist=None,
-        nlevels=None,
-        solrad=None,
-        Hsmax=None,
-        lbroadening=None,
-        lshifting=None,
-        isothermal=None,
-    )
+    '''
+    GMR: Init context variables
+    '''
+    ctxt = CONTEXT(**ndctx)
     return ctxt
-
-
-def ctxtupdt(
-    runtime=None,
-    cleanup=None,
-    model=None,
-    planet=None,
-    rp0=None,
-    orbp=None,
-    tspectrum=None,
-    xsl=None,
-    spc=None,
-    modparlbl=None,
-    hzlib=None,
-    fixed_params=None,
-    mcmcdat=None,
-    mcmcsig=None,
-    nodeshape=None,
-    forwardmodel=None,
-):
-    '''
-    G. ROUDIER: Update global context for pymc deterministics
-    '''
-    # sys.modules[__name__].ctxt = CONTEXT(
-    excalibur.cerberus.forward_model.ctxt = CONTEXT(
-        cleanup=cleanup,
-        model=model,
-        planet=planet,
-        rp0=rp0,
-        orbp=orbp,
-        tspectrum=tspectrum,
-        xsl=xsl,
-        spc=spc,
-        modparlbl=modparlbl,
-        hzlib=hzlib,
-        fixedParams=fixed_params,
-        mcmcdat=mcmcdat,
-        mcmcsig=mcmcsig,
-        nodeshape=nodeshape,
-        forwardmodel=forwardmodel,
-        knownspecies=runtime.knownspecies,
-        cialist=runtime.cialist,
-        xmollist=runtime.xmollist,
-        nlevels=runtime.nlevels,
-        solrad=runtime.solrad,
-        Hsmax=runtime.Hsmax,
-        lbroadening=runtime.lbroadening,
-        lshifting=runtime.lshifting,
-        isothermal=runtime.isothermal,
-    )
-
-    excalibur.util.tensor.ctxt = excalibur.cerberus.forward_model.ctxt
-
-    return

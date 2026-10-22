@@ -7,7 +7,7 @@ import dawgie.security
 
 from excalibur.util.main import main_start
 
-import excalibur.eclipse.bot
+import excalibur.eclipse
 
 # ------------- ------------------------------------------------------
 if __name__ == "__main__":
@@ -16,10 +16,10 @@ if __name__ == "__main__":
     if tn in ['', '__all__']:
         pass
     else:
-        NAME = ['normalize', 'spectrum', 'whitelight', None][
+        NAME = ['normalize', 'whitelight', 'spectrum', None][
             -1
         ]  # -1 to run them all
-        subtasks = excalibur.eclipse.bot.Actor('eclipse', 4, rid, tn)
+        subtasks = excalibur.eclipse.task('eclipse', 4, rid, tn)
         subtasks.do(NAME)
         dawgie.db.close()
         dawgie.security.finalize()

@@ -70,11 +70,8 @@ class XSLib(dawgie.Algorithm):
         '''Top level algorithm call'''
 
         target = repr(self).split('.')[1]
-
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
-        # for fltr in ['Ariel-sim']:
+
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
@@ -92,18 +89,6 @@ class XSLib(dawgie.Algorithm):
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
 
             runtime = self.__rt.sv_as_dict()['status']
-            runtime_params = crbcore.CerbXSlibParams(
-                knownspecies=runtime[
-                    'cerberus_crbmodel_HITEMPmolecules'
-                ].molecules,
-                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
-                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
-            )
 
             # for Ariel targets, option to only do the actually Tier-2 targets
             targetlistcheck = True
@@ -126,9 +111,7 @@ class XSLib(dawgie.Algorithm):
 
             if vspc and targetlistcheck:
                 log.info('--< CERBERUS XSLIB: %s  %s >--', fltr, target)
-                update = self._xslib(
-                    sv, runtime_params, only_these_planets, fltrs.index(fltr)
-                )
+                update = self._xslib(sv, runtime, only_these_planets, fltr)
             else:
                 if targetlistcheck:
                     errstr = [m for m in [sspc] if m is not None]
@@ -149,15 +132,25 @@ class XSLib(dawgie.Algorithm):
             )
         return
 
-    def _xslib(self, spc, runtime_params, only_these_planets, index):
+    def _xslib(self, spc, runtime, only_these_planets, fltr):
         '''Core code call'''
-        cs = crbcore.myxsecs(
-            spc,
-            runtime_params,
-            self.__out[index],
-            only_these_planets=only_these_planets,
-            verbose=False,
-        )
+        if 'JWST' in fltr:
+            cs = crbcore.jwstwxs(
+                spc,
+                runtime,
+                self.__out[fltrs.index(fltr)],
+                verbose=False,
+            )
+            pass
+        else:
+            cs = crbcore.myxsecs(
+                spc,
+                runtime,
+                self.__out[fltrs.index(fltr)],
+                only_these_planets=only_these_planets,
+                verbose=False,
+            )
+            pass
         return cs
 
     @staticmethod
@@ -214,63 +207,41 @@ class Atmos(dawgie.Algorithm):
             sfin = 'Missing system params!'
 
         runtime = self.__rt.sv_as_dict()['status']
-        runtime_params = crbcore.CerbAtmosParams(
-            MCMC_chain_length=runtime['cerberus_steps'].value(),
-            MCMC_chains=runtime['cerberus_chains'].value(),
-            MCMC_sliceSampler=runtime['cerberus_atmos_sliceSampler'],
-            fitCloudParameters=runtime['cerberus_atmos_fitCloudParameters'],
-            cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-            fitT=runtime['cerberus_atmos_fitT'],
-            fitCtoO=runtime['cerberus_atmos_fitCtoO'],
-            fitNtoO=runtime['cerberus_atmos_fitNtoO'],
-            fitmolecules=runtime['cerberus_crbmodel_fitmolecules'].molecules,
-            knownspecies=runtime['cerberus_crbmodel_HITEMPmolecules'].molecules,
-            cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-            xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
-            nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-            solrad=runtime['cerberus_crbmodel_solrad'].value(),
-            Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-            lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-            lshifting=runtime['cerberus_crbmodel_lshifting'],
-            isothermal=runtime['cerberus_crbmodel_isothermal'],
-            boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-            boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-            boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-            boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-            boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-            boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-        )
 
         svupdate = []
-        # just one filter, while debugging:
-        # for fltr in ['HST-WFC3-IR-G141-SCAN']:
         # for fltr in ['Ariel-sim']:
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
 
             update = False
+            # XSLIB CHECK
             if fltr in self.__xsl.sv_as_dict():
                 vxsl, sxsl = checksv(self.__xsl.sv_as_dict()[fltr])
                 if sxsl:
                     sxsl = fltr + ' missing XSL'
             else:
                 vxsl, sxsl = (False, fltr + ' missing XSL')
-
+                pass
+            # INPUT SPECTRUM CHECK
             if fltr == 'Ariel-sim':
                 sv = self.__arielsim.sv_as_dict()['parameters']
                 vspc, sspc = checksv(sv)
                 sspc = 'Ariel-sim spectrum not found'
+                pass
             elif fltr in self.__spc.sv_as_dict().keys():
                 sv = self.__spc.sv_as_dict()[fltr]
                 if 'data' in sv and 'target' not in sv['data']:
                     sv['data']['target'] = 'HST spectrum needs target name'
+                    pass
                 vspc, sspc = checksv(sv)
+                pass
             else:
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
+                pass
 
-            # for Ariel targets, option to only do the actually Tier-2 targets
+            # for Ariel targets, option to only do the Tier-2 targets
             targetlistcheck = True
             only_these_planets = []
             if (
@@ -287,7 +258,6 @@ class Atmos(dawgie.Algorithm):
                     for planet in planetlist:
                         if planet.startswith(target + ' '):
                             only_these_planets.append(planet[-1])
-                # print('only these planets', only_these_planets)
 
             if vfin and vxsl and vspc and targetlistcheck:
                 log.info('--< CERBERUS ATMOS: %s  %s >--', fltr, target)
@@ -296,19 +266,24 @@ class Atmos(dawgie.Algorithm):
                     self.__fin.sv_as_dict()['parameters'],
                     self.__xsl.sv_as_dict()[fltr],
                     sv,
-                    runtime_params,
+                    runtime,
                     only_these_planets,
-                    fltrs.index(fltr),
                     fltr,
                 )
+                pass
             else:
                 if targetlistcheck:
                     errstr = [m for m in [sfin, sspc, sxsl] if m is not None]
+                    pass
                 else:
                     errstr = ['not in the Ariel target list']
+                    pass
                 self._failure(errstr[0], target)
+                pass
             if update:
                 svupdate.append(self.__out[fltrs.index(fltr)])
+                pass
+            pass
         self.__out = svupdate
         if self.__out:
             _ = excalibur.lagger()
@@ -320,33 +295,38 @@ class Atmos(dawgie.Algorithm):
             )
         return
 
-    def _atmos(
-        self, fin, xsl, spc, runtime_params, only_these_planets, index, fltr
-    ):
-        '''Core code call'''
-
-        mcmc_chains = runtime_params.MCMC_chains
-        mcmc_chain_length = runtime_params.MCMC_chain_length
-        # print('MCMC_chain_length', mcmc_chain_length)
-        # mcmc_chain_length = 1000
-        # mcmc_chain_length = 10
-        # print('MCMC_chain_length', mcmc_chain_length)
+    def _atmos(self, fin, xsl, spc, runtime, only_these_planets, fltr):
+        '''
+        Core code call
+        '''
         log.info(
-            ' calling atmos from cerb-alg-atmos  chain len=%d',
-            mcmc_chain_length,
+            '--< CERBERUS ATMOS: Chain length %d >--',
+            runtime['cerberus_steps'].value(),
         )
-        am = crbcore.atmos(
-            fin,
-            xsl,
-            spc,
-            runtime_params,
-            self.__out[index],
-            fltr,
-            only_these_planets=only_these_planets,
-            Nchains=mcmc_chains,
-            chainlen=mcmc_chain_length,
-            verbose=False,
-        )  # singlemod='TEC' after chainlen
+        if 'JWST' in fltr:
+            am = crbcore.jwstatmos(
+                self.__fin.sv_as_dict()['parameters'],
+                xsl,
+                spc,
+                self.__rt.sv_as_dict()['status'],
+                self.__out[fltrs.index(fltr)],
+                verbose=False,
+            )
+            pass
+        else:
+            am = crbcore.atmos(
+                fin,
+                xsl,
+                spc,
+                runtime,
+                self.__out[fltrs.index(fltr)],
+                fltr,
+                only_these_planets=only_these_planets,
+                Nchains=runtime['cerberus_chains'].value(),
+                chainlen=runtime['cerberus_steps'].value(),
+                verbose=False,
+            )
+            pass
         return am
 
     @staticmethod
@@ -407,24 +387,6 @@ class Results(dawgie.Algorithm):
         update = False
         if vfin and vanc:
             runtime = self.__rt.sv_as_dict()['status']
-            runtime_params = crbcore.CerbResultsParams(
-                nrandomwalkers=runtime[
-                    'cerberus_results_nrandomwalkers'
-                ].value(),
-                randomseed=runtime['cerberus_results_randomseed'].value(),
-                knownspecies=runtime[
-                    'cerberus_crbmodel_HITEMPmolecules'
-                ].molecules,
-                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
-                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                lbroadening=runtime['cerberus_crbmodel_lbroadening'],
-                lshifting=runtime['cerberus_crbmodel_lshifting'],
-                isothermal=runtime['cerberus_crbmodel_isothermal'],
-            )
 
             # available_filters = self.__xsl.sv_as_dict().keys()
             # available_filters = self.__atm.sv_as_dict().keys()
@@ -452,7 +414,7 @@ class Results(dawgie.Algorithm):
                     and runtime['cerberus_arielsample_tier'].value() == 2
                 ):
                     alltargetlists = get_target_lists()
-                    targetlist = alltargetlists['ariel_stars_2years']
+                    targetlist = alltargetlists['ariel_stars_tier2']
                     if target not in targetlist:
                         targetlistcheck = False
 
@@ -469,7 +431,7 @@ class Results(dawgie.Algorithm):
                     update = self._results(
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
-                        runtime_params,
+                        runtime,
                         only_these_planets,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
@@ -504,7 +466,7 @@ class Results(dawgie.Algorithm):
         self,
         trgt,
         fltr,
-        runtime_params,
+        runtime,
         only_these_planets,
         fin,
         ancil,
@@ -516,7 +478,7 @@ class Results(dawgie.Algorithm):
         resout = crbcore.results(
             trgt,
             fltr,
-            runtime_params,
+            runtime,
             fin,
             ancil,
             xsl,
@@ -615,24 +577,14 @@ class Analysis(dawgie.Analyzer):
                 # runtime2 = self.__rtc.sv_as_dict()['status']
                 # print('runtime old2 way',runtime2)
 
-                # RUNTIME DOESNT WORK YET FOR ASPECTS!!
-                runtime_params = crbcore.CerbAnalysisParams(
-                    # tier=runtime['ariel_simspectrum_tier'].value(),
-                    tier=2,
-                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                )
-                # if runtime_params.tier == None:
-                #    runtime_params.tier = 2  # no dice. it's too tupley
-                # print('runtime', runtime_params)
+                # this might actually work now that it's not a tuple
+                # if runtime['ariel_simspectrum_tier'].value() == None:
+                #    runtime['ariel_simspectrum_tier'].value() = 2
+                # print('runtime', runtime)
 
                 log.info('--< CERBERUS ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
-                    aspects, fltr, runtime_params, fltrs.index(fltr)
+                    aspects, fltr, runtime, fltrs.index(fltr)
                 )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
@@ -645,10 +597,10 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    def _analysis(self, aspects, fltr, runtime_params, index):
+    def _analysis(self, aspects, fltr, runtime, index):
         '''Core code call'''
         analysisout = crbcore.analysis(
-            aspects, fltr, runtime_params, self.__out[index], verbose=False
+            aspects, fltr, runtime, self.__out[index], verbose=False
         )
         return analysisout
 

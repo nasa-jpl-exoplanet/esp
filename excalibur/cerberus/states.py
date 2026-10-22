@@ -26,15 +26,58 @@ class XslibSv(ExcaliburSV):
     def view(self, caller: excalibur.Identity, visitor: dawgie.Visitor) -> None:
         '''view ds'''
         if self['STATUS'][-1]:
-            myfig = plt.figure()
-            crblogo = img.imread(
-                os.path.join(
-                    excalibur.context['data_dir'], 'CERBERUS/cerberus.png'
-                )
-            )
-            plt.imshow(crblogo)
-            plt.axis('off')
-            save_plot_toscreen(myfig, visitor, headertext='Cerberus ')
+            # formerly xslib just showed a weird dog
+            # crblogo = img.imread(
+            #    os.path.join(
+            #        excalibur.context['data_dir'], 'CERBERUS/cerberus.png'
+            #    )
+            # )
+            # myfig = plt.figure()
+            # plt.imshow(crblogo)
+            # plt.axis('off')
+
+            # now we show the cross-sections as function of temperature
+            for planet_letter in self['data']:
+                for dictkey in self['data'][planet_letter].keys():
+                    if dictkey.startswith('plot_'):
+                        # if dictkey == 'plot_depthprobed':
+                        title = (
+                            '------ cross-sections for planet '
+                            + planet_letter
+                            + ' ------'
+                        )
+                        visitor.add_image(
+                            '...',
+                            title,
+                            self['data'][planet_letter][dictkey],
+                        )
+                        pass
+                    pass
+
+                # special case for JWST data, where results are by visit
+                for maybevisit in self['data'][planet_letter]:
+                    for dictkey in self['data'][planet_letter][
+                        maybevisit
+                    ].keys():
+                        if dictkey.startswith('plot_'):
+                            title = (
+                                '------ cross-sections for planet '
+                                + planet_letter
+                                + str(maybevisit)
+                                + ' ------'
+                            )
+                            visitor.add_image(
+                                '...',
+                                title,
+                                self['data'][planet_letter][maybevisit][
+                                    dictkey
+                                ],
+                            )
+                            pass
+                        pass
+                    pass
+                pass
+            pass
         return
 
 
