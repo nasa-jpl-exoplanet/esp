@@ -1329,7 +1329,7 @@ def ppar():
         'M*_uperr': 0.51,
         'M*_lowerr': -0.51,
         'M*_ref': 'Stassun et al. 2017',
-        'LOGG*':4.36,
+        'LOGG*': 4.36,
         'LOGG*_uperr': 0.30,
         'LOGG*_lowerr': -0.30,
         'LOGG*_ref': 'Stassun et al. 2017',
@@ -1376,9 +1376,12 @@ def ppar():
     for starname in ['HAT-P-30']:
         # print('overwrite before', overwrite[starname])
         system_info = copy.deepcopy(overwrite[starname])
-        logg_derived, logg_lowerr_derived, logg_uperr_derived, logg_ref_derived = (
-            derive_LOGGstar_from_R_and_M(system_info)
-        )
+        (
+            logg_derived,
+            logg_lowerr_derived,
+            logg_uperr_derived,
+            logg_ref_derived,
+        ) = derive_LOGGstar_from_R_and_M(system_info)
         overwrite[starname]['LOGG*'] = float(logg_derived[0])
         overwrite[starname]['LOGG*_lowerr'] = float(logg_lowerr_derived[0])
         overwrite[starname]['LOGG*_uperr'] = float(logg_uperr_derived[0])
