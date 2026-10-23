@@ -74,7 +74,12 @@ class SimSpectrum(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
+        if runtime['ignoreinput_selftest_sim_spectrum']:
+            msg = 'runtime option to skip selftest.sim-spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
 
         # stop here if it is not a runtime target
         if not self.__rt.is_valid() or not target.startswith('test'):
