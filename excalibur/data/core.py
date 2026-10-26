@@ -827,7 +827,7 @@ def readfitsdata(
     return out
 
 
-def jwstcal(fin, tim, ext, out, verbose=False, debug=True):
+def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
     '''
     G. ROUDIER: Extracts and Wavelength calibrates JWST datasets
     '''

@@ -3692,8 +3692,9 @@ def spectrumversion():
     K. PEARSON: 1.2.2 JWST NIRISS
     R ESTRELA: 1.3.0 Merged Spectra Capability
     GMR: 1.4.0 Added jwstspectrum()
+    A. Tokadjian: 1.4.1 added photon noise
     '''
-    return dawgie.VERSION(1, 4, 0)
+    return dawgie.VERSION(1, 4, 1)
 
 
 def jwstspectrum(
@@ -3777,6 +3778,11 @@ def jwstspectrum(
                     > rtp['transit_spectrum_threshold'].value() * noise
                 ] = np.nan
                 zndata = 1e0 + zndata[trd].T
+                # add electron counts in same time sorting and shape as spectra
+                electron_count = nrm['data'][pln]['electron_count'][det][vis][
+                    trd
+                ].T.copy()
+                electron_count[~np.isfinite(zndata)] = np.nan
                 if debug:
                     tsp = '-'
                     fig = plt.figure(figsize=(12, 9))
@@ -3799,6 +3805,7 @@ def jwstspectrum(
                 ndsc = 0
                 spc = []
                 spcerr = []
+                photon_errors = []
                 wvl = []
                 trc = []
                 dta = []
@@ -3810,6 +3817,7 @@ def jwstspectrum(
                 # REBIN
                 if bntst > 1:
                     newzndata = []
+                    newcounts = []
                     newallwvl = []
                     bnndx = 0
                     bnnmx = len(zndata)
@@ -3823,6 +3831,11 @@ def jwstspectrum(
                             newzndata.append(
                                 np.nanmean(zndata[bnndx:bnndxlmt], axis=0)
                             )
+                            newcounts.append(
+                                np.nansum(
+                                    electron_count[bnndx:bnndxlmt], axis=0
+                                )
+                            )
                             newallwvl.append(np.mean(allwvl[bnndx:bnndxlmt]))
                             pass
                         bnndx += bntst
@@ -3833,16 +3846,18 @@ def jwstspectrum(
                     allwvl = np.array(newallwvl)
                     dltwvl = newdltwvl
                     zndata = np.array(newzndata)
+                    electron_count = np.array(newcounts)
+                    electron_count[~np.isfinite(zndata)] = np.nan
                     pass
                 # --< GMR SPEED UP FOR TESTS
                 if binstart > 0:
                     zndata = zndata[binstart:binstop]
+                    electron_count = electron_count[binstart:binstop]
                     allwvl = allwvl[binstart:binstop]
-                    dltwvl = dltwvl[binstart:binstop]
                     if 'NRS1' in det:
                         zndata = zndata[-2:]
+                        electron_count = electron_count[-2:]
                         allwvl = allwvl[-2:]
-                        dltwvl = dltwvl[-2:]
                         pass
                     pass
                 # >--
@@ -3858,6 +3873,10 @@ def jwstspectrum(
                 progbar = nerdclub.Progressbar(
                     argsdict, det + ' ' + vis, zndata
                 )
+                # Fully in transit, exclude ingress and egress.
+                in_transit = np.abs(zst) < (1.0 - rpors)
+                # Out-of-transit baseline
+                out_of_transit = np.abs(zst) > (1.0 + 2.0 * rpors)
                 for chn, slc in enumerate(zndata):
                     slc[
                         np.abs(1e0 - slc)
@@ -3880,6 +3899,15 @@ def jwstspectrum(
                             plt.tick_params(axis='both', labelsize=18)
                             plt.show()
                             pass
+                        #Exclude integrations rejected from this channel
+                        counts = np.where(np.isfinite(slc),electron_count[chn],np.nan)
+                        #Counts in and out of transit
+                        counts_in = np.nansum(counts[in_transit])
+                        counts_out = np.nansum(counts[out_of_transit])
+                        if counts_in > 0 and counts_out > 0:
+                            photon_error = np.sqrt(1.0 / counts_in + 1.0 / counts_out) #rel error
+                        else:
+                            photon_error = np.nan
                         # GRUSNIS LD
                         ldcoefs = ldtl(
                             spr['T*'],
@@ -4078,6 +4106,7 @@ def jwstspectrum(
                         # trc.append(mctrace)
                         spc.append(np.nanmedian(mctrace['rprs']))
                         spcerr.append(np.nanstd(mctrace['rprs']))
+                        photon_errors.append(photon_error)
                         dta.append(dctxt['mcmcdat'])
                         bmd.append(bestlc)
                         pass
@@ -4089,6 +4118,7 @@ def jwstspectrum(
                 progbar.close()
                 out['data'][pln][det][vis]['ES'] = np.array(spc)
                 out['data'][pln][det][vis]['ESerr'] = np.array(spcerr)
+                out['data'][pln][det][vis]['PHOTON_DEPTH_ERR'] = np.array(photon_errors)
                 out['data'][pln][det][vis]['MCTRACE'] = trc
                 out['data'][pln][det][vis]['WB'] = np.array(wvl)
                 out['data'][pln][det][vis]['WBlow'] = (
