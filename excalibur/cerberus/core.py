@@ -156,7 +156,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     nugridhires = np.logspace(
         np.log10(199.9932685482632), np.log10(33333.333333333336), 76744
     )
-    dwnuhires = np.concatenate((np.array([np.diff(nugridhires)[0]]), np.diff(nugridhires)))
+    dwnuhires = np.concatenate(
+        (np.array([np.diff(nugridhires)[0]]), np.diff(nugridhires))
+    )
     nugridFactor = nugridhires[1] / nugridhires[0]
     nugridhires_loedge = nugridhires / np.sqrt(nugridFactor)
     nugridhires_hiedge = nugridhires * np.sqrt(nugridFactor)
@@ -363,15 +365,16 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         select = (hdf_wavenos > lo) & (hdf_wavenos <= hi)
 
                         if np.sum(select) != 1:
-                            print('bin dunt have exactly one:',
-                                  iwave, np.sum(select))
+                            print(
+                                'bin dunt have exactly one:',
+                                iwave,
+                                np.sum(select),
+                            )
                         # xsecs[:, :, iwave] = np.mean(
-                        xsecs = np.mean(
-                            hdf_xsecs[:, :, select], axis=2
-                        )
+                        xsecs = np.mean(hdf_xsecs[:, :, select], axis=2)
                         # pass
-                    # pass
-                    # for iwave in range(len(nugridhires)):
+                        # pass
+                        # for iwave in range(len(nugridhires)):
                         myspl = RegularGridInterpolator(
                             (hdf_pressures, hdf_temperatures),
                             # xsecs[:, :, iwave],
@@ -391,14 +394,21 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
-            plot_xsecs_vsT(myexomol, 'EXOMOL', hdf_temperatures, library, spc, p)
+            plot_xsecs_vsT(
+                myexomol, 'EXOMOL', hdf_temperatures, library, spc, p
+            )
             # if hi-res opacity is available, make two additional plots
             #  (one as a function of T; one as a function of P)
             # starttime = time.process_time()
             if 'SPLhires' in library[myexomol]:
                 plt.subplot(1, 3, 2)
                 plot_HIRESxsecs_vsT(
-                    myexomol, 'EXOMOL full-res', hdf_temperatures, library, spc, p
+                    myexomol,
+                    'EXOMOL full-res',
+                    hdf_temperatures,
+                    library,
+                    spc,
+                    p,
                 )
                 plt.subplot(1, 3, 3)
                 plot_HIRESxsecs_vsP(
@@ -643,7 +653,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             allwavenumbers = []
             alltemperatures = []
             for tstep in np.arange(300, 2000, 100):  # put in runtime?
-                #log.info('>---- %s K', str(tstep))
+                # log.info('>---- %s K', str(tstep))
                 print('loop1', tstep)
                 sigma, lsig = absorb(
                     library[ks],
@@ -719,7 +729,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             hireswavenumbers = []
             hirestemperatures = []
             for tstep in np.arange(300, 2000, 100):  # put in runtime?
-                #log.info('>---- %s K', str(tstep))
+                # log.info('>---- %s K', str(tstep))
                 print('loop2', tstep)
                 sigmahires, wavenohires = absorb(
                     library[ks],
@@ -750,7 +760,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 bini = np.array(bini) / dwnuhires
                 library[ks]['nuhires'].extend(list(nugridhires))
                 library[ks]['Ihires'].extend(list(bini))
-                library[ks]['Thires'].extend(list(np.ones(nugridhires.size) * mytemp))
+                library[ks]['Thires'].extend(
+                    list(np.ones(nugridhires.size) * mytemp)
+                )
                 pass
             for iline in set(library[ks]['nuhires']):
 
@@ -778,8 +790,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 np.min(nugridhires),
                 np.max(nugridhires),
             )
-#________________________________________________________________________
-            
+            # ________________________________________________________________________
+
             # plot the cross-sections for this HITEMP species
             print('plotting HITEMP')
             thisfig = plt.figure(figsize=(20, 5))
@@ -788,7 +800,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             if 'SPLhires' in library[ks]:
                 print('plotting HITEMPhires')
                 plt.subplot(1, 3, 2)
-                plot_xsecs_vsT(ks, 'HITEMP (hires)', alltemperatures, library, spc, p)
+                plot_xsecs_vsT(
+                    ks, 'HITEMP (hires)', alltemperatures, library, spc, p
+                )
                 # (there is no pressure dependence, so third panel is blank)
             plt.tight_layout()
             out['data'][p]['plot_crossSections_' + ks] = save_plot_tosv(thisfig)
@@ -907,7 +921,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             )
             wavenos = 1e4 / wavelengths
             for iwave, (lo, hi) in enumerate(
-                    zip(nugridhires_loedge, nugridhires_hiedge)
+                zip(nugridhires_loedge, nugridhires_hiedge)
             ):
                 select = (wavenos > lo) & (wavenos <= hi)
                 if sum(select) == 0:
@@ -916,8 +930,11 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     avsigma = np.mean(xsec[:, :, select], axis=2)
                     xsec_matchingwgridhires[:, :, iwave] = avsigma
             print(
-                'SPLNUhires size (atom)', thisatom,
-                len(wgridhires), wgridhires[0], wgridhires[-1]
+                'SPLNUhires size (atom)',
+                thisatom,
+                len(wgridhires),
+                wgridhires[0],
+                wgridhires[-1],
             )
             for iwave in range(len(wgridhires)):
                 myspl = RegularGridInterpolator(
@@ -929,7 +946,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 )
                 library[thisatom]['SPLhires'].append(myspl)
 
-
             # plot the cross-sections for this atom as a function of T
             print('plotting atom')
             thisfig = plt.figure(figsize=(20, 5))
@@ -937,12 +953,18 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             plot_atomxsecs_vsT(
                 thisatom, 'atom', temperatures, pressures, library, spc, p
             )
-            # if 'SPLhires' in library[thisatom]:
-            if 0:
+            if 'SPLhires' in library[thisatom]:
                 print('plotting atom-hires')
                 plt.subplot(1, 3, 2)
-                plot_HIRESxsecs_vsT(   NEEDS-WORK,
-                    thisatom, 'atom (hires)', temperatures, pressures, library, spc, p)
+                plot_HIRESxsecs_vsT(
+                    thisatom,
+                    'atom (hires)',
+                    temperatures,
+                    pressures,
+                    library,
+                    spc,
+                    p,
+                )
             plt.subplot(1, 3, 3)
             plot_atomxsecs_vsP(
                 thisatom, 'atom', temperatures, pressures, library, spc, p
