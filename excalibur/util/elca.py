@@ -20,13 +20,13 @@ from scipy import spatial
 #from ultranest import ReactiveNestedSampler
 
 # from astropy import units  # CI problem.  strange
-import astropy.units
-from astropy.time import Time
+# import astropy.units
+# from astropy.time import Time
 
-try:
-    from astropy.modeling.models import BlackBody
-except ImportError:
-    from astropy.modeling.blackbody import blackbody_lambda as BlackBody
+# try:
+#     from astropy.modeling.models import BlackBody
+# except ImportError:
+#     from astropy.modeling.blackbody import blackbody_lambda as BlackBody
 
 
 def weightedflux(flux, gw, nearest):

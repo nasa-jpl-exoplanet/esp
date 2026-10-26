@@ -35,17 +35,17 @@ from scipy.ndimage.morphology import (
 )
 
 # from photutils.aperture import aperture_photometry, CircularAperture
-import pyvo as vo
+# import pyvo as vo
 
 import numpy as np
 import numpy.polynomial.polynomial as poly
 
-import astropy.io.fits as pyfits
-import astropy.units
-from astropy.modeling.models import BlackBody as astrobb
-from astropy.coordinates import SkyCoord
-from astropy.time import Time
-from astropy.wcs import WCS
+# import astropy.io.fits as pyfits
+# import astropy.units
+# from astropy.modeling.models import BlackBody as astrobb
+# from astropy.coordinates import SkyCoord
+# from astropy.time import Time
+# from astropy.wcs import WCS
 
 log = logging.getLogger(__name__)
 

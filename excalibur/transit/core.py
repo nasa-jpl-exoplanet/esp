@@ -38,7 +38,7 @@ import copy
 # import corner
 import logging
 import random
-# import lmfit as lm
+import lmfit as lm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
@@ -56,16 +56,16 @@ from scipy.interpolate import RectBivariateSpline
 
 import numpy as np
 
-try:
-    import astropy.constants
-    import astropy.units
-    from astropy.modeling.models import BlackBody
-
-    pass
-except ImportError:
-    from astropy.modeling.blackbody import blackbody_lambda as BlackBody
-
-    pass
+# try:
+#    import astropy.constants
+#    import astropy.units
+#    from astropy.modeling.models import BlackBody
+#
+#    pass
+# except ImportError:
+#    from astropy.modeling.blackbody import blackbody_lambda as BlackBody
+#
+#    pass
 
 # LDTK
 # We should get rid of the imports + the parts of the code that are still calling this
