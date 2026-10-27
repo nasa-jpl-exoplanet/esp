@@ -2174,10 +2174,7 @@ def plot_HIRESxsecs_vsT(
             label=str(int(temp)) + 'K',
         )
         pass
-
-    # THIS IS A PROBLEM HERE!!  PROB IS EXOMOL SPECIFIC. ALSO WHY? SWITCH TO SPL
-    maxsigma = np.max(library[speciesName]['I'])
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
@@ -2265,8 +2262,7 @@ def plot_HIRESxsecs_vsP(
             label=f'{press:1.1e} bar',
         )
         pass
-    maxsigma = np.max(library[speciesName]['I'])
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
@@ -2326,8 +2322,7 @@ def plot_atomxsecs_vsT(
             ),
             label=str(int(temp)) + ' K',
         )
-    maxsigma = np.max(sigma)
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
@@ -2384,8 +2379,7 @@ def plot_atomxsecs_vsP(
             ),
             label=f'{press:1.1e} bar',
         )
-    maxsigma = np.max(sigma)
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
