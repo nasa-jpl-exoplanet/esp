@@ -2045,11 +2045,9 @@ def plot_mass_vs_metals(
 def plot_xsecs_vsT(
     speciesName,
     speciesType,
-    temperatures,
     library,
     spc,
     p,
-    press=1.0e-4,
     Nplots=8,
     fontsize=16,
 ):

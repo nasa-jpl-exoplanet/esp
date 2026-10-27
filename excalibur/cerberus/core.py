@@ -141,15 +141,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
     xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
     atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
-    fontsize = 16
-    Nplots = 8  # number of temps/pressures to plot cross-sections for
-    temperatureColors = plt.colormaps['magma']
-    # temperatureColors = plt.colormaps['autumn']  # red is too light
-    pressureColors = plt.colormaps['PuBuGn']
-    # pressureColors = plt.colormaps['winter']  # didn't test with good spacing
-    # pressureColors = plt.colormaps['cool']  # didn't test with good spacing
-    # pressureColors = plt.colormaps['YlGnBu']
-
     # create a high-resolution wavelength grid (ideally matches EXOMOL hdf grid)
     R = 15000  # spectral resolving power (same as EXOMOL's Taurex version)
     # this is 0.3um to 50um; maybe should trim it down?
@@ -394,9 +385,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
-            plot_xsecs_vsT(
-                myexomol, 'EXOMOL', hdf_temperatures, library, spc, p
-            )
+            plot_xsecs_vsT(myexomol, 'EXOMOL', library, spc, p)
             # if hi-res opacity is available, make two additional plots
             #  (one as a function of T; one as a function of P)
             # starttime = time.process_time()
@@ -853,8 +842,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 #'nuhires': [],
                 'SPL': [],
                 'SPLNU': nugrid,
-                'SPLhires': [],
-                'SPLNUhires': nugridhires,
             }
 
             # generic xsec grid has to be binned to coarser-resolution wgrid
@@ -916,6 +903,8 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 library[thisatom]['SPL'].append(myspl)
 
             # also calculate atom cross-sections on a hires grid
+            library[thisatom]['SPLhires'] = []
+            library[thisatom]['SPLNUhires'] = nugridhires
             xsec_matchingwgridhires = (
                 np.ones((xsec.shape[0], xsec.shape[1], len(wgridhires))) * 666
             )
@@ -956,15 +945,24 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             if 'SPLhires' in library[thisatom]:
                 print('plotting atom-hires')
                 plt.subplot(1, 3, 2)
-                plot_HIRESxsecs_vsT(
-                    thisatom,
-                    'atom (hires)',
-                    temperatures,
-                    pressures,
-                    library,
-                    spc,
-                    p,
-                )
+                if 1:
+                    plot_HIRESxsecs_vsT(
+                        thisatom,
+                        'atom (hires)',
+                        temperatures,
+                        library,
+                        spc,
+                        p,
+                    )
+                else:
+                    plot_HIRESxsecs_vsP(
+                        thisatom,
+                        'atom (hires)',
+                        pressures,
+                        library,
+                        spc,
+                        p,
+                    )
             plt.subplot(1, 3, 3)
             plot_atomxsecs_vsP(
                 thisatom, 'atom', temperatures, pressures, library, spc, p
