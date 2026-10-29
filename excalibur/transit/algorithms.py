@@ -395,7 +395,7 @@ class Spectrum(dawgie.Algorithm):
         '''Output State Vectors: transit.spectrum'''
         return self.__out
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False, debug=False):
         '''Top level algorithm call'''
 
         svupdate = []
@@ -404,7 +404,6 @@ class Spectrum(dawgie.Algorithm):
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
-
             update = False
             vnrm, snrm = checksv(self._nrm.sv_as_dict()[fltr])
             vwht, swht = checksv(self._wht.sv_as_dict()[fltr])
@@ -417,6 +416,8 @@ class Spectrum(dawgie.Algorithm):
                     self.__rt.sv_as_dict()['status'],
                     self.__out[fltrs.index(fltr)],
                     fltr,
+                    verbose=verbose,
+                    debug=debug,
                 )
             else:
                 errstr = [m for m in [sfin, snrm, swht] if m is not None]
@@ -450,7 +451,7 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, rnt, out, fltr):
+    def _spectrum(self, fin, nrm, wht, rnt, out, fltr, verbose=False, debug=False):
         '''Core code call'''
 
         if "Spitzer" in fltr:
@@ -462,12 +463,11 @@ class Spectrum(dawgie.Algorithm):
                 fin,
                 wht,
                 rnt,
-                verbose=False,
-                debug=False,
+                verbose=verbose,
+                debug=debug,
                 donotuse=False,
-                bntst=4,  # TEMPORARY SHOULD BE IN RUNTIME: CO2
-                binstart=100,
-                binstop=300,
+                bntst=2,  # ABOUT 200 CHANNELS FOR SO2
+                chnwnd='SO2',
             )
             pass
         else:
@@ -479,7 +479,7 @@ class Spectrum(dawgie.Algorithm):
                 fltr,
                 self._type,
                 rnt,
-                verbose=False,
+                verbose=verbose,
             )
             pass
         return s

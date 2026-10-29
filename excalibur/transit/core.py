@@ -3694,8 +3694,7 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bntst=1,
-    binstart=0,
-    binstop=-1,
+        chnwnd='',
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3823,14 +3822,25 @@ def jwstspectrum(
                     zndata = np.array(newzndata)
                     pass
                 # --< GMR SPEED UP FOR TESTS
-                if binstart > 0:
-                    zndata = zndata[binstart:binstop]
-                    allwvl = allwvl[binstart:binstop]
-                    dltwvl = dltwvl[binstart:binstop]
+                # GMR: I dont like this, get rid of it as soon as tests are done
+                # or code it properly
+                if chnwnd:
                     if 'NRS1' in det:
                         zndata = zndata[-2:]
                         allwvl = allwvl[-2:]
-                        dltwvl = dltwvl[-2:]
+                        pass
+                    elif 'NRS2' in det:
+                        if 'SO2' in chnwnd:
+                            minchnwnd = 3.9
+                            maxchnwnd = 4.2
+                            pass
+                        else:
+                            minchnwnd = 1.
+                            maxchnwnd = 10.
+                            pass
+                        wvlwnd = (allwvl > minchnwnd) & (allwvl < maxchnwnd)
+                        zndata = zndata[wvlwnd]
+                        allwvl = allwvl[wvlwnd]
                         pass
                     pass
                 # >--
@@ -3838,7 +3848,7 @@ def jwstspectrum(
                     zndata.T[abs(zst) > (1e0 + 2e0 * rpors)], axis=0
                 )
                 argsdict = {
-                    'progbar': verbose,
+                    'progbar': verbose and not debug,
                     'progsizemax': 35,
                     'lbllen': 20,
                     'proginprompt': True,
@@ -4011,7 +4021,8 @@ def jwstspectrum(
                                     rtp['transit_spectrum_chainlen'].value()
                                 )
                                 if debug or verbose:
-                                    chainlen = int(1e3)
+                                    chainlen = int(100)
+                                    pass
                                 trace = pymc.sample(
                                     chainlen,
                                     cores=4,
@@ -4033,7 +4044,7 @@ def jwstspectrum(
                                 *[np.median(di[-1]) for di in mctrace.items()]
                             )
                         )
-                        if debug:
+                        if debug and (chainlen > 1000):
                             mclbl = list(mctrace)
                             mcarr = np.array([v for _, v in mctrace.items()])
                             corner.corner(
