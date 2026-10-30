@@ -511,8 +511,7 @@ class Spectrum(dawgie.Algorithm):
                 debug=False,
                 donotuse=False,
                 bntst=4,  # TEMPORARY SHOULD BE IN RUNTIME: CO2
-                binstart=100,
-                binstop=300,
+                binstart=0,
             )
             pass
         else:
