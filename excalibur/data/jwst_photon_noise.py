@@ -1,7 +1,7 @@
 '''data core ds'''
 
 # Heritage code shame:
-# pylint: disable=too-many-arguments,many-positional-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
 
 # -- IMPORTS --------------------------------------------------------
 import numpy as np
