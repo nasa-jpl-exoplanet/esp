@@ -2124,27 +2124,31 @@ def plot_HIRESxsecs_vsT(
     waveedges = (wgrid[1:] + wgrid[:-1]) / 2
 
     # select a subsample of the temperature array
-    # Tselect = np.round(
-    #    np.linspace(0, len(temperatures) - 1, Nplots)
-    # ).astype(int)
     # switch to log-space T selection
-    Tselect = (
-        np.round(np.logspace(0, np.log10(len(temperatures)), Nplots)).astype(
-            int
+    #  ok that's good if the T's are linearly spaced,
+    #   but for atoms it's already a log-spaced grid of T
+    #   (check for it)
+    deltabott = temperatures[1] - temperatures[0]
+    deltatop = temperatures[-1] - temperatures[-2]
+    if deltatop < 2 * deltabott:
+        # more of less linear grid, so log-space it here
+        Tselect = (
+            np.round(np.logspace(0, np.log10(len(temperatures)), Nplots)).astype(
+                int
+            )
+            - 1
         )
-        - 1
-    )
+    else:
+        # looks like it's already log spaced, so just do linear here
+        Tselect = np.round(
+            np.linspace(0, len(temperatures) - 1, Nplots)
+        ).astype(int)
     # print('# of press',len(pressures))
     # print(' press range',pressures[0],pressures[-1])
     # print('temp',(temperatures))
     # print('# of temp',len(temperatures))
     # print(' temp range',temperatures[0],temperatures[-1])
     # print(' Tselect',Tselect)
-
-    # print('checking pressure',
-    #      library[speciesName]['SPLhires'][100]((10, 1000)),
-    #      library[speciesName]['SPLhires'][100]((1e-3, 1000)),
-    #      library[speciesName]['SPLhires'][100]((1e-6, 1000)))
 
     for itemp, temp in enumerate(temperatures[Tselect][::-1]):
         if press is None:
@@ -2200,7 +2204,17 @@ def plot_HIRESxsecs_vsT(
         pass
     # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
     # use the same max-sigma as in the previous panel (same y-axis range)
-    maxsigma = np.max(library[speciesName]['I'])
+    if 'I' in library[speciesName]:
+        maxsigma = np.max(library[speciesName]['I'])
+    else:
+        # for atomic species use same code as for panel 1
+        sigmalores = np.array(
+            [
+                thisspl((temp, press))
+                for thisspl in library[speciesName]['SPL']
+            ]
+        )
+        maxsigma = np.max(sigmalores)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
@@ -2235,6 +2249,7 @@ def plot_HIRESxsecs_vsP(
     spc,
     p,
     temp=1000,
+    flippedTP=False,
     Nplots=8,
     fontsize=16,
 ):
@@ -2247,12 +2262,21 @@ def plot_HIRESxsecs_vsP(
     # now plot as a function of pressure instead of temperature
     Pselect = np.round(np.linspace(0, len(pressures) - 1, Nplots)).astype(int)
     for ipress, press in enumerate(pressures[Pselect]):
-        sigma = np.array(
-            [
-                thisspl((press, temp))
-                for thisspl in library[speciesName]['SPLhires']
-            ]
-        )
+        if flippedTP:
+            sigma = np.array(
+                [
+                    thisspl((temp, press))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+        else:
+            sigma = np.array(
+                [
+                    thisspl((press, temp))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+            pass
         plt.semilogy(
             1e4 / library[speciesName]['SPLNUhires'],
             sigma,
@@ -2293,7 +2317,17 @@ def plot_HIRESxsecs_vsP(
         pass
     # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
     # use the same max-sigma as in the previous panel (same y-axis range)
-    maxsigma = np.max(library[speciesName]['I'])
+    if 'I' in library[speciesName]:
+        maxsigma = np.max(library[speciesName]['I'])
+    else:
+        # for atomic species use same code as for panel 1
+        sigmalores = np.array(
+            [
+                thisspl((temp, press))
+                for thisspl in library[speciesName]['SPL']
+            ]
+        )
+        maxsigma = np.max(sigmalores)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))

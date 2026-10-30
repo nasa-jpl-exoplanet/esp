@@ -505,7 +505,7 @@ def myxsecs(
                             list(np.ones(nugridhires.size) * mytemp)
                         )
                         pass
-                    print('making an interpolator for each wave')
+                    # print('making an interpolator for each wave')
                     for iline in set(library[mycia]['nuhires']):
                         select = np.array(library[mycia]['nuhires']) == iline
                         y = np.array(library[mycia]['Ihires'])[select]
@@ -674,21 +674,6 @@ def myxsecs(
                 alltemperatures.append(tstep)
                 pass
             alltemperatures = np.array(alltemperatures)
-            # assume all 17 temps have same wgrid? yes, checks
-            print(
-                'allwavenumbers size (ks)',
-                ks,
-                len(allwavenumbers[0]),
-                np.min(allwavenumbers[0]),
-                np.max(allwavenumbers[0]),
-            )
-            print(
-                'allwavenumbers size (ks)',
-                ks,
-                len(allwavenumbers[-1]),
-                np.min(allwavenumbers[-1]),
-                np.max(allwavenumbers[-1]),
-            )
             library[ks]['nu'] = []
             library[ks]['I'] = []
             library[ks]['T'] = []
@@ -720,13 +705,6 @@ def myxsecs(
                 library[ks]['SPL'].append(myspl)
                 library[ks]['SPLNU'].append(iline)
                 pass
-            print(
-                'SPLNU size (ks)',
-                ks,
-                len(library[ks]['SPLNU']),
-                np.min(library[ks]['SPLNU']),
-                np.max(library[ks]['SPLNU']),
-            )
             if also_hires_xsecs:
                 # also save a hires version of HITEMP
                 hiresxsections = []
@@ -734,7 +712,6 @@ def myxsecs(
                 hirestemperatures = []
                 for tstep in np.arange(300, 2000, 100):  # put in runtime?
                     # log.info('>---- %s K', str(tstep))
-                    print('loop2', tstep)
                     sigmahires, wavenohires = absorb(
                         library[ks],
                         qtgrid[ks],
@@ -751,7 +728,6 @@ def myxsecs(
                 library[ks]['Thires'] = []
                 library[ks]['SPLhires'] = []
                 library[ks]['SPLNUhires'] = []
-                print('startcheck')
                 for indextemp, mytemp in enumerate(hirestemperatures):
                     bini = []
                     matnu = np.array(hireswavenumbers)[indextemp]
@@ -872,10 +848,6 @@ def myxsecs(
             #     Ts = Ts[sortme]
             # myspl = itp(Ts, Is, bounds_error=False, fill_value=0)
 
-            print(
-                'SPLNU size (atom)', thisatom, len(wgrid), wgrid[0], wgrid[-1]
-            )
-
             for iwave in range(len(wgrid)):
                 myspl = RegularGridInterpolator(
                     (temperatures, pressures),
@@ -909,13 +881,6 @@ def myxsecs(
                 for iwave, wavenow in enumerate(nugridhires):
                     inearest = np.abs(wavenos - wavenow).argmin()
                     xsec_matchingwgridhires[:, :, iwave] = xsec[:, :, inearest]
-                print(
-                    'SPLNUhires size (atom)',
-                    thisatom,
-                    len(wgridhires),
-                    wgridhires[0],
-                    wgridhires[-1],
-                )
                 for iwave in range(len(wgridhires)):
                     myspl = RegularGridInterpolator(
                         (temperatures, pressures),
@@ -928,14 +893,12 @@ def myxsecs(
                     pass
                 pass
             # plot the cross-sections for this atom as a function of T
-            print('plotting atom')
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
             plot_atomxsecs_vsT(
                 thisatom, 'atom', temperatures, pressures, library, spc, p
             )
             if 'SPLhires' in library[thisatom]:
-                print('plotting atom-hires')
                 plt.subplot(1, 3, 2)
                 plot_HIRESxsecs_vsT(
                     thisatom,
@@ -944,9 +907,9 @@ def myxsecs(
                     library,
                     spc,
                     p,
-                    press=2.4e-5,
-                    #press=10,
-                    #press=pressures[int(len(pressures) / 2)],
+                    # press=2.4e-5,
+                    # press=10,
+                    press=pressures[int(len(pressures) / 2)],
                     flippedTP=True,
                 )
             plt.subplot(1, 3, 3)
