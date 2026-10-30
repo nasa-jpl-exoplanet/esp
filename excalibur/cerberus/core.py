@@ -5,7 +5,6 @@
 #  more for customDist pymc method:
 # pylint: disable=invalid-name,cell-var-from-loop
 
-import time
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -300,7 +299,6 @@ def myxsecs(
                 ]
                 if verbose:
                     print('hdffiles', hdffiles)
-                # starttime = time.process_time()
                 if len(hdffiles) > 0:
                     hdffilename = hdffiles[0]
                     # decide which HDF file to use
@@ -369,9 +367,6 @@ def myxsecs(
                             pass
                         pass
                     pass
-                # endtime = time.process_time()
-                # if verbose:
-                # print(' CPU time', endtime - starttime)
 
             # plot the cross-sections for this EXOMOL species
             thisfig = plt.figure(figsize=(20, 5))
@@ -379,7 +374,6 @@ def myxsecs(
             plot_xsecs_vsT(myexomol, 'EXOMOL', library, spc, p)
             # if hi-res opacity is available, make two additional plots
             #  (one as a function of T; one as a function of P)
-            # starttime = time.process_time()
             if 'SPLhires' in library[myexomol]:
                 plt.subplot(1, 3, 2)
                 plot_HIRESxsecs_vsT(
@@ -403,7 +397,6 @@ def myxsecs(
                 pass
             plt.close(thisfig)
             pass
-            # endtime = time.process_time()
             # if verbose:
             # print(' CPU time', endtime - starttime)
         for mycia in cialist:
@@ -437,8 +430,6 @@ def myxsecs(
                         library[mycia]['Ttemp'].append(tmprtr)
                         pass
                     pass
-                sortedwave = np.sort(library[mycia]['nutemp'])
-                settedwave = set(sortedwave)
                 for mytemp in set(library[mycia]['Ttemp']):
                     select = np.array(library[mycia]['Ttemp']) == mytemp
                     bini = []
@@ -452,7 +443,7 @@ def myxsecs(
                             bini.append(0.0)
                         else:
                             bini.append(np.mean(sigma2[select]))
-                    #bini = np.array(bini) / dwnu
+                    # bini = np.array(bini) / dwnu
                     library[mycia]['nu'].extend(list(nugrid))
                     library[mycia]['I'].extend(list(bini))
                     library[mycia]['T'].extend(
@@ -507,7 +498,7 @@ def myxsecs(
                         #    statistic='mean',
                         #    bins=nugridhires_edges,
                         # ).statistic
-                        #bini = np.array(bini) / dwnu
+                        # bini = np.array(bini) / dwnu
                         library[mycia]['nuhires'].extend(list(nugridhires))
                         library[mycia]['Ihires'].extend(list(bini))
                         library[mycia]['Thires'].extend(
@@ -776,7 +767,6 @@ def myxsecs(
                         list(np.ones(nugridhires.size) * mytemp)
                     )
                     pass
-                starttime = time.process_time()
                 library[ks]['nuhires'] = np.array(library[ks]['nuhires'])
                 library[ks]['Ihires'] = np.array(library[ks]['Ihires'])
                 library[ks]['Thires'] = np.array(library[ks]['Thires'])
@@ -954,8 +944,10 @@ def myxsecs(
                     library,
                     spc,
                     p,
-                    press=10,
-                    # press=pressures[int(len(pressures) / 2)],
+                    press=2.4e-5,
+                    #press=10,
+                    #press=pressures[int(len(pressures) / 2)],
+                    flippedTP=True,
                 )
             plt.subplot(1, 3, 3)
             plot_HIRESxsecs_vsP(
@@ -965,6 +957,7 @@ def myxsecs(
                 library,
                 spc,
                 p,
+                flippedTP=True,
             )
             # plot_atomxsecs_vsP(
             #    thisatom, 'atom', temperatures, pressures, library, spc, p
