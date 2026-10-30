@@ -2108,6 +2108,7 @@ def plot_HIRESxsecs_vsT(
     spc,
     p,
     press=1.0e-4,
+    flippedTP=False,
     Nplots=8,
     fontsize=16,
 ):
@@ -2135,13 +2136,31 @@ def plot_HIRESxsecs_vsT(
     # print(' temp range',temperatures[0],temperatures[-1])
     # print(' Tselect',Tselect)
 
+    # print('checking pressure',
+    #      library[speciesName]['SPLhires'][100]((10, 1000)),
+    #      library[speciesName]['SPLhires'][100]((1e-3, 1000)),
+    #      library[speciesName]['SPLhires'][100]((1e-6, 1000)))
+
     for itemp, temp in enumerate(temperatures[Tselect][::-1]):
-        sigma = np.array(
-            [
-                thisspl((press, temp))
-                for thisspl in library[speciesName]['SPLhires']
-            ]
-        )
+        if press == None:
+            # HITEMP array is just a function of T, not T+P
+            sigma = np.array(
+                [thisspl(temp) for thisspl in library[speciesName]['SPLhires']]
+            )
+        elif flippedTP:
+            sigma = np.array(
+                [
+                    thisspl((temp, press))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+        else:
+            sigma = np.array(
+                [
+                    thisspl((press, temp))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
         plt.semilogy(
             1e4 / library[speciesName]['SPLNUhires'],
             sigma,
@@ -2174,13 +2193,18 @@ def plot_HIRESxsecs_vsT(
             label=str(int(temp)) + 'K',
         )
         pass
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # use the same max-sigma as in the previous panel (same y-axis range)
+    maxsigma = np.max(library[speciesName]['I'])
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
-    plt.title(
-        f'{speciesName} ({speciesType})  P = {press:1.1e} bar',
-        fontsize=fontsize + 4,
-    )
+    if press == None:
+        title = f'{speciesName} ({speciesType})'
+    else:
+        title = f'{speciesName} ({speciesType})  P = {press:1.1e} bar'
+    plt.title(title, fontsize=fontsize + 4)
+
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
     if speciesType == 'CIA':
         plt.ylabel(
@@ -2262,7 +2286,10 @@ def plot_HIRESxsecs_vsP(
             label=f'{press:1.1e} bar',
         )
         pass
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # use the same max-sigma as in the previous panel (same y-axis range)
+    maxsigma = np.max(library[speciesName]['I'])
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
