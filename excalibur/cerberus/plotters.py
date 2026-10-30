@@ -2089,7 +2089,12 @@ def plot_xsecs_vsT(
         fontsize=fontsize + 4,
     )
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
-    plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    if 'CIA' in speciesType:
+        plt.ylabel(
+            'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]', fontsize=fontsize
+        )
+    else:
+        plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
     plt.tick_params(axis='both', labelsize=fontsize)
     plt.legend(
         numpoints=1,
@@ -2206,7 +2211,7 @@ def plot_HIRESxsecs_vsT(
     plt.title(title, fontsize=fontsize + 4)
 
     plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
-    if speciesType == 'CIA':
+    if 'CIA' in speciesType:
         plt.ylabel(
             'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]', fontsize=fontsize
         )
