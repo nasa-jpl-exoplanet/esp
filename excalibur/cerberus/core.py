@@ -5,7 +5,7 @@
 #  more for customDist pymc method:
 # pylint: disable=invalid-name,cell-var-from-loop
 
-# import time
+import time
 
 # -- IMPORTS -- ------------------------------------------------------
 import dawgie
@@ -131,31 +131,42 @@ def myxsecsversion():
     return dawgie.VERSION(1, 1, 3)
 
 
-def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
+def myxsecs(
+    spc,
+    runtime,
+    out,
+    also_hires_xsecs=True,
+    only_these_planets=None,
+    verbose=False,
+):
     '''
     G. ROUDIER: Builds Cerberus cross section library
     '''
-    logarithmic_opacity_summing = False
     hitemplist = runtime['cerberus_crbmodel_HITEMPmolecules'].molecules
     cialist = runtime['cerberus_crbmodel_HITRANmolecules'].molecules
     xmollist = runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules
     atomlist = runtime['cerberus_crbmodel_atoms'].molecules
 
-    # create a high-resolution wavelength grid (ideally matches EXOMOL hdf grid)
-    R = 15000  # spectral resolving power (same as EXOMOL's Taurex version)
-    # this is 0.3um to 50um; maybe should trim it down?
-    nugridhires = np.logspace(
-        np.log10(199.9932685482632), np.log10(33333.333333333336), 76744
-    )
-    dwnuhires = np.concatenate(
-        (np.array([np.diff(nugridhires)[0]]), np.diff(nugridhires))
-    )
-    nugridFactor = nugridhires[1] / nugridhires[0]
-    nugridhires_loedge = nugridhires / np.sqrt(nugridFactor)
-    nugridhires_hiedge = nugridhires * np.sqrt(nugridFactor)
-    print('nugridhires', nugridhires[0], nugridhires[-1])
-    wgridhires = (1e4 / nugridhires)[::-1]
-    print('wgridhires', wgridhires[0], wgridhires[-1])
+    if also_hires_xsecs:
+        # create a high-resolution wavelength grid
+        #  (ideally it matches the EXOMOL hdf grid)
+        # R = 15000  # spectral resolving power (= EXOMOL's Taurex version)
+        # this is 0.3um to 50um; maybe should trim it down?
+        nugridhires = np.logspace(
+            # np.log10(199.9932685482632), np.log10(33333.333333333336), 76744
+            np.log10(199.9932685482632),
+            np.log10(33333.333333333336),
+            76744,
+        )
+        dwnuhires = np.concatenate(
+            (np.array([np.diff(nugridhires)[0]]), np.diff(nugridhires))
+        )
+        nugridFactor = nugridhires[1] / nugridhires[0]
+        nugridhires_loedge = nugridhires / np.sqrt(nugridFactor)
+        nugridhires_hiedge = nugridhires * np.sqrt(nugridFactor)
+        print('nugridhires', nugridhires[0], nugridhires[-1])
+        wgridhires = (1e4 / nugridhires)[::-1]
+        print('wgridhires', wgridhires[0], wgridhires[-1])
 
     # if 'WBhires' in spc['data']:
     #     wgridhires = spc['data']['WBhires']
@@ -236,18 +247,10 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     select = (matnu > (nubin - mydw / 2.0)) & (
                         matnu <= nubin + mydw / 2.0
                     )
-                    if logarithmic_opacity_summing:
-                        # linearsum = np.sum(sigma2[select])
-                        logmean = np.mean(np.log(sigma2[select]))
-                        nbin = np.sum(select)
-                        # print('Nbin',Nbin)
-                        bini.append(nbin * np.exp(logmean))
-                        # print('old,new',linearsum,Nbin * np.exp(logmean),
-                        #      'Nbin,min,max',Nbin,np.min(sigma2[select]),np.max(sigma2[select]))
-                    else:
-                        bini.append(np.sum(sigma2[select]))
+                    # bini.append(np.sum(sigma2[select]))
+                    bini.append(np.mean(sigma2[select]))
                     pass
-                bini = np.array(bini) / dwnu
+                # bini = np.array(bini) / dwnu
                 library[myexomol]['nu'].extend(list(nugrid))
                 library[myexomol]['I'].extend(list(bini))
                 library[myexomol]['T'].extend(
@@ -281,105 +284,106 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 library[myexomol]['SPLNU'][0],
                 library[myexomol]['SPLNU'][-1],
             )
-            # also include cross-sections at highest resolution, if available
-            hdffiles = [f for f in os.listdir(thisxmdir) if f.endswith('h5')]
-            if verbose:
-                print('hdffiles', hdffiles)
-            # starttime = time.process_time()
-            if len(hdffiles) > 0:
-                hdffilename = hdffiles[0]
-                # decide which HDF file to use
-                HDFselections = {
-                    'CO': 'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
-                    'CH3CL': 'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
-                    'MGH': '24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
-                }
-                if (
-                    myexomol in HDFselections
-                    and HDFselections[myexomol] in hdffiles
-                ):
-                    hdffilename = HDFselections[myexomol]
-                elif len(hdffiles) > 1:
-                    log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
-                with h5py.File(os.path.join(thisxmdir, hdffilename)) as hdfdata:
-                    # print(hdfdata.keys())
-                    # molecule name is read in as b'H2O'; have to make it utf
-                    # also, cut it off a bit maybe (e.g. 'CO2-626')
-                    molecule = hdfdata['mol_name'][:][0].decode('utf-8')
-                    if '-' in molecule:
-                        molecule = molecule[: molecule.index('-')]
-                    if myexomol.upper() != molecule.upper():
-                        log.warning(
-                            '>-- molecule name doesnt match hdf! %s %s',
-                            myexomol,
-                            molecule,
-                        )
-                    # else:
-                    #    log.info(
-                    #        '>-- Good! hdf molecule name matches for %s',
-                    #        myexomol,
-                    #    )
-                    hdf_pressures = hdfdata['p'][:]
-                    hdf_temperatures = hdfdata['t'][:]
-                    hdf_xsecs = hdfdata['xsecarr'][:]
-                    hdf_wavenos = hdfdata['bin_edges'][:]
-                    # hdf_waves = 1.0e4 / hdf_wavenos
-                    hdfdata.close()
-                    # print('P shape', hdf_pressures.shape)
-                    # print('T shape', hdf_temperatures.shape)
-                    # print('XSec shape', hdf_xsecs.shape)
-
-                    # save a 2-D (T,P) interpolator for each wavelength
-                    # library[myexomol]['SPLNUhires'] = hdf_wavenos
-                    # print(
-                    #    'SPLNUhires size',
-                    #    myexomol,
-                    #    len(library[myexomol]['SPLNUhires']),
-                    #    library[myexomol]['SPLNUhires'][0],
-                    #    library[myexomol]['SPLNUhires'][-1],
-                    # )
-
-                    # bin the hires hdf data into the hires grid
-                    # (it should be a one-to-one binning, if grids match)
-                    # xsecs = np.zeros(
-                    #    (
-                    #        len(hdf_pressures),
-                    #        len(hdf_temperatures),
-                    #        len(nugridhires),
-                    #    )
-                    # )
-                    library[myexomol]['SPLNUhires'] = nugridhires
-                    library[myexomol]['SPLhires'] = []
-                    for iwave, (lo, hi) in enumerate(
-                        zip(nugridhires_loedge, nugridhires_hiedge)
+            if also_hires_xsecs:
+                # include cross-sections at highest resolution, if available
+                hdffiles = [
+                    f for f in os.listdir(thisxmdir) if f.endswith('h5')
+                ]
+                if verbose:
+                    print('hdffiles', hdffiles)
+                # starttime = time.process_time()
+                if len(hdffiles) > 0:
+                    hdffilename = hdffiles[0]
+                    # decide which HDF file to use
+                    HDFselections = {
+                        'CO': 'C-O-NatAbund__Li2015.R15000_0.3-50mu.xsec.TauREx.h5',
+                        'CH3CL': 'C-H3-Cl-NatAbund__OYT.R15000_0.3-50mu.xsec.TauREx.h5',
+                        'MGH': '24-25-26Mg-1H__XAB.R15000_0.3-50mu.xsec.TauREx.h5',
+                    }
+                    if (
+                        myexomol in HDFselections
+                        and HDFselections[myexomol] in hdffiles
                     ):
-                        select = (hdf_wavenos > lo) & (hdf_wavenos <= hi)
-
-                        if np.sum(select) != 1:
-                            print(
-                                'bin dunt have exactly one:',
-                                iwave,
-                                np.sum(select),
+                        hdffilename = HDFselections[myexomol]
+                    elif len(hdffiles) > 1:
+                        log.warning('>-- MORE THAN ONE HDF FOR %s', myexomol)
+                    with h5py.File(
+                        os.path.join(thisxmdir, hdffilename)
+                    ) as hdfdata:
+                        # print(hdfdata.keys())
+                        # molecule name is read in as b'H2O'; have to make it utf
+                        # also, cut it off a bit maybe (e.g. 'CO2-626')
+                        molecule = hdfdata['mol_name'][:][0].decode('utf-8')
+                        if '-' in molecule:
+                            molecule = molecule[: molecule.index('-')]
+                        if myexomol.upper() != molecule.upper():
+                            log.warning(
+                                '>-- molecule name doesnt match hdf! %s %s',
+                                myexomol,
+                                molecule,
                             )
-                        # xsecs[:, :, iwave] = np.mean(
-                        xsecs = np.mean(hdf_xsecs[:, :, select], axis=2)
-                        # pass
-                        # pass
-                        # for iwave in range(len(nugridhires)):
-                        myspl = RegularGridInterpolator(
-                            (hdf_pressures, hdf_temperatures),
-                            # xsecs[:, :, iwave],
-                            xsecs,
-                            bounds_error=False,
-                            fill_value=None,
-                        )
-                        library[myexomol]['SPLhires'].append(myspl)
+                        # else:
+                        #    log.info(
+                        #        '>-- Good! hdf molecule name matches for %s',
+                        #        myexomol,
+                        #    )
+                        hdf_pressures = hdfdata['p'][:]
+                        hdf_temperatures = hdfdata['t'][:]
+                        hdf_xsecs = hdfdata['xsecarr'][:]
+                        hdf_wavenos = hdfdata['bin_edges'][:]
+                        # hdf_waves = 1.0e4 / hdf_wavenos
+                        hdfdata.close()
+                        # print('P shape', hdf_pressures.shape)
+                        # print('T shape', hdf_temperatures.shape)
+                        # print('XSec shape', hdf_xsecs.shape)
+
+                        # save a 2-D (T,P) interpolator for each wavelength
+                        # library[myexomol]['SPLNUhires'] = hdf_wavenos
+                        # print(
+                        #    'SPLNUhires size',
+                        #    myexomol,
+                        #    len(library[myexomol]['SPLNUhires']),
+                        #    library[myexomol]['SPLNUhires'][0],
+                        #    library[myexomol]['SPLNUhires'][-1],
+                        # )
+
+                        # bin the hires hdf data into the hires grid
+                        # (it should be a one-to-one binning, if grids match)
+                        # xsecs = np.zeros(
+                        #    (
+                        #        len(hdf_pressures),
+                        #        len(hdf_temperatures),
+                        #        len(nugridhires),
+                        #    )
+                        # )
+                        library[myexomol]['SPLNUhires'] = nugridhires
+                        library[myexomol]['SPLhires'] = []
+                        for iwave, (lo, hi) in enumerate(
+                            zip(nugridhires_loedge, nugridhires_hiedge)
+                        ):
+                            select = (hdf_wavenos > lo) & (hdf_wavenos <= hi)
+
+                            if np.sum(select) != 1:
+                                print(
+                                    'bin dunt have exactly one:',
+                                    iwave,
+                                    np.sum(select),
+                                )
+                            # xsecs[:, :, iwave] = np.mean(
+                            xsecs = np.mean(hdf_xsecs[:, :, select], axis=2)
+                            myspl = RegularGridInterpolator(
+                                (hdf_pressures, hdf_temperatures),
+                                xsecs,
+                                bounds_error=False,
+                                fill_value=None,
+                            )
+                            library[myexomol]['SPLhires'].append(myspl)
+                            pass
                         pass
                     pass
-                pass
-            # endtime = time.process_time()
-            # if verbose:
-            # print(' CPU time', endtime - starttime)
+                # endtime = time.process_time()
+                # if verbose:
+                # print(' CPU time', endtime - starttime)
 
             # plot the cross-sections for this EXOMOL species
             # thisfig, ax = plt.subplots(1, 3, figsize=(20, 5))
@@ -474,29 +478,14 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         select = (matnu > (nubin - mydw / 2.0)) & (
                             matnu <= nubin + mydw / 2.0
                         )
-                        if logarithmic_opacity_summing:
-                            logmean = np.mean(np.log(sigma2[select]))
-                            nbin = np.sum(select)
-                            bini.append(nbin * np.exp(logmean))
-                        else:
-                            bini.append(np.sum(sigma2[select]))
-                        pass
-                    bini = np.array(bini) / dwnu
+                        bini.append(np.sum(sigma2[select]))
+                    # bini = np.array(bini) / dwnu
                     library[mycia]['nu'].extend(list(nugrid))
                     library[mycia]['I'].extend(list(bini))
                     library[mycia]['T'].extend(
                         list(np.ones(nugrid.size) * mytemp)
                     )
                     pass
-                print(
-                    'nu size (mycia)',
-                    mycia,
-                    len(library[mycia]['nu']),
-                    library[mycia]['nu'][0],
-                    library[mycia]['nu'][-1],
-                    np.min(library[mycia]['nu'][0]),
-                    np.max(library[mycia]['nu'][-1]),
-                )
                 for iline in set(library[mycia]['nu']):
                     select = np.array(library[mycia]['nu']) == iline
                     y = np.array(library[mycia]['I'])[select]
@@ -516,19 +505,79 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                         plt.show()
                         pass
                     pass
-                pass
                 print(
-                    'SPLNU size (mycia)',
+                    'nu size (mycia)',
                     mycia,
-                    len(library[mycia]['SPLNU']),
-                    np.min(library[mycia]['SPLNU']),
-                    np.max(library[mycia]['SPLNU']),
+                    len(library[mycia]['nu']),
+                    library[mycia]['nu'][0],
+                    library[mycia]['nu'][-1],
+                    np.min(library[mycia]['nu'][0]),
+                    np.max(library[mycia]['nu'][-1]),
                 )
-
+                if also_hires_xsecs:
+                    print('doing hires CIA binning')
+                    library[mycia]['nuhires'] = []
+                    library[mycia]['Ihires'] = []
+                    library[mycia]['Thires'] = []
+                    library[mycia]['SPLhires'] = []
+                    library[mycia]['SPLNUhires'] = []
+                    print('gathering up info for each T')
+                    for mytemp in set(library[mycia]['Ttemp']):
+                        select = np.array(library[mycia]['Ttemp']) == mytemp
+                        bini = []
+                        matnu = np.array(library[mycia]['nutemp'])[select]
+                        sigma2 = np.array(library[mycia]['Itemp'])[select]
+                        for lo, hi in zip(
+                            nugridhires_loedge, nugridhires_hiedge
+                        ):
+                            select = (matnu > lo) & (matnu <= hi)
+                            bini.append(np.sum(sigma2[select]))
+                        # bini = np.array(bini) / dwnu
+                        library[mycia]['nuhires'].extend(list(nugridhires))
+                        library[mycia]['Ihires'].extend(list(bini))
+                        library[mycia]['Thires'].extend(
+                            list(np.ones(nugridhires.size) * mytemp)
+                        )
+                        pass
+                    print('making an interpolator for each wave')
+                    for iline in set(library[mycia]['nuhires']):
+                        select = np.array(library[mycia]['nuhires']) == iline
+                        y = np.array(library[mycia]['Ihires'])[select]
+                        x = np.array(library[mycia]['Thires'])[select]
+                        sortme = np.argsort(x)
+                        x = x[sortme]
+                        y = y[sortme]
+                        myspl = itp(x, y, bounds_error=False, fill_value=0)
+                        library[mycia]['SPLhires'].append(myspl)
+                        library[mycia]['SPLNUhires'].append(iline)
+                    print(
+                        'SPLNUhires size (mycia)',
+                        mycia,
+                        len(library[mycia]['SPLNUhires']),
+                        np.min(library[mycia]['SPLNUhires']),
+                        np.max(library[mycia]['SPLNUhires']),
+                    )
+                    pass
+                print('done with hires CIA binning')
+                pass
             # plot the cross-sections for this CIA species
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
-            plot_xsecs_vsT(mycia, 'CIA', temperatures, library, spc, p)
+            plot_xsecs_vsT(mycia, 'CIA', library, spc, p)
+            if 'SPLhires' in library[ks]:
+                print('plotting CIAhires')
+                plt.subplot(1, 3, 2)
+                # set press=None to indicate that SPL is f(T), not f(T,P)
+                plot_HIRESxsecs_vsT(
+                    mycia,
+                    'CIA hires',
+                    alltemperatures,
+                    library,
+                    spc,
+                    p,
+                    press=None,
+                )
+                # (there is no pressure dependence, so third panel is blank)
             plt.tight_layout()
             out['data'][p]['plot_crossSections_' + mycia] = save_plot_tosv(
                 thisfig
@@ -643,7 +692,6 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
             alltemperatures = []
             for tstep in np.arange(300, 2000, 100):  # put in runtime?
                 # log.info('>---- %s K', str(tstep))
-                print('loop1', tstep)
                 sigma, lsig = absorb(
                     library[ks],
                     qtgrid[ks],
@@ -655,6 +703,7 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 allwavenumbers.append(lsig)
                 alltemperatures.append(tstep)
                 pass
+            alltemperatures = np.array(alltemperatures)
             # assume all 17 temps have same wgrid? yes, checks
             print(
                 'allwavenumbers size (ks)',
@@ -683,14 +732,9 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                     select = (matnu > (nubin - mydw / 2.0)) & (
                         matnu <= nubin + mydw / 2.0
                     )
-                    if logarithmic_opacity_summing:
-                        logmean = np.mean(np.log(sigma2[select]))
-                        nbin = np.sum(select)
-                        bini.append(nbin * np.exp(logmean))
-                    else:
-                        bini.append(np.sum(sigma2[select]))
-                    pass
-                bini = np.array(bini) / dwnu
+                    bini.append(np.sum(sigma2[select]))
+                # mistake - drop this normalization (off by 40x)
+                # bini = np.array(bini) / dwnu
                 library[ks]['nu'].extend(list(nugrid))
                 library[ks]['I'].extend(list(bini))
                 library[ks]['T'].extend(list(np.ones(nugrid.size) * mytemp))
@@ -713,84 +757,130 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 np.min(library[ks]['SPLNU']),
                 np.max(library[ks]['SPLNU']),
             )
-            # also save a hires version of HITEMP
-            hiresxsections = []
-            hireswavenumbers = []
-            hirestemperatures = []
-            for tstep in np.arange(300, 2000, 100):  # put in runtime?
-                # log.info('>---- %s K', str(tstep))
-                print('loop2', tstep)
-                sigmahires, wavenohires = absorb(
-                    library[ks],
-                    qtgrid[ks],
-                    tstep,
-                    1e4 / nugridhires,
-                    debug=False,
-                )
-                hiresxsections.append(sigmahires[0])
-                hireswavenumbers.append(wavenohires)
-                hirestemperatures.append(tstep)
-                pass
-            library[ks]['nuhires'] = []
-            library[ks]['Ihires'] = []
-            library[ks]['Thires'] = []
-            library[ks]['SPLhires'] = []
-            library[ks]['SPLNUhires'] = []
-            for indextemp, mytemp in enumerate(hirestemperatures):
-                bini = []
-                matnu = np.array(hireswavenumbers)[indextemp]
-                sigma2 = np.array(hiresxsections)[indextemp]
-                for nubin, mydw in zip(nugridhires, dwnuhires):
-                    select = (matnu > (nubin - mydw / 2.0)) & (
-                        matnu <= nubin + mydw / 2.0
+            if also_hires_xsecs:
+                # also save a hires version of HITEMP
+                hiresxsections = []
+                hireswavenumbers = []
+                hirestemperatures = []
+                for tstep in np.arange(300, 2000, 100):  # put in runtime?
+                    # log.info('>---- %s K', str(tstep))
+                    print('loop2', tstep)
+                    sigmahires, wavenohires = absorb(
+                        library[ks],
+                        qtgrid[ks],
+                        tstep,
+                        (1e4 / nugridhires)[::-1],
+                        debug=False,
                     )
-                    bini.append(np.sum(sigma2[select]))
+                    hiresxsections.append(sigmahires[0])
+                    hireswavenumbers.append(wavenohires)
+                    hirestemperatures.append(tstep)
                     pass
-                bini = np.array(bini) / dwnuhires
-                library[ks]['nuhires'].extend(list(nugridhires))
-                library[ks]['Ihires'].extend(list(bini))
-                library[ks]['Thires'].extend(
-                    list(np.ones(nugridhires.size) * mytemp)
-                )
-                pass
-            for iline in set(library[ks]['nuhires']):
+                library[ks]['nuhires'] = []
+                library[ks]['Ihires'] = []
+                library[ks]['Thires'] = []
+                library[ks]['SPLhires'] = []
+                library[ks]['SPLNUhires'] = []
+                print('startcheck')
+                for indextemp, mytemp in enumerate(hirestemperatures):
+                    bini = []
+                    matnu = np.array(hireswavenumbers)[indextemp]
+                    sigma2 = np.array(hiresxsections)[indextemp]
+                    # print('   size check',
+                    #      np.array(hiresxsections).shape,
+                    #      sigma2.shape)
+                    for nubin, mydw in zip(nugridhires, dwnuhires):
+                        select = (matnu > (nubin - mydw / 2.0)) & (
+                            matnu <= nubin + mydw / 2.0
+                        )
+                        bini.append(np.sum(sigma2[select]))
+                        # print(' selectsiz',np.sum(select))
+                        # print('sigma2',sigma2[select])
+                        pass
+                    # bini = np.array(bini) / dwnuhires  # <-- OH NO!!!
+                    library[ks]['nuhires'].extend(list(nugridhires))
+                    library[ks]['Ihires'].extend(list(bini))
+                    library[ks]['Thires'].extend(
+                        list(np.ones(nugridhires.size) * mytemp)
+                    )
+                    pass
+                print(' len check', len(library[ks]['nuhires']))
+                print('midcheck')
+                # exit('wtf')
+                starttime = time.process_time()
+                library[ks]['nuhires'] = np.array(library[ks]['nuhires'])
+                library[ks]['Ihires'] = np.array(library[ks]['Ihires'])
+                library[ks]['Thires'] = np.array(library[ks]['Thires'])
+                for iline in set(library[ks]['nuhires']):
+                    # print('iline',iline,len(set(library[ks]['nuhires'])))
+                    select = library[ks]['nuhires'] == iline
+                    # print('select', np.sum(select), iline)  # 17 are selected
+                    y = library[ks]['Ihires'][select]
+                    x = library[ks]['Thires'][select]
+                    sortme = np.argsort(x)
+                    x = x[sortme]
+                    y = y[sortme]
+                    # print('x',x)
+                    # print('y',y)
+                    myspl = itp(x, y, bounds_error=False, fill_value=0)
+                    # print('interper check',myspl(1000))
+                    # print('interper check',myspl((1000)))
+                    # if np.sum(y) != 0:
+                    #    exit('ssss')
+                    # myspl = 0  # this version takes 62-64s cpu
+                    library[ks]['SPLhires'].append(myspl)
+                    library[ks]['SPLNUhires'].append(iline)
+                    pass
+                if verbose:
+                    endtime = time.process_time()
+                    print(' CPU time', endtime - starttime)
+                # huh? this is done with a set().  so it's not in order by wavelength!
+                # yes,true. sort it back now before plotting below
+                # library[ks]['SPLNUhires'] = np.array(library[ks]['SPLNUhires'])
+                reorder = np.argsort(library[ks]['SPLNUhires'])
+                # print(reorder)
+                # import pdb;pdb.set_trace()
+                library[ks]['SPLNUhires'] = np.array(library[ks]['SPLNUhires'])[
+                    reorder
+                ]
+                library[ks]['SPLhires'] = np.array(library[ks]['SPLhires'])[
+                    reorder
+                ]
 
-                select = np.array(library[ks]['nuhires']) == iline
-                y = np.array(library[ks]['Ihires'])[select]
-                x = np.array(library[ks]['Thires'])[select]
-                sortme = np.argsort(x)
-                x = x[sortme]
-                y = y[sortme]
-                myspl = itp(x, y, bounds_error=False, fill_value=0)
-                library[ks]['SPLhires'].append(myspl)
-                library[ks]['SPLNUhires'].append(iline)
+                # print(
+                #    'SPLNUhires size (ks)',
+                #    ks,
+                #    len(library[ks]['SPLNUhires']),
+                #    np.min(library[ks]['SPLNUhires']),
+                #    np.max(library[ks]['SPLNUhires']),
+                # )
+                # print(
+                #    ' identical to nugridhires?',  # yes!
+                #    ks,
+                #    len(nugridhires),
+                #    np.min(nugridhires),
+                #    np.max(nugridhires),
+                # )
                 pass
-            print(
-                'SPLNUhires size (ks)',
-                ks,
-                len(library[ks]['SPLNUhires']),
-                np.min(library[ks]['SPLNUhires']),
-                np.max(library[ks]['SPLNUhires']),
-            )
-            print(
-                ' identical to nugridhires?',
-                ks,
-                len(nugridhires),
-                np.min(nugridhires),
-                np.max(nugridhires),
-            )
             # ________________________________________________________________________
 
             # plot the cross-sections for this HITEMP species
             print('plotting HITEMP')
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
-            plot_xsecs_vsT(ks, 'HITEMP', alltemperatures, library, spc, p)
+            plot_xsecs_vsT(ks, 'HITEMP', library, spc, p)
             if 'SPLhires' in library[ks]:
                 print('plotting HITEMPhires')
                 plt.subplot(1, 3, 2)
-                plot_xsecs_vsT(
-                    ks, 'HITEMP (hires)', alltemperatures, library, spc, p
+                # set press=None to indicate that SPL is f(T), not f(T,P)
+                plot_HIRESxsecs_vsT(
+                    ks,
+                    'HITEMP hires',
+                    alltemperatures,
+                    library,
+                    spc,
+                    p,
+                    press=None,
                 )
                 # (there is no pressure dependence, so third panel is blank)
             plt.tight_layout()
@@ -902,39 +992,48 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 )
                 library[thisatom]['SPL'].append(myspl)
 
-            # also calculate atom cross-sections on a hires grid
-            library[thisatom]['SPLhires'] = []
-            library[thisatom]['SPLNUhires'] = nugridhires
-            xsec_matchingwgridhires = (
-                np.ones((xsec.shape[0], xsec.shape[1], len(wgridhires))) * 666
-            )
-            wavenos = 1e4 / wavelengths
-            for iwave, (lo, hi) in enumerate(
-                zip(nugridhires_loedge, nugridhires_hiedge)
-            ):
-                select = (wavenos > lo) & (wavenos <= hi)
-                if sum(select) == 0:
-                    xsec_matchingwgridhires[:, :, iwave] = 0
-                else:
-                    avsigma = np.mean(xsec[:, :, select], axis=2)
-                    xsec_matchingwgridhires[:, :, iwave] = avsigma
-            print(
-                'SPLNUhires size (atom)',
-                thisatom,
-                len(wgridhires),
-                wgridhires[0],
-                wgridhires[-1],
-            )
-            for iwave in range(len(wgridhires)):
-                myspl = RegularGridInterpolator(
-                    (temperatures, pressures),
-                    xsec_matchingwgridhires[:, :, iwave],
-                    # careful with values going outside of bounds
-                    bounds_error=False,
-                    fill_value=None,
+            if also_hires_xsecs:
+                # also calculate atom cross-sections on a hires grid
+                library[thisatom]['SPLhires'] = []
+                library[thisatom]['SPLNUhires'] = nugridhires
+                xsec_matchingwgridhires = (
+                    np.ones((xsec.shape[0], xsec.shape[1], len(wgridhires)))
+                    * 666
                 )
-                library[thisatom]['SPLhires'].append(myspl)
-
+                wavenos = 1e4 / wavelengths
+                # OLD METHOD: leaves gaps all over
+                # for iwave, (lo, hi) in enumerate(
+                #    zip(nugridhires_loedge, nugridhires_hiedge)
+                # ):
+                #    select = (wavenos > lo) & (wavenos <= hi)
+                #     if sum(select) == 0:
+                #         xsec_matchingwgridhires[:, :, iwave] = 0
+                #     else:
+                #        avsigma = np.mean(xsec[:, :, select], axis=2)
+                #        xsec_matchingwgridhires[:, :, iwave] = avsigma
+                # NEW METHOD: find the nearest value, not the average
+                for iwave, wavenow in enumerate(nugridhires):
+                    inearest = np.abs(wavenos - wavenow).argmin()
+                    xsec_matchingwgridhires[:, :, iwave] = xsec[:, :, inearest]
+                print(
+                    'SPLNUhires size (atom)',
+                    thisatom,
+                    len(wgridhires),
+                    wgridhires[0],
+                    wgridhires[-1],
+                )
+                for iwave in range(len(wgridhires)):
+                    myspl = RegularGridInterpolator(
+                        # (temperatures, pressures),
+                        (pressures, temperatures),
+                        xsec_matchingwgridhires[:, :, iwave],
+                        # careful with values going outside of bounds
+                        bounds_error=False,
+                        fill_value=None,
+                    )
+                    library[thisatom]['SPLhires'].append(myspl)
+                    pass
+                pass
             # plot the cross-sections for this atom as a function of T
             print('plotting atom')
             thisfig = plt.figure(figsize=(20, 5))
@@ -948,25 +1047,35 @@ def myxsecs(spc, runtime, out, only_these_planets=None, verbose=False):
                 if 1:
                     plot_HIRESxsecs_vsT(
                         thisatom,
-                        'atom (hires)',
+                        'atom hires',
                         temperatures,
                         library,
                         spc,
                         p,
+                        press=10,
+                        # press=pressures[int(len(pressures) / 2)],
                     )
                 else:
                     plot_HIRESxsecs_vsP(
                         thisatom,
-                        'atom (hires)',
+                        'atom hires',
                         pressures,
                         library,
                         spc,
                         p,
                     )
             plt.subplot(1, 3, 3)
-            plot_atomxsecs_vsP(
-                thisatom, 'atom', temperatures, pressures, library, spc, p
+            plot_HIRESxsecs_vsP(
+                thisatom,
+                'atom hires',
+                pressures,
+                library,
+                spc,
+                p,
             )
+            # plot_atomxsecs_vsP(
+            #    thisatom, 'atom', temperatures, pressures, library, spc, p
+            # )
             plt.tight_layout()
             out['data'][p]['plot_crossSections_' + thisatom] = save_plot_tosv(
                 thisfig
