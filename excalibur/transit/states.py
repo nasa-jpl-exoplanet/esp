@@ -708,6 +708,96 @@ class SpectrumSV(ExcaliburSV):
                         axs[1].set_xlabel(r'Wavelength [$\mu$m]', fontsize=20)
                         save_plot_toscreen(fig, visitor)
                         fig = None
+                        # Separate photon noise comparison.
+                        for ndx, detector_name in enumerate(dtc):
+                            visit_data = self['data'][pln][detector_name][vst]
+                            if 'PHOTON_DEPTH_ERR' not in visit_data:
+                                continue
+
+                            wavelength = np.asarray(visit_data['WB'])
+                            radius_ratio = np.asarray(visit_data['ES'])
+                            radius_error = np.asarray(visit_data['ESerr'])
+                            depth = radius_ratio**2
+                            assigned_error = np.abs(
+                                (radius_ratio + radius_error) ** 2 - depth
+                            )
+                            photon_error = np.asarray(
+                                visit_data['PHOTON_DEPTH_ERR']
+                            )
+                            keep = (
+                                cleanup[ndx]
+                                & np.isfinite(wavelength)
+                                & np.isfinite(depth)
+                                & np.isfinite(assigned_error)
+                                & np.isfinite(photon_error)
+                                & (photon_error > 0)
+                            )
+                            if not np.any(keep):
+                                continue
+
+                            fig, ax = plt.subplots(figsize=(10, 6))
+                            ax.errorbar(
+                                wavelength[keep],
+                                depth[keep] * 1e6,
+                                yerr=assigned_error[keep] * 1e6,
+                                fmt='none',
+                                ecolor='red',
+                                elinewidth=2,
+                                alpha=0.7,
+                                label='Pipeline uncertainty',
+                            )
+                            ax.errorbar(
+                                wavelength[keep],
+                                depth[keep] * 1e6,
+                                yerr=photon_error[keep] * 1e6,
+                                fmt='o',
+                                markersize=3,
+                                color='black',
+                                ecolor='black',
+                                elinewidth=2,
+                                label='Estimated photon noise',
+                            )
+                            ax.set_title(f'{pln} — {detector_name} visit {vst}')
+                            ax.set_xlabel('Wavelength [µm]')
+                            ax.set_ylabel('Transit depth [ppm]')
+                            ax.legend()
+                            fig.tight_layout()
+                            save_plot_toscreen(fig, visitor)
+
+                            # Histogram: compare uncertainties across wavelength bins.
+                            ratio = assigned_error[keep] / photon_error[keep]
+                            ratio = ratio[np.isfinite(ratio)]
+                            if not ratio.size:
+                                continue
+                            ratio_mean = np.mean(ratio)
+                            ratio_std = np.std(ratio)
+
+                            fig, ax = plt.subplots(figsize=(10, 6))
+                            ax.hist(
+                                ratio,
+                                bins='auto',
+                                color='0.7',
+                                edgecolor='black',
+                            )
+                            ax.axvline(
+                                1.0,
+                                color='black',
+                                linestyle='--',
+                            )
+                            ax.axvline(
+                                ratio_mean,
+                                color='red',
+                                label=f'Mean = {ratio_mean:.2f}; '
+                                f'std dev = {ratio_std:.2f}',
+                            )
+                            ax.set_title(f'{pln} — {detector_name} visit {vst}')
+                            ax.set_xlabel(
+                                'Pipeline depth uncertainty / photon uncertainty'
+                            )
+                            ax.set_ylabel('Number of wavelength bins')
+                            ax.legend()
+                            fig.tight_layout()
+                            save_plot_toscreen(fig, visitor)
                         pass
                     pass
                 pass
