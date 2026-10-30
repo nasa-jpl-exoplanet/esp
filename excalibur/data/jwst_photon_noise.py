@@ -1,9 +1,17 @@
+'''data core ds'''
+
+# Heritage code shame:
+# pylint: disable=too-many-arguments,many-positional-arguments,too-many-locals
+
+# -- IMPORTS --------------------------------------------------------
 import numpy as np
 from astropy.io import fits
 
 
 def read_jwst_noise_parameters(calibrated_paths):
-    """Read per-detector times and scalar NIRSpec gain estimates. This is from STSci"""
+    """
+    Read per-detector times and scalar NIRSpec gain estimates. This is from STSci
+    """
     average_gain = {"NRS1": 0.996, "NRS2": 1.137}
     integration_time = {}
     gains = {}
@@ -56,6 +64,9 @@ def calculate_jwst_native_photon_noise(
     integration_time,
     gains,
 ):
+    """
+    Calculates JWST native photon noise
+    """
     photon_noise_by_detector = {}
 
     for detector_name in np.unique(detector):
