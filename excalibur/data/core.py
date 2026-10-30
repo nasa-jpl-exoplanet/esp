@@ -116,7 +116,7 @@ def timingversion():
     1.2.0: K. Pearson: Spitzer
     1.3.0: GMR: JWST
     '''
-    return dawgie.VERSION(1, 3, 0)
+    return dawgie.VERSION(1, 3, 1)
 
 
 def timing(force, ext, clc, out, fastdev=-1, verbose=False):
