@@ -2142,7 +2142,7 @@ def plot_HIRESxsecs_vsT(
     #      library[speciesName]['SPLhires'][100]((1e-6, 1000)))
 
     for itemp, temp in enumerate(temperatures[Tselect][::-1]):
-        if press == None:
+        if press is None:
             # HITEMP array is just a function of T, not T+P
             sigma = np.array(
                 [thisspl(temp) for thisspl in library[speciesName]['SPLhires']]
@@ -2199,7 +2199,7 @@ def plot_HIRESxsecs_vsT(
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
-    if press == None:
+    if press is None:
         title = f'{speciesName} ({speciesType})'
     else:
         title = f'{speciesName} ({speciesType})  P = {press:1.1e} bar'
