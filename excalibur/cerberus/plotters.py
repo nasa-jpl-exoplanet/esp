@@ -2133,9 +2133,9 @@ def plot_HIRESxsecs_vsT(
     if deltatop < 2 * deltabott:
         # more of less linear grid, so log-space it here
         Tselect = (
-            np.round(np.logspace(0, np.log10(len(temperatures)), Nplots)).astype(
-                int
-            )
+            np.round(
+                np.logspace(0, np.log10(len(temperatures)), Nplots)
+            ).astype(int)
             - 1
         )
     else:
@@ -2209,10 +2209,7 @@ def plot_HIRESxsecs_vsT(
     else:
         # for atomic species use same code as for panel 1
         sigmalores = np.array(
-            [
-                thisspl((temp, press))
-                for thisspl in library[speciesName]['SPL']
-            ]
+            [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
         )
         maxsigma = np.max(sigmalores)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
@@ -2322,10 +2319,7 @@ def plot_HIRESxsecs_vsP(
     else:
         # for atomic species use same code as for panel 1
         sigmalores = np.array(
-            [
-                thisspl((temp, press))
-                for thisspl in library[speciesName]['SPL']
-            ]
+            [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
         )
         maxsigma = np.max(sigmalores)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
