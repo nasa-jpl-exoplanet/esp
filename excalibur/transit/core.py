@@ -3899,13 +3899,17 @@ def jwstspectrum(
                             plt.tick_params(axis='both', labelsize=18)
                             plt.show()
                             pass
-                        #Exclude integrations rejected from this channel
-                        counts = np.where(np.isfinite(slc),electron_count[chn],np.nan)
-                        #Counts in and out of transit
+                        # Exclude integrations rejected from this channel
+                        counts = np.where(
+                            np.isfinite(slc), electron_count[chn], np.nan
+                        )
+                        # Counts in and out of transit
                         counts_in = np.nansum(counts[in_transit])
                         counts_out = np.nansum(counts[out_of_transit])
                         if counts_in > 0 and counts_out > 0:
-                            photon_error = np.sqrt(1.0 / counts_in + 1.0 / counts_out) #rel error
+                            photon_error = np.sqrt(
+                                1.0 / counts_in + 1.0 / counts_out
+                            )  # rel error
                         else:
                             photon_error = np.nan
                         # GRUSNIS LD
@@ -4118,7 +4122,9 @@ def jwstspectrum(
                 progbar.close()
                 out['data'][pln][det][vis]['ES'] = np.array(spc)
                 out['data'][pln][det][vis]['ESerr'] = np.array(spcerr)
-                out['data'][pln][det][vis]['PHOTON_DEPTH_ERR'] = np.array(photon_errors)
+                out['data'][pln][det][vis]['PHOTON_DEPTH_ERR'] = np.array(
+                    photon_errors
+                )
                 out['data'][pln][det][vis]['MCTRACE'] = trc
                 out['data'][pln][det][vis]['WB'] = np.array(wvl)
                 out['data'][pln][det][vis]['WBlow'] = (
