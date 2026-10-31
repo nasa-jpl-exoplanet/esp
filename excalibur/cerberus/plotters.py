@@ -9,6 +9,7 @@ import logging
 import corner
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import binned_statistic
 
 # import excalibur
 from excalibur.cerberus.forward_model import TPprofile
@@ -19,6 +20,13 @@ from excalibur.util.plotters import save_plot_tosv
 log = logging.getLogger(__name__)
 
 ssc = ssconstants(mks=True)
+
+temperatureColors = plt.colormaps['magma']
+# temperatureColors = plt.colormaps['autumn']  # red is too light
+pressureColors = plt.colormaps['PuBuGn']
+# pressureColors = plt.colormaps['winter']  # didn't test with good spacing
+# pressureColors = plt.colormaps['cool']  # didn't test with good spacing
+# pressureColors = plt.colormaps['YlGnBu']
 
 
 # --------------------------------------------------------------------
@@ -2031,6 +2039,426 @@ def plot_mass_vs_metals(
     if verbose:
         plt.show()
     return save_plot_tosv(figure), figure
+
+
+# --------------------------------------------------------------------
+def plot_xsecs_vsT(
+    speciesName,
+    speciesType,
+    library,
+    spc,
+    p,
+    Nplots=8,
+    fontsize=16,
+):
+    '''this is just one panel; figure has already been opened'''
+
+    wgrid = np.array(spc['data'][p]['WB'])
+
+    haha = list(set(library[speciesName]['T']))
+    haha = np.sort(np.array(haha))
+    haha = haha[::-1]
+    # select a subsample of the temperature array
+    # Tselect = np.round(np.linspace(0, len(haha) - 1, Nplots)).astype(int)
+    # print('Tselect lin',Tselect)
+    Tselect = (
+        np.round(np.logspace(0, np.log10(len(haha)), Nplots)).astype(int) - 1
+    )
+    # T grid is backwards, so have to flip log-spaced indices
+    Tselect = (len(haha) - 1 - Tselect)[::-1]
+    # print('Tselect log',Tselect)
+    # for itemp, temp in zip(Tselect, haha[Tselect]):
+    for itemp, temp in enumerate(haha[Tselect]):
+        select = np.array(library[speciesName]['T']) == temp
+        plt.semilogy(
+            1e4 / (np.array(library[speciesName]['nu'])[select]),
+            np.array(library[speciesName]['I'])[select],
+            # color=temperatureColors(
+            #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+            # ),
+            color=temperatureColors(0.9 - (0.8 * itemp / (len(Tselect) - 1))),
+            label=str(int(temp)) + 'K',
+        )
+        pass
+    maxsigma = np.max(library[speciesName]['I'])
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    plt.xlim(np.min(wgrid), np.max(wgrid))
+    plt.title(
+        f'{speciesName} ({speciesType})',
+        fontsize=fontsize + 4,
+    )
+    plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+    if 'CIA' in speciesType:
+        plt.ylabel(
+            'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]', fontsize=fontsize
+        )
+    else:
+        plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
+    plt.legend(
+        numpoints=1,
+        borderaxespad=0.0,
+        frameon=True,
+    )
+    return
+
+
+# --------------------------------------------------------------------
+def plot_HIRESxsecs_vsT(
+    speciesName,
+    speciesType,
+    temperatures,
+    library,
+    spc,
+    p,
+    press=1.0e-4,
+    flippedTP=False,
+    Nplots=8,
+    fontsize=16,
+):
+    '''this is just one panel; figure has already been opened'''
+
+    wavelength_um = 1e4 / library[speciesName]['SPLNUhires']
+    wgrid = np.array(spc['data'][p]['WB'])
+    waveedges = (wgrid[1:] + wgrid[:-1]) / 2
+
+    # select a subsample of the temperature array
+    # switch to log-space T selection
+    #  ok that's good if the T's are linearly spaced,
+    #   but for atoms it's already a log-spaced grid of T
+    #   (check for it)
+    deltabott = temperatures[1] - temperatures[0]
+    deltatop = temperatures[-1] - temperatures[-2]
+    if deltatop < 2 * deltabott:
+        # more of less linear grid, so log-space it here
+        Tselect = (
+            np.round(
+                np.logspace(0, np.log10(len(temperatures)), Nplots)
+            ).astype(int)
+            - 1
+        )
+    else:
+        # looks like it's already log spaced, so just do linear here
+        Tselect = np.round(
+            np.linspace(0, len(temperatures) - 1, Nplots)
+        ).astype(int)
+    # print('# of press',len(pressures))
+    # print(' press range',pressures[0],pressures[-1])
+    # print('temp',(temperatures))
+    # print('# of temp',len(temperatures))
+    # print(' temp range',temperatures[0],temperatures[-1])
+    # print(' Tselect',Tselect)
+
+    for itemp, temp in enumerate(temperatures[Tselect][::-1]):
+        if press is None:
+            # HITEMP array is just a function of T, not T+P
+            sigma = np.array(
+                [thisspl(temp) for thisspl in library[speciesName]['SPLhires']]
+            )
+        elif flippedTP:
+            sigma = np.array(
+                [
+                    thisspl((temp, press))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+        else:
+            sigma = np.array(
+                [
+                    thisspl((press, temp))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+        plt.semilogy(
+            1e4 / library[speciesName]['SPLNUhires'],
+            sigma,
+            lw=0.01,
+            # color=temperatureColors(
+            #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+            # ),
+            color=temperatureColors(0.9 - (0.8 * itemp / (len(Tselect) - 1))),
+            # label=str(int(temp)) + 'K',
+        )
+        sigma_rebin = binned_statistic(
+            wavelength_um,
+            sigma,
+            statistic='mean',
+            bins=waveedges,
+        ).statistic
+        wavelength_um_rebin = binned_statistic(
+            wavelength_um,
+            wavelength_um,
+            statistic='mean',
+            bins=waveedges,
+        ).statistic
+        plt.semilogy(
+            wavelength_um_rebin,
+            sigma_rebin,
+            # color=temperatureColors(
+            #    0.1 + 0.8 * itemp / (len(Tselect) - 1)
+            # ),
+            color=temperatureColors(0.9 - (0.8 * itemp / (len(Tselect) - 1))),
+            label=str(int(temp)) + 'K',
+        )
+        pass
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # use the same max-sigma as in the previous panel (same y-axis range)
+    if 'I' in library[speciesName]:
+        maxsigma = np.max(library[speciesName]['I'])
+    else:
+        # for atomic species use same code as for panel 1
+        # no, doesn't match. and press might not be defined error
+        # sigmalores = np.array(
+        #     [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
+        # )
+        # maxsigma = np.max(sigmalores)
+        maxsigma = np.max(sigma_rebin)
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    plt.xlim(np.min(wgrid), np.max(wgrid))
+    if press is None:
+        title = f'{speciesName} ({speciesType})'
+    else:
+        title = f'{speciesName} ({speciesType})  P = {press:1.1e} bar'
+    plt.title(title, fontsize=fontsize + 4)
+
+    plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+    if 'CIA' in speciesType:
+        plt.ylabel(
+            'Line intensity $S(T)$ [$cm^{5}/molecule^{2}$]', fontsize=fontsize
+        )
+    else:
+        plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
+    plt.legend(
+        numpoints=1,
+        borderaxespad=0.0,
+        frameon=True,
+    )
+    return
+
+
+# --------------------------------------------------------------------
+def plot_HIRESxsecs_vsP(
+    speciesName,
+    speciesType,
+    pressures,
+    library,
+    spc,
+    p,
+    temp=1000,
+    flippedTP=False,
+    Nplots=8,
+    fontsize=16,
+):
+    '''this is just one panel; figure has already been opened'''
+
+    wavelength_um = 1e4 / library[speciesName]['SPLNUhires']
+    wgrid = np.array(spc['data'][p]['WB'])
+    waveedges = (wgrid[1:] + wgrid[:-1]) / 2
+
+    # now plot as a function of pressure instead of temperature
+    Pselect = np.round(np.linspace(0, len(pressures) - 1, Nplots)).astype(int)
+    for ipress, press in enumerate(pressures[Pselect]):
+        if flippedTP:
+            sigma = np.array(
+                [
+                    thisspl((temp, press))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+        else:
+            sigma = np.array(
+                [
+                    thisspl((press, temp))
+                    for thisspl in library[speciesName]['SPLhires']
+                ]
+            )
+            pass
+        plt.semilogy(
+            1e4 / library[speciesName]['SPLNUhires'],
+            sigma,
+            lw=0.01,
+            color=pressureColors(
+                1.0 - 0.8 * (len(Pselect) - ipress) / (len(Pselect) - 1)
+            ),
+            # label=f'{press:1.1e} bar',
+        )
+        # put it into Ariel bins, as with temperature
+        # sigma_rebin = []
+        # for wavelow, wavehigh in zip(wavelows, wavehighs):
+        #    thisWaveBin = np.where(
+        #        (wavelength_um >= wavelow)
+        #        & (wavelength_um <= wavehigh)
+        #    )
+        #    sigma_rebin.append(np.average(sigma[thisWaveBin]))
+        sigma_rebin = binned_statistic(
+            wavelength_um,
+            sigma,
+            statistic='mean',
+            bins=waveedges,
+        ).statistic
+        wavelength_um_rebin = binned_statistic(
+            wavelength_um,
+            wavelength_um,
+            statistic='mean',
+            bins=waveedges,
+        ).statistic
+        plt.semilogy(
+            wavelength_um_rebin,
+            sigma_rebin,
+            color=pressureColors(
+                1.0 - 0.8 * (len(Pselect) - ipress) / (len(Pselect) - 1)
+            ),
+            label=f'{press:1.1e} bar',
+        )
+        pass
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # use the same max-sigma as in the previous panel (same y-axis range)
+    if 'I' in library[speciesName]:
+        maxsigma = np.max(library[speciesName]['I'])
+    else:
+        # for atomic species use same code as for panel 1
+        # no, doesn't match. and press might not be defined error
+        # sigmalores = np.array(
+        #    [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
+        # )
+        # maxsigma = np.max(sigmalores)
+        maxsigma = np.max(sigma_rebin)
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    plt.xlim(np.min(wgrid), np.max(wgrid))
+    plt.title(
+        f'{speciesName} ({speciesType})  T = {int(temp):d} K',
+        fontsize=fontsize + 4,
+    )
+    plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+    plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
+    plt.legend(
+        numpoints=1,
+        borderaxespad=0.0,
+        frameon=True,
+    )
+    return
+
+
+# --------------------------------------------------------------------
+def plot_atomxsecs_vsT(
+    speciesName,
+    speciesType,
+    temperatures,
+    pressures,
+    library,
+    spc,
+    p,
+    # press=1.0e-4,
+    Nplots=8,
+    fontsize=16,
+):
+    '''this is just one panel; figure has already been opened'''
+
+    wgrid = np.array(spc['data'][p]['WB'])
+
+    # make a 3-d array of cross-sections using the SPL interpolators
+    # (loop over a bunch of 2-d interps, rather than full 3-d interp)
+    sigmas = []
+    temp_grid, press_grid = np.meshgrid(temperatures, pressures)
+    for interp2d_xsec in library[speciesName]['SPL']:
+        sigmas.append(interp2d_xsec((temp_grid, press_grid)))
+    sigma = np.array(sigmas)
+    # print('sigma shape (2d)', sigma.shape)
+
+    # select a subsample of the temperature array
+    Tselect = np.round(np.linspace(0, len(temperatures) - 1, Nplots)).astype(
+        int
+    )
+    for itemp, temp in zip(Tselect, temperatures[Tselect]):
+        # choose one pressure value to plot bunch of temperatures
+        ipress = int(len(pressures) / 2)
+        Pplot = pressures[ipress]
+        plt.semilogy(
+            wgrid,
+            sigma[:, ipress, itemp],
+            color=temperatureColors(
+                0.1 + (0.8 * itemp / (len(temperatures) - 1))
+            ),
+            label=str(int(temp)) + ' K',
+        )
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    plt.xlim(np.min(wgrid), np.max(wgrid))
+    plt.title(
+        f'{speciesName} ({speciesType})   P = {Pplot:1.1e} bar',
+        fontsize=fontsize + 4,
+    )
+    plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+    plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
+    plt.legend(
+        numpoints=1,
+        borderaxespad=0.0,
+        frameon=True,
+    )
+    return
+
+
+# --------------------------------------------------------------------
+def plot_atomxsecs_vsP(
+    speciesName,
+    speciesType,
+    temperatures,
+    pressures,
+    library,
+    spc,
+    p,
+    # temp=1000,
+    Nplots=8,
+    fontsize=16,
+):
+    '''this is just one panel; figure has already been opened'''
+
+    wgrid = np.array(spc['data'][p]['WB'])
+
+    # make a 3-d array of cross-sections using the SPL interpolators
+    # (loop over a bunch of 2-d interps, rather than full 3-d interp)
+    sigmas = []
+    temp_grid, press_grid = np.meshgrid(temperatures, pressures)
+    for interp2d_xsec in library[speciesName]['SPL']:
+        sigmas.append(interp2d_xsec((temp_grid, press_grid)))
+    sigma = np.array(sigmas)
+    # print('sigma shape (2d)', sigma.shape)
+
+    Pselect = np.round(np.linspace(0, len(pressures) - 1, Nplots)).astype(int)
+    for ipress, press in zip(Pselect, pressures[Pselect]):
+        # choose one temperature value; plot a bunch of pressures
+        itemp = int(len(temperatures) / 2)
+        Tplot = temperatures[itemp]
+        plt.semilogy(
+            wgrid,
+            sigma[:, ipress, itemp],
+            color=pressureColors(
+                0.2 + 0.8 * (len(pressures) - ipress) / (len(pressures) - 1)
+            ),
+            label=f'{press:1.1e} bar',
+        )
+    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    plt.xlim(np.min(wgrid), np.max(wgrid))
+    plt.title(
+        f'{speciesName} ({speciesType})   T = {int(Tplot):d} K',
+        fontsize=fontsize + 4,
+    )
+    plt.xlabel('Wavelength [$\\mu m$]', fontsize=fontsize)
+    plt.ylabel('Cross Section [$cm^{2}/molecule$]', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
+    plt.legend(
+        numpoints=1,
+        borderaxespad=0.0,
+        frameon=True,
+    )
+    return
 
 
 # --------------------------------------------------------------------
