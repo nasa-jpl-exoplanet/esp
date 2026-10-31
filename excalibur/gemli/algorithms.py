@@ -84,7 +84,12 @@ class MLfit(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
+        if runtime['ignoreinput_gemli_sim_spectrum']:
+            msg = 'runtime option to skip gemli.sim_spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
 
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])

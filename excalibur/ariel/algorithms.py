@@ -53,6 +53,13 @@ class SimSpectrum(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
+        target = repr(self).split('.')[1]
+        if runtime['ignoreinput_ariel_sim_spectrum']:
+            msg = 'runtime option to skip ariel.sim-spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
+
         # stop here if it is not a runtime target
         if not self.__rt.is_valid():
             log.info(
@@ -68,7 +75,6 @@ class SimSpectrum(dawgie.Algorithm):
             ancil_dict = self.__ancillary_estimate.sv_as_dict()['parameters']
             ancvalid, errstring = checksv(ancil_dict)
 
-            target = repr(self).split('.')[1]
             if target.startswith('test'):
                 sysvalid = False
                 errstring = 'Do not run ariel-sim for test targets'

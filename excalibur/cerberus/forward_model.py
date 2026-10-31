@@ -1140,11 +1140,11 @@ def absorb(
     G. ROUDIER: HITRAN HITEMP database parser
     '''
 
-    select = np.array(xsecs['I']) == (iso + 1)
-    select = np.array(xsecs['I']) == iso + 1
+    select = np.array(xsecs['Iraw']) == (iso + 1)
+    select = np.array(xsecs['Iraw']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
-    nu = np.array(xsecs['nu'])[select]
+    nu = np.array(xsecs['nuraw'])[select]
     # these are no longer used (part of removed line shifting,broadening)
     # gself = np.array(xsecs['g_self'])[select]
     # delta = np.array(xsecs['delta'])[select]
@@ -1152,7 +1152,6 @@ def absorb(
     # gair = np.array(xsecs['g_air'])[select]
 
     Qref = float(qtgrid['SPL'][iso](Tref))
-
     try:
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:

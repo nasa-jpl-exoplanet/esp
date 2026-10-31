@@ -17,6 +17,10 @@ import excalibur.system.core as syscore
 import excalibur.data.coreview as datcvw
 import excalibur.util.time
 from excalibur.util import nerdclub
+from excalibur.data.jwst_photon_noise import (
+    read_jwst_noise_parameters,
+    calculate_jwst_native_photon_noise,
+)
 
 import lmfit as lm
 import matplotlib.pyplot as plt
@@ -1021,7 +1025,13 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
         out['data']['EXPFLAG'] = alldq
-        pass
+        # JWST photon noise - each integration and channel
+        calibrated_paths = [os.path.join(dbs, location) for location in calloc]
+        inttimes, gains = read_jwst_noise_parameters(calibrated_paths)
+        native_photon_noise = calculate_jwst_native_photon_noise(
+            np.asarray(all1d), alldet, np.asarray(all1dvalid), inttimes, gains
+        )
+        out['data']['PHOTON_NOISE'] = native_photon_noise
     # I know it is useless but I feel bad
     for it in iexist.values():
         it.close()
