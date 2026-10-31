@@ -2208,10 +2208,12 @@ def plot_HIRESxsecs_vsT(
         maxsigma = np.max(library[speciesName]['I'])
     else:
         # for atomic species use same code as for panel 1
-        sigmalores = np.array(
-            [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
-        )
-        maxsigma = np.max(sigmalores)
+        # no, doesn't match. and press might not be defined error
+        # sigmalores = np.array(
+        #     [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
+        # )
+        # maxsigma = np.max(sigmalores)
+        maxsigma = np.max(sigma_rebin)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
@@ -2318,10 +2320,12 @@ def plot_HIRESxsecs_vsP(
         maxsigma = np.max(library[speciesName]['I'])
     else:
         # for atomic species use same code as for panel 1
-        sigmalores = np.array(
-            [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
-        )
-        maxsigma = np.max(sigmalores)
+        # no, doesn't match. and press might not be defined error
+        # sigmalores = np.array(
+        #    [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
+        # )
+        # maxsigma = np.max(sigmalores)
+        maxsigma = np.max(sigma_rebin)
     roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
     plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     plt.xlim(np.min(wgrid), np.max(wgrid))
