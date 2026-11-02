@@ -2017,7 +2017,7 @@ def detect_flares(
                         visit_result,
                         visit_artifacts,
                     )
-            except Exception as exc:  # pragma: no cover
+            except Exception as exc: # pylint: disable=broad-exception-caught # pragma: no cover
                 if fig is not None:
                     plt.close(fig)
                 if fig2 is not None:
