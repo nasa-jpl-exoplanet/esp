@@ -1,0 +1,3 @@
+# Optional dependencies for the FlowAtmos notebook workflow.
+torch>=2.2
+zuko>=1.3
