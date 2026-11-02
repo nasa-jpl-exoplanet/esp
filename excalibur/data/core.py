@@ -610,6 +610,9 @@ def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
     '''
     G. ROUDIER: Ramp fits
     '''
+    for ramp in raws['alldexp']:
+        raws['allpeakcounts'].append(np.nanmax(ramp, axis=0))
+
     allsb = []
     alldqnl = []
     if sb:
@@ -735,6 +738,43 @@ def getscore(expts):
     return np.nanmedian(patch)
 
 
+def representative_detector_image(images, valid):
+    '''
+    A. Tokadjian: Build median detector image with valid pixels
+    '''
+    masked_images = np.where(valid, images, np.nan)
+    return np.nanmedian(masked_images, axis=0)
+
+
+def brightest_pixel_mask(image, valid, npixels=2500):
+    '''
+    A. Tokadjian: Select the brightest valid pixels in a detector image
+    '''
+    image_flat = image.ravel()
+    valid_indices = np.flatnonzero(valid.ravel() & np.isfinite(image_flat))
+    sorted_indices = valid_indices[np.argsort(image_flat[valid_indices])]
+    brightest_indices = sorted_indices[-npixels:]
+    mask = np.zeros(image.shape, dtype=bool)
+    mask.flat[brightest_indices] = True
+
+    return mask
+
+
+def full_well_metric(peak_counts, valid, full_well, npixels=2500):
+    '''
+    A. Tokadjian: Calculate well fractions for the brightest valid pixels
+    '''
+    representative_image = representative_detector_image(peak_counts, valid)
+    bright_pixels = brightest_pixel_mask(
+        representative_image,
+        np.isfinite(representative_image),
+        npixels=npixels,
+    )
+    well_fractions = peak_counts / full_well
+
+    return bright_pixels, well_fractions[:, bright_pixels]
+
+
 def readfitsdata(
     loclist,
     dbs,
@@ -752,6 +792,7 @@ def readfitsdata(
     out = {
         'alldet': [],
         'alldexp': [],
+        'allpeakcounts': [],
         'allunits': [],
         'allerr': [],
         'alldq': [],
@@ -839,6 +880,8 @@ def jwstcal(fin, tim, ext, out, verbose=False):
     # RAWS (32, 2048)
     datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
     allrexp = np.array(rawdata['alldexp'])
+    allpeakcounts = np.array(rawdata['allpeakcounts'])
+    full_well_dn = 61000
     alldet = np.array(rawdata['alldet'])
     allwaves = caldata['allwaves'].copy()
 
@@ -944,6 +987,17 @@ def jwstcal(fin, tim, ext, out, verbose=False):
         _ = TMY
         pass
     elif 'NIRSPEC' in ext:
+        bright_pixel_masks = {}
+        well_fractions = {}
+        for detector in np.unique(alldet):
+            select = alldet == detector
+            bright_pixel_masks[detector], well_fractions[detector] = (
+                full_well_metric(
+                    allpeakcounts[select],
+                    np.isfinite(alldq[select]),
+                    full_well_dn,
+                )
+            )
         all1d = []
         all1dwave = []
         all1dvalid = []
