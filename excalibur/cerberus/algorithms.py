@@ -69,6 +69,7 @@ class XSLib(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
         svupdate = []
 
@@ -76,6 +77,25 @@ class XSLib(dawgie.Algorithm):
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
             update = False
+
+            if (
+                fltr.startswith('JWST')
+                and runtime['ignoreinput_cerberus_xslib_jwst']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.xslib for JWST: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
+            if (
+                fltr.startswith('Ariel')
+                and runtime['ignoreinput_cerberus_xslib_ariel']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.xslib for Ariel: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
 
             if fltr == 'Ariel-sim':
                 sv = self.__arielsim.sv_as_dict()['parameters']
@@ -87,8 +107,6 @@ class XSLib(dawgie.Algorithm):
             else:
                 vspc = False
                 sspc = 'This filter doesnt have a spectrum: ' + fltr
-
-            runtime = self.__rt.sv_as_dict()['status']
 
             # for Ariel targets, option to only do the actually Tier-2 targets
             targetlistcheck = True
@@ -213,6 +231,25 @@ class Atmos(dawgie.Algorithm):
         for fltr in self.__rt.sv_as_dict()['status']['allowed_filter_names']:
             # stop here if it is not a runtime target
             self.__rt.proceed(fltr)
+
+            if (
+                fltr.startswith('JWST')
+                and runtime['ignoreinput_cerberus_atmos_jwst']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.atmos for JWST: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
+            if (
+                fltr.startswith('Ariel')
+                and runtime['ignoreinput_cerberus_atmos_ariel']
+            ):
+                msg = (
+                    'runtime option to skip cerberus.atmos for Ariel: ' + target
+                )
+                log.info(msg)
+                raise dawgie.NoValidInputDataError(msg)
 
             update = False
             # XSLIB CHECK

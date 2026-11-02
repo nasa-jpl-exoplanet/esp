@@ -1,5 +1,8 @@
 '''Cerberus Database Products View'''
 
+# Heritage code shame:
+# pylint: disable=too-many-nested-blocks
+
 # -- IMPORTS -- ------------------------------------------------------
 
 import dawgie
@@ -40,15 +43,39 @@ class XslibSv(ExcaliburSV):
             for planet_letter in self['data']:
                 for dictkey in self['data'][planet_letter].keys():
                     if dictkey.startswith('plot_'):
-                        # if dictkey == 'plot_depthprobed':
-                        title = '------ cross-sections for planet '
-
+                        title = (
+                            '------ cross-sections for planet '
+                            + planet_letter
+                            + ' ------'
+                        )
                         visitor.add_image(
                             '...',
-                            # title + target + ' ' + planet_letter + ' ------',
-                            title + planet_letter + ' ------',
+                            title,
                             self['data'][planet_letter][dictkey],
                         )
+                        pass
+
+                    # special case for JWST data, where results are by visit
+                    #  check if there are dictionary keys '0','1',etc.
+                    if dictkey.isdigit():
+                        # for JWST it should be a dict inside of the dict
+                        for jwstkey in self['data'][planet_letter][dictkey]:
+                            if jwstkey.startswith('plot_'):
+                                title = (
+                                    '------ cross-sections for planet '
+                                    + planet_letter
+                                    + str(dictkey)
+                                    + ' ------'
+                                )
+                                visitor.add_image(
+                                    '...',
+                                    title,
+                                    self['data'][planet_letter][dictkey][
+                                        jwstkey
+                                    ],
+                                )
+                                pass
+                            pass
                         pass
                     pass
                 pass

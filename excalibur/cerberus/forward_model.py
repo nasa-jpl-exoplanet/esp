@@ -144,12 +144,27 @@ class crbFM:
             chemistry = ctxt.chemistry
 
         ssc = syscore.ssconstants(mks=True)
-        pgrid = np.arange(
-            np.log(solrad) - Hsmax,
-            np.log(solrad) + Hsmax / nlevels,
-            Hsmax / (nlevels - 1),
-        )
-        pgrid = np.exp(pgrid)
+
+        if Hsmax in [666]:
+            # GMR DIRTY FOR TEST
+            log.info('Cerberus Ariel TEST')
+            pmax = 1.0
+            pmin = -6.0
+            pgrid = np.arange(
+                pmin,
+                pmax + (pmax - pmin) / nlevels,
+                (pmax - pmin) / (nlevels - 1),
+            )
+            pgrid = 10 ** (pgrid)
+            pass
+        else:
+            pgrid = np.arange(
+                np.log(solrad) - Hsmax,
+                np.log(solrad) + Hsmax / nlevels,
+                Hsmax / (nlevels - 1),
+            )
+            pgrid = np.exp(pgrid)
+            pass
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
@@ -1125,11 +1140,11 @@ def absorb(
     G. ROUDIER: HITRAN HITEMP database parser
     '''
 
-    select = np.array(xsecs['I']) == (iso + 1)
-    select = np.array(xsecs['I']) == iso + 1
+    select = np.array(xsecs['Iraw']) == (iso + 1)
+    select = np.array(xsecs['Iraw']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
-    nu = np.array(xsecs['nu'])[select]
+    nu = np.array(xsecs['nuraw'])[select]
     # these are no longer used (part of removed line shifting,broadening)
     # gself = np.array(xsecs['g_self'])[select]
     # delta = np.array(xsecs['delta'])[select]
@@ -1137,7 +1152,6 @@ def absorb(
     # gair = np.array(xsecs['g_air'])[select]
 
     Qref = float(qtgrid['SPL'][iso](Tref))
-
     try:
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:

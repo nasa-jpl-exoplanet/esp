@@ -38,10 +38,7 @@ class Validate(dawgie.Algorithm):
 
     def __init__(self):
         '''__init__ ds'''
-        # self._version_ = dawgie.VERSION(1,1,4)  # typos fixed in core/ssconstants
-        self._version_ = dawgie.VERSION(
-            1, 2, 0
-        )  # new bestValue() parameter selection
+        self._version_ = syscore.validateversion()
         self.__autofill = trgalg.Autofill()
         self.__rt = rtalg.Autofill()
         self.__out = sysstates.PriorsSV('parameters')
@@ -111,7 +108,7 @@ class Finalize(dawgie.Algorithm):
     throws out incomplete systems'''
 
     def __init__(self):
-        self._version_ = dawgie.VERSION(1, 1, 4)
+        self._version_ = syscore.finalizeversion()
         self.__rt = rtalg.Autofill()
         self.__val = Validate()
         self.__out = sysstates.PriorsSV('parameters')
@@ -131,7 +128,7 @@ class Finalize(dawgie.Algorithm):
         '''Output State Vectors: system.finalize'''
         return [self.__out]
 
-    def run(self, ds, ps):
+    def run(self, ds, ps, verbose=False):
         '''Top level algorithm call'''
 
         # FIXMEE: this code needs repaired by moving out to config
@@ -160,7 +157,9 @@ class Finalize(dawgie.Algorithm):
                     overwritetargetname = target
                 if overwritetargetname in overwrite:
                     update = self._priority(
-                        overwrite[overwritetargetname], self.__out
+                        overwrite[overwritetargetname],
+                        self.__out,
+                        verbose=verbose,
                     )
                     if not update:
                         log.warning('>-- STILL MISSING DICT INFO')
@@ -224,9 +223,9 @@ class Finalize(dawgie.Algorithm):
         return
 
     @staticmethod
-    def _priority(overwrite, out):
+    def _priority(overwrite, out, verbose=False):
         '''Core code call'''
-        ffill = syscore.forcepar(overwrite, out)
+        ffill = syscore.forcepar(overwrite, out, verbose=verbose)
         return ffill
 
     @staticmethod
@@ -246,7 +245,7 @@ class Population(dawgie.Analyzer):
 
     def __init__(self):
         '''__init__ ds'''
-        self._version_ = dawgie.VERSION(1, 0, 3)
+        self._version_ = syscore.syspopversion()
         self.__fin = Finalize()
         self.__out = sysstates.PopulationSV('statistics')
         return

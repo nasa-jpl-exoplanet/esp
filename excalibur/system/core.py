@@ -9,6 +9,7 @@ import os
 import numpy as np
 import logging
 
+import dawgie
 import excalibur
 
 from excalibur.system.autofill import (
@@ -35,6 +36,14 @@ from excalibur.system.constants import ssconstants
 from excalibur.system.overwriter import fix_default_reference
 
 log = logging.getLogger(__name__)
+
+
+# --------------------------------------------------------------------
+def validateversion():
+    '''
+    1.2.0 8oct26
+    '''
+    return dawgie.VERSION(1, 2, 0)
 
 
 # ----------------- --------------------------------------------------
@@ -801,6 +810,14 @@ def buildsp(autofill, runtime, out, verbose=False):
     return True
 
 
+# --------------------------------------------------------------------
+def finalizeversion():
+    '''
+    1.1.4 8oct26
+    '''
+    return dawgie.VERSION(1, 1, 4)
+
+
 # ------------------------- ------------------------------------------
 # -- FORCE PRIOR PARAMETERS -- ---------------------------------------
 def forcepar(overwrite, out, verbose=False):
@@ -1044,3 +1061,11 @@ def write_spreadsheet(svname, aspects, targetlists, st_keys, pl_keys, exts):
                 outfile.write('\n')
 
     return
+
+
+# --------------------------------------------------------------------
+def syspopversion():
+    '''
+    1.0.3 8oct26
+    '''
+    return dawgie.VERSION(1, 0, 3)
