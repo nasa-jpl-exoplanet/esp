@@ -94,40 +94,44 @@ class crbFM:
         if hitemplist is None:
             hitemplist = ctxt.hitemplist
             if hitemplist is None:
-                hitemplist = ctxt.runtime.hitemplist
-                # hitemplist = ctxt.runtime[
-                #    'cerberus_crbmodel_HITEMPmolecules'
-                # ].molecules
+                # hitemplist = ctxt.runtime.hitemplist
+                hitemplist = ctxt.runtime[
+                    'cerberus_crbmodel_HITEMPmolecules'
+                ].molecules
         if cialist is None:
             cialist = ctxt.cialist
             if cialist is None:
-                cialist = ctxt.runtime.cialist
-                # cialist = ctxt.runtime[
-                #                    'cerberus_crbmodel_HITRANmolecules'
-                #                ].molecules
+                # cialist = ctxt.runtime.cialist
+                cialist = ctxt.runtime[
+                    'cerberus_crbmodel_HITRANmolecules'
+                ].molecules
         if xmollist is None:
             xmollist = ctxt.xmollist
             if xmollist is None:
-                xmollist = ctxt.runtime.xmollist
-                # xmollist = ctxt.runtime[
-                #    'cerberus_crbmodel_EXOMOLmolecules'
-                # ].molecules
+                # xmollist = ctxt.runtime.xmollist
+                xmollist = ctxt.runtime[
+                    'cerberus_crbmodel_EXOMOLmolecules'
+                ].molecules
         if atomlist is None:
             atomlist = ctxt.atomlist
             if atomlist is None:
-                atomlist = ctxt.runtime.atomlist
+                # atomlist = ctxt.runtime.atomlist
+                atomlist = ctxt.runtime['cerberus_crbmodel_atoms'].molecules
         if nlevels is None:
             nlevels = ctxt.nlevels
             if nlevels is None:
-                nlevels = ctxt.runtime.nlevels
+                # nlevels = ctxt.runtime.nlevels
+                nlevels = ctxt.runtime['cerberus_crbmodel_nlevels'].value()
         if Hsmax is None:
             Hsmax = ctxt.Hsmax
             if Hsmax is None:
-                Hsmax = ctxt.runtime.Hsmax
+                # Hsmax = ctxt.runtime.Hsmax
+                Hsmax = ctxt.runtime['cerberus_crbmodel_Hsmax'].value()
         if solrad is None:
             solrad = ctxt.solrad
             if solrad is None:
-                solrad = ctxt.runtime.solrad
+                # solrad = ctxt.runtime.solrad
+                solrad = ctxt.runtime['cerberus_crbmodel_solrad'].value()
         if rp0 is None:
             rp0 = ctxt.rp0
         if xsecs is None:
@@ -140,12 +144,27 @@ class crbFM:
             chemistry = ctxt.chemistry
 
         ssc = syscore.ssconstants(mks=True)
-        pgrid = np.arange(
-            np.log(solrad) - Hsmax,
-            np.log(solrad) + Hsmax / nlevels,
-            Hsmax / (nlevels - 1),
-        )
-        pgrid = np.exp(pgrid)
+
+        if Hsmax in [666]:
+            # GMR DIRTY FOR TEST
+            log.info('Cerberus Ariel TEST')
+            pmax = 1.0
+            pmin = -6.0
+            pgrid = np.arange(
+                pmin,
+                pmax + (pmax - pmin) / nlevels,
+                (pmax - pmin) / (nlevels - 1),
+            )
+            pgrid = 10 ** (pgrid)
+            pass
+        else:
+            pgrid = np.arange(
+                np.log(solrad) - Hsmax,
+                np.log(solrad) + Hsmax / nlevels,
+                Hsmax / (nlevels - 1),
+            )
+            pgrid = np.exp(pgrid)
+            pass
         pressure = pgrid[::-1]
         dPoverP = (pressure[1] - pressure[0]) / pressure[0]
 
@@ -175,7 +194,9 @@ class crbFM:
                 log.error('!!! >--< Neither mixratio nor cheq are defined')
                 pass
             if chemistry.startswith('TEC'):
-                log.warning('using old TEC chemistry for forward model')
+                if verbose:
+                    print('using old TEC chemistry for forward model')
+                # log.warning('using old TEC chemistry for forward model')
                 mixratio, mixratioprofiles, fH2, fHe = crbce(
                     pressure,
                     tpp,
@@ -194,13 +215,17 @@ class crbFM:
             elif chemistry.startswith('TEA'):
                 interp_tea = excalibur.cerberus.forward_model.ctxt.interp_tea
                 if interp_tea is None and tea_data is not None:
-                    log.info('using external TEA grid')
+                    if verbose:
+                        print('using external TEA grid')
+                    # log.info('using external TEA grid')
                     # option to pass in tea grid when used outside of the pipeline
                     # also used for ariel-sim call, which doesn't use context
                     interp_tea = tea_data
                     pass
                 if interp_tea is None:
-                    log.info('using full=slow TEA calculation')
+                    if verbose:
+                        print('using full=slow TEA calculation')
+                    # log.info('using full=slow TEA calculation')
                     #  (this one gives a div-by-0 error)
                     # tempCoeffs = [0, temp, 0, 0, 0, 0, 0, 0, 0, 0]
                     #  this is the correct way to pass in to Luke's _make_tp_profile
@@ -216,10 +241,13 @@ class crbFM:
                         # S_O=?? * 10.0 ** cheq['StoO'],
                     )
                 else:
-                    log.info('using TEA interpolation grid')
-                    log.info('  checking cheq-XtoH %s', cheq['XtoH'])
-                    # print('using TEA interpolation grid')
-                    # print('  checking cheq-XtoH %s', cheq['XtoH'])
+                    if verbose:
+                        print('using TEA interpolation grid')
+                        print('  checking cheq-XtoH %s', cheq['XtoH'])
+                        print('  checking cheq-CtoO %s', cheq['CtoO'])
+                    # log.info('using TEA interpolation grid')
+                    # log.info('  checking cheq-XtoH %s', cheq['XtoH'])
+                    # log.info('  checking cheq-CtoO %s', cheq['CtoO'])
 
                     # species used for the equilibrium are :
                     # CH4, CO2, CO, H2O, H2, H2S, He, O3, O2, OH,
@@ -246,6 +274,8 @@ class crbFM:
                 for molecule, mixratioprofile in mixratioprofiles.items():
                     mixratio[molecule] = mixratioprofile
                     # mixratio[molecule] = np.median(mixratioprofile)
+                    # print('median mixratio',molecule,np.median(mixratioprofile),
+                    #      np.nanmedian(mixratioprofile))
                     pass
                 mmw, fH2, fHe = getmmw(mixratio)
 
@@ -338,6 +368,10 @@ class crbFM:
             / (mmw * 1e-2 * (10.0 ** float(orbp[planet]['logg'])))
         )  # [m]
 
+        # some trouble with cold (<300 K) planets.  deal with NaNs
+        badHs = np.where(~np.isfinite(Hs))
+        Hs[badHs] = 0
+
         # when the Pressure grid is log-spaced, rdz is a constant
         #  drop dz[] and dzprime[] arrays and just use this constant instead
         dz = 2 * abs(Hs / 2.0 * np.log(1.0 + dPoverP))
@@ -373,6 +407,8 @@ class crbFM:
             improvedBoundaryCondition=improvedBoundaryCondition,
             extendedBoundaryCondition=extendedBoundaryCondition,
         )
+        # for mole in tau_by_molecule.keys():
+        #    print('tau check', mole, np.median(tau_by_molecule[mole]))
         if not break_down_by_molecule:
             tau_by_molecule = {}
             pass
@@ -619,10 +655,6 @@ def gettau(
     )
     dlarray = dl - dl0
 
-    # print('dlarray shape', dlarray.shape)
-    # print('dlarray[0]', dlarray[0])
-    # print('dlarray[-1]', dlarray[-1])
-
     top_rho = rho[-1]
     # bottom_rho = rho[0]
     # rp0 is in units of meters.  z,dz also
@@ -734,9 +766,7 @@ def gettau(
                         # print('  iwave', wave, iwave)
                         if len(iwave) > 0:
                             # print('check', wave, iwave[0], len(ozoneUVdata['wavelength']))
-                            if (iwave[0] >= 0) and (
-                                iwave[0] < len(ozoneUVdata['wavelength'])
-                            ):
+                            if 0 <= iwave[0] < len(ozoneUVdata['wavelength']):
                                 sigma[inu] += ozoneUVdata['xsec'][iwave[0]]
                         #    else:
                         #        print('spectrum shorter than opacity table', wave)
@@ -757,7 +787,17 @@ def gettau(
                 pass
             sigma = sigma * 1e-4  # m^2/mol
 
+            # breaking out opacity doesn't help with NaN overflow problem
+            # opacity = mmr * sigma
+            # tau_by_molecule[elem] = (rho * opacity).T
             tau_by_molecule[elem] = (rho * mmr * sigma).T
+
+            # for a few targets there is some NaN trouble for trace species
+            # e.g. TOI-715 with Teq~=235K
+            # these NaN's should be zero
+            badtau = np.where(~np.isfinite(tau_by_molecule[elem]))
+            tau_by_molecule[elem][badtau] = 0
+
             tau = tau + tau_by_molecule[elem]
 
             top_sigma = sigma[:, -1]
@@ -765,6 +805,8 @@ def gettau(
             toptau_by_molecule[elem] = top_rho * top_mmr * top_sigma
             # print('  shape check',top_rho.shape,sigma.shape,top_mmr.shape)
             # print('toptau shape', toptau_by_molecule[elem].shape) #103
+            badtau = np.where(~np.isfinite(toptau_by_molecule[elem]))
+            toptau_by_molecule[elem][badtau] = 0
 
             if extendedBoundaryCondition:
                 # analytictau = analyticIntegral * rho * top_mmr * top_sigma
@@ -783,6 +825,9 @@ def gettau(
                     * sigma.T[49, :][np.newaxis, :]
                 )
                 # print('anal shape', analytictau_by_molecule[elem].shape)
+
+                badtau = np.where(~np.isfinite(analytictau_by_molecule[elem]))
+                analytictau_by_molecule[elem][badtau] = 0
             pass
         pass
 
@@ -822,8 +867,13 @@ def gettau(
         top_f1 = np.array(f1)[-1]
         top_f2 = np.array(f2)[-1]
         toptau_by_molecule[cia] = top_f1 * top_f2 * top_sigma * top_rho**2
+        badtau = np.where(~np.isfinite(toptau_by_molecule[cia]))
+        toptau_by_molecule[cia][badtau] = 0
 
         tau_by_molecule[cia] = (f1 * f2 * sigma * rho**2).T
+        badtau = np.where(~np.isfinite(tau_by_molecule[cia]))
+        tau_by_molecule[cia][badtau] = 0
+
         tau = tau + tau_by_molecule[cia]
         pass
 
@@ -835,8 +885,13 @@ def gettau(
 
     top_fH2 = np.array(fH2)[-1]
     toptau_by_molecule['rayleigh'] = top_fH2 * top_rho * sigma
+    badtau = np.where(~np.isfinite(toptau_by_molecule['rayleigh']))
+    toptau_by_molecule['rayleigh'][badtau] = 0
 
     tau_by_molecule['rayleigh'] = (fH2 * rho * np.array(len(rho) * [sigma]).T).T
+    badtau = np.where(~np.isfinite(tau_by_molecule['rayleigh']))
+    tau_by_molecule['rayleigh'][badtau] = 0
+
     tau = tau + tau_by_molecule['rayleigh']
 
     # HAZE ARRAY, ZPRIME VERSUS WAVELENGTH  --------------------------------------
@@ -1085,11 +1140,11 @@ def absorb(
     G. ROUDIER: HITRAN HITEMP database parser
     '''
 
-    select = np.array(xsecs['I']) == (iso + 1)
-    select = np.array(xsecs['I']) == iso + 1
+    select = np.array(xsecs['Iraw']) == (iso + 1)
+    select = np.array(xsecs['Iraw']) == iso + 1
     S = np.array(xsecs['S'])[select]
     E = np.array(xsecs['Epp'])[select]
-    nu = np.array(xsecs['nu'])[select]
+    nu = np.array(xsecs['nuraw'])[select]
     # these are no longer used (part of removed line shifting,broadening)
     # gself = np.array(xsecs['g_self'])[select]
     # delta = np.array(xsecs['delta'])[select]
@@ -1097,7 +1152,6 @@ def absorb(
     # gair = np.array(xsecs['g_air'])[select]
 
     Qref = float(qtgrid['SPL'][iso](Tref))
-
     try:
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:

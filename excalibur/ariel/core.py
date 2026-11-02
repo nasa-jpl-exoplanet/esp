@@ -7,8 +7,6 @@
 # -- IMPORTS -- ------------------------------------------------------
 import logging
 
-from collections import namedtuple
-
 # import excalibur
 import excalibur.system.core as syscore
 import excalibur.util.cerberus as crbutil
@@ -43,32 +41,6 @@ import numpy as np
 import scipy.constants as cst
 
 log = logging.getLogger(__name__)
-
-ArielParams = namedtuple(
-    'ariel_params_from_runtime',
-    [
-        'tier',
-        'arielRad',
-        'SNRfactor',
-        'randomSeed',
-        'randomCloudProperties',
-        'thorngrenMassMetals',
-        'chachanMassMetals',
-        'includeMetallicityDispersion',
-        'metallicityDispersion',
-        'CtoOdaSilva',
-        'CtoOaverage',
-        'CtoOdispersion',
-        'hitemplist',
-        'cialist',
-        'xmollist',
-        'atomlist',
-        'nlevels',
-        'solrad',
-        'Hsmax',
-        'isothermal',
-    ],
-)
 
 
 # ----------------- --------------------------------------------------
@@ -135,7 +107,7 @@ def simulate_spectra(
     target,
     system_dict,
     ancil_dict,
-    runtime_params,
+    runtime,
     out,
     verbose=False,
 ):
@@ -147,13 +119,11 @@ def simulate_spectra(
     3) two models for metallicity/mmw (mmw=2.3 or FINESSE mass-metallicity relation)
     4) TEC vs TEA (DISEQ is not implemented yet)
     '''
-    # print(runtime_params)
-    # print('metallicity dispersion?',runtime_params.includeMetallicityDispersion)
 
     testTarget = bool(target.startswith('test'))
 
     # select Tier-1 or Tier-2 for spectra SNR
-    tier = runtime_params.tier
+    tier = runtime['ariel_simspectrum_tier'].value()
 
     sscmks = syscore.ssconstants(mks=True)
 
@@ -167,17 +137,17 @@ def simulate_spectra(
     # specify which models should be calculated (use these as keys within data)
     atmosModels = [
         'cerberus',
-        'cerberusNonisothermal',
-        'cerberusTEA',
-        'cerberusTEANonisothermal',
+        # 'cerberusNonisothermal',
+        # 'cerberusTEA',
+        # 'cerberusTEANonisothermal',
         'cerberusTEAgrid',
         'cerberusTEAgridNonisothermal',
-        'cerberusNoclouds',
-        'cerberusNocloudsNonisothermal',
-        'cerberusTEANoclouds',
+        # 'cerberusNoclouds',
+        # 'cerberusNocloudsNonisothermal',
+        # 'cerberusTEANoclouds',
         'cerberusTEAgridNoclouds',
-        'cerberuslowmmw',
-        'cerberuslowmmwNoclouds',
+        # 'cerberuslowmmw',
+        # 'cerberuslowmmwNoclouds',
         'cerberusGemliNoclouds',
         'cerberusWaterNoclouds',
     ]
@@ -193,9 +163,9 @@ def simulate_spectra(
     # load TEA equilibrium chemistry interpolation grid
     modelName = (
         'Pgrid_'
-        + str(runtime_params.nlevels)
+        + str(runtime['cerberus_crbmodel_nlevels'].value())
         + 'levels'
-        + str(runtime_params.Hsmax)
+        + str(runtime['cerberus_crbmodel_Hsmax'].value())
         + 'scaleHeights'
     )
     interp_tea = get_TEA_grid(modelName)
@@ -224,7 +194,8 @@ def simulate_spectra(
             intFromTarget += int(target[-3:])
         for char in target + ' ' + planet_letter:
             intFromTarget = (
-                runtime_params.randomSeed * intFromTarget + ord(char)
+                runtime['ariel_simspectrum_randomseed'].value() * intFromTarget
+                + ord(char)
             ) % 1000000
         np.random.seed(intFromTarget)
 
@@ -243,17 +214,17 @@ def simulate_spectra(
         if oldArielRadformat:
             ariel_instrument = load_ariel_instrument(
                 targetplanet,
-                runtime_params,
+                runtime,
             )
         elif newArielRadformat:
             ariel_instrument = load_arielrad_results(
                 targetplanet,
-                runtime_params,
+                runtime,
             )
 
             # old_ariel_instrument = load_ariel_instrument(
             #    targetplanet,
-            #    runtime_params,
+            #    runtime,
             # )
             # print('old Nvisits',old_ariel_instrument['nVisits'])
             # print('new Nvisits',ariel_instrument['nVisits'])
@@ -264,7 +235,7 @@ def simulate_spectra(
                 targetplanet,
                 system_params,
                 ancil_params,
-                runtime_params,
+                runtime,
                 verbose=verbose,
             )
 
@@ -291,10 +262,13 @@ def simulate_spectra(
             )
             pgrid = np.exp(
                 np.arange(
-                    np.log(runtime_params.solrad) - runtime_params.Hsmax,
-                    np.log(runtime_params.solrad)
-                    + runtime_params.Hsmax / runtime_params.nlevels,
-                    runtime_params.Hsmax / (runtime_params.nlevels - 1),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    - runtime['cerberus_crbmodel_Hsmax'].value(),
+                    np.log(runtime['cerberus_crbmodel_solrad'].value())
+                    + runtime['cerberus_crbmodel_Hsmax'].value()
+                    / runtime['cerberus_crbmodel_nlevels'].value(),
+                    runtime['cerberus_crbmodel_Hsmax'].value()
+                    / (runtime['cerberus_crbmodel_nlevels'].value() - 1),
                 )
             )
             pressure = pgrid[::-1]
@@ -304,28 +278,30 @@ def simulate_spectra(
             # planet metallicity should be defined relative to the stellar metallicity
             metallicity_star_dex = system_params['FEH*']
             M_p = model_params['Mp']
-            if runtime_params.includeMetallicityDispersion:
+            if runtime['ariel_simspectrum_includeMetallicityDispersion']:
                 # make sure that the random mass is fixed for each target planet
                 np.random.seed(intFromTarget + 1234)
                 metallicity_planet_dex = massMetalRelationDisp(
                     metallicity_star_dex,
                     M_p,
-                    thorngren=runtime_params.thorngrenMassMetals,
-                    chachan=runtime_params.chachanMassMetals,
-                    dispersion=runtime_params.metallicityDispersion,
+                    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'],
+                    chachan=runtime['ariel_simspectrum_chachanMassMetals'],
+                    dispersion=runtime[
+                        'ariel_simspectrum_metallicityDispersion'
+                    ].value(),
                 )
             else:
                 metallicity_planet_dex = massMetalRelation(
                     metallicity_star_dex,
                     M_p,
-                    thorngren=runtime_params.thorngrenMassMetals,
-                    chachan=runtime_params.chachanMassMetals,
+                    thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'],
+                    chachan=runtime['ariel_simspectrum_chachanMassMetals'],
                 )
             # print('metallicity_star_dex',metallicity_star_dex)
             # print('metallicity_planet_dex',metallicity_planet_dex)
             # metallicity_planet_dex_nonrandom = massMetalRelation(metallicity_star_dex, M_p,
-            #              thorngren=runtime_params.thorngrenMassMetals)
-            #              chachan=runtime_params.chachanMassMetals)
+            #          thorngren=runtime['ariel_simspectrum_thorngrenMassMetals'])
+            #          chachan=runtime['ariel_simspectrum_chachanMassMetals'])
             # print('metallicity_planet_dex (non random)',metallicity_planet_dex_nonrandom)
             # print('planet mass',M_p)
 
@@ -335,22 +311,28 @@ def simulate_spectra(
 
             # option to use da Silva 2024 C/O trend as the baseline,
             #  (before adding on some dispersion)
-            if runtime_params.CtoOdaSilva:
+            if runtime['ariel_simspectrum_CtoOdaSilva']:
                 CtoOstar = ancil_params['CO*']
                 CtoO_planet_linear = randomCtoO_linear(
                     logCtoOaverage=CtoOstar + np.log10(solarCtoO),
-                    logCtoOdispersion=runtime_params.CtoOdispersion,
+                    logCtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
+                    ].value(),
                 )
                 # oldCtoO_planet_linear = randomCtoO_linear(
-                #    logCtoOaverage=runtime_params.CtoOaverage,
-                #    logCtoOdispersion=runtime_params.CtoOdispersion,
+                #    logCtoOaverage=runtime['ariel_simspectrum_CtoOaverage'].value(),
+                #    logCtoOdispersion=runtime['ariel_simspectrum_CtoOdispersion'].value(),
                 # )
                 # print('CtoO_planet_linear new,old',
                 #      CtoO_planet_linear,oldCtoO_planet_linear)
             else:
                 CtoO_planet_linear = randomCtoO_linear(
-                    logCtoOaverage=runtime_params.CtoOaverage,
-                    logCtoOdispersion=runtime_params.CtoOdispersion,
+                    logCtoOaverage=runtime[
+                        'ariel_simspectrum_CtoOaverage'
+                    ].value(),
+                    logCtoOdispersion=runtime[
+                        'ariel_simspectrum_CtoOdispersion'
+                    ].value(),
                 )
                 # print('CtoO_planet_linear',CtoO_planet_linear)
 
@@ -365,9 +347,14 @@ def simulate_spectra(
 
             # allow for arbitrary scaling of the spectrum SNR during testing
             if verbose:
-                print('SNR adjustment factor:', runtime_params.SNRfactor)
-            if runtime_params.SNRfactor:
-                uncertainties /= runtime_params.SNRfactor
+                print(
+                    'SNR adjustment factor:',
+                    runtime['ariel_simspectrum_SNRadjustment'].value(),
+                )
+            if runtime['ariel_simspectrum_SNRadjustment']:
+                uncertainties /= runtime[
+                    'ariel_simspectrum_SNRadjustment'
+                ].value()
 
             # ________LOOP OVER ALL SELECTED MODELS_______
             opticalDepthProfiles = {}
@@ -462,7 +449,7 @@ def simulate_spectra(
                         CtoO_planet_linear / solarCtoO
                     )
                     # print('C/O model param',model_params['C/O'])
-                    if runtime_params.CtoOdaSilva:
+                    if runtime['ariel_simspectrum_CtoOdaSilva']:
                         model_params['N/O'] = ancil_params['NO*']
                     else:
                         model_params['N/O'] = 0
@@ -512,7 +499,7 @@ def simulate_spectra(
                         # model_params['HThick'] = 0.
 
                         # use the median from Estrella 2022 or a random selection?
-                        if runtime_params.randomCloudProperties:
+                        if runtime['ariel_simspectrum_randomCloudProperties']:
                             # make sure that random cloud properties are fixed between runs
                             np.random.seed(intFromTarget + 123456)
                             cloudParams = randomCloudParameters()
@@ -550,7 +537,7 @@ def simulate_spectra(
                         }
                         if verbose:
                             print('CALCulating cross-sections START')
-                        _ = myxsecs(tempspc, runtime_params, xslib)
+                        _ = myxsecs(tempspc, runtime, xslib)
                         if verbose:
                             print('CALCulating cross-sections DONE')
                     else:
@@ -574,7 +561,7 @@ def simulate_spectra(
                         opticalDepthProfiles,
                         moleculeProfiles,
                     ) = make_cerberus_atmos(
-                        runtime_params,
+                        runtime,
                         wavelength_um,
                         model_params,
                         xslib,

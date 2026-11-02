@@ -12,19 +12,20 @@ import dawgie.context
 import logging
 
 import excalibur
-import excalibur.system as sys
+
+# (uncomment these imports after reverting previous())
+# import excalibur.system as sys
+# import excalibur.ancillary as anc
+# import excalibur.transit as trn
+# from excalibur import ariel
+# import excalibur.cerberus as crb
 import excalibur.system.algorithms as sysalg
-import excalibur.ancillary as anc
 import excalibur.ancillary.algorithms as ancillaryalg
 import excalibur.runtime.algorithms as rtalg
 import excalibur.runtime.binding as rtbind
-import excalibur.transit as trn
 import excalibur.transit.algorithms as trnalg
-from excalibur import ariel
 import excalibur.ariel.algorithms as arielalg
-import excalibur.cerberus as crb
 import excalibur.cerberus.algorithms as crbalg
-import excalibur.cerberus.core as crbcore
 import excalibur.gemli.core as gemlicore
 import excalibur.gemli.states as gemlistates
 from excalibur.util.checksv import checksv
@@ -66,14 +67,15 @@ class MLfit(dawgie.Algorithm):
 
     def previous(self):
         '''Input State Vectors: gemli.atmos'''
-        return [
-            dawgie.ALG_REF(sys.task, self.__fin),
-            dawgie.ALG_REF(anc.task, self.__anc),
-            dawgie.ALG_REF(crb.task, self.__xsl),
-            dawgie.ALG_REF(crb.task, self.__atm),
-            dawgie.ALG_REF(trn.task, self.__spc),
-            dawgie.ALG_REF(ariel.task, self.__arielsim),
-        ] + self.__rt.refs_for_proceed()
+        return []
+        # return [
+        #    dawgie.ALG_REF(sys.task, self.__fin),
+        #    dawgie.ALG_REF(anc.task, self.__anc),
+        #    dawgie.ALG_REF(crb.task, self.__xsl),
+        #    dawgie.ALG_REF(crb.task, self.__atm),
+        #    dawgie.ALG_REF(trn.task, self.__spc),
+        #    dawgie.ALG_REF(ariel.task, self.__arielsim),
+        # ] + self.__rt.refs_for_proceed()
 
     def state_vectors(self):
         '''Output State Vectors: gemli.mlfit'''
@@ -82,7 +84,12 @@ class MLfit(dawgie.Algorithm):
     def run(self, ds, ps):
         '''Top level algorithm call'''
 
+        runtime = self.__rt.sv_as_dict()['status']
         target = repr(self).split('.')[1]
+        if runtime['ignoreinput_gemli_sim_spectrum']:
+            msg = 'runtime option to skip gemli.sim_spectrum: ' + target
+            log.info(msg)
+            raise dawgie.NoValidInputDataError(msg)
 
         svupdate = []
         vfin, sfin = checksv(self.__fin.sv_as_dict()['parameters'])
@@ -91,23 +98,6 @@ class MLfit(dawgie.Algorithm):
         update = False
         if vfin and vanc:
             runtime = self.__rt.sv_as_dict()['status']
-            runtime_params = crbcore.CerbResultsParams(
-                nrandomwalkers=runtime[
-                    'cerberus_results_nrandomwalkers'
-                ].value(),
-                randomseed=runtime['cerberus_results_randomseed'].value(),
-                hitemplist=runtime[
-                    'cerberus_crbmodel_HITEMPmolecules'
-                ].molecules,
-                cialist=runtime['cerberus_crbmodel_HITRANmolecules'].molecules,
-                xmollist=runtime['cerberus_crbmodel_EXOMOLmolecules'].molecules,
-                atomlist=runtime['cerberus_crbmodel_atoms'].molecules,
-                nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
-                Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
-                solrad=runtime['cerberus_crbmodel_solrad'].value(),
-                cornerBins=runtime['cerberus_plotters_cornerBins'].value(),
-                isothermal=runtime['cerberus_crbmodel_isothermal'],
-            )
 
             # available_filters = self.__xsl.sv_as_dict().keys()
             # available_filters = self.__atm.sv_as_dict().keys()
@@ -167,7 +157,7 @@ class MLfit(dawgie.Algorithm):
                         repr(self).split('.')[1],  # this is the target name
                         fltr,
                         only_these_planets,
-                        runtime_params,
+                        runtime,
                         self.__fin.sv_as_dict()['parameters'],
                         self.__anc.sv_as_dict()['parameters'],
                         self.__xsl.sv_as_dict()[fltr]['data'],
@@ -205,7 +195,7 @@ class MLfit(dawgie.Algorithm):
         trgt,
         fltr,
         only_these_planets,
-        runtime_params,
+        runtime,
         fin,
         ancil,
         xsl,
@@ -218,7 +208,7 @@ class MLfit(dawgie.Algorithm):
         mlfitout = gemlicore.mlfit(
             trgt,
             fltr,
-            runtime_params,
+            runtime,
             fin,
             ancil,
             xsl,
@@ -317,30 +307,9 @@ class Analysis(dawgie.Analyzer):
                 # runtime2 = self.__rtc.sv_as_dict()['status']
                 # print('runtime old2 way',runtime2)
 
-                # RUNTIME DOESNT WORK YET FOR ASPECTS!!
-                runtime_params = crbcore.CerbAnalysisParams(
-                    # tier=runtime['ariel_simspectrum_tier'].value(),
-                    tier=2,
-                    boundTeq=runtime['cerberus_atmos_bounds_Teq'],
-                    boundAbundances=runtime['cerberus_atmos_bounds_abundances'],
-                    boundMetallicity=runtime[
-                        'cerberus_atmos_bounds_metallicity'
-                    ],
-                    boundCtoO=runtime['cerberus_atmos_bounds_CtoO'],
-                    boundNtoO=runtime['cerberus_atmos_bounds_NtoO'],
-                    boundStoO=runtime['cerberus_atmos_bounds_StoO'],
-                    boundCTP=runtime['cerberus_atmos_bounds_CTP'],
-                    boundHLoc=runtime['cerberus_atmos_bounds_HLoc'],
-                    boundHScale=runtime['cerberus_atmos_bounds_HScale'],
-                    boundHThick=runtime['cerberus_atmos_bounds_HThick'],
-                )
-                # if runtime_params.tier == None:
-                #    runtime_params.tier = 2  # no dice. it's too tupley
-                # print('runtime', runtime_params)
-
                 log.info('--< GEMLI ANALYSIS: %s  >--', fltr)
                 update = self._analysis(
-                    aspects, fltr, runtime_params, fltrs.index(fltr)
+                    aspects, fltr, runtime, fltrs.index(fltr)
                 )
                 if update:
                     svupdate.append(self.__out[fltrs.index(fltr)])
@@ -353,10 +322,10 @@ class Analysis(dawgie.Analyzer):
             )
         return
 
-    def _analysis(self, aspects, fltr, runtime_params, index):
+    def _analysis(self, aspects, fltr, runtime, index):
         '''Core code call'''
         analysisout = gemlicore.analysis(
-            aspects, fltr, runtime_params, self.__out[index], verbose=False
+            aspects, fltr, runtime, self.__out[index], verbose=False
         )
         return analysisout
 
