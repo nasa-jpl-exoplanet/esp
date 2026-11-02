@@ -381,49 +381,22 @@ def get_flare_times(bt, flcd, N1, N2, N3, sigma, diff, transits):
     flares_dict = {"tstart": [], "tstop": []}
     flares_tbl = getattr(flcd_out, "flares", None)
 
+    # Extract and sort flare start/stop times
+    tstart = np.array([], dtype=float)
+    tstop = np.array([], dtype=float)
+
     # Convert astropy Table -> pandas DataFrame if needed/available
     if flares_tbl is not None:
-        try:
-            # pandas DataFrame already?
-            if (
-                hasattr(flares_tbl, "columns")
-                and ("tstart" in flares_tbl.columns)
-                and ("tstop" in flares_tbl.columns)
-            ):
-                flares_df = flares_tbl.sort_values(by="tstart", ascending=True)
-                tstart = np.asarray(flares_df["tstart"].values, dtype=float)
-                tstop = np.asarray(flares_df["tstop"].values, dtype=float)
-            # astropy Table
-            elif (
-                hasattr(flares_tbl, "colnames")
-                and ("tstart" in flares_tbl.colnames)
-                and ("tstop" in flares_tbl.colnames)
-            ):
-                # try to_pandas if present; otherwise read columns directly
-                try:
-                    flares_df = flares_tbl.to_pandas()
-                    flares_df = flares_df.sort_values(
-                        by="tstart", ascending=True
-                    )
-                    tstart = np.asarray(flares_df["tstart"].values, dtype=float)
-                    tstop = np.asarray(flares_df["tstop"].values, dtype=float)
-                # 'broad-exception-caught' error
-                except Exception:
-                    tstart = np.asarray(flares_tbl["tstart"], dtype=float)
-                    tstop = np.asarray(flares_tbl["tstop"], dtype=float)
-                    if tstart.size:
-                        order = np.argsort(tstart)
-                        tstart, tstop = tstart[order], tstop[order]
-            else:
-                tstart = np.array([], dtype=float)
-                tstop = np.array([], dtype=float)
-        # 'broad-exception-caught' error
-        except Exception:
-            tstart = np.array([], dtype=float)
-            tstop = np.array([], dtype=float)
-    else:
-        tstart = np.array([], dtype=float)
-        tstop = np.array([], dtype=float)
+        columns = getattr(flares_tbl, "columns", ())
+
+        if "tstart" in columns and "tstop" in columns:
+            tstart = np.asarray(flares_tbl["tstart"], dtype=float)
+            tstop = np.asarray(flares_tbl["tstop"], dtype=float)
+
+            if tstart.size:
+                order = np.argsort(tstart)
+                tstart = tstart[order]
+                tstop = tstop[order]
 
     # Pack into dict
     if tstart.size:
