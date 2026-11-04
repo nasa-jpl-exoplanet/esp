@@ -2002,7 +2002,6 @@ def jwstwl(
     '''
 
     LETHE = None
-    # GMR: Put that in rtp['light_curve_model'] someday
     if rtp['transit_limbdarkening_lethe']:
         # Interpolators for LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
@@ -2173,12 +2172,12 @@ def jwstwl(
                     # TKNOT
                     pymctknot = pymc.Uniform(
                         'tknot',
-                        lower=tmjd + 100.0 * priors[pln]['t0_lowerr'],
-                        upper=tmjd + 100.0 * priors[pln]['t0_uperr'],
+                        lower=tmjd + 1e5 * priors[pln]['t0_lowerr'],
+                        upper=tmjd + 1e5 * priors[pln]['t0_uperr'],
                     )
                     prior_ranges['t0'] = [
-                        tmjd + 100.0 * priors[pln]['t0_lowerr'],
-                        tmjd + 100.0 * priors[pln]['t0_uperr'],
+                        tmjd + 1e5 * priors[pln]['t0_lowerr'],
+                        tmjd + 1e5 * priors[pln]['t0_uperr'],
                     ]
                     prior_center['t0'] = tmjd
                     nodes.append(pymctknot)
@@ -2189,15 +2188,14 @@ def jwstwl(
                         if incl > 90:
                             incl = 180.0 - incl
                             pass
-                        inclup = min(incl + 3.0 * priors[pln]['inc_uperr'], 90)
                         pymcinc = pymc.Uniform(
                             'inc',
-                            lower=incl + 3.0 * priors[pln]['inc_lowerr'],
-                            upper=inclup,
+                            lower=max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.),
+                            upper=min(incl + 1e3 * priors[pln]['inc_uperr'], 90.),
                         )
                         prior_ranges['inc'] = [
-                            incl + 3.0 * priors[pln]['inc_lowerr'],
-                            inclup,
+                            max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.),
+                            min(incl + 1e3 * priors[pln]['inc_uperr'], 90.),
                         ]
                         prior_center['inc'] = incl
                         nodes.append(pymcinc)
@@ -3902,7 +3900,7 @@ def jwstspectrum(
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
                     ) and transiting:
-                        if not verbose:
+                        if not verbose and debug:
                             log.info('>--------< %s / %s >', chn, len(zndata))
                         if debug:
                             plt.figure(figsize=(12, 9))
