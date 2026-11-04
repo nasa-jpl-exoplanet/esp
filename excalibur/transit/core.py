@@ -2190,12 +2190,16 @@ def jwstwl(
                             pass
                         pymcinc = pymc.Uniform(
                             'inc',
-                            lower=max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.),
-                            upper=min(incl + 1e3 * priors[pln]['inc_uperr'], 90.),
+                            lower=max(
+                                incl + 1e3 * priors[pln]['inc_lowerr'], 0.0
+                            ),
+                            upper=min(
+                                incl + 1e3 * priors[pln]['inc_uperr'], 90.0
+                            ),
                         )
                         prior_ranges['inc'] = [
-                            max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.),
-                            min(incl + 1e3 * priors[pln]['inc_uperr'], 90.),
+                            max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.0),
+                            min(incl + 1e3 * priors[pln]['inc_uperr'], 90.0),
                         ]
                         prior_center['inc'] = incl
                         nodes.append(pymcinc)
