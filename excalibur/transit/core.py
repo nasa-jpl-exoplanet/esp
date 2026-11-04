@@ -3852,9 +3852,6 @@ def jwstspectrum(
                 # GMR: I dont like this, get rid of it as soon as tests are done
                 # or code it properly
                 if chnwnd:
-                    zndata = zndata[binstart:binstop]
-                    electron_count = electron_count[binstart:binstop]
-                    allwvl = allwvl[binstart:binstop]
                     if 'NRS1' in det:
                         zndata = zndata[-2:]
                         electron_count = electron_count[-2:]
@@ -3871,6 +3868,7 @@ def jwstspectrum(
                             pass
                         wvlwnd = (allwvl > minchnwnd) & (allwvl < maxchnwnd)
                         zndata = zndata[wvlwnd]
+                        electron_count = electron_count[wvlwnd]
                         allwvl = allwvl[wvlwnd]
                         pass
                     pass
