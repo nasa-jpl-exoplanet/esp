@@ -3707,7 +3707,7 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bntst=1,
-        chnwnd='',
+    chnwnd='',
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3863,8 +3863,8 @@ def jwstspectrum(
                             maxchnwnd = 4.2
                             pass
                         else:
-                            minchnwnd = 1.
-                            maxchnwnd = 10.
+                            minchnwnd = 1.0
+                            maxchnwnd = 10.0
                             pass
                         wvlwnd = (allwvl > minchnwnd) & (allwvl < maxchnwnd)
                         zndata = zndata[wvlwnd]

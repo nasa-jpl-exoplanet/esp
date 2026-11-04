@@ -496,7 +496,9 @@ class Spectrum(dawgie.Algorithm):
             )
         return
 
-    def _spectrum(self, fin, nrm, wht, rnt, out, fltr, verbose=False, debug=False):
+    def _spectrum(
+        self, fin, nrm, wht, rnt, out, fltr, verbose=False, debug=False
+    ):
         '''Core code call'''
 
         if "Spitzer" in fltr:
