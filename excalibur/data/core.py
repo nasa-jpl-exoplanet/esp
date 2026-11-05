@@ -51,6 +51,7 @@ from astropy.modeling.models import BlackBody as astrobb
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
+from astropy.stats import sigma_clip
 
 log = logging.getLogger(__name__)
 
@@ -615,7 +616,8 @@ def rampfits(raws, iexist, sb=False, nl=False, alldq=None, verbose=False):
     G. ROUDIER: Ramp fits
     '''
     for ramp in raws['alldexp']:
-        raws['allpeakcounts'].append(np.nanmax(ramp, axis=0))
+        # Keep the final raw read, before bias subtraction or other corrections.
+        raws['allfinalcounts'].append(ramp[-1].copy())
 
     allsb = []
     alldqnl = []
@@ -764,17 +766,46 @@ def brightest_pixel_mask(image, valid, npixels=2500):
     return mask
 
 
-def full_well_metric(peak_counts, valid, full_well, npixels=2500):
+def full_well_valid_pixels(raw_valid, calibrated_dq):
+    '''Align calibrated quality flags with the raw detector image.'''
+    if calibrated_dq.shape == raw_valid.shape:
+        return raw_valid & (calibrated_dq == 0)
+
+    # NRS1 calibrated images are cropped. Match the wavelength-map placement
+    # in jwstcal(), leaving pixels outside the calibrated region invalid.
+    calibrated_valid = np.zeros(raw_valid.shape, dtype=bool)
+    calibrated_valid[:-4, -calibrated_dq.shape[1] - 4 : -4] = calibrated_dq == 0
+    return raw_valid & calibrated_valid
+
+
+def full_well_metric(final_counts, valid, full_well, npixels=2500):
     '''
     A. Tokadjian: Calculate well fractions for the brightest valid pixels
     '''
-    representative_image = representative_detector_image(peak_counts, valid)
+    # Mask bad measurements before both pixel selection and fraction calculation.
+    clean_counts = np.where(valid, final_counts, np.nan)
+
+    # Compare each pixel with itself across integrations (axis=0). Reject
+    # cosmic-ray candidates more than 5 sigma from its median. mad_std estimates
+    # the scatter robustly, so a large hit does not inflate the rejection limit.
+    clean_counts = sigma_clip(
+        np.ma.masked_invalid(clean_counts),
+        sigma=5,
+        axis=0,
+        cenfunc='median',
+        stdfunc='mad_std',
+        maxiters=3,
+    ).filled(np.nan)
+
+    representative_image = representative_detector_image(
+        clean_counts, np.isfinite(clean_counts)
+    )
     bright_pixels = brightest_pixel_mask(
         representative_image,
         np.isfinite(representative_image),
         npixels=npixels,
     )
-    well_fractions = peak_counts / full_well
+    well_fractions = clean_counts / full_well
 
     return bright_pixels, well_fractions[:, bright_pixels]
 
@@ -796,7 +827,7 @@ def readfitsdata(
     out = {
         'alldet': [],
         'alldexp': [],
-        'allpeakcounts': [],
+        'allfinalcounts': [],
         'allunits': [],
         'allerr': [],
         'alldq': [],
@@ -888,7 +919,7 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
     # RAWS (32, 2048)
     datatiming = np.array([t[5] for t in rawdata['alltiming']])  # [Days]
     allrexp = np.array(rawdata['alldexp'])
-    allpeakcounts = np.array(rawdata['allpeakcounts'])
+    allfinalcounts = np.array(rawdata['allfinalcounts'])
     full_well_dn = 61000
     alldet = np.array(rawdata['alldet'])
     allwaves = caldata['allwaves'].copy()
@@ -997,12 +1028,17 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
     elif 'NIRSPEC' in ext:
         bright_pixel_masks = {}
         well_fractions = {}
+        full_well_valid = np.isfinite(alldq)
+        for i, calibrated_dq in enumerate(caldata['alldq']):
+            full_well_valid[i] = full_well_valid_pixels(
+                full_well_valid[i], calibrated_dq
+            )
         for detector in np.unique(alldet):
             select = alldet == detector
             bright_pixel_masks[detector], well_fractions[detector] = (
                 full_well_metric(
-                    allpeakcounts[select],
-                    np.isfinite(alldq[select]),
+                    allfinalcounts[select],
+                    full_well_valid[select],
                     full_well_dn,
                 )
             )
