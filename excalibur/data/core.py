@@ -744,30 +744,10 @@ def getscore(expts):
     return np.nanmedian(patch)
 
 
-def representative_detector_image(images, valid):
-    '''
-    A. Tokadjian: Build median detector image with valid pixels
-    '''
-    masked_images = np.where(valid, images, np.nan)
-    return np.nanmedian(masked_images, axis=0)
-
-
-def brightest_pixel_mask(image, valid, npixels=2500):
-    '''
-    A. Tokadjian: Select the brightest valid pixels in a detector image
-    '''
-    image_flat = image.ravel()
-    valid_indices = np.flatnonzero(valid.ravel() & np.isfinite(image_flat))
-    sorted_indices = valid_indices[np.argsort(image_flat[valid_indices])]
-    brightest_indices = sorted_indices[-npixels:]
-    mask = np.zeros(image.shape, dtype=bool)
-    mask.flat[brightest_indices] = True
-
-    return mask
-
-
 def full_well_valid_pixels(raw_valid, calibrated_dq):
-    '''Align calibrated quality flags with the raw detector image.'''
+    '''
+    A. Tokadjian: Align calibrated quality flags with the raw detector image.
+    '''
     if calibrated_dq.shape == raw_valid.shape:
         return raw_valid & (calibrated_dq == 0)
 
@@ -797,14 +777,19 @@ def full_well_metric(final_counts, valid, full_well, npixels=2500):
         maxiters=3,
     ).filled(np.nan)
 
-    representative_image = representative_detector_image(
-        clean_counts, np.isfinite(clean_counts)
-    )
-    bright_pixels = brightest_pixel_mask(
-        representative_image,
-        np.isfinite(representative_image),
-        npixels=npixels,
-    )
+    # Build a representative detector image by taking each pixel's median
+    # across integrations, ignoring the measurements masked as NaN.
+    representative_image = np.nanmedian(clean_counts, axis=0)
+
+    # Select the brightest npixels valid pixels in the representative image
+    # and mark their detector positions in a boolean mask.
+    image_flat = representative_image.ravel()
+    valid_indices = np.flatnonzero(np.isfinite(image_flat))
+    sorted_indices = valid_indices[np.argsort(image_flat[valid_indices])]
+    brightest_indices = sorted_indices[-npixels:]
+    bright_pixels = np.zeros(representative_image.shape, dtype=bool)
+    bright_pixels.flat[brightest_indices] = True
+
     well_fractions = clean_counts / full_well
 
     return bright_pixels, well_fractions[:, bright_pixels]
