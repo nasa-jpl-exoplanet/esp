@@ -1100,6 +1100,8 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
         out['data']['EXPFLAG'] = alldq
+        # Save full-well fractions by detector: integrations x selected pixels.
+        out['data']['WELL_FRACTIONS'] = well_fractions
         # JWST photon noise - each integration and channel
         calibrated_paths = [os.path.join(dbs, location) for location in calloc]
         inttimes, gains = read_jwst_noise_parameters(calibrated_paths)
