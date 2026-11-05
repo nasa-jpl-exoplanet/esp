@@ -811,6 +811,7 @@ def readfitsdata(
     '''
     out = {
         'alldet': [],
+        'allvisits': [],
         'alldexp': [],
         'allfinalcounts': [],
         'allunits': [],
@@ -838,6 +839,8 @@ def readfitsdata(
             if 'PRIMARY' in hdu.name:
                 nints = 1 + hdu.header['INTEND'] - hdu.header['INTSTART']
                 out['alldet'].extend(nints * [hdu.header['DETECTOR']])
+                # File segments from the same visit share this identifier.
+                out['allvisits'].extend(nints * [hdu.header['VISIT_ID']])
                 out['allfilter'].extend(nints * [hdu.header['FILTER']])
                 out['allgrating'].extend(nints * [hdu.header['GRATING']])
                 out['allslit'].extend(nints * [hdu.header['FXD_SLIT']])
@@ -907,6 +910,7 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
     allfinalcounts = np.array(rawdata['allfinalcounts'])
     full_well_dn = 61000
     alldet = np.array(rawdata['alldet'])
+    allvisits = np.array(rawdata['allvisits'])
     allwaves = caldata['allwaves'].copy()
 
     # CALIBRATION STEPS
@@ -1019,14 +1023,18 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
                 full_well_valid[i], calibrated_dq
             )
         for detector in np.unique(alldet):
-            select = alldet == detector
-            bright_pixel_masks[detector], well_fractions[detector] = (
-                full_well_metric(
-                    allfinalcounts[select],
-                    full_well_valid[select],
-                    full_well_dn,
+            detector_select = alldet == detector
+            bright_pixel_masks[detector] = {}
+            well_fractions[detector] = {}
+            # Process each visit separately so its pixel selection and
+            # cosmic-ray filtering use only integrations from that visit.
+            for visit in np.unique(allvisits[detector_select]):
+                select = detector_select & (allvisits == visit)
+                bright_pixels, fractions = full_well_metric(
+                    allfinalcounts[select], full_well_valid[select], full_well_dn
                 )
-            )
+                bright_pixel_masks[detector][visit] = bright_pixels
+                well_fractions[detector][visit] = fractions
         all1d = []
         all1dwave = []
         all1dvalid = []
@@ -1100,7 +1108,7 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
         out['data']['SPECTRUM'] = all1d
         out['data']['WAVE'] = all1dwave
         out['data']['EXPFLAG'] = alldq
-        # Save full-well fractions by detector: integrations x selected pixels.
+        # Save fractions by detector, then visit: integrations x selected pixels.
         out['data']['WELL_FRACTIONS'] = well_fractions
         # JWST photon noise - each integration and channel
         calibrated_paths = [os.path.join(dbs, location) for location in calloc]
