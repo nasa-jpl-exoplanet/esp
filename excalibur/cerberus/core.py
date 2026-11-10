@@ -359,7 +359,9 @@ def myxsecs(
                     pass
                 else:
                     # no hdf file available for this species!
-                    log.error('no hdf EXOMOL file is available for: %s', myexomol)
+                    log.error(
+                        'no hdf EXOMOL file is available for: %s', myexomol
+                    )
                     pass
             # plot the cross-sections for this EXOMOL species
             thisfig = plt.figure(figsize=(20, 5))
