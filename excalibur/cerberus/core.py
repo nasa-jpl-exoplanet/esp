@@ -282,16 +282,6 @@ def myxsecs(
                 myspl = itp(x, y, bounds_error=False, fill_value=0)
                 library[myexomol]['SPL'].append(myspl)
                 library[myexomol]['SPLNU'].append(iline)
-                if verbose and myexomol == 'too many plots here!':
-                    plt.plot(x, y, 'o')
-                    xp = np.arange(101) / 100.0 * (3000.0 - np.min(x)) + np.min(
-                        x
-                    )
-                    plt.plot(xp, myspl(xp))
-                    plt.title(myexomol)
-                    plt.show()
-                    pass
-                pass
             if also_hires_xsecs:
                 # include cross-sections at highest resolution, if available
                 hdffiles = [
@@ -367,7 +357,10 @@ def myxsecs(
                             pass
                         pass
                     pass
-
+                else:
+                    # no hdf file available for this species!
+                    log.error('no hdf EXOMOL file is available for: %s', myexomol)
+                    pass
             # plot the cross-sections for this EXOMOL species
             thisfig = plt.figure(figsize=(20, 5))
             plt.subplot(1, 3, 1)
@@ -419,17 +412,40 @@ def myxsecs(
                 fp.close()
                 # Richard et Al. 2012
                 tmprtr = 666  # otherwise possibly-used-before-assignment flag
+                # save sigma as a 2-d grid (temperatures vs nugriddata)
+                temperatures = []
+                nugriddata = []
+                oldnugriddata = []
+                sigmas = []
+                sigma2d = []
                 for line in data:
                     line = np.array(line.split(' '))
                     line = line[line != '']
                     if line.size > 2:
                         tmprtr = float(line[4])
+                        temperatures.append(tmprtr)
+                        if oldnugriddata != []:
+                            if oldnugriddata != nugriddata:
+                                print('ERROR: all temps should have same waves')
+                            sigma2d.append(sigmas)
+                            nugriddata = []
+                            sigmas = []
+                        else:
+                            # this is the first line of the file; no waves/sigmas yet
+                            pass
+                        oldnugriddata = nugriddata
                     if line.size == 2:
                         library[mycia]['nutemp'].append(float(line[0]))
                         library[mycia]['Itemp'].append(float(line[1]))
                         library[mycia]['Ttemp'].append(tmprtr)
+                        nugriddata.append(float(line[0]))
+                        sigmas.append(float(line[1]))
                         pass
                     pass
+                sigma2d.append(sigmas)
+                sigma2d = np.array(sigma2d)
+                nugriddata = np.array(nugriddata)
+                temperatures = np.array(temperatures)
                 for mytemp in set(library[mycia]['Ttemp']):
                     select = np.array(library[mycia]['Ttemp']) == mytemp
                     bini = []
@@ -460,74 +476,21 @@ def myxsecs(
                     myspl = itp(x, y, bounds_error=False, fill_value=0)
                     library[mycia]['SPL'].append(myspl)
                     library[mycia]['SPLNU'].append(iline)
-                    if verbose and mycia == 'too many plots here!':
-                        plt.plot(x, y, 'o')
-                        xp = np.arange(101) / 100.0 * (
-                            np.max(x) - np.min(x)
-                        ) + np.min(x)
-                        plt.plot(xp, myspl(xp))
-                        plt.show()
-                        pass
                     pass
                 if also_hires_xsecs:
-                    library[mycia]['nuhires'] = []
-                    library[mycia]['Ihires'] = []
-                    library[mycia]['Thires'] = []
+                    library[mycia]['SPLNUhires'] = nugridhires
                     library[mycia]['SPLhires'] = []
-                    library[mycia]['SPLNUhires'] = []
-                    for mytemp in set(library[mycia]['Ttemp']):
-                        select = np.array(library[mycia]['Ttemp']) == mytemp
-                        bini = []
-                        matnu = np.array(library[mycia]['nutemp'])[select]
-                        sigma2 = np.array(library[mycia]['Itemp'])[select]
-                        for lo, hi in zip(
-                            nugridhires_loedge, nugridhires_hiedge
-                        ):
-                            select = (matnu > lo) & (matnu <= hi)
-                            if np.sum(select) == 0:
-                                bini.append(0.0)
-                            else:
-                                bini.append(np.mean(sigma2[select]))
-                            # bini.append(np.sum(sigma2[select]))
-                        # binned_stats should be faster, but may require a sort
-                        # nugridhires_edges = nugridhires_loedge.extend(
-                        #    nugridhires_hiedge[-1])
-                        # bini = binned_statistic(
-                        #    matnu,
-                        #    sigma2,
-                        #    statistic='mean',
-                        #    bins=nugridhires_edges,
-                        # ).statistic
-                        # bini = np.array(bini) / dwnu
-                        library[mycia]['nuhires'].extend(list(nugridhires))
-                        library[mycia]['Ihires'].extend(list(bini))
-                        library[mycia]['Thires'].extend(
-                            list(np.ones(nugridhires.size) * mytemp)
+                    for iii, nu in enumerate(nugridhires):
+                        # this assumes that nugridhires is higher res than nugriddata
+                        # so bins don't work; just find the nearest one
+                        nearest = np.abs(nu - nugriddata).argmin()
+                        myspl = itp(
+                            temperatures,
+                            sigma2d[:, nearest],
+                            bounds_error=False,
+                            fill_value=0,
                         )
-                        pass
-                    # print('making an interpolator for each wave')
-                    for iline in set(library[mycia]['nuhires']):
-                        select = np.array(library[mycia]['nuhires']) == iline
-                        y = np.array(library[mycia]['Ihires'])[select]
-                        x = np.array(library[mycia]['Thires'])[select]
-                        sortme = np.argsort(x)
-                        x = x[sortme]
-                        y = y[sortme]
-                        myspl = itp(x, y, bounds_error=False, fill_value=0)
                         library[mycia]['SPLhires'].append(myspl)
-                        library[mycia]['SPLNUhires'].append(iline)
-                    library[mycia]['SPLNUhires'] = np.array(
-                        library[mycia]['SPLNUhires']
-                    )
-                    # wavelengths are from an unsorted set
-                    #  put in order for plotting
-                    reorder = np.argsort(library[mycia]['SPLNUhires'])
-                    library[mycia]['SPLNUhires'] = np.array(
-                        library[mycia]['SPLNUhires']
-                    )[reorder]
-                    library[mycia]['SPLhires'] = np.array(
-                        library[mycia]['SPLhires']
-                    )[reorder]
                     pass
                 pass
             # plot the cross-sections for this CIA species
@@ -537,7 +500,7 @@ def myxsecs(
             if 'SPLhires' in library[mycia]:
                 plt.subplot(1, 3, 2)
                 # set press=None to indicate that SPL is f(T), not f(T,P)
-                temperatures = np.sort(list(set(library[mycia]['Thires'])))
+                # temperatures = np.sort(list(set(library[mycia]['Thires'])))
                 plot_HIRESxsecs_vsT(
                     mycia,
                     'CIA hires',
@@ -641,20 +604,6 @@ def myxsecs(
                             pass
                         pass
                     pass
-                pass
-            if verbose and ks == 'too many plots here!':
-                for i in set(library[ks]['Iraw']):
-                    select = np.array(library[ks]['Iraw']) == i
-                    plt.semilogy(
-                        np.array(library[ks]['MU'])[select],
-                        np.array(library[ks]['S'])[select],
-                        '.',
-                    )
-                    pass
-                plt.title(ks)
-                plt.xlabel('Wavelength [$\\mu m$]')
-                plt.ylabel('Line intensity $S_{296K}$ [$cm/molecule$]')
-                plt.show()
                 pass
             # BUILDS INTERPOLATORS SIMILAR TO EXOMOL DB DATA HANDLING
             allxsections = []
