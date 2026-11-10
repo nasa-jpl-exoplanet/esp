@@ -424,7 +424,7 @@ def myxsecs(
                     if line.size > 2:
                         tmprtr = float(line[4])
                         temperatures.append(tmprtr)
-                        if oldnugriddata != []:
+                        if oldnugriddata:
                             if oldnugriddata != nugriddata:
                                 print('ERROR: all temps should have same waves')
                             sigma2d.append(sigmas)
@@ -480,7 +480,7 @@ def myxsecs(
                 if also_hires_xsecs:
                     library[mycia]['SPLNUhires'] = nugridhires
                     library[mycia]['SPLhires'] = []
-                    for iii, nu in enumerate(nugridhires):
+                    for nu in nugridhires:
                         # this assumes that nugridhires is higher res than nugriddata
                         # so bins don't work; just find the nearest one
                         nearest = np.abs(nu - nugriddata).argmin()
