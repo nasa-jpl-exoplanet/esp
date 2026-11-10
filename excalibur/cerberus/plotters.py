@@ -2081,8 +2081,11 @@ def plot_xsecs_vsT(
         )
         pass
     maxsigma = np.max(library[speciesName]['I'])
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
-    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    if np.isfinite(maxsigma):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+        plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    else:
+        log.warning('undefined yrange1 for %s', speciesName)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
         f'{speciesName} ({speciesType})',
@@ -2214,8 +2217,11 @@ def plot_HIRESxsecs_vsT(
         # )
         # maxsigma = np.max(sigmalores)
         maxsigma = np.max(sigma_rebin)
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
-    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    if np.isfinite(maxsigma):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+        plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    else:
+        log.warning('undefined yrange2 for %s', speciesName)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     if press is None:
         title = f'{speciesName} ({speciesType})'
@@ -2326,8 +2332,11 @@ def plot_HIRESxsecs_vsP(
         # )
         # maxsigma = np.max(sigmalores)
         maxsigma = np.max(sigma_rebin)
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
-    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    if np.isfinite(maxsigma):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
+        plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    else:
+        log.warning('undefined yrange3 for %s', speciesName)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
         f'{speciesName} ({speciesType})  T = {int(temp):d} K',
@@ -2386,8 +2395,11 @@ def plot_atomxsecs_vsT(
             ),
             label=str(int(temp)) + ' K',
         )
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
-    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    if np.isfinite(np.max(sigma)):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+        plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    else:
+        log.warning('undefined yrange4 for %s', speciesName)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
         f'{speciesName} ({speciesType})   P = {Pplot:1.1e} bar',
@@ -2443,8 +2455,11 @@ def plot_atomxsecs_vsP(
             ),
             label=f'{press:1.1e} bar',
         )
-    roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
-    plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    if np.isfinite(np.max(sigma)):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+        plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
+    else:
+        log.warning('undefined yrange5 for %s', speciesName)
     plt.xlim(np.min(wgrid), np.max(wgrid))
     plt.title(
         f'{speciesName} ({speciesType})   T = {int(Tplot):d} K',

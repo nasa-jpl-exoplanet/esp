@@ -2002,7 +2002,6 @@ def jwstwl(
     '''
 
     LETHE = None
-    # GMR: Put that in rtp['light_curve_model'] someday
     if rtp['transit_limbdarkening_lethe']:
         # Interpolators for LETHE
         z_grid = np.load(LETHE_dir + "/parameters/z_grid.npy")
@@ -2173,12 +2172,12 @@ def jwstwl(
                     # TKNOT
                     pymctknot = pymc.Uniform(
                         'tknot',
-                        lower=tmjd + 100.0 * priors[pln]['t0_lowerr'],
-                        upper=tmjd + 100.0 * priors[pln]['t0_uperr'],
+                        lower=tmjd + 1e5 * priors[pln]['t0_lowerr'],
+                        upper=tmjd + 1e5 * priors[pln]['t0_uperr'],
                     )
                     prior_ranges['t0'] = [
-                        tmjd + 100.0 * priors[pln]['t0_lowerr'],
-                        tmjd + 100.0 * priors[pln]['t0_uperr'],
+                        tmjd + 1e5 * priors[pln]['t0_lowerr'],
+                        tmjd + 1e5 * priors[pln]['t0_uperr'],
                     ]
                     prior_center['t0'] = tmjd
                     nodes.append(pymctknot)
@@ -2189,15 +2188,18 @@ def jwstwl(
                         if incl > 90:
                             incl = 180.0 - incl
                             pass
-                        inclup = min(incl + 3.0 * priors[pln]['inc_uperr'], 90)
                         pymcinc = pymc.Uniform(
                             'inc',
-                            lower=incl + 3.0 * priors[pln]['inc_lowerr'],
-                            upper=inclup,
+                            lower=max(
+                                incl + 1e3 * priors[pln]['inc_lowerr'], 0.0
+                            ),
+                            upper=min(
+                                incl + 1e3 * priors[pln]['inc_uperr'], 90.0
+                            ),
                         )
                         prior_ranges['inc'] = [
-                            incl + 3.0 * priors[pln]['inc_lowerr'],
-                            inclup,
+                            max(incl + 1e3 * priors[pln]['inc_lowerr'], 0.0),
+                            min(incl + 1e3 * priors[pln]['inc_uperr'], 90.0),
                         ]
                         prior_center['inc'] = incl
                         nodes.append(pymcinc)
@@ -3707,8 +3709,7 @@ def jwstspectrum(
     debug=False,
     donotuse=False,
     bntst=1,
-    binstart=0,
-    binstop=-1,
+    chnwnd='',
 ):
     '''
     GMR: JWST Spectral Light Curve Fit
@@ -3850,14 +3851,27 @@ def jwstspectrum(
                     electron_count[~np.isfinite(zndata)] = np.nan
                     pass
                 # --< GMR SPEED UP FOR TESTS
-                if binstart > 0:
-                    zndata = zndata[binstart:binstop]
-                    electron_count = electron_count[binstart:binstop]
-                    allwvl = allwvl[binstart:binstop]
+                # GMR: I dont like this, get rid of it as soon as tests are done
+                # or code it properly
+                if chnwnd:
                     if 'NRS1' in det:
                         zndata = zndata[-2:]
                         electron_count = electron_count[-2:]
                         allwvl = allwvl[-2:]
+                        pass
+                    elif 'NRS2' in det:
+                        if 'SO2' in chnwnd:
+                            minchnwnd = 3.9
+                            maxchnwnd = 4.2
+                            pass
+                        else:
+                            minchnwnd = 1.0
+                            maxchnwnd = 10.0
+                            pass
+                        wvlwnd = (allwvl > minchnwnd) & (allwvl < maxchnwnd)
+                        zndata = zndata[wvlwnd]
+                        electron_count = electron_count[wvlwnd]
+                        allwvl = allwvl[wvlwnd]
                         pass
                     pass
                 # >--
@@ -3865,7 +3879,7 @@ def jwstspectrum(
                     zndata.T[abs(zst) > (1e0 + 2e0 * rpors)], axis=0
                 )
                 argsdict = {
-                    'progbar': verbose,
+                    'progbar': verbose and not debug,
                     'progsizemax': 35,
                     'lbllen': 20,
                     'proginprompt': True,
@@ -3890,7 +3904,7 @@ def jwstspectrum(
                     if (
                         np.sum(np.isfinite(slc)) > np.sum(~np.isfinite(slc))
                     ) and transiting:
-                        if not verbose:
+                        if not verbose and debug:
                             log.info('>--------< %s / %s >', chn, len(zndata))
                         if debug:
                             plt.figure(figsize=(12, 9))
@@ -4055,7 +4069,8 @@ def jwstspectrum(
                                     rtp['transit_spectrum_chainlen'].value()
                                 )
                                 if debug or verbose:
-                                    chainlen = int(1e3)
+                                    chainlen = int(100)
+                                    pass
                                 trace = pymc.sample(
                                     chainlen,
                                     cores=4,
@@ -4077,7 +4092,7 @@ def jwstspectrum(
                                 *[np.median(di[-1]) for di in mctrace.items()]
                             )
                         )
-                        if debug:
+                        if debug and (chainlen > 1000):
                             mclbl = list(mctrace)
                             mcarr = np.array([v for _, v in mctrace.items()])
                             corner.corner(
