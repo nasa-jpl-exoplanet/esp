@@ -34,7 +34,6 @@ from excalibur.phasecurve.flare_det_utils import (
 
 import logging
 
-
 _numpy_linalg_linalg = types.ModuleType('numpy.linalg.linalg')
 _numpy_linalg_linalg.LinAlgError = np_linalg.LinAlgError
 sys.modules.setdefault('numpy.linalg.linalg', _numpy_linalg_linalg)
