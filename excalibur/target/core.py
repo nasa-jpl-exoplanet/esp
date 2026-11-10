@@ -318,14 +318,14 @@ def autofill(ident, thistarget, out, allowed_filters, searchrad=0.2, ntrymax=4):
                         targettable.append(obs)
                         platformlist.append(obs['obs_collection'])
                         pass
-                    else:
-                        log.info(
-                            '--< TARGET AUTOFILL REJ: %s %s %s',
-                            obs['obs_collection'],
-                            obs['instrument_name'],
-                            obs['filters'],
-                        )
-                        pass
+                    # else:
+                    #    log.info(
+                    #        '--< TARGET AUTOFILL REJ: %s %s %s',
+                    #        obs['obs_collection'],
+                    #        obs['instrument_name'],
+                    #        obs['filters'],
+                    #    )
+                    #    pass
                     pass
                 pass
             log.info(

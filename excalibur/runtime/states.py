@@ -3,6 +3,9 @@
 # Heritage code shame:
 #  no-member is for "Instance of HiLoValue has no _hi"
 # pylint: disable=no-member,method-hidden,invalid-name,too-many-statements
+# there's similar list of switches in runtime/core.py
+# eventually it would help to pull that all out to a separate shared file
+# pylint: disable=duplicate-code
 
 import dawgie
 import excalibur
@@ -210,6 +213,25 @@ class ControlsSV(dawgie.StateVector, dawgie.Value):
         self['cerberus_results_randomseed'] = excalibur.ValueScalar()
         self['cerberus_results_nrandomwalkers'] = excalibur.ValueScalar()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        self['ignoreinput_target_scrape'] = BoolValue()
+        self['ignoreinput_transit_normalization'] = BoolValue()
+        self['ignoreinput_transit_whitelight'] = BoolValue()
+        self['ignoreinput_transit_spectrum'] = BoolValue()
+        self['ignoreinput_transit_starspots'] = BoolValue()
+        self['ignoreinput_eclipse_normalization'] = BoolValue()
+        self['ignoreinput_eclipse_whitelight'] = BoolValue()
+        self['ignoreinput_eclipse_spectum'] = BoolValue()
+        self['ignoreinput_phasecurve_normalization'] = BoolValue()
+        self['ignoreinput_phasecurve_whitelight'] = BoolValue()
+        self['ignoreinput_phasecurve_flares'] = BoolValue()
+        self['ignoreinput_gemli_mlfit'] = BoolValue()
+        self['ignoreinput_hwo_sim_spectrum'] = BoolValue()
+        self['ignoreinput_selftest_sim_spectrum'] = BoolValue()
+        self['ignoreinput_ariel_sim_spectrum'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_ariel'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_ariel'] = BoolValue()
         return
 
     def features(self):
@@ -420,12 +442,29 @@ class StatusSV(dawgie.StateVector):
         self['transit_whitelight_chainlen'] = excalibur.ValueScalar()
         self['transit_spectrum_chainlen'] = excalibur.ValueScalar()
         self['transit_limbdarkening_lethe'] = BoolValue()
-        self['spectrum_chains'] = excalibur.ValueScalar()
-        self['spectrum_steps'] = excalibur.ValueScalar()
         self['transit_pymc_sliceSampler'] = BoolValue()
         self['system_validate_selectMostRecent'] = BoolValue()
         self['system_validate_maximizeSelfConsistency'] = BoolValue()
         self['selftest_Nrepeats'] = excalibur.ValueScalar()
+        self['ignoreinput_target_scrape'] = BoolValue()
+        self['ignoreinput_transit_normalization'] = BoolValue()
+        self['ignoreinput_transit_whitelight'] = BoolValue()
+        self['ignoreinput_transit_spectrum'] = BoolValue()
+        self['ignoreinput_transit_starspots'] = BoolValue()
+        self['ignoreinput_eclipse_normalization'] = BoolValue()
+        self['ignoreinput_eclipse_whitelight'] = BoolValue()
+        self['ignoreinput_eclipse_spectum'] = BoolValue()
+        self['ignoreinput_phasecurve_normalization'] = BoolValue()
+        self['ignoreinput_phasecurve_whitelight'] = BoolValue()
+        self['ignoreinput_phasecurve_flares'] = BoolValue()
+        self['ignoreinput_gemli_mlfit'] = BoolValue()
+        self['ignoreinput_hwo_sim_spectrum'] = BoolValue()
+        self['ignoreinput_selftest_sim_spectrum'] = BoolValue()
+        self['ignoreinput_ariel_sim_spectrum'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_xslib_ariel'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_jwst'] = BoolValue()
+        self['ignoreinput_cerberus_atmos_ariel'] = BoolValue()
         return
 
     def name(self):
@@ -466,16 +505,12 @@ class StatusSV(dawgie.StateVector):
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline('PYMC Sampling Parameters', tag='b')
         table = visitor.add_table(
-            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 2
+            ['Algorithm', 'Sampler', '# of chains', 'Chain length'], 1
         )
         table.get_cell(0, 0).add_primitive('cerberus')
         table.get_cell(0, 1).add_primitive('metropolis-hastings')
         table.get_cell(0, 2).add_primitive(self['cerberus_chains'].value())
         table.get_cell(0, 3).add_primitive(self['cerberus_steps'].value())
-        table.get_cell(1, 0).add_primitive('spectrum')
-        table.get_cell(1, 1).add_primitive('metropolis-hastings')
-        table.get_cell(1, 2).add_primitive(self['spectrum_chains'].value())
-        table.get_cell(1, 3).add_primitive(self['spectrum_steps'].value())
         visitor.add_declaration_inline('', div='</div>')
         visitor.add_declaration_inline('', div='<div><hr>')
         visitor.add_declaration_inline(
@@ -546,6 +581,25 @@ class StatusSV(dawgie.StateVector):
             'cerberus_results_nrandomwalkers',
             'cerberus_results_randomseed',
             'selftest_Nrepeats',
+            'ignoreinput_target_scrape',
+            'ignoreinput_transit_normalization',
+            'ignoreinput_transit_whitelight',
+            'ignoreinput_transit_spectrum',
+            'ignoreinput_transit_starspots',
+            'ignoreinput_eclipse_normalization',
+            'ignoreinput_eclipse_whitelight',
+            'ignoreinput_eclipse_spectum',
+            'ignoreinput_phasecurve_normalization',
+            'ignoreinput_phasecurve_whitelight',
+            'ignoreinput_phasecurve_flares',
+            'ignoreinput_gemli_mlfit',
+            'ignoreinput_hwo_sim_spectrum',
+            'ignoreinput_selftest_sim_spectrum',
+            'ignoreinput_ariel_sim_spectrum',
+            'ignoreinput_cerberus_xslib_jwst',
+            'ignoreinput_cerberus_xslib_ariel',
+            'ignoreinput_cerberus_atmos_jwst',
+            'ignoreinput_cerberus_atmos_ariel',
         ]
         table = visitor.add_table(['Switch', 'State'], len(switches))
         for row, switch in enumerate(switches):

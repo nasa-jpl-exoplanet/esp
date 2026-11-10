@@ -155,8 +155,8 @@ def plot_spectrum(
                 label=molecule,
             )
         extra = (maxdepth - baseline) / 13
-        if np.isnan(extra):
-            log.error('NaN in plot_spectrum: %s', target)
+        if ~np.isfinite(extra):
+            log.error('NaN/Inf in plot_spectrum: %s', target)
         else:
             plt.ylim((baseline - extra, maxdepth + extra))
             yrange = plt.ylim()
@@ -503,12 +503,15 @@ def plot_vertical_profiles(
         # )
     # print('T profile!!', temperature)
     if temperature is not None:
-        # print('len check',len(temperature), len(pressure))
-        ax_T.plot(
-            temperature,
-            pressure,
-            color='k',
-        )
+        # print('len check',temperature.shape, pressure.shape)
+        if temperature.shape != pressure.shape:
+            log.error('Wrong length for the temperature array!')
+        else:
+            ax_T.plot(
+                temperature,
+                pressure,
+                color='k',
+            )
     ax_chem.set_yscale('log')
     ax_T.set_yscale('log')
     ax_chem.set_xscale('log')

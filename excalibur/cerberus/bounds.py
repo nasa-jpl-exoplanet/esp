@@ -14,82 +14,91 @@ log = logging.getLogger(__name__)
 
 
 # -------------------------------------------------------------------
-def set_prior_bound(eqtemp, runtime_params):
+def set_prior_bound(eqtemp, runtime):
     '''
     Set prior constraints on the spectrum-fitting parameters
     '''
 
-    # if runtime_params.boundTeq is None:
+    # if runtime['cerberus_atmos_bounds_Teq'] is None:
     #    log.info('--< temp junk for pylint reasons >--')
-    # print('IN BOUNDS runtime_params',runtime_params)
-    # print('          boundsTeq',runtime_params.boundTeq)
+    # print('IN BOUNDS runtime',runtime)
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'])
     # import pdb; pdb.set_trace()
-    # print('          boundsTeq',runtime_params.boundTeq.hi)
-    # print('          boundsTeq',runtime_params.boundTeq.lo)
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'].hi)
+    # print('          boundsTeq',runtime['cerberus_atmos_bounds_Teq'].lo)
     #
-    if runtime_params.boundTeq.lo != 0.75 or runtime_params.boundTeq.hi != 1.5:
+    if (
+        runtime['cerberus_atmos_bounds_Teq'].lo != 0.75
+        or runtime['cerberus_atmos_bounds_Teq'].hi != 1.5
+    ):
         log.info('--< Non-standard prior range for Teq >--')
     # if (
-    #    runtime_params.boundAbundances.lo != -6
-    #    or runtime_params.boundAbundances.hi != 6
+    #    runtime['cerberus_atmos_bounds_abundances'].lo != -6
+    #    or runtime['cerberus_atmos_bounds_abundances'].hi != 6
     # ):
     #    log.info('--< Non-standard prior range for abundances >--')
-    if runtime_params.boundCTP.lo != -6 or runtime_params.boundCTP.hi != 1:
+    if (
+        runtime['cerberus_atmos_bounds_CTP'].lo != -6
+        or runtime['cerberus_atmos_bounds_CTP'].hi != 1
+    ):
         log.info('--< Non-standard prior range for CTP >--')
-    if runtime_params.boundHLoc.lo != -6 or runtime_params.boundHLoc.hi != 1:
+    if (
+        runtime['cerberus_atmos_bounds_HLoc'].lo != -6
+        or runtime['cerberus_atmos_bounds_HLoc'].hi != 1
+    ):
         log.info('--< Non-standard prior range for HLoc >--')
     if (
-        runtime_params.boundHScale.lo != -6
-        or runtime_params.boundHScale.hi != 6
+        runtime['cerberus_atmos_bounds_HScale'].lo != -6
+        or runtime['cerberus_atmos_bounds_HScale'].hi != 6
     ):
         log.info('--< Non-standard prior range for HScale >--')
     if (
-        runtime_params.boundHThick.lo != 1
-        or runtime_params.boundHThick.hi != 20
+        runtime['cerberus_atmos_bounds_HThick'].lo != 1
+        or runtime['cerberus_atmos_bounds_HThick'].hi != 20
     ):
         log.info('--< Non-standard prior range for HThick >--')
 
     prior_ranges = {}
 
     prior_ranges['T'] = (
-        runtime_params.boundTeq.lo * eqtemp,
-        runtime_params.boundTeq.hi * eqtemp,
+        runtime['cerberus_atmos_bounds_Teq'].lo * eqtemp,
+        runtime['cerberus_atmos_bounds_Teq'].hi * eqtemp,
     )
     prior_ranges['dexRange'] = (
-        runtime_params.boundAbundances.lo,
-        runtime_params.boundAbundances.hi,
+        runtime['cerberus_atmos_bounds_abundances'].lo,
+        runtime['cerberus_atmos_bounds_abundances'].hi,
     )
     prior_ranges['MetallicityRange'] = (
-        runtime_params.boundMetallicity.lo,
-        runtime_params.boundMetallicity.hi,
+        runtime['cerberus_atmos_bounds_metallicity'].lo,
+        runtime['cerberus_atmos_bounds_metallicity'].hi,
     )
     prior_ranges['CtoORange'] = (
-        runtime_params.boundCtoO.lo,
-        runtime_params.boundCtoO.hi,
+        runtime['cerberus_atmos_bounds_CtoO'].lo,
+        runtime['cerberus_atmos_bounds_CtoO'].hi,
     )
     prior_ranges['NtoORange'] = (
-        runtime_params.boundNtoO.lo,
-        runtime_params.boundNtoO.hi,
+        runtime['cerberus_atmos_bounds_NtoO'].lo,
+        runtime['cerberus_atmos_bounds_NtoO'].hi,
     )
     prior_ranges['StoORange'] = (
-        runtime_params.boundStoO.lo,
-        runtime_params.boundStoO.hi,
+        runtime['cerberus_atmos_bounds_StoO'].lo,
+        runtime['cerberus_atmos_bounds_StoO'].hi,
     )
     prior_ranges['CTP'] = (
-        runtime_params.boundCTP.lo,
-        runtime_params.boundCTP.hi,
+        runtime['cerberus_atmos_bounds_CTP'].lo,
+        runtime['cerberus_atmos_bounds_CTP'].hi,
     )
     prior_ranges['HScale'] = (
-        runtime_params.boundHScale.lo,
-        runtime_params.boundHScale.hi,
+        runtime['cerberus_atmos_bounds_HScale'].lo,
+        runtime['cerberus_atmos_bounds_HScale'].hi,
     )
     prior_ranges['HLoc'] = (
-        runtime_params.boundHLoc.lo,
-        runtime_params.boundHLoc.hi,
+        runtime['cerberus_atmos_bounds_HLoc'].lo,
+        runtime['cerberus_atmos_bounds_HLoc'].hi,
     )
     prior_ranges['HThick'] = (
-        runtime_params.boundHThick.lo,
-        runtime_params.boundHThick.hi,
+        runtime['cerberus_atmos_bounds_HThick'].lo,
+        runtime['cerberus_atmos_bounds_HThick'].hi,
     )
 
     if prior_ranges['dexRange'] == (0, 1):
@@ -235,23 +244,21 @@ def apply_profiling(target, limits, alltraces, allkeys):
     return profile_mask, applied_limits
 
 
-def add_priors(
-    nodes, nodeshape, prior_range_table, runtime_params, model, modparlbls
-):
+def add_priors(nodes, nodeshape, prior_range_table, runtime, model, modparlbls):
     '''
     careful - the order that you add parameters here has to match the order in fmcerberus
     '''
 
     prior_ranges = {}
 
-    if runtime_params.fitCTP:
+    if runtime['cerberus_atmos_fitCTP']:
         prior_ranges['CTP'] = prior_range_table['CTP']
         nodes.append(
             pymc.Uniform('CTP', prior_ranges['CTP'][0], prior_ranges['CTP'][1])
         )
         nodeshape.append(1)
 
-    if runtime_params.fitHaze:
+    if runtime['cerberus_atmos_fitHaze']:
         prior_ranges['HScale'] = prior_range_table['HScale']
         nodes.append(
             pymc.Uniform(
@@ -276,9 +283,9 @@ def add_priors(
         )
         nodeshape.append(1)
 
-    if runtime_params.fitT:
+    if runtime['cerberus_atmos_fitT']:
         prior_ranges['T'] = prior_range_table['T']
-        if runtime_params.isothermal:
+        if runtime['cerberus_crbmodel_isothermal']:
             # print('OK normal isothermal T')
             nodes.append(
                 pymc.Uniform('T', prior_ranges['T'][0], prior_ranges['T'][1])
