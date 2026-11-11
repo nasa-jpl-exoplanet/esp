@@ -262,10 +262,12 @@ def myxsecs(
                     select = (matnu > (nubin - mydw / 2.0)) & (
                         matnu <= nubin + mydw / 2.0
                     )
-                    # bini.append(np.sum(sigma2[select]))
-                    bini.append(np.mean(sigma2[select]))
+                    if np.sum(select) == 0:
+                        bini.append(0.0)
+                    else:
+                        bini.append(np.mean(sigma2[select]))
+                        pass
                     pass
-                # bini = np.array(bini) / dwnu
                 library[myexomol]['nu'].extend(list(nugrid))
                 library[myexomol]['I'].extend(list(bini))
                 library[myexomol]['T'].extend(
@@ -638,7 +640,12 @@ def myxsecs(
                     select = (matnu > (nubin - mydw / 2.0)) & (
                         matnu <= nubin + mydw / 2.0
                     )
-                    bini.append(np.sum(sigma2[select]))
+                    if np.sum(select) == 0:
+                        bini.append(0.0)
+                    else:
+                        bini.append(np.sum(sigma2[select]))
+                        pass
+                    pass
                 # mistake - drop this normalization (off by 40x)
                 # bini = np.array(bini) / dwnu
                 library[ks]['nu'].extend(list(nugrid))
@@ -685,7 +692,11 @@ def myxsecs(
                     sigma2 = np.array(hiresxsections)[indextemp]
                     for lo, hi in zip(nugridhires_loedge, nugridhires_hiedge):
                         select = (matnu > lo) & (matnu <= hi)
-                        bini.append(np.sum(sigma2[select]))
+                        if np.sum(select) == 0:
+                            bini.append(0.0)
+                        else:
+                            bini.append(np.sum(sigma2[select]))
+                            pass
                         pass
                     # bini = np.array(bini) / dwnuhires  # <-- OH NO!!!
                     library[ks]['nuhires'].extend(list(nugridhires))
