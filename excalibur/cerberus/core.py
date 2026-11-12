@@ -896,8 +896,22 @@ def myxsecs(
             plt.close(thisfig)
             pass
 
-        out['data'][p]['XSECS'] = library
-        out['data'][p]['QTGRID'] = qtgrid
+        # let's limit the amount of information saved
+        # hi-res cross-sections will otherwise waste many Gbytes
+        # OLD:
+        # out['data'][p]['XSECS'] = library
+        # out['data'][p]['QTGRID'] = qtgrid
+        # NEW:
+        goodparts = ['SPL', 'SPLNU', 'SPLhires', 'SPLNUhires']
+        shorterlibrary = {}
+        for molecule in library:
+            shorterlibrary[molecule] = {}
+            for goodpart in goodparts:
+                if goodpart in library[molecule]:
+                    shorterlibrary[molecule][goodpart] = library[molecule][
+                        goodpart
+                    ]
+        out['data'][p]['XSECS'] = shorterlibrary
         pass
     if out['data'].keys():
         cs = True
