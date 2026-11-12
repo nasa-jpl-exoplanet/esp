@@ -814,8 +814,9 @@ def buildsp(autofill, runtime, out, verbose=False):
 def finalizeversion():
     '''
     1.1.4 8oct26
+    1.1.5:GMR:Tknots from ESP JWST-NIRSPEC-NRS-F290LP-G395H
     '''
-    return dawgie.VERSION(1, 1, 4)
+    return dawgie.VERSION(1, 1, 5)
 
 
 # ------------------------- ------------------------------------------
