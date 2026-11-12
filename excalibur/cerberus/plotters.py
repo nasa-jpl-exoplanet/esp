@@ -2080,7 +2080,7 @@ def plot_xsecs_vsT(
             label=str(int(temp)) + 'K',
         )
         pass
-    maxsigma = np.max(library[speciesName]['I'])
+    maxsigma = np.nanmax(library[speciesName]['I'])
     if np.isfinite(maxsigma):
         roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
         plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
@@ -2205,18 +2205,18 @@ def plot_HIRESxsecs_vsT(
             label=str(int(temp)) + 'K',
         )
         pass
-    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.nanmax(sigma_rebin))))
     # use the same max-sigma as in the previous panel (same y-axis range)
     if 'I' in library[speciesName]:
-        maxsigma = np.max(library[speciesName]['I'])
+        maxsigma = np.nanmax(library[speciesName]['I'])
     else:
         # for atomic species use same code as for panel 1
         # no, doesn't match. and press might not be defined error
         # sigmalores = np.array(
         #     [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
         # )
-        # maxsigma = np.max(sigmalores)
-        maxsigma = np.max(sigma_rebin)
+        # maxsigma = np.nanmax(sigmalores)
+        maxsigma = np.nanmax(sigma_rebin)
     if np.isfinite(maxsigma):
         roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
         plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
@@ -2320,18 +2320,18 @@ def plot_HIRESxsecs_vsP(
             label=f'{press:1.1e} bar',
         )
         pass
-    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma_rebin))))
+    # roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.nanmax(sigma_rebin))))
     # use the same max-sigma as in the previous panel (same y-axis range)
     if 'I' in library[speciesName]:
-        maxsigma = np.max(library[speciesName]['I'])
+        maxsigma = np.nanmax(library[speciesName]['I'])
     else:
         # for atomic species use same code as for panel 1
         # no, doesn't match. and press might not be defined error
         # sigmalores = np.array(
         #    [thisspl((temp, press)) for thisspl in library[speciesName]['SPL']]
         # )
-        # maxsigma = np.max(sigmalores)
-        maxsigma = np.max(sigma_rebin)
+        # maxsigma = np.nanmax(sigmalores)
+        maxsigma = np.nanmax(sigma_rebin)
     if np.isfinite(maxsigma):
         roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(maxsigma)))
         plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
@@ -2395,8 +2395,8 @@ def plot_atomxsecs_vsT(
             ),
             label=str(int(temp)) + ' K',
         )
-    if np.isfinite(np.max(sigma)):
-        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    if np.isfinite(np.nanmax(sigma)):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.nanmax(sigma))))
         plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     else:
         log.warning('undefined yrange4 for %s', speciesName)
@@ -2455,8 +2455,8 @@ def plot_atomxsecs_vsP(
             ),
             label=f'{press:1.1e} bar',
         )
-    if np.isfinite(np.max(sigma)):
-        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.max(sigma))))
+    if np.isfinite(np.nanmax(sigma)):
+        roundedupmaxsigma = 10.0 ** (np.ceil(np.log10(np.nanmax(sigma))))
         plt.ylim(roundedupmaxsigma / 1.0e10, roundedupmaxsigma)
     else:
         log.warning('undefined yrange5 for %s', speciesName)
