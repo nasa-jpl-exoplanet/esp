@@ -904,13 +904,11 @@ def myxsecs(
         # NEW:
         goodparts = ['SPL', 'SPLNU', 'SPLhires', 'SPLNUhires']
         shorterlibrary = {}
-        for molecule in library:
+        for molecule, xsecs in library.items():
             shorterlibrary[molecule] = {}
             for goodpart in goodparts:
-                if goodpart in library[molecule]:
-                    shorterlibrary[molecule][goodpart] = library[molecule][
-                        goodpart
-                    ]
+                if goodpart in xsecs:
+                    shorterlibrary[molecule][goodpart] = xsecs[goodpart]
         out['data'][p]['XSECS'] = shorterlibrary
         pass
     if out['data'].keys():
