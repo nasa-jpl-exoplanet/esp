@@ -56,6 +56,52 @@ class CalibrateSV(dawgie.StateVector):
                 plt.ylabel('DN', fontsize=20)
                 save_plot_toscreen(myfig, visitor)
                 pass
+                # add in the full well metric plots
+                if 'WELL_FRACTIONS' in self['data']:
+                    fractions_by_detector = self['data']['WELL_FRACTIONS']
+                    # Collect the visits from both detectors, without duplicates.
+                    all_visits = set()
+                    for visits in fractions_by_detector.values():
+                        all_visits.update(visits)
+
+                    # Display each visit's NRS1 histogram, then its NRS2 histogram.
+                    # Use simple visit numbers in titles; keep the IDs as keys.
+                    for visit_number, visit in enumerate(
+                        sorted(all_visits), start=1
+                    ):
+                        for detector in sorted(fractions_by_detector):
+                            detector_visits = fractions_by_detector[detector]
+                            if visit not in detector_visits:
+                                continue
+                            well_fractions = detector_visits[visit]
+                            values = well_fractions[np.isfinite(well_fractions)]
+                            if values.size == 0:
+                                continue
+                            myfig = plt.figure()
+                            plt.hist(values * 100, bins=50)
+                            plt.title(f'{detector}, visit {visit_number}')
+                            plt.xlabel("Full Well Fraction (%)")
+                            plt.ylabel("Number of Pixel Measurements")
+                            plt.xlim(0, 100)
+                            plt.tight_layout()
+                            save_plot_toscreen(myfig, visitor)
+
+                            # Summarize the same valid measurements as the histogram.
+                            visitor.add_primitive(
+                                f'{well_fractions.shape[0]:,} integrations '
+                                f'(entire visit); {well_fractions.shape[1]:,} '
+                                'selected pixels.'
+                            )
+                            visitor.add_primitive(
+                                f'Median well fraction: {np.median(values):.1%}'
+                            )
+                            visitor.add_primitive(
+                                '95th percentile well fraction: '
+                                f'{np.percentile(values, 95):.1%}'
+                            )
+                            visitor.add_primitive(
+                                f'Maximum well fraction: {np.max(values):.1%}'
+                            )
             else:
                 data = self['data']
                 timing = np.array(
