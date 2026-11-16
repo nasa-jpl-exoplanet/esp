@@ -24,6 +24,8 @@ services:
       context: ..
       dockerfile: .docker/Dockerfile
       target: server
+    cap_add:
+      - SYS_PTRACE
     container_name: pipeline-${EXCALIBUR_USER}
     environment:
       - DAWGIE_FE_DEBUG=T
@@ -59,6 +61,8 @@ services:
       - pipeline_domain
     ports:
       - "${DAWGIE_FE_PORT:-9990}-${DAWGIE_SFE_PORT:-9995}:8080-8085"
+    security_opt:
+      - seccomp=unconfined
     user: "${EXCALIBUR_UID}:${EXCALIBUR_GID}"
     volumes:
       - ${EXCALIBUR_CERTS}:${EXCALIBUR_CERTS}
