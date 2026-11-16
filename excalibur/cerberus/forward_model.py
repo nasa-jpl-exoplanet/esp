@@ -77,6 +77,7 @@ class crbFM:
         debug=False,
         atom_data=None,
         tea_data=None,
+        hiresXSlib=False,
         improvedBoundaryCondition=True,
         extendedBoundaryCondition=False,
     ):
@@ -403,6 +404,7 @@ class crbFM:
             hazeloc,
             hazethick,
             atom_data,
+            hiresXSlib=hiresXSlib,
             debug=debug,
             improvedBoundaryCondition=improvedBoundaryCondition,
             extendedBoundaryCondition=extendedBoundaryCondition,
@@ -622,6 +624,7 @@ def gettau(
     hazeloc,
     hazethick,
     atom_data,
+    hiresXSlib=False,
     debug=False,
     improvedBoundaryCondition=True,
     extendedBoundaryCondition=False,
@@ -730,7 +733,9 @@ def gettau(
                 # note that HITRAN version is not used here anymore
 
                 # EXOMOL HILL ET AL. 2013 ----------------------------------
-                sigma, lsig = getxmolxs(temp, xsecs[elem])  # cm^2/mol
+                sigma, lsig = getxmolxs(
+                    temp, xsecs[elem], hiresXSlib=hiresXSlib
+                )  # cm^2/mol
 
                 # special inclusion of the Hartley-band cross-section for ozone
                 if elem == 'O3':
@@ -853,7 +858,9 @@ def gettau(
             f2 = 0
             pass
         # HITRAN RICHARD ET AL. 2012
-        sigma, lsig = getciaxs(temp, xsecs[cia])  # cm^5/mol^2
+        sigma, lsig = getciaxs(
+            temp, xsecs[cia], hiresXSlib=hiresXSlib
+        )  # cm^5/mol^2
         # sigma.shape(n_waves, n_pressure)
         sigma = np.array(sigma) * 1e-10  # m^5/mol^2
         if True in (sigma < 0):
@@ -1156,6 +1163,7 @@ def absorb(
         Q = float(qtgrid['SPL'][iso](T))
     except ValueError:
         Q = np.nan
+        pass
     c2 = 1e2 * cst.h * cst.c / cst.Boltzmann
     tips = (Qref * np.exp(-c2 * E / T) * (1.0 - np.exp(-c2 * nu / T))) / (
         Q * np.exp(-c2 * E / Tref) * (1.0 - np.exp(-c2 * nu / Tref))
@@ -1214,14 +1222,17 @@ def getatomxs(temp, pressure, wgrid, interpolator):
 
 # --------------------------------------------------------------------
 # -- EXOMOL ----------------------------------------------------------
-def getxmolxs(temp, xsecs):
+def getxmolxs(temp, xsecs, hiresXSlib=False):
     '''
     G. ROUDIER: Wrapper around EXOMOL Cerberus library
     Also used to read HITRAN data (saved by myxsecs in same format as XOMOL)
     '''
-    # sigma = np.array(list(xsecs['SPL']))
-    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
-    nu = np.array(xsecs['SPLNU'])
+    if hiresXSlib:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPLhires']])
+        nu = np.array(xsecs['SPLNUhires'])
+    else:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+        nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]
@@ -1230,12 +1241,16 @@ def getxmolxs(temp, xsecs):
 
 # ------------------------- ------------------------------------------
 # -- CIA -- ----------------------------------------------------------
-def getciaxs(temp, xsecs):
+def getciaxs(temp, xsecs, hiresXSlib=False):
     '''
     G. ROUDIER: Wrapper around CIA Cerberus library
     '''
-    sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
-    nu = np.array(xsecs['SPLNU'])
+    if hiresXSlib:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPLhires']])
+        nu = np.array(xsecs['SPLNUhires'])
+    else:
+        sigma = np.array([thisspl(temp) for thisspl in xsecs['SPL']])
+        nu = np.array(xsecs['SPLNU'])
     select = np.argsort(nu)
     nu = nu[select]
     sigma = sigma[select]
@@ -1454,6 +1469,11 @@ def crbnrs(*nodes):
     if ctxt.model in ['FREE']:
         mixratio = dctprm
         pass
+    # if 'HIRES' in ctxt.model:
+    #    hiresXSlib=True
+    # else:
+    # hiresXSlib=False
+    #    pass
     out = (
         crbFM()
         .crbmodel(
@@ -1481,6 +1501,7 @@ def crbnrs(*nodes):
             Hsmax=ctxt.runtime['cerberus_crbmodel_Hsmax'].value(),
             solrad=ctxt.runtime['cerberus_crbmodel_solrad'].value(),
             tea_data=ctxt.interp_tea,
+            # hiresXSlib=hiresXSlib,
             improvedBoundaryCondition=True,
         )
         .spectrum

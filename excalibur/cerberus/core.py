@@ -2184,6 +2184,7 @@ def calculateSpectrum(
     fin,
     xsl,
     transitdata,
+    hiresXSlib=False,
     chemistry='TEC',
 ):
     '''
@@ -2219,6 +2220,7 @@ def calculateSpectrum(
         nlevels=runtime['cerberus_crbmodel_nlevels'].value(),
         Hsmax=runtime['cerberus_crbmodel_Hsmax'].value(),
         solrad=runtime['cerberus_crbmodel_solrad'].value(),
+        hiresXSlib=hiresXSlib,
     )
     spectrum = fmc.spectrum
 
@@ -2320,6 +2322,10 @@ def results(
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
+                if bool('HIRES' in model_name):
+                    hiresXSlib = True
+                else:
+                    hiresXSlib = False
 
                 all_traces = []
                 all_keys = []
@@ -2643,6 +2649,7 @@ def results(
                     fin,
                     xsl,
                     transitdata,
+                    hiresXSlib=hiresXSlib,
                     chemistry=chemistry,
                 )
 
@@ -2665,6 +2672,7 @@ def results(
                     fin,
                     xsl,
                     transitdata,
+                    hiresXSlib=hiresXSlib,
                     chemistry=chemistry,
                 )
                 # print('median params', tpr, tceqdict)
@@ -2734,6 +2742,7 @@ def results(
                         fin,
                         xsl,
                         transitdata,
+                        hiresXSlib=hiresXSlib,
                         chemistry=chemistry,
                     )
 
@@ -2846,6 +2855,7 @@ def results(
                             fin,
                             xsl,
                             transitdata,
+                            hiresXSlib=hiresXSlib,
                             chemistry=chemistry,
                         )
                         # check to see if this model is the best one
