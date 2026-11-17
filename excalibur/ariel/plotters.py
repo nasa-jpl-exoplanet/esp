@@ -28,6 +28,8 @@ def plot_spectrum(
     molecules,
     fluxDepth_by_molecule,
     Hsscaling,
+    wavelength_um_raw=False,
+    fluxDepth_raw=False,
     plottype='Ariel',
     verbose=False,
 ):
@@ -53,17 +55,18 @@ def plot_spectrum(
     plt.ylabel(str('$(R_p/R_*)^2$ [%]'), fontsize=14)
 
     # plot the true (model) spectrum - raw
-    #  (this is for testing higher resolution cross-sections
-    #   but currently raw and rebin are the same thing)
-    # plt.plot(
-    #    wavelength_um_raw,
-    #    fluxDepth_raw,
-    #    color='palegoldenrod',
-    #    ls='-',
-    #    lw=1,
-    #    zorder=1,
-    #    label='truth raw',
-    # )
+    #  this is for testing higher resolution cross-sections
+    #  but before the hiresXSlib update, raw and rebin were the same thing
+    if np.any(wavelength_um_raw) != False:
+        plt.plot(
+            wavelength_um_raw,
+            fluxDepth_raw,
+            color='palegoldenrod',
+            ls='-',
+            lw=1,
+            zorder=1,
+            label='truth raw',
+        )
     # plot the true (model) spectrum - binned
     plt.plot(
         wavelength_um,
