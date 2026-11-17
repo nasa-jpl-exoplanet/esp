@@ -207,9 +207,7 @@ class CalibrateSV(dawgie.StateVector):
 
         # Display each visit's NRS1 histogram, then its NRS2 histogram.
         # Use simple visit numbers in titles; keep the IDs as keys.
-        for visit_number, visit in enumerate(
-            sorted(all_visits), start=1
-        ):
+        for visit_number, visit in enumerate(sorted(all_visits), start=1):
             for detector in sorted(fractions_by_detector):
                 detector_visits = fractions_by_detector[detector]
                 if visit not in detector_visits:
