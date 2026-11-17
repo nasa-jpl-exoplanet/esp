@@ -1031,7 +1031,9 @@ def jwstcal(fin, tim, ext, out, verbose=False, debug=False):
             for visit in np.unique(allvisits[detector_select]):
                 select = detector_select & (allvisits == visit)
                 bright_pixels, fractions = full_well_metric(
-                    allfinalcounts[select], full_well_valid[select], full_well_dn
+                    allfinalcounts[select], 
+                    full_well_valid[select], 
+                    full_well_dn,
                 )
                 bright_pixel_masks[detector][visit] = bright_pixels
                 well_fractions[detector][visit] = fractions
