@@ -210,6 +210,7 @@ def planetkeys(inl):
 class TfyfTl:
     '''
     GMR:If it quacks like a dawgie.visitor
+    GMR:Even for a table
     '''
 
     def __init__(self):
@@ -224,6 +225,34 @@ class TfyfTl:
         '''
         log.info('%s', yo)
         pass
+
+    def add_table(self, clabels=[], rows=0):
+        '''
+        GMR
+        '''
+        class openbar:
+            '''
+            GMR
+            '''
+            class get_cell:
+                '''
+                GMR
+                '''
+                def __init__(self, a: int, b: int):
+                    '''
+                    GMR
+                    '''
+                    pass
+                def add_primitive(self, happyhour):
+                    '''
+                    GMR
+                    '''
+                    log.info('%s', happyhour)
+                    pass
+                pass
+            pass
+        return openbar()
+        
 
     def add_image(self, chit: str, chat: str, bff):
         '''
