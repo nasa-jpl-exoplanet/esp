@@ -2322,10 +2322,8 @@ def results(
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
-                if 'HIRES' in model_name:
-                    hiresXSlib = True
-                else:
-                    hiresXSlib = False
+
+                hiresXSlib = 'HIRES' in model_name
 
                 all_traces = []
                 all_keys = []
