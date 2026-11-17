@@ -2318,11 +2318,11 @@ def results(
                 if model_name in atm[p].keys():
                     models.append(model_name)
             for model_name in models:
-                if bool('TEA' in model_name):
+                if 'TEA' in model_name:
                     chemistry = 'TEA'
                 else:
                     chemistry = 'TEC'
-                if bool('HIRES' in model_name):
+                if 'HIRES' in model_name:
                     hiresXSlib = True
                 else:
                     hiresXSlib = False
