@@ -2172,12 +2172,12 @@ def jwstwl(
                     # TKNOT
                     pymctknot = pymc.Uniform(
                         'tknot',
-                        lower=tmjd + 1e5 * priors[pln]['t0_lowerr'],
-                        upper=tmjd + 1e5 * priors[pln]['t0_uperr'],
+                        lower=tmjd + 1e1 * priors[pln]['t0_lowerr'],
+                        upper=tmjd + 1e1 * priors[pln]['t0_uperr'],
                     )
                     prior_ranges['t0'] = [
-                        tmjd + 1e5 * priors[pln]['t0_lowerr'],
-                        tmjd + 1e5 * priors[pln]['t0_uperr'],
+                        tmjd + 1e1 * priors[pln]['t0_lowerr'],
+                        tmjd + 1e1 * priors[pln]['t0_uperr'],
                     ]
                     prior_center['t0'] = tmjd
                     nodes.append(pymctknot)
