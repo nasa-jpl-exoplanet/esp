@@ -94,6 +94,7 @@
       <xs:enumeration value="H2"/>
       <xs:enumeration value="H2CO"/>
       <xs:enumeration value="H2O"/>
+      <xs:enumeration value="HDO"/>
       <xs:enumeration value="H2S"/>
       <xs:enumeration value="HBO"/>
       <xs:enumeration value="HCL"/>
