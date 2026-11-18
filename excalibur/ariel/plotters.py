@@ -57,7 +57,8 @@ def plot_spectrum(
     # plot the true (model) spectrum - raw
     #  this is for testing higher resolution cross-sections
     #  but before the hiresXSlib update, raw and rebin were the same thing
-    if np.any(wavelength_um_raw) != False:
+    # if np.any(wavelength_um_raw) is not False:
+    if wavelength_um_raw is not False:
         plt.plot(
             wavelength_um_raw,
             fluxDepth_raw,
